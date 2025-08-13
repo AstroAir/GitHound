@@ -1,0 +1,26 @@
+[project]
+name = "githound"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ripgrepy",
+    "GitPython",
+    "typer",
+    "pydantic>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+    "rapidfuzz>=3.0.0",
+    "redis>=4.5.0",
+    "diskcache>=5.6.0",
+    "pandas>=2.0.0",
+    "websockets>=11.0.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+githound = "githound.cli:app"
+
+[tool.mypy]
+ignore_missing_imports = true
