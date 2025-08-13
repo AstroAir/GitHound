@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHound - Advanced Git History Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-search"></i> GitHound
+            </span>
+            <span class="navbar-text">
+                Advanced Git History Search
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search"></i> Search Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="searchForm">
+                    <!-- Repository Path -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="repoPath" class="form-label">Repository Path *</label>
+                            <input type="text" class="form-control" id="repoPath" required 
+                                   placeholder="/path/to/git/repository" value=".">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="branch" class="form-label">Branch</label>
+                            <input type="text" class="form-control" id="branch" 
+                                   placeholder="main (leave empty for current branch)">
+                        </div>
+                    </div>
+
+                    <!-- Search Criteria Tabs -->
+                    <ul class="nav nav-tabs" id="searchTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="content-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#content" type="button" role="tab">
+                                <i class="fas fa-file-alt"></i> Content
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="commit-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#commit" type="button" role="tab">
+                                <i class="fas fa-code-branch"></i> Commit
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="files-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#files" type="button" role="tab">
+                                <i class="fas fa-folder"></i> Files
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#advanced" type="button" role="tab">
+                                <i class="fas fa-cogs"></i> Advanced
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3" id="searchTabContent">
+                        <!-- Content Search -->
+                        <div class="tab-pane fade show active" id="content" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="contentPattern" class="form-label">Content Pattern</label>
+                                    <input type="text" class="form-control" id="contentPattern" 
+                                           placeholder="Regular expression or text to search for">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="caseSensitive">
+                                        <label class="form-check-label" for="caseSensitive">
+                                            Case Sensitive
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commit Search -->
+                        <div class="tab-pane fade" id="commit" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="commitHash" class="form-label">Commit Hash</label>
+                                    <input type="text" class="form-control" id="commitHash" 
+                                           placeholder="Full or partial commit hash">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="authorPattern" class="form-label">Author</label>
+                                    <input type="text" class="form-control" id="authorPattern" 
+                                           placeholder="Author name or email">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="messagePattern" class="form-label">Commit Message</label>
+                                    <input type="text" class="form-control" id="messagePattern" 
+                                           placeholder="Search in commit messages">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="dateFrom" class="form-label">Date From</label>
+                                    <input type="date" class="form-control" id="dateFrom">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="dateTo" class="form-label">Date To</label>
+                                    <input type="date" class="form-control" id="dateTo">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Search -->
+                        <div class="tab-pane fade" id="files" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="filePathPattern" class="form-label">File Path Pattern</label>
+                                    <input type="text" class="form-control" id="filePathPattern" 
+                                           placeholder="e.g., *.py or src/**/*.js">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="fileExtensions" class="form-label">File Extensions</label>
+                                    <input type="text" class="form-control" id="fileExtensions" 
+                                           placeholder="py,js,java (comma-separated)">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="includeGlobs" class="form-label">Include Patterns</label>
+                                    <input type="text" class="form-control" id="includeGlobs" 
+                                           placeholder="src/**,tests/** (comma-separated)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="excludeGlobs" class="form-label">Exclude Patterns</label>
+                                    <input type="text" class="form-control" id="excludeGlobs" 
+                                           placeholder="node_modules/**,*.log (comma-separated)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="tab-pane fade" id="advanced" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="fuzzySearch">
+                                        <label class="form-check-label" for="fuzzySearch">
+                                            Enable Fuzzy Search
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="fuzzyThreshold" class="form-label">Fuzzy Threshold</label>
+                                    <input type="range" class="form-range" id="fuzzyThreshold" 
+                                           min="0" max="1" step="0.1" value="0.8">
+                                    <small class="text-muted">Current: <span id="fuzzyThresholdValue">0.8</span></small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="maxResults" class="form-label">Max Results</label>
+                                    <input type="number" class="form-control" id="maxResults" 
+                                           placeholder="1000" min="1" max="10000">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="maxFileSize" class="form-label">Max File Size (bytes)</label>
+                                    <input type="number" class="form-control" id="maxFileSize" 
+                                           placeholder="10485760 (10MB)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="timeoutSeconds" class="form-label">Timeout (seconds)</label>
+                                    <input type="number" class="form-control" id="timeoutSeconds" 
+                                           value="300" min="10" max="3600">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-lg" id="searchButton">
+                                <i class="fas fa-search"></i> Start Search
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-lg ms-2" id="cancelButton" 
+                                    style="display: none;">
+                                <i class="fas fa-stop"></i> Cancel Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="card mb-4" id="progressCard" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-spinner fa-spin"></i> Search Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         id="progressBar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div id="progressMessage" class="text-muted">Initializing search...</div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <small class="text-muted">Results Found: <span id="resultsCount">0</span></small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Status: <span id="searchStatus">Starting</span></small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Search ID: <span id="searchId">-</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card" id="resultsCard" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Search Results
+                </h5>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="exportJson">
+                        <i class="fas fa-download"></i> JSON
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="exportCsv">
+                        <i class="fas fa-download"></i> CSV
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="resultsContainer">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
