@@ -1,0 +1,168 @@
+site_name: GitHound Documentation
+site_description: Comprehensive Git repository analysis tool with advanced search capabilities, MCP server support, and REST API
+site_author: GitHound Team
+site_url: https://githound.readthedocs.io
+
+repo_name: GitHound
+repo_url: https://github.com/your-org/githound
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue grey
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Configuration: getting-started/configuration.md
+  - User Guide:
+    - CLI Usage: user-guide/cli-usage.md
+    - Search Capabilities: user-guide/search-capabilities.md
+    - Export Options: user-guide/export-options.md
+    - Web Interface: user-guide/web-interface.md
+  - MCP Server:
+    - Overview: mcp-server/overview.md
+    - Setup: mcp-server/setup.md
+    - Tools Reference: mcp-server/tools-reference.md
+    - Integration Examples: mcp-server/integration-examples.md
+  - API Reference:
+    - REST API: api-reference/rest-api.md
+    - WebSocket API: api-reference/websocket-api.md
+    - Python API: api-reference/python-api.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Search Engine: architecture/search-engine.md
+    - Git Handlers: architecture/git-handlers.md
+    - Data Models: architecture/data-models.md
+  - Development:
+    - Contributing: development/contributing.md
+    - Testing: development/testing.md
+    - Type Checking: development/type-checking.md
+    - Release Process: development/release-process.md
+  - API Documentation:
+    - Core Modules: reference/
+    - Search Engine: reference/search_engine/
+    - Web Components: reference/web/
+    - Utilities: reference/utils/
+
+plugins:
+  - search:
+      lang: en
+      prebuild_index: false
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
+            show_submodules: false
+            show_source: true
+            show_bases: true
+            show_inheritance_diagram: false
+            members_order: source
+            filters:
+              - "!^_"
+              - "!^__"
+            heading_level: 2
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: your-org
+      repo: githound
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/githound
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/githound/
+  version:
+    provider: mike
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+watch:
+  - githound/

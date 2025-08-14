@@ -58,20 +58,20 @@ class TestMCPRepositoryAnalysis:
     async def test_analyze_repository(self, temp_repo, mcp_client):
         """Test repository analysis MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
-        
+
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_repository",
-                {"repo_path": temp_dir}
+                {"input_data": {"repo_path": temp_dir}}
             )
-            
+
             assert result is not None
             result_data = result.content[0].text
-            
+
             # Parse the JSON response
             import json
             response = json.loads(result_data)
-            
+
             assert response["status"] == "success"
             assert "repository_metadata" in response
             assert response["repository_metadata"]["total_commits"] >= 2
@@ -81,22 +81,24 @@ class TestMCPRepositoryAnalysis:
     async def test_analyze_commit(self, temp_repo, mcp_client):
         """Test commit analysis MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
-        
+
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_commit",
                 {
-                    "repo_path": temp_dir,
-                    "commit_hash": second_commit.hexsha
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "commit_hash": second_commit.hexsha
+                    }
                 }
             )
-            
+
             assert result is not None
             result_data = result.content[0].text
-            
+
             import json
             response = json.loads(result_data)
-            
+
             assert response["status"] == "success"
             assert "commit_metadata" in response
             assert response["commit_metadata"]["hash"] == second_commit.hexsha
@@ -111,9 +113,11 @@ class TestMCPRepositoryAnalysis:
             result = await mcp_client.call_tool(
                 "get_filtered_commits",
                 {
-                    "repo_path": temp_dir,
-                    "author_pattern": "Test User",
-                    "max_count": 10
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "author_pattern": "Test User",
+                        "max_count": 10
+                    }
                 }
             )
             
@@ -135,11 +139,13 @@ class TestMCPRepositoryAnalysis:
         
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "get_file_history",
+                "get_file_history_mcp",
                 {
-                    "repo_path": temp_dir,
-                    "file_path": "test.py",
-                    "max_count": 10
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "file_path": "test.py",
+                        "max_count": 10
+                    }
                 }
             )
             
@@ -167,8 +173,10 @@ class TestMCPBlameAndDiff:
             result = await mcp_client.call_tool(
                 "analyze_file_blame",
                 {
-                    "repo_path": temp_dir,
-                    "file_path": "test.py"
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "file_path": "test.py"
+                    }
                 }
             )
             
@@ -192,9 +200,11 @@ class TestMCPBlameAndDiff:
             result = await mcp_client.call_tool(
                 "compare_commits_diff",
                 {
-                    "repo_path": temp_dir,
-                    "from_commit": initial_commit.hexsha,
-                    "to_commit": second_commit.hexsha
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "from_commit": initial_commit.hexsha,
+                        "to_commit": second_commit.hexsha
+                    }
                 }
             )
             
@@ -218,7 +228,7 @@ class TestMCPBlameAndDiff:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "get_author_stats",
-                {"repo_path": temp_dir}
+                {"input_data": {"repo_path": temp_dir}}
             )
             
             assert result is not None
@@ -308,10 +318,12 @@ class TestMCPExport:
                 result = await mcp_client.call_tool(
                     "export_repository_data",
                     {
-                        "repo_path": temp_dir,
-                        "output_path": output_file,
-                        "format": "json",
-                        "include_metadata": True
+                        "input_data": {
+                            "repo_path": temp_dir,
+                            "output_path": output_file,
+                            "format": "json",
+                            "include_metadata": True
+                        }
                     }
                 )
                 
@@ -345,7 +357,7 @@ class TestMCPErrorHandling:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_repository",
-                {"repo_path": "/nonexistent/path"}
+                {"input_data": {"repo_path": "/nonexistent/path"}}
             )
             
             assert result is not None
@@ -366,8 +378,10 @@ class TestMCPErrorHandling:
             result = await mcp_client.call_tool(
                 "analyze_commit",
                 {
-                    "repo_path": temp_dir,
-                    "commit_hash": "invalid_hash_123"
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "commit_hash": "invalid_hash_123"
+                    }
                 }
             )
             
@@ -389,8 +403,10 @@ class TestMCPErrorHandling:
             result = await mcp_client.call_tool(
                 "analyze_file_blame",
                 {
-                    "repo_path": temp_dir,
-                    "file_path": "nonexistent.py"
+                    "input_data": {
+                        "repo_path": temp_dir,
+                        "file_path": "nonexistent.py"
+                    }
                 }
             )
             
