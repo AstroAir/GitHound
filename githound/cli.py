@@ -6,12 +6,12 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, TextIO, Literal
+from typing import List, Optional, TextIO, Dict, Any, Literal
 
 import typer
 from git import GitCommandError, Repo
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TaskID
 from rich.table import Table
 
 from githound.git_handler import get_repository, walk_history, process_commit
@@ -34,7 +34,7 @@ app = typer.Typer(
 console = Console()
 
 
-def print_results_text(results: List[SearchResult], show_details: bool = False):
+def print_results_text(results: List[SearchResult], show_details: bool = False) -> None:
     """Prints search results in a human-readable text format."""
     if not results:
         console.print("[yellow]No results found.[/yellow]")
@@ -69,12 +69,12 @@ def print_results_text(results: List[SearchResult], show_details: bool = False):
     console.print(f"\n[bold]Total results: {len(results)}[/bold]")
 
 
-def print_results_json(results: List[SearchResult], include_metadata: bool = False):
+def print_results_json(results: List[SearchResult], include_metadata: bool = False) -> None:
     """Prints search results in JSON format."""
     json_results = []
 
     for r in results:
-        result_dict = {
+        result_dict: Dict[str, Any] = {
             "commit_hash": r.commit_hash,
             "file_path": str(r.file_path),
             "search_type": r.search_type.value,
@@ -106,7 +106,7 @@ def print_results_json(results: List[SearchResult], include_metadata: bool = Fal
     print(json.dumps(json_results, indent=2, default=str))
 
 
-def print_results_csv(results: List[SearchResult], output_file: Optional[TextIO] = None):
+def print_results_csv(results: List[SearchResult], output_file: Optional[TextIO] = None) -> None:
     """Prints search results in CSV format."""
     if not results:
         return
@@ -144,10 +144,10 @@ class ProgressReporter:
 
     def __init__(self, enable_progress: bool = True):
         self.enable_progress = enable_progress
-        self.progress = None
-        self.task = None
+        self.progress: Optional[Progress] = None
+        self.task: Optional[TaskID] = None
 
-    def __enter__(self):
+    def __enter__(self) -> "ProgressReporter":
         if self.enable_progress:
             self.progress = Progress(
                 SpinnerColumn(),
@@ -160,11 +160,11 @@ class ProgressReporter:
             self.task = self.progress.add_task("Searching...", total=100)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self.progress:
             self.progress.__exit__(exc_type, exc_val, exc_tb)
 
-    def update(self, description: str, progress: float):
+    def update(self, description: str, progress: float) -> None:
         """Update progress with description and percentage (0.0-1.0)."""
         if self.progress and self.task is not None:
             self.progress.update(
@@ -237,14 +237,23 @@ async def enhanced_search(
     return results
 
 
-def legacy_search_and_print(config: LegacyGitHoundConfig):
+def legacy_search_and_print(config: LegacyGitHoundConfig) -> None:
     """Legacy search function for backward compatibility."""
     try:
+        # Convert legacy config to new config format
+        new_config = GitHoundConfig(
+            repo_path=config.repo_path,
+            search_query=config.search_query,
+            branch=config.branch,
+            output_format=OutputFormat.TEXT if config.output_format == "text" else OutputFormat.JSON,
+            search_config=config.search_config
+        )
+
         repo = get_repository(config.repo_path)
         all_results: List[SearchResult] = []
 
-        for commit in walk_history(repo, config):
-            commit_results = process_commit(commit, config)
+        for commit in walk_history(repo, new_config):
+            commit_results = process_commit(commit, new_config)
             all_results.extend(commit_results)
 
         if config.output_format == "json":
@@ -267,7 +276,7 @@ async def search_and_print(
     show_details: bool = False,
     include_metadata: bool = False,
     max_results: Optional[int] = None
-):
+) -> None:
     """Enhanced search function with new capabilities."""
     try:
         repo = get_repository(repo_path)
@@ -329,7 +338,7 @@ def legacy_main(
     branch: str = typer.Option(
         None, "--branch", "-b", help="Branch to search (defaults to current branch)."
     ),
-    output_format: Literal["text", "json"] = typer.Option(
+    output_format: str = typer.Option(
         "text",
         "--output-format",
         "-f",
@@ -344,10 +353,18 @@ def legacy_main(
     case_sensitive: bool = typer.Option(
         False, "--case-sensitive", "-s", help="Perform a case-sensitive search."
     ),
-):
+) -> None:
     """
     Legacy GitHound search (for backward compatibility).
     """
+    # Validate output format
+    if output_format not in ["text", "json"]:
+        typer.echo(f"Error: Invalid output format '{output_format}'. Must be 'text' or 'json'.")
+        raise typer.Exit(1)
+
+    # Cast to Literal type for type safety
+    validated_output_format: Literal["text", "json"] = output_format  # type: ignore[assignment]
+
     search_config = LegacySearchConfig(
         include_globs=include_glob,
         exclude_globs=exclude_glob,
@@ -357,7 +374,7 @@ def legacy_main(
         repo_path=repo_path,
         search_query=search_query,
         branch=branch,
-        output_format=output_format,
+        output_format=validated_output_format,
         search_config=search_config,
     )
     legacy_search_and_print(config)
@@ -449,7 +466,7 @@ def search(
     branch: Optional[str] = typer.Option(
         None, "--branch", "-b", help="Branch to search (defaults to current)."
     ),
-):
+) -> None:
     """
     GitHound: Advanced Git history search with multi-modal capabilities.
 
@@ -520,7 +537,9 @@ def search(
         fuzzy_threshold=fuzzy_threshold,
         include_globs=include_glob,
         exclude_globs=exclude_glob,
-        max_file_size=max_file_size
+        max_file_size=max_file_size,
+        min_commit_size=None,
+        max_commit_size=None
     )
 
     # Run search
@@ -539,7 +558,7 @@ def search(
 
 # Backward compatibility: make 'search' the default command
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
+def main(ctx: typer.Context) -> None:
     """
     GitHound: Advanced Git history search tool.
 

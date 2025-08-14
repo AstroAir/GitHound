@@ -25,7 +25,7 @@ def serve(
     reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload"),
     log_level: str = typer.Option("info", "--log-level", "-l", help="Log level"),
     workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
-):
+) -> None:
     """
     Start the GitHound web server.
     
@@ -84,7 +84,7 @@ def serve(
 
 
 @app.command()
-def dev():
+def dev() -> None:
     """
     Start the development server with auto-reload and debug logging.
     
@@ -106,7 +106,7 @@ def prod(
     host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind to"),
     workers: int = typer.Option(4, "--workers", "-w", help="Number of worker processes"),
-):
+) -> None:
     """
     Start the production server with optimized settings.
     
@@ -129,7 +129,7 @@ def prod(
 def health(
     host: str = typer.Option("127.0.0.1", "--host", "-h", help="Server host"),
     port: int = typer.Option(8000, "--port", "-p", help="Server port"),
-):
+) -> None:
     """
     Check if the GitHound server is running and healthy.
     """

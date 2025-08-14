@@ -3,7 +3,7 @@
 import asyncio
 import json
 import logging
-from typing import Dict, Set
+from typing import Dict, Set, Optional
 from datetime import datetime
 
 from fastapi import WebSocket, WebSocketDisconnect
@@ -23,13 +23,13 @@ class WebSocketMessage(BaseModel):
 class ConnectionManager:
     """Manages WebSocket connections for real-time updates."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         # Active connections by search_id
         self.active_connections: Dict[str, Set[WebSocket]] = {}
         # Connection metadata
         self.connection_metadata: Dict[WebSocket, Dict] = {}
     
-    async def connect(self, websocket: WebSocket, search_id: str):
+    async def connect(self, websocket: WebSocket, search_id: str) -> None:
         """Accept a new WebSocket connection."""
         await websocket.accept()
         
@@ -57,7 +57,7 @@ class ConnectionManager:
             }
         })
     
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         """Remove a WebSocket connection."""
         if websocket in self.connection_metadata:
             search_id = self.connection_metadata[websocket]["search_id"]
@@ -75,7 +75,7 @@ class ConnectionManager:
             
             logger.info(f"WebSocket disconnected for search {search_id}")
     
-    async def send_personal_message(self, websocket: WebSocket, message: dict):
+    async def send_personal_message(self, websocket: WebSocket, message: dict) -> None:
         """Send a message to a specific WebSocket connection."""
         try:
             ws_message = WebSocketMessage(
@@ -87,7 +87,7 @@ class ConnectionManager:
             logger.error(f"Failed to send personal message: {e}")
             self.disconnect(websocket)
     
-    async def broadcast_to_search(self, search_id: str, message: dict):
+    async def broadcast_to_search(self, search_id: str, message: dict) -> None:
         """Broadcast a message to all connections for a specific search."""
         if search_id not in self.active_connections:
             return
@@ -110,7 +110,7 @@ class ConnectionManager:
         for websocket in disconnected:
             self.disconnect(websocket)
     
-    async def broadcast_progress(self, search_id: str, progress: float, message: str, results_count: int = 0):
+    async def broadcast_progress(self, search_id: str, progress: float, message: str, results_count: int = 0) -> None:
         """Broadcast progress update for a search."""
         await self.broadcast_to_search(search_id, {
             "type": "progress",
@@ -123,7 +123,7 @@ class ConnectionManager:
             }
         })
     
-    async def broadcast_result(self, search_id: str, result: dict):
+    async def broadcast_result(self, search_id: str, result: dict) -> None:
         """Broadcast a new search result."""
         await self.broadcast_to_search(search_id, {
             "type": "result",
@@ -134,7 +134,7 @@ class ConnectionManager:
             }
         })
     
-    async def broadcast_completion(self, search_id: str, status: str, total_results: int, error_message: str = None):
+    async def broadcast_completion(self, search_id: str, status: str, total_results: int, error_message: Optional[str] = None) -> None:
         """Broadcast search completion."""
         await self.broadcast_to_search(search_id, {
             "type": "completed",
@@ -147,7 +147,7 @@ class ConnectionManager:
             }
         })
     
-    async def broadcast_error(self, search_id: str, error_message: str):
+    async def broadcast_error(self, search_id: str, error_message: str) -> None:
         """Broadcast an error for a search."""
         await self.broadcast_to_search(search_id, {
             "type": "error",
@@ -158,7 +158,7 @@ class ConnectionManager:
             }
         })
     
-    def get_connection_count(self, search_id: str = None) -> int:
+    def get_connection_count(self, search_id: Optional[str] = None) -> int:
         """Get the number of active connections."""
         if search_id:
             return len(self.active_connections.get(search_id, set()))
@@ -169,16 +169,17 @@ class ConnectionManager:
         """Get list of search IDs with active connections."""
         return list(self.active_connections.keys())
     
-    async def ping_all_connections(self):
+    async def ping_all_connections(self) -> None:
         """Send ping to all connections to check if they're alive."""
-        all_connections = []
+        all_connections: list[WebSocket] = []
         for connections in self.active_connections.values():
             all_connections.extend(connections)
         
         disconnected = []
         for websocket in all_connections:
             try:
-                await websocket.ping()
+                # Send a ping message to check if connection is alive
+                await websocket.send_text('{"type": "ping"}')
             except Exception:
                 disconnected.append(websocket)
         
@@ -191,7 +192,7 @@ class ConnectionManager:
 connection_manager = ConnectionManager()
 
 
-async def websocket_endpoint(websocket: WebSocket, search_id: str):
+async def websocket_endpoint(websocket: WebSocket, search_id: str) -> None:
     """WebSocket endpoint for real-time progress updates."""
     await connection_manager.connect(websocket, search_id)
     
@@ -225,7 +226,7 @@ async def websocket_endpoint(websocket: WebSocket, search_id: str):
         connection_manager.disconnect(websocket)
 
 
-async def handle_client_message(websocket: WebSocket, search_id: str, message: dict):
+async def handle_client_message(websocket: WebSocket, search_id: str, message: dict) -> None:
     """Handle messages from WebSocket clients."""
     message_type = message.get("type", "")
     
@@ -256,7 +257,7 @@ async def handle_client_message(websocket: WebSocket, search_id: str, message: d
 
 
 # Background task to clean up stale connections
-async def cleanup_stale_connections():
+async def cleanup_stale_connections() -> None:
     """Periodically clean up stale WebSocket connections."""
     while True:
         try:

@@ -7,9 +7,14 @@ from pathlib import Path
 from typing import List, Optional, TextIO, Iterator, Dict, Any
 
 import pandas as pd
+import yaml
 from rich.console import Console
 
 from ..models import SearchResult, SearchMetrics
+from ..schemas import (
+    ExportOptions, OutputFormat, DataFilter, SortCriteria,
+    SearchResultSchema, SearchResultsCollectionSchema
+)
 
 
 class ExportManager:
@@ -19,12 +24,12 @@ class ExportManager:
         self.console = console or Console()
     
     def export_to_json(
-        self, 
-        results: List[SearchResult], 
+        self,
+        results: List[SearchResult],
         output_file: Path,
         include_metadata: bool = True,
         pretty: bool = True
-    ):
+    ) -> None:
         """Export results to JSON format."""
         try:
             json_data = self._prepare_json_data(results, include_metadata)
@@ -40,13 +45,43 @@ class ExportManager:
         except Exception as e:
             self.console.print(f"[red]✗ Failed to export to JSON: {e}[/red]")
             raise
-    
+
+    def export_to_yaml(
+        self,
+        results: List[SearchResult],
+        output_file: Path,
+        include_metadata: bool = True,
+        pretty: bool = True
+    ) -> None:
+        """Export results to YAML format."""
+        try:
+            yaml_data = self._prepare_json_data(results, include_metadata)
+
+            with open(output_file, 'w', encoding='utf-8') as f:
+                if pretty:
+                    yaml.dump(
+                        yaml_data,
+                        f,
+                        default_flow_style=False,
+                        allow_unicode=True,
+                        indent=2,
+                        sort_keys=False
+                    )
+                else:
+                    yaml.dump(yaml_data, f, default_flow_style=True, allow_unicode=True)
+
+            self.console.print(f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
+
+        except Exception as e:
+            self.console.print(f"[red]✗ Failed to export to YAML: {e}[/red]")
+            raise
+
     def export_to_csv(
-        self, 
-        results: List[SearchResult], 
+        self,
+        results: List[SearchResult],
         output_file: Path,
         include_metadata: bool = True
-    ):
+    ) -> None:
         """Export results to CSV format."""
         try:
             with open(output_file, 'w', newline='', encoding='utf-8') as f:
@@ -68,11 +103,11 @@ class ExportManager:
             raise
     
     def export_to_excel(
-        self, 
-        results: List[SearchResult], 
+        self,
+        results: List[SearchResult],
         output_file: Path,
         include_metadata: bool = True
-    ):
+    ) -> None:
         """Export results to Excel format."""
         try:
             # Prepare data for DataFrame
@@ -95,11 +130,11 @@ class ExportManager:
             raise
     
     def export_to_text(
-        self, 
-        results: List[SearchResult], 
+        self,
+        results: List[SearchResult],
         output_file: Path,
         format_style: str = "detailed"
-    ):
+    ) -> None:
         """Export results to plain text format."""
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
@@ -119,11 +154,11 @@ class ExportManager:
             raise
     
     def stream_export_csv(
-        self, 
-        results: Iterator[SearchResult], 
+        self,
+        results: Iterator[SearchResult],
         output_file: Path,
         include_metadata: bool = True
-    ):
+    ) -> None:
         """Stream export results to CSV for large datasets."""
         try:
             with open(output_file, 'w', newline='', encoding='utf-8') as f:
@@ -152,11 +187,11 @@ class ExportManager:
             raise
     
     def export_metrics(
-        self, 
-        metrics: SearchMetrics, 
+        self,
+        metrics: SearchMetrics,
         output_file: Path,
         format: str = "json"
-    ):
+    ) -> None:
         """Export search metrics."""
         try:
             if format.lower() == "json":
@@ -179,7 +214,7 @@ class ExportManager:
         json_results = []
         
         for result in results:
-            result_dict = {
+            result_dict: Dict[str, Any] = {
                 "commit_hash": result.commit_hash,
                 "file_path": str(result.file_path),
                 "search_type": result.search_type.value,
@@ -234,10 +269,10 @@ class ExportManager:
         row = [
             result.commit_hash,
             str(result.file_path),
-            result.line_number or "",
+            str(result.line_number) if result.line_number is not None else "",
             result.matching_line or "",
             result.search_type.value,
-            result.relevance_score
+            str(result.relevance_score)
         ]
         
         if include_metadata:
@@ -247,9 +282,9 @@ class ExportManager:
                     result.commit_info.author_email,
                     result.commit_info.date.isoformat() if isinstance(result.commit_info.date, datetime) else str(result.commit_info.date),
                     result.commit_info.message,
-                    result.commit_info.files_changed,
-                    result.commit_info.insertions,
-                    result.commit_info.deletions
+                    str(result.commit_info.files_changed),
+                    str(result.commit_info.insertions),
+                    str(result.commit_info.deletions)
                 ])
             else:
                 row.extend(["", "", "", "", "", "", ""])
@@ -271,7 +306,7 @@ class ExportManager:
             data.update({
                 "author_name": result.commit_info.author_name,
                 "author_email": result.commit_info.author_email,
-                "commit_date": result.commit_info.date,
+                "commit_date": result.commit_info.date.isoformat() if isinstance(result.commit_info.date, datetime) else str(result.commit_info.date),
                 "commit_message": result.commit_info.message,
                 "files_changed": result.commit_info.files_changed,
                 "insertions": result.commit_info.insertions,
@@ -280,7 +315,7 @@ class ExportManager:
         
         return data
     
-    def _write_simple_text(self, results: List[SearchResult], f: TextIO):
+    def _write_simple_text(self, results: List[SearchResult], f: TextIO) -> None:
         """Write results in simple text format."""
         for result in results:
             f.write(f"Commit: {result.commit_hash}\n")
@@ -289,7 +324,7 @@ class ExportManager:
                 f.write(f"Match: {result.matching_line}\n")
             f.write("\n")
     
-    def _write_detailed_text(self, results: List[SearchResult], f: TextIO):
+    def _write_detailed_text(self, results: List[SearchResult], f: TextIO) -> None:
         """Write results in detailed text format."""
         for i, result in enumerate(results, 1):
             f.write(f"=== Result {i} ===\n")
@@ -311,7 +346,7 @@ class ExportManager:
             
             f.write("\n")
     
-    def _write_summary_text(self, results: List[SearchResult], f: TextIO):
+    def _write_summary_text(self, results: List[SearchResult], f: TextIO) -> None:
         """Write results in summary text format."""
         f.write(f"GitHound Search Results Summary\n")
         f.write(f"==============================\n\n")
@@ -319,7 +354,7 @@ class ExportManager:
         f.write(f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         
         # Group by search type
-        by_type = {}
+        by_type: Dict[str, List[SearchResult]] = {}
         for result in results:
             search_type = result.search_type.value
             if search_type not in by_type:
@@ -338,7 +373,7 @@ class ExportManager:
             
             f.write("\n")
     
-    def _write_metrics_text(self, metrics: SearchMetrics, f: TextIO):
+    def _write_metrics_text(self, metrics: SearchMetrics, f: TextIO) -> None:
         """Write metrics in text format."""
         f.write("GitHound Search Metrics\n")
         f.write("======================\n\n")
@@ -352,10 +387,167 @@ class ExportManager:
         if metrics.memory_usage_mb:
             f.write(f"Peak Memory Usage: {metrics.memory_usage_mb:.2f} MB\n")
     
-    def _json_serializer(self, obj):
+    def _json_serializer(self, obj: Any) -> Any:
         """Custom JSON serializer for datetime and other objects."""
         if isinstance(obj, datetime):
             return obj.isoformat()
         elif isinstance(obj, Path):
             return str(obj)
         return str(obj)
+
+    def export_with_options(
+        self,
+        results: List[SearchResult],
+        output_file: Path,
+        options: ExportOptions
+    ) -> None:
+        """Export results with advanced options including filtering and sorting."""
+        try:
+            # Apply filters
+            filtered_results = self._apply_filters(results, options.filters)
+
+            # Apply sorting
+            sorted_results = self._apply_sorting(filtered_results, options.sort_by)
+
+            # Apply field selection
+            if options.fields or options.exclude_fields:
+                # This would be implemented for structured formats
+                pass
+
+            # Export based on format
+            if options.format == OutputFormat.JSON:
+                self.export_to_json(
+                    sorted_results,
+                    output_file,
+                    options.include_metadata,
+                    options.pretty_print
+                )
+            elif options.format == OutputFormat.YAML:
+                self.export_to_yaml(
+                    sorted_results,
+                    output_file,
+                    options.include_metadata,
+                    options.pretty_print
+                )
+            elif options.format == OutputFormat.CSV:
+                self.export_to_csv(sorted_results, output_file, options.include_metadata)
+            elif options.format == OutputFormat.TEXT:
+                self.export_to_text(sorted_results, output_file, "detailed")
+            else:
+                raise ValueError(f"Unsupported export format: {options.format}")
+
+        except Exception as e:
+            self.console.print(f"[red]✗ Failed to export with options: {e}[/red]")
+            raise
+
+    def _apply_filters(self, results: List[SearchResult], filters: List[DataFilter]) -> List[SearchResult]:
+        """Apply data filters to results."""
+        if not filters:
+            return results
+
+        filtered_results = []
+        for result in results:
+            include_result = True
+
+            for filter_criteria in filters:
+                if not self._evaluate_filter(result, filter_criteria):
+                    include_result = False
+                    break
+
+            if include_result:
+                filtered_results.append(result)
+
+        return filtered_results
+
+    def _evaluate_filter(self, result: SearchResult, filter_criteria: DataFilter) -> bool:
+        """Evaluate a single filter against a result."""
+        # Get the field value from the result
+        field_value = self._get_field_value(result, filter_criteria.field)
+
+        if field_value is None:
+            return False
+
+        # Convert to string for string operations
+        if isinstance(field_value, str):
+            if not filter_criteria.case_sensitive:
+                field_value = field_value.lower()
+                if isinstance(filter_criteria.value, str):
+                    filter_criteria.value = filter_criteria.value.lower()
+
+        # Apply the filter operator
+        from ..schemas import FilterOperator
+
+        if filter_criteria.operator == FilterOperator.EQUALS:
+            return bool(field_value == filter_criteria.value)
+        elif filter_criteria.operator == FilterOperator.NOT_EQUALS:
+            return bool(field_value != filter_criteria.value)
+        elif filter_criteria.operator == FilterOperator.CONTAINS:
+            return bool(str(filter_criteria.value) in str(field_value))
+        elif filter_criteria.operator == FilterOperator.NOT_CONTAINS:
+            return bool(str(filter_criteria.value) not in str(field_value))
+        elif filter_criteria.operator == FilterOperator.STARTS_WITH:
+            return bool(str(field_value).startswith(str(filter_criteria.value)))
+        elif filter_criteria.operator == FilterOperator.ENDS_WITH:
+            return bool(str(field_value).endswith(str(filter_criteria.value)))
+        elif filter_criteria.operator == FilterOperator.GREATER_THAN:
+            return self._compare_numeric(field_value, filter_criteria.value, lambda x, y: x > y)
+        elif filter_criteria.operator == FilterOperator.LESS_THAN:
+            return self._compare_numeric(field_value, filter_criteria.value, lambda x, y: x < y)
+        elif filter_criteria.operator == FilterOperator.GREATER_EQUAL:
+            return self._compare_numeric(field_value, filter_criteria.value, lambda x, y: x >= y)
+        elif filter_criteria.operator == FilterOperator.LESS_EQUAL:
+            return self._compare_numeric(field_value, filter_criteria.value, lambda x, y: x <= y)
+        elif filter_criteria.operator == FilterOperator.IN:
+            try:
+                return bool(field_value in filter_criteria.value)  # type: ignore[operator]
+            except TypeError:
+                return False
+        elif filter_criteria.operator == FilterOperator.NOT_IN:
+            try:
+                return bool(field_value not in filter_criteria.value)  # type: ignore[operator]
+            except TypeError:
+                return True
+        elif filter_criteria.operator == FilterOperator.REGEX:
+            import re
+            pattern = re.compile(str(filter_criteria.value),
+                               re.IGNORECASE if not filter_criteria.case_sensitive else 0)
+            return bool(pattern.search(str(field_value)))
+        
+        # This line is unreachable if all enum members are handled.
+        # Adding a safeguard for unexpected cases.
+        raise ValueError(f"Unsupported filter operator: {filter_criteria.operator}")
+
+    def _get_field_value(self, result: SearchResult, field_path: str) -> Any:
+        """Get a field value from a result using dot notation."""
+        obj = result
+        for field in field_path.split('.'):
+            if hasattr(obj, field):
+                obj = getattr(obj, field)
+            else:
+                return None
+        return obj
+
+    def _compare_numeric(self, val1: Any, val2: Any, op: Any) -> bool:
+        """Safely compare two values as numbers."""
+        try:
+            num1 = float(val1)
+            num2 = float(val2)
+            return bool(op(num1, num2))
+        except (ValueError, TypeError):
+            return False
+
+    def _apply_sorting(self, results: List[SearchResult], sort_criteria: List[SortCriteria]) -> List[SearchResult]:
+        """Apply sorting to results."""
+        if not sort_criteria:
+            return results
+
+        # Sort by multiple criteria (reverse order for proper precedence)
+        sorted_results = results.copy()
+        for criteria in reversed(sort_criteria):
+            reverse = criteria.order.value == "desc"
+            sorted_results.sort(
+                key=lambda x: self._get_field_value(x, criteria.field) or "",
+                reverse=reverse
+            )
+
+        return sorted_results

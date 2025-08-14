@@ -60,7 +60,9 @@ class SearchRequest(BaseModel):
             fuzzy_threshold=self.fuzzy_threshold,
             include_globs=self.include_globs,
             exclude_globs=self.exclude_globs,
-            max_file_size=self.max_file_size
+            max_file_size=self.max_file_size,
+            min_commit_size=None,
+            max_commit_size=None
         )
 
 
@@ -93,15 +95,13 @@ class SearchResultResponse(BaseModel):
             matching_line=result.matching_line,
             search_type=result.search_type.value,
             relevance_score=result.relevance_score,
-            match_context=result.match_context
+            match_context=result.match_context,
+            author_name=result.commit_info.author_name if result.commit_info else None,
+            author_email=result.commit_info.author_email if result.commit_info else None,
+            commit_date=result.commit_info.date if result.commit_info and isinstance(result.commit_info.date, datetime) else None,
+            commit_message=result.commit_info.message if result.commit_info else None
         )
-        
-        if include_metadata and result.commit_info:
-            response.author_name = result.commit_info.author_name
-            response.author_email = result.commit_info.author_email
-            response.commit_date = result.commit_info.date if isinstance(result.commit_info.date, datetime) else None
-            response.commit_message = result.commit_info.message
-        
+
         return response
 
 

@@ -49,7 +49,7 @@ class BaseSearcher(ABC):
         """Estimate the amount of work this searcher will do (for progress reporting)."""
         return 1
     
-    def _report_progress(self, context: SearchContext, message: str, progress: float):
+    def _report_progress(self, context: SearchContext, message: str, progress: float) -> None:
         """Report progress if callback is available."""
         if context.progress_callback:
             context.progress_callback(f"[{self.name}] {message}", progress)
@@ -95,7 +95,7 @@ class CacheableSearcher(BaseSearcher):
             self._update_metrics(cache_misses=1)
             return None
     
-    async def _set_cache(self, context: SearchContext, key: str, value: Any, ttl: int = 3600):
+    async def _set_cache(self, context: SearchContext, key: str, value: Any, ttl: int = 3600) -> None:
         """Set value in cache."""
         if not context.cache:
             return
@@ -116,7 +116,7 @@ class ParallelSearcher(BaseSearcher):
     
     async def _run_parallel(self, tasks: List[Callable], context: SearchContext) -> List[Any]:
         """Run tasks in parallel with concurrency control."""
-        async def _run_task(task):
+        async def _run_task(task: Callable) -> Any:
             async with self._semaphore:
                 return await task()
         

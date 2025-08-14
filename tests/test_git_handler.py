@@ -37,4 +37,4 @@ def test_process_commit(temp_repo):
     commit = repo.head.commit
     results = process_commit(commit, config)
     assert len(results) == 1
-    assert results.matching_line == "hello world"
+    assert results[0].matching_line == "hello world"

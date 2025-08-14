@@ -52,10 +52,13 @@ class CommitHashSearcher(CacheableSearcher):
             result = SearchResult(
                 commit_hash=commit.hexsha,
                 file_path=context.repo.working_dir,  # Repository root
+                line_number=None,
+                matching_line=None,
                 search_type=SearchType.COMMIT_HASH,
                 relevance_score=1.0,  # Exact match
                 commit_info=commit_info,
-                match_context={"search_term": commit_hash}
+                match_context={"search_term": commit_hash},
+                search_time_ms=None
             )
             
             self._update_metrics(total_commits_searched=1, total_results_found=1)
@@ -175,6 +178,8 @@ class AuthorSearcher(CacheableSearcher):
                     result = SearchResult(
                         commit_hash=commit.hexsha,
                         file_path=context.repo.working_dir,
+                        line_number=None,
+                        matching_line=None,
                         search_type=SearchType.AUTHOR,
                         relevance_score=match_score,
                         commit_info=commit_info,
@@ -182,7 +187,8 @@ class AuthorSearcher(CacheableSearcher):
                             "search_term": author_pattern,
                             "matched_field": match_field,
                             "matched_value": author_name if match_field == "name" else author_email
-                        }
+                        },
+                        search_time_ms=None
                     )
                     
                     results_found += 1
@@ -287,13 +293,16 @@ class MessageSearcher(CacheableSearcher):
                     result = SearchResult(
                         commit_hash=commit.hexsha,
                         file_path=context.repo.working_dir,
+                        line_number=None,
+                        matching_line=None,
                         search_type=SearchType.MESSAGE,
                         relevance_score=match_score,
                         commit_info=commit_info,
                         match_context={
                             "search_term": message_pattern,
                             "matched_message": message
-                        }
+                        },
+                        search_time_ms=None
                     )
 
                     results_found += 1
@@ -388,6 +397,8 @@ class DateRangeSearcher(CacheableSearcher):
                     result = SearchResult(
                         commit_hash=commit.hexsha,
                         file_path=context.repo.working_dir,
+                        line_number=None,
+                        matching_line=None,
                         search_type=SearchType.DATE_RANGE,
                         relevance_score=1.0,  # All matches in range are equally relevant
                         commit_info=commit_info,
@@ -395,7 +406,8 @@ class DateRangeSearcher(CacheableSearcher):
                             "date_from": date_from.isoformat() if date_from else None,
                             "date_to": date_to.isoformat() if date_to else None,
                             "commit_date": commit_date.isoformat()
-                        }
+                        },
+                        search_time_ms=None
                     )
 
                     results_found += 1

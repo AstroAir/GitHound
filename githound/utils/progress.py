@@ -3,12 +3,12 @@
 import signal
 import threading
 import time
-from typing import Callable, Optional, Dict, Any
+from typing import Callable, Optional, Dict, Any, Union
 
 from rich.console import Console
 from rich.progress import (
-    Progress, SpinnerColumn, TextColumn, BarColumn, 
-    TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn
+    Progress, SpinnerColumn, TextColumn, BarColumn,
+    TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn, TaskID
 )
 from rich.live import Live
 from rich.table import Table
@@ -22,7 +22,7 @@ class CancellationToken:
         self._lock = threading.Lock()
         self._reason = None
     
-    def cancel(self, reason: str = "Operation cancelled"):
+    def cancel(self, reason: str = "Operation cancelled") -> None:
         """Cancel the operation with an optional reason."""
         with self._lock:
             self._reason = reason
@@ -39,7 +39,7 @@ class CancellationToken:
         with self._lock:
             return self._reason
     
-    def check_cancelled(self):
+    def check_cancelled(self) -> None:
         """Raise an exception if cancellation has been requested."""
         if self.is_cancelled:
             raise OperationCancelledException(self.reason or "Operation cancelled")
@@ -57,13 +57,13 @@ class ProgressManager:
         self.console = console or Console()
         self.enable_cancellation = enable_cancellation
         self.cancellation_token = CancellationToken()
-        self._progress = None
-        self._tasks = {}
-        self._stats = {}
-        self._start_time = None
+        self._progress: Optional[Progress] = None
+        self._tasks: dict[str, TaskID] = {}
+        self._stats: dict[str, dict[str, Any]] = {}
+        self._start_time: Optional[float] = None
         self._signal_handler_set = False
     
-    def __enter__(self):
+    def __enter__(self) -> "ProgressManager":
         self._start_time = time.time()
         
         # Set up signal handler for Ctrl+C
@@ -85,7 +85,7 @@ class ProgressManager:
         self._progress.__enter__()
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self._progress:
             self._progress.__exit__(exc_type, exc_val, exc_tb)
         
@@ -94,7 +94,7 @@ class ProgressManager:
             elapsed = time.time() - self._start_time
             self._show_final_stats(elapsed, exc_type is not None)
     
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(self, signum: int, frame: Any) -> None:
         """Handle Ctrl+C signal."""
         self.console.print("\n[yellow]Cancellation requested... Please wait for graceful shutdown.[/yellow]")
         self.cancellation_token.cancel("User requested cancellation (Ctrl+C)")
@@ -114,8 +114,8 @@ class ProgressManager:
         }
         return name
     
-    def update_task(self, name: str, advance: Optional[int] = None, 
-                   completed: Optional[int] = None, description: Optional[str] = None):
+    def update_task(self, name: str, advance: Optional[int] = None,
+                   completed: Optional[int] = None, description: Optional[str] = None) -> None:
         """Update a progress task."""
         if name not in self._tasks:
             raise ValueError(f"Task '{name}' not found")
@@ -124,37 +124,41 @@ class ProgressManager:
         self.cancellation_token.check_cancelled()
         
         task_id = self._tasks[name]
-        
+
+        if self._progress is None:
+            return
+
         if advance is not None:
             self._progress.advance(task_id, advance)
             self._stats[name]['completed'] += advance
-        
+
         if completed is not None:
             self._progress.update(task_id, completed=completed)
             self._stats[name]['completed'] = completed
-        
+
         if description is not None:
             self._progress.update(task_id, description=description)
             self._stats[name]['description'] = description
     
-    def complete_task(self, name: str, description: Optional[str] = None):
+    def complete_task(self, name: str, description: Optional[str] = None) -> None:
         """Mark a task as completed."""
         if name not in self._tasks:
             return
         
         task_id = self._tasks[name]
         total = self._stats[name]['total']
-        
-        self._progress.update(
-            task_id, 
-            completed=total, 
-            description=description or f"✓ {self._stats[name]['description']}"
-        )
+
+        if self._progress is not None:
+            self._progress.update(
+                task_id,
+                completed=total,
+                description=description or f"✓ {self._stats[name]['description']}"
+            )
         self._stats[name]['completed'] = total
     
     def get_progress_callback(self, task_name: str) -> Callable[[str, float], None]:
         """Get a progress callback function for a specific task."""
-        def callback(description: str, progress: float):
+        def callback(description: str, progress: float) -> None:
             if task_name in self._tasks:
                 total = self._stats[task_name]['total']
                 completed = int(progress * total)
@@ -162,7 +166,7 @@ class ProgressManager:
         
         return callback
     
-    def _show_final_stats(self, elapsed_time: float, had_error: bool):
+    def _show_final_stats(self, elapsed_time: float, had_error: bool) -> None:
         """Show final statistics after completion."""
         if not self._stats:
             return
@@ -208,10 +212,10 @@ class SimpleProgressReporter:
     
     def __init__(self, console: Optional[Console] = None):
         self.console = console or Console()
-        self._last_update = 0
+        self._last_update = 0.0
         self._update_interval = 0.5  # Update every 500ms
     
-    def report(self, message: str, progress: Optional[float] = None):
+    def report(self, message: str, progress: Optional[float] = None) -> None:
         """Report progress with optional percentage."""
         current_time = time.time()
         

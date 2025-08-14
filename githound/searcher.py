@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from githound.models import SearchConfig, SearchResult
+from githound.models import SearchConfig, SearchResult, SearchType
 
 
 def search_blob_content(
@@ -49,6 +49,11 @@ def search_blob_content(
                     file_path=Path(file_path),
                     line_number=data["line_number"],
                     matching_line=data["lines"]["text"].strip(),
+                    commit_info=None,
+                    search_type=SearchType.CONTENT,
+                    relevance_score=0.0,
+                    match_context=None,
+                    search_time_ms=None
                 )
             )
     return results

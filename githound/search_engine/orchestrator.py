@@ -17,11 +17,11 @@ class SearchOrchestrator:
         self._searchers: List[BaseSearcher] = []
         self._metrics = SearchMetrics()
     
-    def register_searcher(self, searcher: BaseSearcher):
+    def register_searcher(self, searcher: BaseSearcher) -> None:
         """Register a searcher with the orchestrator."""
         self._searchers.append(searcher)
     
-    def unregister_searcher(self, searcher: BaseSearcher):
+    def unregister_searcher(self, searcher: BaseSearcher) -> None:
         """Unregister a searcher from the orchestrator."""
         if searcher in self._searchers:
             self._searchers.remove(searcher)
@@ -104,7 +104,7 @@ class SearchOrchestrator:
             # Run searchers and collect results
             completed_work = 0
             
-            async def run_searcher(searcher: BaseSearcher):
+            async def run_searcher(searcher: BaseSearcher) -> List[SearchResult]:
                 nonlocal completed_work, results_count
                 
                 searcher_results = []

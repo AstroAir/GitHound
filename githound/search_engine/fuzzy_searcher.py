@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime
-from typing import AsyncGenerator, Dict, List, Tuple
+from typing import Any, AsyncGenerator, Dict, List, Tuple
 
 from rapidfuzz import fuzz, process
 
@@ -145,7 +145,7 @@ class FuzzySearcher(CacheableSearcher):
         
         # Extract all unique authors
         authors = set()
-        author_to_commits = {}
+        author_to_commits: Dict[str, List[Dict[str, Any]]] = {}
         
         for target in targets:
             commit_info = target['commit_info']
@@ -172,6 +172,8 @@ class FuzzySearcher(CacheableSearcher):
                 result = SearchResult(
                     commit_hash=target['commit_info'].hash,
                     file_path=target['commit'].repo.working_dir,
+                    line_number=None,
+                    matching_line=None,
                     search_type=SearchType.AUTHOR,
                     relevance_score=relevance_score,
                     commit_info=target['commit_info'],
@@ -179,7 +181,8 @@ class FuzzySearcher(CacheableSearcher):
                         "search_term": pattern,
                         "matched_author": match,
                         "fuzzy_score": score
-                    }
+                    },
+                    search_time_ms=None
                 )
                 results.append(result)
         
@@ -213,6 +216,8 @@ class FuzzySearcher(CacheableSearcher):
             result = SearchResult(
                 commit_hash=target['commit_info'].hash,
                 file_path=target['commit'].repo.working_dir,
+                line_number=None,
+                matching_line=None,
                 search_type=SearchType.MESSAGE,
                 relevance_score=relevance_score,
                 commit_info=target['commit_info'],
@@ -220,7 +225,8 @@ class FuzzySearcher(CacheableSearcher):
                     "search_term": pattern,
                     "matched_message": match,
                     "fuzzy_score": score
-                }
+                },
+                search_time_ms=None
             )
             results.append(result)
         
@@ -277,7 +283,8 @@ class FuzzySearcher(CacheableSearcher):
                     "matched_line": match,
                     "fuzzy_score": score,
                     "file_path": context['file_path']
-                }
+                },
+                search_time_ms=None
             )
             results.append(result)
         

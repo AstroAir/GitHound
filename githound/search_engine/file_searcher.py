@@ -100,13 +100,16 @@ class FilePathSearcher(CacheableSearcher):
                             result = SearchResult(
                                 commit_hash=commit.hexsha,
                                 file_path=Path(file_path),
+                                line_number=None,
+                                matching_line=None,
                                 search_type=SearchType.FILE_PATH,
                                 relevance_score=1.0,
                                 commit_info=commit_info,
                                 match_context={
                                     "search_pattern": file_pattern,
                                     "matched_path": file_path
-                                }
+                                },
+                                search_time_ms=None
                             )
                             
                             results_found += 1
@@ -206,6 +209,8 @@ class FileTypeSearcher(CacheableSearcher):
                             result = SearchResult(
                                 commit_hash=commit.hexsha,
                                 file_path=Path(file_path),
+                                line_number=None,
+                                matching_line=None,
                                 search_type=SearchType.FILE_TYPE,
                                 relevance_score=1.0,
                                 commit_info=commit_info,
@@ -213,7 +218,8 @@ class FileTypeSearcher(CacheableSearcher):
                                     "search_extensions": extensions,
                                     "matched_extension": file_ext,
                                     "file_path": file_path
-                                }
+                                },
+                                search_time_ms=None
                             )
                             
                             results_found += 1
@@ -343,7 +349,8 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                         "line_number": match.get('line_number'),
                                         "column_start": match.get('column_start'),
                                         "column_end": match.get('column_end')
-                                    }
+                                    },
+                                    search_time_ms=None
                                 )
 
                                 results_found += 1
