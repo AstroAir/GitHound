@@ -180,11 +180,66 @@ author_stats = get_author_statistics(repo)
 diff_result = compare_branches(repo, "main", "feature-branch")
 ```
 
+## 📚 Examples and Documentation
+
+GitHound includes comprehensive examples demonstrating all functionality:
+
+### Example Categories
+
+- **`examples/mcp_server/`** - MCP server usage examples and client interactions
+- **`examples/rest_api/`** - REST API usage with sample requests/responses
+- **`examples/git_operations/`** - Git repository analysis and operations
+- **`examples/output_formats/`** - JSON/YAML output examples and schemas
+- **`examples/error_handling/`** - Error handling patterns and recovery
+- **`examples/workflows/`** - End-to-end workflow examples
+
+### Running Examples
+
+```bash
+# MCP server examples
+python examples/mcp_server/basic_setup.py
+python examples/mcp_server/tool_usage.py /path/to/repo
+python examples/mcp_server/client_interactions.py /path/to/repo
+
+# Git operations examples
+python examples/git_operations/repository_analysis.py /path/to/repo
+python examples/git_operations/commit_analysis.py /path/to/repo [commit_hash]
+
+# Output format examples
+python examples/output_formats/json_output.py /path/to/repo
+
+# REST API examples (requires running server)
+uvicorn githound.web.api:app --reload --port 8000
+python examples/rest_api/basic_usage.py /path/to/repo
+```
+
 ## 🧪 Testing
+
+GitHound includes comprehensive test coverage with multiple test categories:
+
+### Test Categories
+
+- **Unit Tests**: Core functionality testing
+- **Integration Tests**: End-to-end workflow testing
+- **Performance Tests**: Performance benchmarks and limits
+- **API Tests**: REST API endpoint testing
+- **MCP Tests**: MCP server functionality testing
+
+### Running Tests
 
 ```bash
 # Run all tests
 pytest
+
+# Run specific test categories
+pytest tests/unit/                    # Unit tests
+pytest tests/integration/             # Integration tests
+pytest tests/performance/             # Performance tests
+
+# Run with markers
+pytest -m "not slow"                  # Skip slow tests
+pytest -m "performance"               # Only performance tests
+pytest -m "integration"               # Only integration tests
 
 # Run specific test suites
 pytest tests/test_git_enhancements.py
@@ -193,8 +248,118 @@ pytest tests/test_mcp_server.py
 pytest tests/test_enhanced_api.py
 
 # Run with coverage
-pytest --cov=githound --cov-report=html
+pytest --cov=githound --cov-report=html --cov-report=term
 
-# Run integration tests
-pytest tests/integration/
+# Run with verbose output
+pytest -v -s
+
+# Run performance benchmarks
+pytest tests/performance/ --benchmark-only
 ```
+
+### Test Requirements
+
+All tests maintain:
+- **Zero errors** for both pytest and mypy
+- **Comprehensive coverage** of all functionality
+- **Type safety** with proper annotations
+- **Performance benchmarks** within acceptable limits
+
+```bash
+# Verify type checking
+mypy githound --show-error-codes
+
+# Check test coverage
+pytest --cov=githound --cov-report=term --cov-fail-under=90
+```
+
+## 🔌 API Reference
+
+### MCP Server Tools
+
+GitHound provides comprehensive MCP tools for AI integration:
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `analyze_repository` | Repository metadata analysis | `repo_path` |
+| `analyze_commit` | Detailed commit analysis | `repo_path`, `commit_hash` |
+| `get_commit_history` | Filtered commit history | `repo_path`, `max_count`, `author`, `date_from`, `date_to` |
+| `get_file_history` | File change history | `repo_path`, `file_path`, `max_count` |
+| `get_file_blame` | Line-by-line blame info | `repo_path`, `file_path` |
+| `compare_commits` | Commit comparison | `repo_path`, `from_commit`, `to_commit` |
+| `compare_branches` | Branch comparison | `repo_path`, `from_branch`, `to_branch` |
+| `get_author_stats` | Author statistics | `repo_path` |
+| `export_repository_data` | Data export | `repo_path`, `output_path`, `format` |
+
+### MCP Resources
+
+| Resource | Description |
+|----------|-------------|
+| `githound://repository/{path}/config` | Repository configuration |
+| `githound://repository/{path}/contributors` | Contributor information |
+| `githound://repository/{path}/summary` | Repository summary |
+
+### REST API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | API health check |
+| `/api/search` | POST | Start new search |
+| `/api/search/{id}` | GET | Get search results |
+| `/api/search/{id}/status` | GET | Get search status |
+| `/api/searches` | GET | List all searches |
+| `/api/export` | POST | Export data |
+| `/ws/{search_id}` | WebSocket | Real-time search progress |
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+# Clone repository
+git clone https://github.com/your-org/githound.git
+cd githound
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run tests
+pytest
+
+# Run type checking
+mypy githound
+```
+
+### Code Quality
+
+- **Type Safety**: All code must pass mypy type checking
+- **Test Coverage**: Maintain >90% test coverage
+- **Documentation**: Update documentation for new features
+- **Examples**: Add examples for new functionality
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [FastMCP](https://github.com/jlowin/fastmcp) for MCP server support
+- Uses [GitPython](https://github.com/gitpython-developers/GitPython) for Git operations
+- API built with [FastAPI](https://fastapi.tiangolo.com/)
+- Testing with [pytest](https://pytest.org/)
+
+## 📞 Support
+
+- **Documentation**: [Full documentation](https://githound.readthedocs.io/)
+- **Issues**: [GitHub Issues](https://github.com/your-org/githound/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/githound/discussions)
+- **Examples**: See `examples/` directory for comprehensive usage examples

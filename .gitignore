@@ -122,3 +122,7 @@ venv.bak/
 /site
 
 # my
+.mypy_cache/
+.mypy_cache_temp
+
+.benchmarks

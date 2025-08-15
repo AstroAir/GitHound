@@ -202,10 +202,10 @@ class TestChangeType:
     
     def test_change_type_values(self):
         """Test ChangeType enum values."""
-        assert ChangeType.ADDED == "A"
-        assert ChangeType.MODIFIED == "M"
-        assert ChangeType.DELETED == "D"
-        assert ChangeType.RENAMED == "R"
+        assert ChangeType.ADDED.value == "A"
+        assert ChangeType.MODIFIED.value == "M"
+        assert ChangeType.DELETED.value == "D"
+        assert ChangeType.RENAMED.value == "R"
 
 
 class TestFileDiffInfo:

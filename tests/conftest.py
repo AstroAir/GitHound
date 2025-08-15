@@ -4,8 +4,9 @@ import asyncio
 import tempfile
 import shutil
 import pytest
+from datetime import datetime
 from pathlib import Path
-from typing import Generator, Dict, Any
+from typing import Generator, Dict, Any, AsyncGenerator
 from unittest.mock import Mock, AsyncMock, patch
 
 from git import Repo
@@ -87,8 +88,8 @@ def sample_commit_info() -> CommitInfo:
         committer_name="Test User",
         committer_email="test@example.com",
         message="Test commit message",
-        timestamp="2024-01-01T12:00:00Z",
-        files_changed=["test.py"],
+        date=datetime(2024, 1, 1, 12, 0, 0),
+        files_changed=2,
         insertions=10,
         deletions=5
     )
@@ -100,12 +101,9 @@ def sample_repository_info() -> RepositoryInfo:
     return RepositoryInfo(
         path="/test/repo",
         name="test-repo",
+        is_bare=False,
         total_commits=100,
-        total_branches=5,
-        total_tags=3,
-        contributors=["Test User", "Another User"],
-        latest_commit_hash="abc123def456",
-        latest_commit_date="2024-01-01T12:00:00Z"
+        contributors=["Test User", "Another User"]
     )
 
 
@@ -116,12 +114,12 @@ def search_orchestrator() -> SearchOrchestrator:
 
 
 @pytest.fixture
-async def mcp_client() -> Generator[MCPClient, None, None]:
+async def mcp_client() -> AsyncGenerator[MCPClient, None]:
     """Create an MCP client for testing."""
     client = MCPClient(mcp)
-    await client.connect()
+    await client._connect()
     yield client
-    await client.disconnect()
+    await client._disconnect()
 
 
 @pytest.fixture

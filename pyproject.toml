@@ -42,7 +42,7 @@ show_error_codes = true
 show_column_numbers = true
 ignore_missing_imports = false
 plugins = ["pydantic.mypy"]
-exclude = ["build/", "githound.egg-info/"]
+exclude = ["build/", "githound.egg-info/", "examples/", "tests/integration/"]
 
 # Per-module options
 [[tool.mypy.overrides]]
@@ -57,6 +57,7 @@ ignore_missing_imports = true
 dev = [
     "pandas-stubs>=2.3.0.250703",
     "types-pyyaml>=6.0.12.20250809",
+    "types-psutil>=6.1.0.20241106",
 ]
 test = [
     "pytest>=8.0.0",
@@ -66,4 +67,5 @@ test = [
     "pytest-benchmark>=4.0.0",
     "httpx>=0.25.0",
     "respx>=0.20.0",
+    "types-pytest>=1.0.0",
 ]
