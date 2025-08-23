@@ -13,7 +13,7 @@ from .base import BaseSearcher, SearchContext
 class SearchOrchestrator:
     """Orchestrates multiple searchers to handle complex queries."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._searchers: list[BaseSearcher] = []
         self._metrics = SearchMetrics()
 
@@ -125,7 +125,8 @@ class SearchOrchestrator:
                 return searcher_results
 
             # Run all searchers concurrently
-            searcher_tasks = [run_searcher(searcher) for searcher in applicable_searchers]
+            searcher_tasks = [run_searcher(searcher)
+                              for searcher in applicable_searchers]
             all_results = await asyncio.gather(*searcher_tasks)
 
             # Flatten and rank results
@@ -134,7 +135,8 @@ class SearchOrchestrator:
                 flattened_results.extend(searcher_results)
 
             # Sort by relevance score (descending)
-            flattened_results.sort(key=lambda r: r.relevance_score, reverse=True)
+            flattened_results.sort(
+                key=lambda r: r.relevance_score, reverse=True)
 
             # Yield results
             for result in flattened_results:

@@ -8,13 +8,13 @@ This directory contains utility modules that provide supporting functionality fo
 
 Advanced progress reporting and cancellation support for long-running operations.
 
-#### Key Classes:
+#### Key Classes
 
 - **ProgressManager**: Advanced progress manager with multiple task tracking and cancellation support
 - **CancellationToken**: Thread-safe cancellation token for graceful operation termination
 - **SimpleProgressReporter**: Basic progress reporter for simple use cases
 
-#### Features:
+#### Features
 
 - **Multi-task Progress Tracking**: Track progress across multiple concurrent operations
 - **Cancellation Support**: Graceful cancellation with Ctrl+C handling
@@ -22,7 +22,7 @@ Advanced progress reporting and cancellation support for long-running operations
 - **Final Statistics**: Comprehensive summary after operation completion
 - **Thread Safety**: Safe to use across multiple threads
 
-#### Usage Example:
+#### Usage Example
 
 ```python
 from githound.utils import ProgressManager
@@ -45,11 +45,11 @@ with ProgressManager(enable_cancellation=True) as progress:
 
 Comprehensive export utilities for search results in multiple formats.
 
-#### Key Classes:
+#### Key Classes
 
 - **ExportManager**: Manager for exporting search results in various formats
 
-#### Supported Formats:
+#### Supported Formats
 
 - **JSON**: Structured data with optional metadata
 - **CSV**: Tabular data compatible with spreadsheet applications
@@ -57,7 +57,7 @@ Comprehensive export utilities for search results in multiple formats.
 - **Text**: Human-readable plain text in multiple styles
 - **Streaming**: Memory-efficient export for large datasets
 
-#### Features:
+#### Features
 
 - **Multiple Export Formats**: JSON, CSV, Excel, and text formats
 - **Metadata Inclusion**: Optional detailed commit information
@@ -65,7 +65,7 @@ Comprehensive export utilities for search results in multiple formats.
 - **Custom Formatting**: Different text output styles (simple, detailed, summary)
 - **Error Handling**: Robust error handling with user-friendly messages
 
-#### Usage Example:
+#### Usage Example
 
 ```python
 from githound.utils import ExportManager

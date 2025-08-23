@@ -63,14 +63,28 @@ ignore_missing_imports = false
 plugins = ["pydantic.mypy"]
 exclude = ["build/", "githound.egg-info/", "examples/", "tests/integration/"]
 
-# Per-module options
+# Per-module options (currently none needed)
+# Incremental stricter typing per-module
 [[tool.mypy.overrides]]
 module = [
-    "ripgrepy.*",
-    "diskcache.*",
-    "redis.*",
+    "githound.search_engine.*",
 ]
-ignore_missing_imports = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "githound.web.*",
+]
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "githound.cli",
+]
+disallow_untyped_defs = true
+
+
+
 
 # Ruff configuration for linting and formatting
 [tool.ruff]
@@ -80,6 +94,7 @@ select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
+    "F",  # pyflakes
     "I",  # isort
     "B",  # flake8-bugbear
     "C4", # flake8-comprehensions
@@ -87,6 +102,7 @@ select = [
     "N",  # pep8-naming
 ]
 ignore = [
+
     "E501",  # line too long, handled by black
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
@@ -273,6 +289,9 @@ docs = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.0.0",
     "mkdocstrings[python]>=0.20.0",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-literate-nav>=0.6.0",
+    "mkdocs-section-index>=0.3.0",
 ]
 build = [
     "build>=0.10.0",

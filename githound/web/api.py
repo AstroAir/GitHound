@@ -1,15 +1,16 @@
 """FastAPI application for GitHound web interface."""
 
+from typing import TypedDict
 import asyncio
 import time
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from git import GitCommandError
 
@@ -25,7 +26,8 @@ from ..search_engine import (
     MessageSearcher,
     SearchOrchestrator,
 )
-from ..utils import ExportManager
+from ..utils import get_export_manager
+from ..models import SearchMetrics, SearchResult
 from .models import (
     ErrorResponse,
     ExportRequest,
@@ -36,8 +38,37 @@ from .models import (
 )
 from .websocket import connection_manager, websocket_endpoint
 
+from dataclasses import dataclass, field
+
+
+@dataclass
+class ActiveSearchState:
+    id: str
+    status: str = "starting"
+    progress: float = 0.0
+    message: str = ""
+    results_count: int = 0
+    started_at: datetime = field(default_factory=datetime.now)
+    request: SearchRequest | None = None
+    response: SearchResponse | None = None
+    results: list[SearchResult] | None = None
+    metrics: SearchMetrics | None = None
+    error: str | None = None
+
+
 # Global state for managing searches
-active_searches: dict[str, dict] = {}
+
+
+class SearchListItem(TypedDict):
+    search_id: str
+    status: str
+    progress: float
+    message: str
+    results_count: int
+    started_at: datetime
+
+
+active_searches: dict[str, ActiveSearchState] = {}
 app_start_time = time.time()
 
 
@@ -86,8 +117,9 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
     """Perform search in background task."""
     try:
         # Update search status
-        active_searches[search_id]["status"] = "running"
-        active_searches[search_id]["message"] = "Initializing search..."
+        state = active_searches[search_id]
+        state.status = "running"
+        state.message = "Initializing search..."
 
         # Validate repository path
         repo_path = Path(request.repo_path)
@@ -100,7 +132,8 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
         try:
             repo = get_repository(repo_path)
         except GitCommandError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid Git repository: {e}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid Git repository: {e}")
 
         # Create search orchestrator
         orchestrator = create_search_orchestrator()
@@ -111,13 +144,14 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
         # Set up progress callback with WebSocket broadcasting
         def progress_callback(message: str, progress: float) -> None:
             if search_id in active_searches:
-                active_searches[search_id]["progress"] = progress
-                active_searches[search_id]["message"] = message
+                state = active_searches[search_id]
+                state.progress = progress
+                state.message = message
 
                 # Broadcast progress via WebSocket
                 asyncio.create_task(
                     connection_manager.broadcast_progress(
-                        search_id, progress, message, active_searches[search_id]["results_count"]
+                        search_id, progress, message, state.results_count
                     )
                 )
 
@@ -131,7 +165,7 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
             max_results=request.max_results,
         ):
             results.append(result)
-            active_searches[search_id]["results_count"] = len(results)
+            state.results_count = len(results)
 
         # Get metrics
         metrics = orchestrator.metrics
@@ -146,12 +180,13 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
         )
 
         # Store results
-        active_searches[search_id]["status"] = "completed"
-        active_searches[search_id]["progress"] = 1.0
-        active_searches[search_id]["message"] = f"Found {len(results)} results"
-        active_searches[search_id]["response"] = response
-        active_searches[search_id]["results"] = results
-        active_searches[search_id]["metrics"] = metrics
+        state = active_searches[search_id]
+        state.status = "completed"
+        state.progress = 1.0
+        state.message = f"Found {len(results)} results"
+        state.response = response
+        state.results = results
+        state.metrics = metrics
 
         # Broadcast completion via WebSocket
         await connection_manager.broadcast_completion(search_id, "completed", len(results))
@@ -159,16 +194,17 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
     except Exception as e:
         # Handle errors
         error_message = str(e)
-        active_searches[search_id]["status"] = "error"
-        active_searches[search_id]["message"] = error_message
-        active_searches[search_id]["error"] = error_message
+        state = active_searches[search_id]
+        state.status = "error"
+        state.message = error_message
+        state.error = error_message
 
         # Broadcast error via WebSocket
         await connection_manager.broadcast_error(search_id, error_message)
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
+async def root() -> Response | str:
     """Serve the main web interface."""
     static_path = Path(__file__).parent / "static" / "index.html"
     if static_path.exists():
@@ -228,15 +264,15 @@ async def start_search(request: SearchRequest, background_tasks: BackgroundTasks
     search_id = str(uuid.uuid4())
 
     # Initialize search state
-    active_searches[search_id] = {
-        "id": search_id,
-        "status": "starting",
-        "progress": 0.0,
-        "message": "Search queued",
-        "results_count": 0,
-        "started_at": datetime.now(),
-        "request": request,
-    }
+    active_searches[search_id] = ActiveSearchState(
+        id=search_id,
+        status="starting",
+        progress=0.0,
+        message="Search queued",
+        results_count=0,
+        started_at=datetime.now(),
+        request=request,
+    )
 
     # Start search in background
     background_tasks.add_task(perform_search, search_id, request)
@@ -259,15 +295,15 @@ async def get_search_status(search_id: str) -> SearchStatusResponse:
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
 
-    search_info = active_searches[search_id]
+    state = active_searches[search_id]
 
     return SearchStatusResponse(
         search_id=search_id,
-        status=search_info["status"],
-        progress=search_info["progress"],
-        message=search_info["message"],
-        results_count=search_info["results_count"],
-        started_at=search_info["started_at"],
+        status=state.status,
+        progress=state.progress,
+        message=state.message,
+        results_count=state.results_count,
+        started_at=state.started_at,
     )
 
 
@@ -277,21 +313,22 @@ async def get_search_results(search_id: str, include_metadata: bool = False) -> 
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
 
-    search_info = active_searches[search_id]
+    state = active_searches[search_id]
 
-    if search_info["status"] == "error":
-        raise HTTPException(status_code=500, detail=search_info.get("error", "Search failed"))
+    if state.status == "error":
+        raise HTTPException(
+            status_code=500, detail=state.error or "Search failed")
 
-    if search_info["status"] != "completed":
+    if state.status != "completed":
         raise HTTPException(status_code=202, detail="Search not yet completed")
 
     # Return stored response or create new one
-    if "response" in search_info:
-        response: SearchResponse = search_info["response"]
+    if state.response is not None:
+        response: SearchResponse = state.response
         if include_metadata:
             # Update response to include metadata if requested
-            results = search_info.get("results", [])
-            metrics = search_info.get("metrics")
+            results = state.results or []
+            metrics = state.metrics
             response = SearchResponse.from_results(
                 results=results,
                 search_id=search_id,
@@ -301,7 +338,8 @@ async def get_search_results(search_id: str, include_metadata: bool = False) -> 
             )
         return response
     else:
-        raise HTTPException(status_code=500, detail="Search results not available")
+        raise HTTPException(
+            status_code=500, detail="Search results not available")
 
 
 @app.delete("/api/search/{search_id}")
@@ -310,32 +348,32 @@ async def cancel_search(search_id: str) -> dict[str, str]:
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
 
-    search_info = active_searches[search_id]
+    state = active_searches[search_id]
 
-    if search_info["status"] in ["completed", "error", "cancelled"]:
-        return {"message": f"Search already {search_info['status']}"}
+    if state.status in ["completed", "error", "cancelled"]:
+        return {"message": f"Search already {state.status}"}
 
     # Mark as cancelled
-    active_searches[search_id]["status"] = "cancelled"
-    active_searches[search_id]["message"] = "Search cancelled by user"
+    state.status = "cancelled"
+    state.message = "Search cancelled by user"
 
     return {"message": "Search cancelled successfully"}
 
 
 @app.get("/api/searches")
-async def list_searches() -> dict[str, Any]:
+async def list_searches() -> dict[str, list[SearchListItem]]:
     """List all searches (active and completed)."""
-    searches = []
-    for search_id, info in active_searches.items():
+    searches: list[SearchListItem] = []
+    for search_id, state in active_searches.items():
         searches.append(
-            {
-                "search_id": search_id,
-                "status": info["status"],
-                "progress": info["progress"],
-                "message": info["message"],
-                "results_count": info["results_count"],
-                "started_at": info["started_at"],
-            }
+            SearchListItem(
+                search_id=search_id,
+                status=state.status,
+                progress=state.progress,
+                message=state.message,
+                results_count=state.results_count,
+                started_at=state.started_at,
+            )
         )
 
     return {"searches": searches}
@@ -353,15 +391,16 @@ async def export_search_results(search_id: str, export_request: ExportRequest) -
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
 
-    search_info = active_searches[search_id]
+    state = active_searches[search_id]
 
-    if search_info["status"] != "completed":
+    if state.status != "completed":
         raise HTTPException(status_code=400, detail="Search not completed")
 
-    if "results" not in search_info:
-        raise HTTPException(status_code=500, detail="Search results not available")
+    if state.results is None:
+        raise HTTPException(
+            status_code=500, detail="Search results not available")
 
-    results = search_info["results"]
+    results = state.results
 
     # Generate filename if not provided
     if not export_request.filename:
@@ -371,13 +410,16 @@ async def export_search_results(search_id: str, export_request: ExportRequest) -
 
     # Create temporary export file
     export_path = Path(f"/tmp/{export_request.filename}")
-    export_manager = ExportManager()
+    ExportManagerCls: type[Any] = get_export_manager()
+    export_manager = ExportManagerCls()
 
     try:
         if export_request.format.value == "json":
-            export_manager.export_to_json(results, export_path, export_request.include_metadata)
+            export_manager.export_to_json(
+                results, export_path, export_request.include_metadata)
         elif export_request.format.value == "csv":
-            export_manager.export_to_csv(results, export_path, export_request.include_metadata)
+            export_manager.export_to_csv(
+                results, export_path, export_request.include_metadata)
         elif export_request.format.value == "text":
             export_manager.export_to_text(
                 results, export_path, "detailed" if export_request.include_metadata else "simple"
@@ -405,8 +447,8 @@ async def cleanup_searches(max_age_hours: int = 24) -> dict[str, str]:
     cutoff_time = datetime.now().timestamp() - (max_age_hours * 3600)
 
     to_remove = []
-    for search_id, info in active_searches.items():
-        if info["started_at"].timestamp() < cutoff_time:
+    for search_id, state in active_searches.items():
+        if state.started_at.timestamp() < cutoff_time:
             to_remove.append(search_id)
 
     for search_id in to_remove:

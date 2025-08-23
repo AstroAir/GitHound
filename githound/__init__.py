@@ -4,6 +4,25 @@ This module provides the main GitHound class for comprehensive Git repository an
 including search, blame, diff, and export functionality.
 """
 
+from .schemas import ExportOptions
+from .models import SearchQuery, SearchResult
+from .search_engine import (
+    AuthorSearcher,
+    CommitHashSearcher,
+    ContentSearcher,
+    DateRangeSearcher,
+    FilePathSearcher,
+    FileTypeSearcher,
+    FuzzySearcher,
+    MessageSearcher,
+    SearchOrchestrator,
+)
+from .schemas import ExportOptions, OutputFormat
+from .models import RepositoryInfo, SearchQuery, SearchResult
+from .git_handler import get_repository, get_repository_metadata
+from .git_diff import CommitDiffResult, compare_branches, compare_commits
+from .git_blame import FileBlameResult, get_file_blame
+from git import GitCommandError, Repo
 import asyncio
 import functools
 import platform
@@ -19,7 +38,6 @@ from typing import Any, Dict, Generator, List, Optional, TypeVar, Union
 warnings.filterwarnings("ignore", message=".*NumPy.*")
 warnings.filterwarnings("ignore", message=".*_ARRAY_API.*")
 
-from git import GitCommandError, Repo
 
 T = TypeVar("T")
 
@@ -49,7 +67,8 @@ def timeout_context(seconds: int) -> Generator[None, None, None]:
             def timeout_handler(signum, frame):
                 raise TimeoutError("Operation timed out")
 
-            old_handler = signal.signal(signal.SIGALRM, timeout_handler)  # type: ignore
+            old_handler = signal.signal(
+                signal.SIGALRM, timeout_handler)  # type: ignore
             signal.alarm(seconds)  # type: ignore
 
             try:
@@ -75,7 +94,8 @@ def with_timeout(timeout_seconds: int) -> Callable[[Callable[..., T]], Callable[
                 with timeout_context(timeout_seconds):
                     return func(*args, **kwargs)
             except TimeoutError:
-                raise GitCommandError(f"Operation timed out after {timeout_seconds} seconds")
+                raise GitCommandError(
+                    f"Operation timed out after {timeout_seconds} seconds")
 
         return wrapper
 
@@ -117,29 +137,12 @@ def with_retry(
                     raise e
 
             # This should never be reached, but just in case
-            raise last_exception or GitCommandError("Unknown error in retry logic")
+            raise last_exception or GitCommandError(
+                "Unknown error in retry logic")
 
         return wrapper
 
     return decorator
-
-
-from .git_blame import FileBlameResult, get_file_blame
-from .git_diff import CommitDiffResult, compare_branches, compare_commits
-from .git_handler import get_repository, get_repository_metadata
-from .models import RepositoryInfo, SearchQuery, SearchResult
-from .schemas import ExportOptions, OutputFormat
-from .search_engine import (
-    AuthorSearcher,
-    CommitHashSearcher,
-    ContentSearcher,
-    DateRangeSearcher,
-    FilePathSearcher,
-    FileTypeSearcher,
-    FuzzySearcher,
-    MessageSearcher,
-    SearchOrchestrator,
-)
 
 
 class GitHound:
@@ -219,7 +222,8 @@ class GitHound:
 
                 self._export_manager = ExportManager(Console())
             except ImportError as e:
-                raise GitCommandError(f"Export functionality requires additional dependencies: {e}")
+                raise GitCommandError(
+                    f"Export functionality requires additional dependencies: {e}")
         return self._export_manager
 
     def analyze_repository(
@@ -430,11 +434,14 @@ class GitHound:
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
             if options.format == OutputFormat.JSON:
-                self.export_manager.export_to_json(data, output_path, options.include_metadata)
+                self.export_manager.export_to_json(
+                    data, output_path, options.include_metadata)
             elif options.format == OutputFormat.YAML:
-                self.export_manager.export_to_yaml(data, output_path, options.include_metadata)
+                self.export_manager.export_to_yaml(
+                    data, output_path, options.include_metadata)
             elif options.format == OutputFormat.CSV:
-                self.export_manager.export_to_csv(data, output_path, options.include_metadata)
+                self.export_manager.export_to_csv(
+                    data, output_path, options.include_metadata)
             elif options.format == OutputFormat.XML:
                 # XML export not yet implemented in ExportManager, use JSON as fallback
                 from rich.console import Console
@@ -443,7 +450,8 @@ class GitHound:
                     "[yellow]⚠ XML export not yet implemented. Using JSON format.[/yellow]"
                 )
                 self.export_manager.export_to_json(
-                    data, output_path.with_suffix(".json"), options.include_metadata
+                    data, output_path.with_suffix(
+                        ".json"), options.include_metadata
                 )
             else:
                 self.export_manager.export_to_text(
@@ -493,15 +501,15 @@ class GitHound:
 
             return get_author_statistics(self.repo, branch)
         except Exception as e:
-            raise GitCommandError(f"Author statistics retrieval failed: {str(e)}")
+            raise GitCommandError(
+                f"Author statistics retrieval failed: {str(e)}")
 
 
 # Version information
 __version__ = "0.1.0"
 
 # Export the main class and key components
-__all__ = ["GitHound", "SearchQuery", "SearchResult", "ExportOptions", "OutputFormat", "__version__"]
+__all__ = ["GitHound", "SearchQuery", "SearchResult",
+           "ExportOptions", "OutputFormat", "__version__"]
 
 # Re-export commonly used classes for convenience
-from .models import SearchQuery, SearchResult
-from .schemas import ExportOptions

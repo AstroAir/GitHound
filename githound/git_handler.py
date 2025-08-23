@@ -214,12 +214,13 @@ def get_repository_metadata(repo: Repo) -> dict[str, Any]:
     # Get remote branch information
     for remote in repo.remotes:
         metadata["remotes"].append(
-            {"name": remote.name, "url": list(remote.urls)[0] if remote.urls else None}
+            {"name": remote.name, "url": list(
+                remote.urls)[0] if remote.urls else None}
         )
 
         for ref in remote.refs:
             if ref.name.startswith(f"{remote.name}/"):
-                branch_name = ref.name[len(remote.name) + 1 :]
+                branch_name = ref.name[len(remote.name) + 1:]
                 metadata["branches"].append(
                     {
                         "name": branch_name,
@@ -247,11 +248,14 @@ def get_repository_metadata(repo: Repo) -> dict[str, Any]:
         if commits:
             # Get contributors
             for commit in commits:
-                metadata["contributors"].add(f"{commit.author.name} <{commit.author.email}>")
+                metadata["contributors"].add(
+                    f"{commit.author.name} <{commit.author.email}>")
 
             # Get date range
-            metadata["first_commit_date"] = datetime.fromtimestamp(commits[-1].committed_date)
-            metadata["last_commit_date"] = datetime.fromtimestamp(commits[0].committed_date)
+            metadata["first_commit_date"] = datetime.fromtimestamp(
+                commits[-1].committed_date)
+            metadata["last_commit_date"] = datetime.fromtimestamp(
+                commits[0].committed_date)
 
         metadata["contributors"] = list(metadata["contributors"])
 
@@ -320,7 +324,8 @@ def get_commits_with_filters(
             if message_pattern:
                 commit_message = commit.message
                 if isinstance(commit_message, (bytes, bytearray, memoryview)):
-                    commit_message = bytes(commit_message).decode("utf-8", errors="ignore")
+                    commit_message = bytes(commit_message).decode(
+                        "utf-8", errors="ignore")
 
                 if (
                     not isinstance(commit_message, str)
@@ -391,6 +396,7 @@ def get_file_history(
                 continue
 
     except GitCommandError as e:
-        raise GitCommandError(f"Error getting file history for '{file_path}': {e}")
+        raise GitCommandError(
+            f"Error getting file history for '{file_path}': {e}")
 
     return history

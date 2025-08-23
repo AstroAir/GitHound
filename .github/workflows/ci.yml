@@ -54,9 +54,9 @@ jobs:
         run: |
           ruff check githound tests
 
-      - name: Run type checking
+      - name: Run type checking (source + tests)
         run: |
-          mypy githound
+          mypy githound tests --config-file pyproject.toml --no-incremental --show-error-codes
 
   # Unit tests across multiple Python versions
   test:

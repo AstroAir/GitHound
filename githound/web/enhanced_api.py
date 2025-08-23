@@ -30,7 +30,8 @@ class RepositoryAnalysisRequest(BaseModel):
     """Request model for repository analysis."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    include_detailed_stats: bool = Field(True, description="Include detailed statistics")
+    include_detailed_stats: bool = Field(
+        True, description="Include detailed statistics")
 
 
 class CommitAnalysisRequest(BaseModel):
@@ -38,7 +39,8 @@ class CommitAnalysisRequest(BaseModel):
 
     repo_path: str = Field(..., description="Path to the Git repository")
     commit_hash: str | None = Field(None, description="Specific commit hash")
-    include_file_changes: bool = Field(True, description="Include file change details")
+    include_file_changes: bool = Field(
+        True, description="Include file change details")
 
 
 class CommitFilterRequest(BaseModel):
@@ -85,9 +87,12 @@ class ExportRequest(BaseModel):
 
     repo_path: str = Field(..., description="Path to the Git repository")
     export_type: str = Field(..., description="Type of data to export")
-    format: OutputFormat = Field(OutputFormat.JSON, description="Export format")
-    filters: list[DataFilter] = Field(default_factory=list, description="Data filters")
-    sort_by: list[SortCriteria] = Field(default_factory=list, description="Sort criteria")
+    format: OutputFormat = Field(
+        OutputFormat.JSON, description="Export format")
+    filters: list[DataFilter] = Field(
+        default_factory=list, description="Data filters")
+    sort_by: list[SortCriteria] = Field(
+        default_factory=list, description="Sort criteria")
 
 
 # Response Models
@@ -96,16 +101,19 @@ class ExportRequest(BaseModel):
 class ApiResponse(BaseModel):
     """Base API response model."""
 
-    success: bool = Field(..., description="Whether the operation was successful")
+    success: bool = Field(...,
+                          description="Whether the operation was successful")
     message: str = Field(..., description="Response message")
     data: Any | None = Field(None, description="Response data")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Response timestamp")
 
 
 class RepositoryAnalysisResponse(ApiResponse):
     """Response model for repository analysis."""
 
-    data: dict[str, Any] | None = Field(None, description="Repository metadata")
+    data: dict[str, Any] | None = Field(
+        None, description="Repository metadata")
 
 
 class CommitAnalysisResponse(ApiResponse):
@@ -117,7 +125,8 @@ class CommitAnalysisResponse(ApiResponse):
 class CommitListResponse(ApiResponse):
     """Response model for commit list."""
 
-    data: list[dict[str, Any]] | None = Field(None, description="List of commits")
+    data: list[dict[str, Any]] | None = Field(
+        None, description="List of commits")
     total_count: int = Field(0, description="Total number of results")
 
 
@@ -160,12 +169,14 @@ def validate_repository_path(repo_path: str) -> Path:
     """Validate and return repository path."""
     path = Path(repo_path)
     if not path.exists():
-        raise HTTPException(status_code=400, detail=f"Repository path does not exist: {repo_path}")
+        raise HTTPException(
+            status_code=400, detail=f"Repository path does not exist: {repo_path}")
 
     try:
         get_repository(path)
     except GitCommandError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Git repository: {e}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid Git repository: {e}")
 
     return path
 
@@ -204,7 +215,8 @@ async def analyze_repository(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/api/v2/commit/analyze", response_model=CommitAnalysisResponse)
@@ -262,7 +274,8 @@ async def analyze_commit(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/api/v2/commits/filter", response_model=CommitListResponse)
@@ -309,7 +322,8 @@ async def get_filtered_commits(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 # Diff Analysis Endpoints
@@ -345,7 +359,8 @@ async def compare_commits_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/api/v2/diff/branches", response_model=ApiResponse)
@@ -378,7 +393,8 @@ async def compare_branches_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 # Statistics and Analytics Endpoints
@@ -387,7 +403,8 @@ async def compare_branches_endpoint(
 @app.get("/api/v2/repository/{repo_path:path}/statistics")
 async def get_repository_statistics(
     repo_path: str,
-    include_author_stats: bool = Query(True, description="Include author statistics"),
+    include_author_stats: bool = Query(
+        True, description="Include author statistics"),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
     """
@@ -421,8 +438,10 @@ async def get_repository_statistics(
             if isinstance(first_date, str):
                 from datetime import datetime
 
-                first_date = datetime.fromisoformat(first_date.replace("Z", "+00:00"))
-                last_date = datetime.fromisoformat(last_date.replace("Z", "+00:00"))
+                first_date = datetime.fromisoformat(
+                    first_date.replace("Z", "+00:00"))
+                last_date = datetime.fromisoformat(
+                    last_date.replace("Z", "+00:00"))
 
             age_delta = last_date - first_date
             statistics["summary"]["repository_age_days"] = age_delta.days
@@ -452,7 +471,8 @@ async def get_repository_statistics(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 # Export Endpoints
@@ -501,7 +521,8 @@ async def export_data(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.get("/api/v2/export/{export_id}/status")
@@ -510,7 +531,8 @@ async def get_export_status(
 ) -> ApiResponse:
     """Get the status of an export operation."""
     if export_id not in active_operations:
-        raise HTTPException(status_code=404, detail="Export operation not found")
+        raise HTTPException(
+            status_code=404, detail="Export operation not found")
 
     operation = active_operations[export_id]
 
@@ -549,7 +571,8 @@ async def perform_export(export_id: str, request: ExportRequest) -> None:
         output_filename = (
             f"githound_export_{request.export_type}_{timestamp}.{request.format.value}"
         )
-        output_path = Path("/tmp") / output_filename  # Configure appropriate output directory
+        # Configure appropriate output directory
+        output_path = Path("/tmp") / output_filename
 
         # Perform export based on type
         if request.export_type == "repository_metadata":
@@ -564,7 +587,8 @@ async def perform_export(export_id: str, request: ExportRequest) -> None:
                 import yaml
 
                 with open(output_path, "w", encoding="utf-8") as f:
-                    yaml.dump(metadata, f, default_flow_style=False, allow_unicode=True)
+                    yaml.dump(metadata, f, default_flow_style=False,
+                              allow_unicode=True)
 
         # Update completion status
         active_operations[export_id]["status"] = "completed"
@@ -641,13 +665,15 @@ async def get_file_history_endpoint(
         return ApiResponse(
             success=True,
             message=f"Retrieved {len(history)} commits in file history",
-            data={"file_path": file_path, "history": history, "total_commits": len(history)},
+            data={"file_path": file_path, "history": history,
+                  "total_commits": len(history)},
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/api/v2/file/blame", response_model=ApiResponse)
@@ -663,7 +689,8 @@ async def analyze_file_blame_endpoint(
         repo_path = validate_repository_path(request.repo_path)
         repo = get_repository(repo_path)
 
-        blame_result = get_file_blame(repo=repo, file_path=request.file_path, commit=request.commit)
+        blame_result = get_file_blame(
+            repo=repo, file_path=request.file_path, commit=request.commit)
 
         return ApiResponse(
             success=True,
@@ -674,4 +701,5 @@ async def analyze_file_blame_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}")

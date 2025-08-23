@@ -7,29 +7,34 @@ This directory contains the enhanced search engine architecture for GitHound, pr
 The search engine follows a modular, extensible architecture with the following components:
 
 ### Base Classes (`base.py`)
+
 - **BaseSearcher**: Abstract base class for all searchers
 - **CacheableSearcher**: Base class for searchers that support caching
 - **ParallelSearcher**: Base class for searchers that can run operations in parallel
 - **SearchContext**: Context information passed to searchers
 
 ### Search Orchestrator (`orchestrator.py`)
+
 - **SearchOrchestrator**: Coordinates multiple searchers to handle complex queries
 - Manages parallel execution of searchers
 - Combines and ranks results from multiple sources
 - Provides progress reporting and metrics collection
 
 ### Commit-based Searchers (`commit_searcher.py`)
+
 - **CommitHashSearcher**: Exact commit hash matching
 - **AuthorSearcher**: Author name/email search with fuzzy matching
 - **MessageSearcher**: Commit message search with regex and fuzzy support
 - **DateRangeSearcher**: Time-based commit filtering
 
 ### File-based Searchers (`file_searcher.py`)
+
 - **FilePathSearcher**: File path pattern matching with glob/regex support
 - **FileTypeSearcher**: File extension filtering
 - **ContentSearcher**: Enhanced content search with ripgrep integration and ranking
 
 ### Fuzzy Search (`fuzzy_searcher.py`)
+
 - **FuzzySearcher**: Advanced fuzzy matching across multiple dimensions
 - Uses rapidfuzz for high-performance fuzzy string matching
 - Configurable similarity thresholds
@@ -38,22 +43,26 @@ The search engine follows a modular, extensible architecture with the following 
 ## Key Features
 
 ### Multi-Modal Search
+
 - Search by commit hash, author, message, date range, file path, file type, and content
 - Combine multiple search criteria in a single query
 - Intelligent result ranking and relevance scoring
 
 ### Performance Optimizations
+
 - Parallel search execution with configurable worker pools
 - Caching layer for frequently accessed data
 - Progress reporting for long-running operations
 - Memory-efficient processing for large repositories
 
 ### Fuzzy Matching
+
 - Configurable similarity thresholds (0.0-1.0)
 - Support for typos and partial matches
 - Cross-dimensional fuzzy search capabilities
 
 ### Extensibility
+
 - Plugin-like architecture for adding new searchers
 - Dependency injection for testability
 - Abstract base classes for consistent interfaces

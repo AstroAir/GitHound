@@ -41,27 +41,39 @@ class SearchQuery(BaseModel):
     )
 
     # Commit-based search
-    commit_hash: str | None = Field(None, description="Specific commit hash to search")
-    author_pattern: str | None = Field(None, description="Author name or email pattern")
-    message_pattern: str | None = Field(None, description="Commit message pattern")
+    commit_hash: str | None = Field(
+        None, description="Specific commit hash to search")
+    author_pattern: str | None = Field(
+        None, description="Author name or email pattern")
+    message_pattern: str | None = Field(
+        None, description="Commit message pattern")
 
     # Date-based search
-    date_from: datetime | None = Field(None, description="Search commits from this date")
-    date_to: datetime | None = Field(None, description="Search commits until this date")
+    date_from: datetime | None = Field(
+        None, description="Search commits from this date")
+    date_to: datetime | None = Field(
+        None, description="Search commits until this date")
 
     # File-based search
-    file_path_pattern: str | None = Field(None, description="File path pattern")
-    file_extensions: list[str] | None = Field(None, description="File extensions to include")
+    file_path_pattern: str | None = Field(
+        None, description="File path pattern")
+    file_extensions: list[str] | None = Field(
+        None, description="File extensions to include")
 
     # Search behavior
-    case_sensitive: bool = Field(False, description="Whether search should be case sensitive")
+    case_sensitive: bool = Field(
+        False, description="Whether search should be case sensitive")
     fuzzy_search: bool = Field(False, description="Enable fuzzy matching")
-    fuzzy_threshold: float = Field(0.8, description="Fuzzy matching threshold (0.0-1.0)")
+    fuzzy_threshold: float = Field(
+        0.8, description="Fuzzy matching threshold (0.0-1.0)")
 
     # Filtering
-    include_globs: list[str] | None = Field(None, description="Glob patterns to include")
-    exclude_globs: list[str] | None = Field(None, description="Glob patterns to exclude")
-    max_file_size: int | None = Field(None, description="Maximum file size in bytes")
+    include_globs: list[str] | None = Field(
+        None, description="Glob patterns to include")
+    exclude_globs: list[str] | None = Field(
+        None, description="Glob patterns to exclude")
+    max_file_size: int | None = Field(
+        None, description="Maximum file size in bytes")
     min_commit_size: int | None = Field(
         None, description="Minimum number of files changed in commit"
     )
@@ -86,7 +98,8 @@ class CommitInfo(BaseModel):
     files_changed: int = Field(..., description="Number of files changed")
     insertions: int = Field(0, description="Number of lines inserted")
     deletions: int = Field(0, description="Number of lines deleted")
-    parents: list[str] = Field(default_factory=list, description="Parent commit hashes")
+    parents: list[str] = Field(
+        default_factory=list, description="Parent commit hashes")
 
 
 class SearchResult(BaseModel):
@@ -95,8 +108,10 @@ class SearchResult(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # Core result data
-    commit_hash: str = Field(..., description="Commit hash where match was found")
-    file_path: Path = Field(..., description="Path to the file containing the match")
+    commit_hash: str = Field(...,
+                             description="Commit hash where match was found")
+    file_path: Path = Field(...,
+                            description="Path to the file containing the match")
     line_number: int | None = Field(
         None, description="Line number of the match (for content searches)"
     )
@@ -105,9 +120,12 @@ class SearchResult(BaseModel):
     )
 
     # Enhanced metadata
-    commit_info: CommitInfo | None = Field(None, description="Detailed commit information")
-    search_type: SearchType = Field(..., description="Type of search that found this result")
-    relevance_score: float = Field(0.0, description="Relevance score (0.0-1.0)")
+    commit_info: CommitInfo | None = Field(
+        None, description="Detailed commit information")
+    search_type: SearchType = Field(...,
+                                    description="Type of search that found this result")
+    relevance_score: float = Field(
+        0.0, description="Relevance score (0.0-1.0)")
     match_context: dict[str, Any] | None = Field(
         None, description="Additional context about the match"
     )
@@ -121,32 +139,45 @@ class SearchResult(BaseModel):
 class SearchMetrics(BaseModel):
     """Performance and statistics metrics for a search operation."""
 
-    total_commits_searched: int = Field(0, description="Total number of commits searched")
-    total_files_searched: int = Field(0, description="Total number of files searched")
-    total_results_found: int = Field(0, description="Total number of results found")
-    search_duration_ms: float = Field(0.0, description="Total search duration in milliseconds")
+    total_commits_searched: int = Field(
+        0, description="Total number of commits searched")
+    total_files_searched: int = Field(
+        0, description="Total number of files searched")
+    total_results_found: int = Field(
+        0, description="Total number of results found")
+    search_duration_ms: float = Field(
+        0.0, description="Total search duration in milliseconds")
     cache_hits: int = Field(0, description="Number of cache hits")
     cache_misses: int = Field(0, description="Number of cache misses")
-    memory_usage_mb: float | None = Field(None, description="Peak memory usage in MB")
+    memory_usage_mb: float | None = Field(
+        None, description="Peak memory usage in MB")
 
 
 class SearchConfig(BaseModel):
     """Advanced configuration for a search operation."""
 
     # Legacy compatibility
-    include_globs: list[str] | None = Field(None, description="Glob patterns to include")
-    exclude_globs: list[str] | None = Field(None, description="Glob patterns to exclude")
-    case_sensitive: bool = Field(False, description="Whether search should be case sensitive")
+    include_globs: list[str] | None = Field(
+        None, description="Glob patterns to include")
+    exclude_globs: list[str] | None = Field(
+        None, description="Glob patterns to exclude")
+    case_sensitive: bool = Field(
+        False, description="Whether search should be case sensitive")
 
     # Performance settings
-    max_results: int | None = Field(None, description="Maximum number of results to return")
-    timeout_seconds: int | None = Field(None, description="Search timeout in seconds")
-    enable_caching: bool = Field(True, description="Whether to enable result caching")
+    max_results: int | None = Field(
+        None, description="Maximum number of results to return")
+    timeout_seconds: int | None = Field(
+        None, description="Search timeout in seconds")
+    enable_caching: bool = Field(
+        True, description="Whether to enable result caching")
     cache_ttl_seconds: int = Field(3600, description="Cache TTL in seconds")
 
     # Progress reporting
-    enable_progress: bool = Field(True, description="Whether to report search progress")
-    progress_callback: Any | None = Field(None, description="Progress callback function")
+    enable_progress: bool = Field(
+        True, description="Whether to report search progress")
+    progress_callback: Any | None = Field(
+        None, description="Progress callback function")
 
 
 class GitHoundConfig(BaseModel):
@@ -159,13 +190,18 @@ class GitHoundConfig(BaseModel):
     search_query: str | SearchQuery = Field(
         ..., description="Search query (string for backward compatibility)"
     )
-    branch: str | None = Field(None, description="Branch to search (defaults to current branch)")
-    output_format: OutputFormat = Field(OutputFormat.TEXT, description="Output format")
+    branch: str | None = Field(
+        None, description="Branch to search (defaults to current branch)")
+    output_format: OutputFormat = Field(
+        OutputFormat.TEXT, description="Output format")
 
     # Enhanced settings
-    search_config: SearchConfig | None = Field(None, description="Advanced search configuration")
-    enable_ranking: bool = Field(True, description="Whether to enable result ranking")
-    parallel_search: bool = Field(True, description="Whether to enable parallel searching")
+    search_config: SearchConfig | None = Field(
+        None, description="Advanced search configuration")
+    enable_ranking: bool = Field(
+        True, description="Whether to enable result ranking")
+    parallel_search: bool = Field(
+        True, description="Whether to enable parallel searching")
 
     @property
     def is_legacy_query(self) -> bool:
@@ -225,7 +261,8 @@ class LegacyGitHoundConfig:
     search_query: str
     branch: str | None = None
     output_format: Literal["text", "json"] = "text"
-    search_config: LegacySearchConfig = dataclasses.field(default_factory=LegacySearchConfig)
+    search_config: LegacySearchConfig = dataclasses.field(
+        default_factory=LegacySearchConfig)
 
 
 # Enhanced models for new git functionality
@@ -238,12 +275,18 @@ class BranchInfo(BaseModel):
 
     name: str = Field(..., description="Branch name")
     commit_hash: str = Field(..., description="Current commit hash")
-    is_remote: bool = Field(False, description="Whether this is a remote branch")
-    remote_name: str | None = Field(None, description="Remote name if remote branch")
-    ahead_count: int | None = Field(None, description="Commits ahead of base branch")
-    behind_count: int | None = Field(None, description="Commits behind base branch")
-    last_commit_date: datetime | None = Field(None, description="Date of last commit")
-    last_commit_author: str | None = Field(None, description="Author of last commit")
+    is_remote: bool = Field(
+        False, description="Whether this is a remote branch")
+    remote_name: str | None = Field(
+        None, description="Remote name if remote branch")
+    ahead_count: int | None = Field(
+        None, description="Commits ahead of base branch")
+    behind_count: int | None = Field(
+        None, description="Commits behind base branch")
+    last_commit_date: datetime | None = Field(
+        None, description="Date of last commit")
+    last_commit_author: str | None = Field(
+        None, description="Author of last commit")
 
 
 class TagInfo(BaseModel):
@@ -256,7 +299,8 @@ class TagInfo(BaseModel):
     message: str | None = Field(None, description="Tag message")
     tagger: str | None = Field(None, description="Tagger name and email")
     tag_date: datetime | None = Field(None, description="Tag creation date")
-    is_annotated: bool = Field(False, description="Whether this is an annotated tag")
+    is_annotated: bool = Field(
+        False, description="Whether this is an annotated tag")
 
 
 class RemoteInfo(BaseModel):
@@ -279,15 +323,22 @@ class RepositoryInfo(BaseModel):
     name: str = Field(..., description="Repository name")
     is_bare: bool = Field(..., description="Whether repository is bare")
     head_commit: str | None = Field(None, description="Current HEAD commit")
-    active_branch: str | None = Field(None, description="Currently active branch")
-    branches: list[BranchInfo] = Field(default_factory=list, description="All branches")
+    active_branch: str | None = Field(
+        None, description="Currently active branch")
+    branches: list[BranchInfo] = Field(
+        default_factory=list, description="All branches")
     tags: list[TagInfo] = Field(default_factory=list, description="All tags")
-    remotes: list[RemoteInfo] = Field(default_factory=list, description="Remote repositories")
+    remotes: list[RemoteInfo] = Field(
+        default_factory=list, description="Remote repositories")
     total_commits: int = Field(0, description="Total number of commits")
-    contributors: list[str] = Field(default_factory=list, description="All contributors")
-    first_commit_date: datetime | None = Field(None, description="Date of first commit")
-    last_commit_date: datetime | None = Field(None, description="Date of last commit")
-    repository_age_days: int | None = Field(None, description="Age of repository in days")
+    contributors: list[str] = Field(
+        default_factory=list, description="All contributors")
+    first_commit_date: datetime | None = Field(
+        None, description="Date of first commit")
+    last_commit_date: datetime | None = Field(
+        None, description="Date of last commit")
+    repository_age_days: int | None = Field(
+        None, description="Age of repository in days")
 
 
 class FileChangeInfo(BaseModel):
@@ -300,8 +351,10 @@ class FileChangeInfo(BaseModel):
     lines_added: int = Field(0, description="Number of lines added")
     lines_deleted: int = Field(0, description="Number of lines deleted")
     is_binary: bool = Field(False, description="Whether the file is binary")
-    old_file_path: str | None = Field(None, description="Old file path for renames")
-    similarity_index: float | None = Field(None, description="Similarity index for renames")
+    old_file_path: str | None = Field(
+        None, description="Old file path for renames")
+    similarity_index: float | None = Field(
+        None, description="Similarity index for renames")
 
 
 class EnhancedCommitInfo(BaseModel):
@@ -321,16 +374,20 @@ class EnhancedCommitInfo(BaseModel):
     files_changed: int = Field(..., description="Number of files changed")
     insertions: int = Field(0, description="Number of lines inserted")
     deletions: int = Field(0, description="Number of lines deleted")
-    parents: list[str] = Field(default_factory=list, description="Parent commit hashes")
+    parents: list[str] = Field(
+        default_factory=list, description="Parent commit hashes")
 
     # Enhanced metadata
     file_changes: list[FileChangeInfo] = Field(
         default_factory=list, description="Detailed file changes"
     )
-    branches: list[str] = Field(default_factory=list, description="Branches containing this commit")
-    tags: list[str] = Field(default_factory=list, description="Tags pointing to this commit")
+    branches: list[str] = Field(
+        default_factory=list, description="Branches containing this commit")
+    tags: list[str] = Field(default_factory=list,
+                            description="Tags pointing to this commit")
     is_merge: bool = Field(False, description="Whether this is a merge commit")
-    merge_base: str | None = Field(None, description="Merge base commit for merge commits")
+    merge_base: str | None = Field(
+        None, description="Merge base commit for merge commits")
     commit_size: int = Field(0, description="Total size of commit changes")
 
 
@@ -341,7 +398,8 @@ class BlameLineInfo(BaseModel):
 
     line_number: int = Field(..., description="Line number (1-based)")
     content: str = Field(..., description="Line content")
-    commit_hash: str = Field(..., description="Commit hash that last modified this line")
+    commit_hash: str = Field(...,
+                             description="Commit hash that last modified this line")
     author_name: str = Field(..., description="Author name")
     author_email: str = Field(..., description="Author email")
     commit_date: datetime = Field(..., description="Date of the commit")
@@ -355,11 +413,16 @@ class FileBlameInfo(BaseModel):
 
     file_path: str = Field(..., description="Path to the file")
     total_lines: int = Field(..., description="Total number of lines")
-    blame_lines: list[BlameLineInfo] = Field(..., description="Blame information for each line")
-    contributors: list[str] = Field(..., description="List of unique contributors")
-    oldest_line_date: datetime | None = Field(None, description="Date of the oldest line")
-    newest_line_date: datetime | None = Field(None, description="Date of the newest line")
-    file_age_days: int | None = Field(None, description="Age of the file in days")
+    blame_lines: list[BlameLineInfo] = Field(...,
+                                             description="Blame information for each line")
+    contributors: list[str] = Field(...,
+                                    description="List of unique contributors")
+    oldest_line_date: datetime | None = Field(
+        None, description="Date of the oldest line")
+    newest_line_date: datetime | None = Field(
+        None, description="Date of the newest line")
+    file_age_days: int | None = Field(
+        None, description="Age of the file in days")
 
 
 class DiffLineInfo(BaseModel):
@@ -367,8 +430,10 @@ class DiffLineInfo(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    line_number_old: int | None = Field(None, description="Line number in old file")
-    line_number_new: int | None = Field(None, description="Line number in new file")
+    line_number_old: int | None = Field(
+        None, description="Line number in old file")
+    line_number_new: int | None = Field(
+        None, description="Line number in new file")
     content: str = Field(..., description="Line content")
     change_type: str = Field(..., description="Type of change (+/-/ )")
 
@@ -379,13 +444,16 @@ class FileDiffInfo(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     file_path: str = Field(..., description="Path to the file")
-    old_file_path: str | None = Field(None, description="Old file path for renames")
+    old_file_path: str | None = Field(
+        None, description="Old file path for renames")
     change_type: str = Field(..., description="Type of change")
     lines_added: int = Field(0, description="Number of lines added")
     lines_deleted: int = Field(0, description="Number of lines deleted")
     is_binary: bool = Field(False, description="Whether the file is binary")
-    diff_lines: list[DiffLineInfo] = Field(default_factory=list, description="Line-by-line diff")
-    similarity_index: float | None = Field(None, description="Similarity index for renames")
+    diff_lines: list[DiffLineInfo] = Field(
+        default_factory=list, description="Line-by-line diff")
+    similarity_index: float | None = Field(
+        None, description="Similarity index for renames")
 
 
 class CommitDiffInfo(BaseModel):
@@ -398,7 +466,8 @@ class CommitDiffInfo(BaseModel):
     files_changed: int = Field(..., description="Number of files changed")
     total_additions: int = Field(..., description="Total lines added")
     total_deletions: int = Field(..., description="Total lines deleted")
-    file_diffs: list[FileDiffInfo] = Field(..., description="Detailed file diffs")
+    file_diffs: list[FileDiffInfo] = Field(...,
+                                           description="Detailed file diffs")
     commit_range_info: dict[str, Any] | None = Field(
         None, description="Additional commit range information"
     )

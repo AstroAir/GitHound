@@ -47,7 +47,8 @@ class CommitAnalysisInput(BaseModel):
     """Input for commit analysis operations."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    commit_hash: str | None = Field(None, description="Specific commit hash (defaults to HEAD)")
+    commit_hash: str | None = Field(
+        None, description="Specific commit hash (defaults to HEAD)")
 
 
 class CommitFilterInput(BaseModel):
@@ -55,11 +56,14 @@ class CommitFilterInput(BaseModel):
 
     repo_path: str = Field(..., description="Path to the Git repository")
     branch: str | None = Field(None, description="Branch to search")
-    author_pattern: str | None = Field(None, description="Author name/email pattern")
-    message_pattern: str | None = Field(None, description="Commit message pattern")
+    author_pattern: str | None = Field(
+        None, description="Author name/email pattern")
+    message_pattern: str | None = Field(
+        None, description="Commit message pattern")
     date_from: str | None = Field(None, description="Start date (ISO format)")
     date_to: str | None = Field(None, description="End date (ISO format)")
-    file_patterns: list[str] | None = Field(None, description="File patterns to filter")
+    file_patterns: list[str] | None = Field(
+        None, description="File patterns to filter")
     max_count: int | None = Field(100, description="Maximum number of commits")
 
 
@@ -84,9 +88,11 @@ class DiffInput(BaseModel):
     """Input for diff operations."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    from_commit: str = Field(..., description="Source commit hash or reference")
+    from_commit: str = Field(...,
+                             description="Source commit hash or reference")
     to_commit: str = Field(..., description="Target commit hash or reference")
-    file_patterns: list[str] | None = Field(None, description="File patterns to filter")
+    file_patterns: list[str] | None = Field(
+        None, description="File patterns to filter")
 
 
 class BranchDiffInput(BaseModel):
@@ -95,7 +101,8 @@ class BranchDiffInput(BaseModel):
     repo_path: str = Field(..., description="Path to the Git repository")
     from_branch: str = Field(..., description="Source branch name")
     to_branch: str = Field(..., description="Target branch name")
-    file_patterns: list[str] | None = Field(None, description="File patterns to filter")
+    file_patterns: list[str] | None = Field(
+        None, description="File patterns to filter")
 
 
 class ExportInput(BaseModel):
@@ -104,17 +111,22 @@ class ExportInput(BaseModel):
     repo_path: str = Field(..., description="Path to the Git repository")
     output_path: str = Field(..., description="Output file path")
     format: str = Field("json", description="Export format (json, yaml, csv)")
-    include_metadata: bool = Field(True, description="Include metadata in export")
-    pagination: dict[str, Any] | None = Field(None, description="Pagination options")
-    fields: list[str] | None = Field(None, description="Specific fields to include")
-    exclude_fields: list[str] | None = Field(None, description="Fields to exclude")
+    include_metadata: bool = Field(
+        True, description="Include metadata in export")
+    pagination: dict[str, Any] | None = Field(
+        None, description="Pagination options")
+    fields: list[str] | None = Field(
+        None, description="Specific fields to include")
+    exclude_fields: list[str] | None = Field(
+        None, description="Fields to exclude")
 
 
 class CommitHistoryInput(BaseModel):
     """Input for commit history operations."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    max_count: int = Field(100, description="Maximum number of commits to retrieve")
+    max_count: int = Field(
+        100, description="Maximum number of commits to retrieve")
     branch: str | None = Field(None, description="Branch to search")
     author: str | None = Field(None, description="Author name/email pattern")
     since: str | None = Field(None, description="Start date (ISO format)")
@@ -133,7 +145,8 @@ class CommitComparisonInput(BaseModel):
     """Input for commit comparison operations."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    from_commit: str = Field(..., description="Source commit hash or reference")
+    from_commit: str = Field(...,
+                             description="Source commit hash or reference")
     to_commit: str = Field(..., description="Target commit hash or reference")
 
 
@@ -150,28 +163,39 @@ class AdvancedSearchInput(BaseModel):
     """Input for advanced multi-modal search operations."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    branch: str | None = Field(None, description="Branch to search (defaults to current)")
+    branch: str | None = Field(
+        None, description="Branch to search (defaults to current)")
 
     # Search criteria
-    content_pattern: str | None = Field(None, description="Content pattern to search for")
+    content_pattern: str | None = Field(
+        None, description="Content pattern to search for")
     commit_hash: str | None = Field(None, description="Specific commit hash")
-    author_pattern: str | None = Field(None, description="Author name or email pattern")
-    message_pattern: str | None = Field(None, description="Commit message pattern")
+    author_pattern: str | None = Field(
+        None, description="Author name or email pattern")
+    message_pattern: str | None = Field(
+        None, description="Commit message pattern")
     date_from: str | None = Field(None, description="Start date (ISO format)")
     date_to: str | None = Field(None, description="End date (ISO format)")
-    file_path_pattern: str | None = Field(None, description="File path pattern")
-    file_extensions: list[str] | None = Field(None, description="File extensions to include")
+    file_path_pattern: str | None = Field(
+        None, description="File path pattern")
+    file_extensions: list[str] | None = Field(
+        None, description="File extensions to include")
 
     # Search options
     case_sensitive: bool = Field(False, description="Case sensitive search")
     fuzzy_search: bool = Field(False, description="Enable fuzzy matching")
-    fuzzy_threshold: float = Field(0.8, description="Fuzzy matching threshold (0.0-1.0)")
-    max_results: int | None = Field(100, description="Maximum number of results")
+    fuzzy_threshold: float = Field(
+        0.8, description="Fuzzy matching threshold (0.0-1.0)")
+    max_results: int | None = Field(
+        100, description="Maximum number of results")
 
     # File filtering
-    include_globs: list[str] | None = Field(None, description="Glob patterns to include")
-    exclude_globs: list[str] | None = Field(None, description="Glob patterns to exclude")
-    max_file_size: int | None = Field(None, description="Maximum file size in bytes")
+    include_globs: list[str] | None = Field(
+        None, description="Glob patterns to include")
+    exclude_globs: list[str] | None = Field(
+        None, description="Glob patterns to exclude")
+    max_file_size: int | None = Field(
+        None, description="Maximum file size in bytes")
 
     @field_validator("repo_path")
     @classmethod
@@ -231,13 +255,16 @@ class FuzzySearchInput(BaseModel):
     """Input for fuzzy search operations."""
 
     repo_path: str = Field(..., description="Path to the Git repository")
-    search_term: str = Field(..., description="Term to search for with fuzzy matching")
-    threshold: float = Field(0.8, description="Fuzzy matching threshold (0.0-1.0)")
+    search_term: str = Field(...,
+                             description="Term to search for with fuzzy matching")
+    threshold: float = Field(
+        0.8, description="Fuzzy matching threshold (0.0-1.0)")
     search_types: list[str] | None = Field(
         None, description="Types to search: content, author, message, file_path"
     )
     branch: str | None = Field(None, description="Branch to search")
-    max_results: int | None = Field(50, description="Maximum number of results")
+    max_results: int | None = Field(
+        50, description="Maximum number of results")
 
     @field_validator("repo_path")
     @classmethod
@@ -274,7 +301,8 @@ class FuzzySearchInput(BaseModel):
             valid_types = {"content", "author", "message", "file_path"}
             invalid_types = set(v) - valid_types
             if invalid_types:
-                raise ValueError(f"Invalid search types: {invalid_types}. Valid types: {valid_types}")
+                raise ValueError(
+                    f"Invalid search types: {invalid_types}. Valid types: {valid_types}")
         return v
 
     @field_validator("max_results")
@@ -293,11 +321,13 @@ class ContentSearchInput(BaseModel):
 
     repo_path: str = Field(..., description="Path to the Git repository")
     pattern: str = Field(..., description="Content pattern to search for")
-    file_extensions: list[str] | None = Field(None, description="File extensions to include")
+    file_extensions: list[str] | None = Field(
+        None, description="File extensions to include")
     case_sensitive: bool = Field(False, description="Case sensitive search")
     whole_word: bool = Field(False, description="Match whole words only")
     branch: str | None = Field(None, description="Branch to search")
-    max_results: int | None = Field(100, description="Maximum number of results")
+    max_results: int | None = Field(
+        100, description="Maximum number of results")
 
 
 class RepositoryManagementInput(BaseModel):
@@ -398,8 +428,10 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
             commit_hash=input_data.commit_hash,
             author_pattern=input_data.author_pattern,
             message_pattern=input_data.message_pattern,
-            date_from=datetime.fromisoformat(input_data.date_from.replace("Z", "+00:00")) if input_data.date_from else None,
-            date_to=datetime.fromisoformat(input_data.date_to.replace("Z", "+00:00")) if input_data.date_to else None,
+            date_from=datetime.fromisoformat(input_data.date_from.replace(
+                "Z", "+00:00")) if input_data.date_from else None,
+            date_to=datetime.fromisoformat(input_data.date_to.replace(
+                "Z", "+00:00")) if input_data.date_to else None,
             file_path_pattern=input_data.file_path_pattern,
             file_extensions=input_data.file_extensions,
             case_sensitive=input_data.case_sensitive,
@@ -499,7 +531,8 @@ async def fuzzy_search(input_data: FuzzySearchInput, ctx: Context) -> dict[str, 
                 "search_type": result.search_type.value,
                 "relevance_score": result.relevance_score,
                 "match_context": result.match_context,
-                "similarity_score": result.relevance_score,  # For fuzzy search, relevance is similarity
+                # For fuzzy search, relevance is similarity
+                "similarity_score": result.relevance_score,
             })
 
         await ctx.info(f"Fuzzy search complete: {len(results)} results found")
@@ -668,9 +701,11 @@ async def get_filtered_commits(input_data: CommitFilterInput, ctx: Context) -> d
         date_from = None
         date_to = None
         if input_data.date_from:
-            date_from = datetime.fromisoformat(input_data.date_from.replace("Z", "+00:00"))
+            date_from = datetime.fromisoformat(
+                input_data.date_from.replace("Z", "+00:00"))
         if input_data.date_to:
-            date_to = datetime.fromisoformat(input_data.date_to.replace("Z", "+00:00"))
+            date_to = datetime.fromisoformat(
+                input_data.date_to.replace("Z", "+00:00"))
 
         commits = get_commits_with_filters(
             repo=repo,
@@ -998,7 +1033,8 @@ async def compare_commits_mcp(input_data: CommitComparisonInput, ctx: Context) -
         await ctx.info(f"Comparing commits {input_data.from_commit} and {input_data.to_commit}")
 
         repo = get_repository(Path(input_data.repo_path))
-        diff_result = compare_commits(repo, input_data.from_commit, input_data.to_commit)
+        diff_result = compare_commits(
+            repo, input_data.from_commit, input_data.to_commit)
 
         await ctx.info(f"Commit comparison complete")
 
@@ -1034,7 +1070,8 @@ async def export_repository_data(input_data: ExportInput, ctx: Context) -> dict[
 
         # Create export manager and options
         export_manager = ExportManager()
-        pagination_info = PaginationInfo(**input_data.pagination) if input_data.pagination else None
+        pagination_info = PaginationInfo(
+            **input_data.pagination) if input_data.pagination else None
 
         export_options = ExportOptions(
             format=OutputFormat(input_data.format.lower()),
@@ -1057,7 +1094,8 @@ async def export_repository_data(input_data: ExportInput, ctx: Context) -> dict[
             import yaml
 
             with open(output_path, "w", encoding="utf-8") as f:
-                yaml.dump(metadata, f, default_flow_style=False, allow_unicode=True)
+                yaml.dump(metadata, f, default_flow_style=False,
+                          allow_unicode=True)
         else:
             return {"status": "error", "error": f"Unsupported export format: {input_data.format}"}
 
@@ -1205,7 +1243,8 @@ async def validate_repository(input_data: RepositoryManagementInput, ctx: Contex
 
         # Check for common issues
         if repo.is_dirty():
-            validation_results["warnings"].append("Working tree has uncommitted changes")
+            validation_results["warnings"].append(
+                "Working tree has uncommitted changes")
 
         if not validation_results["has_commits"]:
             validation_results["warnings"].append("Repository has no commits")
@@ -1347,7 +1386,8 @@ async def generate_repository_report(input_data: RepositoryInput, ctx: Context) 
             "branches": metadata.get("branches", []),
             "tags": metadata.get("tags", []),
             "remotes": metadata.get("remotes", []),
-            "recent_activity": metadata.get("recent_commits", [])[:20],  # Last 20 commits
+            # Last 20 commits
+            "recent_activity": metadata.get("recent_commits", [])[:20],
         }
 
         await ctx.info("Repository report generation complete")
@@ -1529,7 +1569,8 @@ async def get_repository_summary(repo_path: str, ctx: Context) -> str:
         # Add recent commits if available
         if metadata.get('recent_commits'):
             for commit in metadata['recent_commits'][:5]:  # Show last 5 commits
-                summary_lines.append(f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
+                summary_lines.append(
+                    f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
 
         # Add top contributors
         if metadata.get('contributors'):
@@ -1542,7 +1583,8 @@ async def get_repository_summary(repo_path: str, ctx: Context) -> str:
                 key=lambda x: x[1]['commits'],
                 reverse=True
             )
-            for name, stats in sorted_contributors[:5]:  # Show top 5 contributors
+            # Show top 5 contributors
+            for name, stats in sorted_contributors[:5]:
                 summary_lines.append(f"  - {name}: {stats['commits']} commits")
 
         await ctx.info("Repository summary generated successfully")
@@ -1567,7 +1609,8 @@ async def get_file_history_resource(repo_path: str, file_path: str, ctx: Context
         await ctx.info(f"Retrieving file history for {file_path} in {repo_path}")
 
         repo = get_repository(Path(repo_path))
-        history = get_file_history(repo=repo, file_path=file_path, max_count=50)
+        history = get_file_history(
+            repo=repo, file_path=file_path, max_count=50)
 
         history_lines = [
             f"# File History: {file_path}",
@@ -1687,7 +1730,8 @@ async def get_file_blame_resource(repo_path: str, file_path: str, ctx: Context) 
 
         if len(blame_result.blame_info) > 50:
             newline = "\n"
-            blame_lines.append(f"{newline}... and {len(blame_result.blame_info) - 50} more lines")
+            blame_lines.append(
+                f"{newline}... and {len(blame_result.blame_info) - 50} more lines")
 
         blame_lines.extend([
             "",
@@ -2164,7 +2208,8 @@ async def compare_commits_direct(input_data: CommitComparisonInput) -> dict[str,
         await ctx.info(f"Comparing commits {input_data.from_commit} and {input_data.to_commit}")
 
         repo = get_repository(Path(input_data.repo_path))
-        diff_result = compare_commits(repo, input_data.from_commit, input_data.to_commit)
+        diff_result = compare_commits(
+            repo, input_data.from_commit, input_data.to_commit)
 
         await ctx.info(f"Commit comparison complete")
 
@@ -2321,7 +2366,8 @@ async def get_repository_summary_direct(repo_path: str) -> str:
         # Add recent commits if available
         if metadata.get('recent_commits'):
             for commit in metadata['recent_commits'][:5]:  # Show last 5 commits
-                summary_lines.append(f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
+                summary_lines.append(
+                    f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
 
         # Add top contributors
         if metadata.get('contributors'):
@@ -2426,4 +2472,5 @@ if __name__ == "__main__":
             elif arg == "--log-level" and i + 1 < len(sys.argv):
                 log_level = sys.argv[i + 1]
 
-    run_mcp_server(transport=transport, host=host, port=port, log_level=log_level)
+    run_mcp_server(transport=transport, host=host,
+                   port=port, log_level=log_level)

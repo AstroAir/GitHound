@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
+from typing import Any, Literal, TypedDict, Union, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -12,11 +13,110 @@ logger = logging.getLogger(__name__)
 
 
 class WebSocketMessage(BaseModel):
-    """WebSocket message model."""
+    """WebSocket message envelope."""
 
     type: str
     data: dict
     timestamp: datetime = datetime.now()
+
+
+# Strongly-typed payloads
+class ConnectedData(TypedDict):
+    search_id: str
+    message: str
+
+
+class ConnectedMessage(TypedDict):
+    type: Literal["connected"]
+    data: ConnectedData
+
+
+class ProgressData(TypedDict):
+    search_id: str
+    progress: float
+    message: str
+    results_count: int
+    timestamp: str
+
+
+class ProgressMessage(TypedDict):
+    type: Literal["progress"]
+    data: ProgressData
+
+
+class ResultData(TypedDict):
+    search_id: str
+    result: dict[str, Any]
+    timestamp: str
+
+
+class ResultMessage(TypedDict):
+    type: Literal["result"]
+    data: ResultData
+
+
+class CompletedData(TypedDict):
+    search_id: str
+    status: str
+    total_results: int
+    error_message: Optional[str]
+    timestamp: str
+
+
+class CompletedMessage(TypedDict):
+    type: Literal["completed"]
+    data: CompletedData
+
+
+class ErrorData(TypedDict):
+    search_id: str
+    error: str
+    timestamp: str
+
+
+class ErrorMessage(TypedDict):
+    type: Literal["error"]
+    data: ErrorData
+
+
+class PongData(TypedDict):
+    timestamp: str
+
+
+class PongMessage(TypedDict):
+    type: Literal["pong"]
+    data: PongData
+
+
+class PingData(TypedDict):
+    timestamp: str
+
+
+class PingMessage(TypedDict):
+    type: Literal["ping"]
+    data: PingData
+
+
+class StatusData(TypedDict):
+    search_id: str
+    message: str
+
+
+class StatusMessage(TypedDict):
+    type: Literal["status"]
+    data: StatusData
+
+
+WebSocketPayload = Union[
+    ConnectedMessage,
+    ProgressMessage,
+    ResultMessage,
+    CompletedMessage,
+    ErrorMessage,
+    PongMessage,
+    PingMessage,
+    StatusMessage,
+]
 
 
 class ConnectionManager:
@@ -77,31 +177,26 @@ class ConnectionManager:
 
             logger.info(f"WebSocket disconnected for search {search_id}")
 
-    async def send_personal_message(self, websocket: WebSocket, message: dict) -> None:
+    async def send_personal_message(self, websocket: WebSocket, message: WebSocketPayload | dict[str, Any]) -> None:
         """Send a message to a specific WebSocket connection."""
         try:
-            ws_message = WebSocketMessage(
-                type=message.get("type", "message"), data=message.get("data", {})
-            )
-            await websocket.send_text(ws_message.json())
+            await websocket.send_text(json.dumps(message))
         except Exception as e:
             logger.error(f"Failed to send personal message: {e}")
             self.disconnect(websocket)
 
-    async def broadcast_to_search(self, search_id: str, message: dict) -> None:
+    async def broadcast_to_search(self, search_id: str, message: WebSocketPayload | dict[str, Any]) -> None:
         """Broadcast a message to all connections for a specific search."""
         if search_id not in self.active_connections:
             return
 
-        ws_message = WebSocketMessage(
-            type=message.get("type", "progress"), data=message.get("data", {})
-        )
+        payload_str = json.dumps(message)
 
         # Send to all connections for this search
         disconnected = []
         for websocket in self.active_connections[search_id].copy():
             try:
-                await websocket.send_text(ws_message.json())
+                await websocket.send_text(payload_str)
             except Exception as e:
                 logger.error(f"Failed to broadcast to WebSocket: {e}")
                 disconnected.append(websocket)
@@ -114,65 +209,57 @@ class ConnectionManager:
         self, search_id: str, progress: float, message: str, results_count: int = 0
     ) -> None:
         """Broadcast progress update for a search."""
-        await self.broadcast_to_search(
-            search_id,
-            {
-                "type": "progress",
-                "data": {
-                    "search_id": search_id,
-                    "progress": progress,
-                    "message": message,
-                    "results_count": results_count,
-                    "timestamp": datetime.now().isoformat(),
-                },
+        payload: ProgressMessage = {
+            "type": "progress",
+            "data": {
+                "search_id": search_id,
+                "progress": progress,
+                "message": message,
+                "results_count": results_count,
+                "timestamp": datetime.now().isoformat(),
             },
-        )
+        }
+        await self.broadcast_to_search(search_id, payload)
 
-    async def broadcast_result(self, search_id: str, result: dict) -> None:
+    async def broadcast_result(self, search_id: str, result: dict[str, Any]) -> None:
         """Broadcast a new search result."""
-        await self.broadcast_to_search(
-            search_id,
-            {
-                "type": "result",
-                "data": {
-                    "search_id": search_id,
-                    "result": result,
-                    "timestamp": datetime.now().isoformat(),
-                },
+        payload: ResultMessage = {
+            "type": "result",
+            "data": {
+                "search_id": search_id,
+                "result": result,
+                "timestamp": datetime.now().isoformat(),
             },
-        )
+        }
+        await self.broadcast_to_search(search_id, payload)
 
     async def broadcast_completion(
         self, search_id: str, status: str, total_results: int, error_message: str | None = None
     ) -> None:
         """Broadcast search completion."""
-        await self.broadcast_to_search(
-            search_id,
-            {
-                "type": "completed",
-                "data": {
-                    "search_id": search_id,
-                    "status": status,
-                    "total_results": total_results,
-                    "error_message": error_message,
-                    "timestamp": datetime.now().isoformat(),
-                },
+        payload: CompletedMessage = {
+            "type": "completed",
+            "data": {
+                "search_id": search_id,
+                "status": status,
+                "total_results": total_results,
+                "error_message": error_message,
+                "timestamp": datetime.now().isoformat(),
             },
-        )
+        }
+        await self.broadcast_to_search(search_id, payload)
 
     async def broadcast_error(self, search_id: str, error_message: str) -> None:
         """Broadcast an error for a search."""
-        await self.broadcast_to_search(
-            search_id,
-            {
-                "type": "error",
-                "data": {
-                    "search_id": search_id,
-                    "error": error_message,
-                    "timestamp": datetime.now().isoformat(),
-                },
+        payload: ErrorMessage = {
+            "type": "error",
+            "data": {
+                "search_id": search_id,
+                "error": error_message,
+                "timestamp": datetime.now().isoformat(),
             },
-        )
+        }
+        await self.broadcast_to_search(search_id, payload)
 
     def get_connection_count(self, search_id: str | None = None) -> int:
         """Get the number of active connections."""
@@ -223,15 +310,23 @@ async def websocket_endpoint(websocket: WebSocket, search_id: str) -> None:
                     message = json.loads(data)
                     await handle_client_message(websocket, search_id, message)
                 except json.JSONDecodeError:
-                    await connection_manager.send_personal_message(
-                        websocket, {"type": "error", "data": {"message": "Invalid JSON message"}}
-                    )
+                    payload: ErrorMessage = {
+                        "type": "error",
+                        "data": {
+                            "search_id": search_id,
+                            "error": "Invalid JSON message",
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    }
+                    await connection_manager.send_personal_message(websocket, payload)
 
             except TimeoutError:
                 # Send periodic ping to keep connection alive
-                await connection_manager.send_personal_message(
-                    websocket, {"type": "ping", "data": {"timestamp": datetime.now().isoformat()}}
-                )
+                ping_payload: PingMessage = {
+                    "type": "ping",
+                    "data": {"timestamp": datetime.now().isoformat()},
+                }
+                await connection_manager.send_personal_message(websocket, ping_payload)
 
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)
@@ -246,27 +341,32 @@ async def handle_client_message(websocket: WebSocket, search_id: str, message: d
 
     if message_type == "ping":
         # Respond to ping
-        await connection_manager.send_personal_message(
-            websocket, {"type": "pong", "data": {"timestamp": datetime.now().isoformat()}}
-        )
+        pong_payload: PongMessage = {
+            "type": "pong",
+            "data": {"timestamp": datetime.now().isoformat()},
+        }
+        await connection_manager.send_personal_message(websocket, pong_payload)
 
     elif message_type == "status_request":
         # Send current search status
         # This would integrate with the active_searches from api.py
-        await connection_manager.send_personal_message(
-            websocket,
-            {
-                "type": "status",
-                "data": {"search_id": search_id, "message": "Status request received"},
-            },
-        )
+        status_payload: StatusMessage = {
+            "type": "status",
+            "data": {"search_id": search_id, "message": "Status request received"},
+        }
+        await connection_manager.send_personal_message(websocket, status_payload)
 
     else:
         # Unknown message type
-        await connection_manager.send_personal_message(
-            websocket,
-            {"type": "error", "data": {"message": f"Unknown message type: {message_type}"}},
-        )
+        error_payload: ErrorMessage = {
+            "type": "error",
+            "data": {
+                "search_id": search_id,
+                "error": f"Unknown message type: {message_type}",
+                "timestamp": datetime.now().isoformat(),
+            },
+        }
+        await connection_manager.send_personal_message(websocket, error_payload)
 
 
 # Background task to clean up stale connections

@@ -24,17 +24,21 @@ class ChangeType(str, Enum):
 class DiffLineInfo(BaseModel):
     """Information about a single line in a diff."""
 
-    line_number_old: int | None = Field(None, description="Line number in old file")
-    line_number_new: int | None = Field(None, description="Line number in new file")
+    line_number_old: int | None = Field(
+        None, description="Line number in old file")
+    line_number_new: int | None = Field(
+        None, description="Line number in new file")
     content: str = Field(..., description="Line content")
-    change_type: str = Field(..., description="Type of change: '+', '-', or ' '")
+    change_type: str = Field(...,
+                             description="Type of change: '+', '-', or ' '")
 
 
 class FileDiffInfo(BaseModel):
     """Detailed diff information for a single file."""
 
     file_path: str = Field(..., description="Path to the file")
-    old_file_path: str | None = Field(None, description="Old file path (for renames)")
+    old_file_path: str | None = Field(
+        None, description="Old file path (for renames)")
     change_type: ChangeType = Field(..., description="Type of change")
     lines_added: int = Field(0, description="Number of lines added")
     lines_deleted: int = Field(0, description="Number of lines deleted")
@@ -52,7 +56,8 @@ class CommitDiffResult(BaseModel):
     files_changed: int = Field(..., description="Number of files changed")
     total_additions: int = Field(..., description="Total lines added")
     total_deletions: int = Field(..., description="Total lines deleted")
-    file_diffs: list[FileDiffInfo] = Field(..., description="Detailed file diffs")
+    file_diffs: list[FileDiffInfo] = Field(...,
+                                           description="Detailed file diffs")
 
 
 def analyze_diff(diff: Diff) -> FileDiffInfo:
@@ -212,7 +217,8 @@ def compare_commits(
         # Get the diff between commits
         if file_patterns:
             # GitPython accepts various path types, cast to satisfy mypy
-            diffs = from_commit_obj.diff(to_commit_obj, paths=cast(Any, file_patterns))
+            diffs = from_commit_obj.diff(
+                to_commit_obj, paths=cast(Any, file_patterns))
         else:
             diffs = from_commit_obj.diff(to_commit_obj)
 
@@ -324,6 +330,7 @@ def get_file_diff_history(
                     continue
 
     except GitCommandError as e:
-        raise GitCommandError(f"Error getting diff history for '{file_path}': {e}")
+        raise GitCommandError(
+            f"Error getting diff history for '{file_path}': {e}")
 
     return history

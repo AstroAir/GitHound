@@ -13,7 +13,7 @@ from .base import CacheableSearcher, SearchContext
 class CommitHashSearcher(CacheableSearcher):
     """Searcher for exact commit hash matching."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("commit_hash", "commit_hash")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -26,7 +26,8 @@ class CommitHashSearcher(CacheableSearcher):
         if not commit_hash:
             return
 
-        self._report_progress(context, f"Searching for commit {commit_hash[:8]}...", 0.0)
+        self._report_progress(
+            context, f"Searching for commit {commit_hash[:8]}...", 0.0)
 
         try:
             # Try to find the commit
@@ -61,7 +62,8 @@ class CommitHashSearcher(CacheableSearcher):
                 search_time_ms=None,
             )
 
-            self._update_metrics(total_commits_searched=1, total_results_found=1)
+            self._update_metrics(total_commits_searched=1,
+                                 total_results_found=1)
             self._report_progress(context, "Found commit", 1.0)
 
             yield result
@@ -74,7 +76,7 @@ class CommitHashSearcher(CacheableSearcher):
 class AuthorSearcher(CacheableSearcher):
     """Searcher for author names and emails with fuzzy matching."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("author", "author")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -97,7 +99,8 @@ class AuthorSearcher(CacheableSearcher):
         if not author_pattern:
             return
 
-        self._report_progress(context, f"Searching for author '{author_pattern}'...", 0.0)
+        self._report_progress(
+            context, f"Searching for author '{author_pattern}'...", 0.0)
 
         # Get branch to search
         branch = context.branch or context.repo.active_branch.name
@@ -129,8 +132,10 @@ class AuthorSearcher(CacheableSearcher):
 
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
-                    name_score = fuzz.ratio(author_pattern.lower(), author_name.lower()) / 100.0
-                    email_score = fuzz.ratio(author_pattern.lower(), author_email.lower()) / 100.0
+                    name_score = fuzz.ratio(
+                        author_pattern.lower(), author_name.lower()) / 100.0
+                    email_score = fuzz.ratio(
+                        author_pattern.lower(), author_email.lower()) / 100.0
 
                     if name_score >= context.query.fuzzy_threshold:
                         match_score = name_score
@@ -143,7 +148,8 @@ class AuthorSearcher(CacheableSearcher):
                     if regex_pattern:
                         if regex_pattern.search(author_name) or regex_pattern.search(author_email):
                             match_score = 1.0
-                            match_field = "name" if regex_pattern.search(author_name) else "email"
+                            match_field = "name" if regex_pattern.search(
+                                author_name) else "email"
                     else:
                         # Simple string matching
                         search_term = (
@@ -204,7 +210,8 @@ class AuthorSearcher(CacheableSearcher):
 
                 # Report progress every 100 commits
                 if commits_searched % 100 == 0:
-                    progress = min(commits_searched / 1000, 0.9)  # Cap at 90% until done
+                    # Cap at 90% until done
+                    progress = min(commits_searched / 1000, 0.9)
                     self._report_progress(
                         context,
                         f"Searched {commits_searched} commits, found {results_found} matches",
@@ -212,7 +219,8 @@ class AuthorSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(context, f"Error searching authors: {e}", 1.0)
+            self._report_progress(
+                context, f"Error searching authors: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -228,7 +236,7 @@ class AuthorSearcher(CacheableSearcher):
 class MessageSearcher(CacheableSearcher):
     """Searcher for commit messages with regex and fuzzy matching."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("message", "message")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -250,7 +258,8 @@ class MessageSearcher(CacheableSearcher):
         if not message_pattern:
             return
 
-        self._report_progress(context, f"Searching commit messages for '{message_pattern}'...", 0.0)
+        self._report_progress(
+            context, f"Searching commit messages for '{message_pattern}'...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -275,7 +284,8 @@ class MessageSearcher(CacheableSearcher):
 
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
-                    score = fuzz.partial_ratio(message_pattern.lower(), message.lower()) / 100.0
+                    score = fuzz.partial_ratio(
+                        message_pattern.lower(), message.lower()) / 100.0
                     if score >= context.query.fuzzy_threshold:
                         match_score = score
                 else:
@@ -317,7 +327,8 @@ class MessageSearcher(CacheableSearcher):
                         search_type=SearchType.MESSAGE,
                         relevance_score=match_score,
                         commit_info=commit_info,
-                        match_context={"search_term": message_pattern, "matched_message": message},
+                        match_context={
+                            "search_term": message_pattern, "matched_message": message},
                         search_time_ms=None,
                     )
 
@@ -333,7 +344,8 @@ class MessageSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(context, f"Error searching messages: {e}", 1.0)
+            self._report_progress(
+                context, f"Error searching messages: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -349,7 +361,7 @@ class MessageSearcher(CacheableSearcher):
 class DateRangeSearcher(CacheableSearcher):
     """Searcher for commits within a date range."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("date_range", "date_range")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -365,7 +377,8 @@ class DateRangeSearcher(CacheableSearcher):
             if context.query.date_from or context.query.date_to:
                 # Rough estimate: assume 10 commits per day
                 if context.query.date_from and context.query.date_to:
-                    days = (context.query.date_to - context.query.date_from).days
+                    days = (context.query.date_to -
+                            context.query.date_from).days
                     return min(days * 10, 1000)
 
             commits = list(context.repo.iter_commits(branch, max_count=1000))
@@ -381,7 +394,8 @@ class DateRangeSearcher(CacheableSearcher):
         if not date_from and not date_to:
             return
 
-        self._report_progress(context, "Searching commits by date range...", 0.0)
+        self._report_progress(
+            context, "Searching commits by date range...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -445,7 +459,8 @@ class DateRangeSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(context, f"Error searching by date: {e}", 1.0)
+            self._report_progress(
+                context, f"Error searching by date: {e}", 1.0)
 
         finally:
             self._update_metrics(

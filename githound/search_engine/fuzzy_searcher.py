@@ -13,10 +13,10 @@ from .base import CacheableSearcher, SearchContext
 class FuzzySearcher(CacheableSearcher):
     """Advanced fuzzy searcher that combines multiple search types with fuzzy matching."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("fuzzy", "fuzzy")
-        self._author_cache = {}
-        self._message_cache = {}
+        self._author_cache: dict[str, list[dict[str, Any]]] = {}
+        self._message_cache: dict[str, list[dict[str, Any]]] = {}
 
     async def can_handle(self, query: SearchQuery) -> bool:
         """Check if this searcher can handle the query."""
@@ -77,7 +77,8 @@ class FuzzySearcher(CacheableSearcher):
         self._update_metrics(
             total_commits_searched=len(search_targets), total_results_found=len(results)
         )
-        self._report_progress(context, f"Fuzzy search completed: {len(results)} matches", 1.0)
+        self._report_progress(
+            context, f"Fuzzy search completed: {len(results)} matches", 1.0)
 
     async def _build_search_targets(self, context: SearchContext) -> list[dict]:
         """Build a list of search targets from the repository."""
@@ -116,12 +117,14 @@ class FuzzySearcher(CacheableSearcher):
 
                     try:
                         content = diff.b_blob.data_stream.read().decode("utf-8", errors="ignore")
-                        file_contents.append({"path": diff.b_path, "content": content})
+                        file_contents.append(
+                            {"path": diff.b_path, "content": content})
                     except (UnicodeDecodeError, AttributeError):
                         continue
 
             targets.append(
-                {"commit": commit, "commit_info": commit_info, "file_contents": file_contents}
+                {"commit": commit, "commit_info": commit_info,
+                    "file_contents": file_contents}
             )
 
             # Limit to prevent memory issues
@@ -129,8 +132,10 @@ class FuzzySearcher(CacheableSearcher):
                 break
 
             if commits_processed % 100 == 0:
-                progress = 0.1 + (commits_processed / 1000) * 0.2  # 10-30% progress
-                self._report_progress(context, f"Indexed {commits_processed} commits", progress)
+                progress = 0.1 + (commits_processed / 1000) * \
+                    0.2  # 10-30% progress
+                self._report_progress(
+                    context, f"Indexed {commits_processed} commits", progress)
 
         return targets
 

@@ -221,7 +221,8 @@ class ProgressReporter:
     def update(self, description: str, progress: float) -> None:
         """Update progress with description and percentage (0.0-1.0)."""
         if self.progress and self.task is not None:
-            self.progress.update(self.task, description=description, completed=progress * 100)
+            self.progress.update(
+                self.task, description=description, completed=progress * 100)
 
 
 async def enhanced_search(
@@ -255,7 +256,8 @@ async def enhanced_search(
             progress_manager.add_task("search", "Initializing search...", 100)
 
             # Create progress callback
-            progress_callback = progress_manager.get_progress_callback("search")
+            progress_callback = progress_manager.get_progress_callback(
+                "search")
 
             try:
                 # Perform search
@@ -269,7 +271,8 @@ async def enhanced_search(
                     results.append(result)
 
                 # Mark task as complete
-                progress_manager.complete_task("search", f"Found {len(results)} results")
+                progress_manager.complete_task(
+                    "search", f"Found {len(results)} results")
 
             except Exception as e:
                 progress_manager.complete_task("search", f"Search failed: {e}")
@@ -345,9 +348,11 @@ async def search_and_print(
         if output_file:
             # Export to file
             if output_format == OutputFormat.JSON:
-                export_manager.export_to_json(results, output_file, include_metadata)
+                export_manager.export_to_json(
+                    results, output_file, include_metadata)
             elif output_format == OutputFormat.CSV:
-                export_manager.export_to_csv(results, output_file, include_metadata)
+                export_manager.export_to_csv(
+                    results, output_file, include_metadata)
             else:  # TEXT
                 export_manager.export_to_text(
                     results, output_file, "detailed" if show_details else "simple"
@@ -410,11 +415,13 @@ def legacy_main(
     """
     # Validate output format
     if output_format not in ["text", "json"]:
-        typer.echo(f"Error: Invalid output format '{output_format}'. Must be 'text' or 'json'.")
+        typer.echo(
+            f"Error: Invalid output format '{output_format}'. Must be 'text' or 'json'.")
         raise typer.Exit(1)
 
     # Cast to Literal type for type safety
-    validated_output_format: Literal["text", "json"] = output_format  # type: ignore[assignment]
+    # type: ignore[assignment]
+    validated_output_format: Literal["text", "json"] = output_format
 
     search_config = LegacySearchConfig(
         include_globs=include_glob,
@@ -456,7 +463,8 @@ def search(
     author: str | None = typer.Option(
         None, "--author", "-a", help="Search by author name or email."
     ),
-    message: str | None = typer.Option(None, "--message", "-m", help="Search commit messages."),
+    message: str | None = typer.Option(
+        None, "--message", "-m", help="Search commit messages."),
     # Date-based search
     date_from: str | None = typer.Option(
         None, "--date-from", help="Search commits from date (YYYY-MM-DD)."
@@ -472,7 +480,8 @@ def search(
         None, "--ext", help="File extensions to include (e.g., py, js)."
     ),
     # Search behavior
-    fuzzy: bool = typer.Option(False, "--fuzzy", help="Enable fuzzy matching."),
+    fuzzy: bool = typer.Option(
+        False, "--fuzzy", help="Enable fuzzy matching."),
     fuzzy_threshold: float = typer.Option(
         0.8, "--fuzzy-threshold", help="Fuzzy matching threshold (0.0-1.0)."
     ),
@@ -493,7 +502,8 @@ def search(
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", help="Output format (text, json, csv)."
     ),
-    output_file: Path | None = typer.Option(None, "--output", "-o", help="Output file path."),
+    output_file: Path | None = typer.Option(
+        None, "--output", "-o", help="Output file path."),
     show_details: bool = typer.Option(
         False, "--details", help="Show detailed information in text output."
     ),
@@ -504,7 +514,8 @@ def search(
     max_results: int | None = typer.Option(
         None, "--max-results", help="Maximum number of results to return."
     ),
-    no_progress: bool = typer.Option(False, "--no-progress", help="Disable progress indicators."),
+    no_progress: bool = typer.Option(
+        False, "--no-progress", help="Disable progress indicators."),
     # Repository options
     branch: str | None = typer.Option(
         None, "--branch", "-b", help="Branch to search (defaults to current)."
@@ -550,7 +561,8 @@ def search(
         file_extensions,
     ]
     if not any(search_criteria):
-        console.print("[red]Error: At least one search criterion must be provided.[/red]")
+        console.print(
+            "[red]Error: At least one search criterion must be provided.[/red]")
         console.print("Use --help to see available options.")
         raise typer.Exit(code=1)
 
@@ -562,7 +574,8 @@ def search(
         try:
             parsed_date_from = datetime.fromisoformat(date_from)
         except ValueError:
-            console.print(f"[red]Error: Invalid date format for --date-from: {date_from}[/red]")
+            console.print(
+                f"[red]Error: Invalid date format for --date-from: {date_from}[/red]")
             console.print("Use YYYY-MM-DD format.")
             raise typer.Exit(code=1)
 
@@ -570,7 +583,8 @@ def search(
         try:
             parsed_date_to = datetime.fromisoformat(date_to)
         except ValueError:
-            console.print(f"[red]Error: Invalid date format for --date-to: {date_to}[/red]")
+            console.print(
+                f"[red]Error: Invalid date format for --date-to: {date_to}[/red]")
             console.print("Use YYYY-MM-DD format.")
             raise typer.Exit(code=1)
 
@@ -624,9 +638,11 @@ def main(ctx: typer.Context) -> None:
             "[yellow]No command specified. Use 'search' for the enhanced interface or 'legacy' for backward compatibility.[/yellow]"
         )
         console.print("\nAvailable commands:")
-        console.print("  [bold]search[/bold]   - Enhanced multi-modal search (recommended)")
+        console.print(
+            "  [bold]search[/bold]   - Enhanced multi-modal search (recommended)")
         console.print("  [bold]legacy[/bold]   - Original search interface")
-        console.print("  [bold]analyze[/bold]  - Repository analysis and metadata")
+        console.print(
+            "  [bold]analyze[/bold]  - Repository analysis and metadata")
         console.print("  [bold]blame[/bold]    - File blame analysis")
         console.print("  [bold]diff[/bold]     - Commit/branch comparison")
         console.print("  [bold]web[/bold]      - Start web interface")
@@ -635,16 +651,19 @@ def main(ctx: typer.Context) -> None:
         console.print(
             "\n[dim]💡 Use --help with any command for detailed information and examples.[/dim]"
         )
-        console.print("[dim]📖 Documentation: https://github.com/your-org/githound[/dim]")
+        console.print(
+            "[dim]📖 Documentation: https://github.com/your-org/githound[/dim]")
 
 
 @app.command()
 def analyze(
-    repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
+    repo_path: Path = typer.Argument(
+        Path("."), help="Path to the Git repository"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", "-f", help="Output format"
     ),
-    output_file: Path | None = typer.Option(None, "--output", "-o", help="Output file path"),
+    output_file: Path | None = typer.Option(
+        None, "--output", "-o", help="Output file path"),
     include_detailed_stats: bool = typer.Option(
         True, "--detailed/--basic", help="Include detailed statistics"
     ),
@@ -665,7 +684,8 @@ def analyze(
 
         # Input validation
         if not repo_path.exists():
-            console.print(f"[red]✗ Repository path does not exist:[/red] {repo_path}")
+            console.print(
+                f"[red]✗ Repository path does not exist:[/red] {repo_path}")
             raise typer.Exit(1)
 
         if not repo_path.is_dir():
@@ -681,7 +701,8 @@ def analyze(
             )
             raise typer.Exit(1)
 
-        console.print(f"[bold blue]🔍 Analyzing repository:[/bold blue] {repo_path}")
+        console.print(
+            f"[bold blue]🔍 Analyzing repository:[/bold blue] {repo_path}")
 
         # Initialize GitHound
         with console.status("[bold green]Initializing GitHound..."):
@@ -696,13 +717,17 @@ def analyze(
             transient=True,
         ) as progress:
             # Main analysis
-            task1 = progress.add_task("Analyzing repository metadata...", total=None)
-            analysis_result = gh.analyze_repository(include_detailed_stats=include_detailed_stats)
-            progress.update(task1, completed=True, description="✓ Repository metadata analyzed")
+            task1 = progress.add_task(
+                "Analyzing repository metadata...", total=None)
+            analysis_result = gh.analyze_repository(
+                include_detailed_stats=include_detailed_stats)
+            progress.update(task1, completed=True,
+                            description="✓ Repository metadata analyzed")
 
             # Author statistics (if requested)
             if include_author_stats:
-                task2 = progress.add_task("Gathering author statistics...", total=None)
+                task2 = progress.add_task(
+                    "Gathering author statistics...", total=None)
                 try:
                     author_stats = gh.get_author_statistics()
                     analysis_result["author_statistics"] = author_stats
@@ -710,7 +735,8 @@ def analyze(
                         task2, completed=True, description="✓ Author statistics gathered"
                     )
                 except Exception as e:
-                    progress.update(task2, completed=True, description="⚠ Author statistics failed")
+                    progress.update(task2, completed=True,
+                                    description="⚠ Author statistics failed")
                     console.print(
                         f"[yellow]⚠ Warning: Could not get author statistics: {e}[/yellow]"
                     )
@@ -719,27 +745,33 @@ def analyze(
         if output_file:
             from githound.schemas import ExportOptions
 
-            export_options = ExportOptions(format=output_format, include_metadata=True)
-            gh.export_with_options(analysis_result, output_file, export_options)
-            console.print(f"[green]Analysis exported to:[/green] {output_file}")
+            export_options = ExportOptions(
+                format=output_format, include_metadata=True)
+            gh.export_with_options(
+                analysis_result, output_file, export_options)
+            console.print(
+                f"[green]Analysis exported to:[/green] {output_file}")
         else:
             if output_format == OutputFormat.JSON:
                 # Convert datetime objects to strings for JSON serialization
                 import json
                 from datetime import datetime
 
-                def json_serializer(obj):
+                def json_serializer(obj: Any) -> str:
                     if isinstance(obj, datetime):
                         return obj.isoformat()
-                    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+                    raise TypeError(
+                        f"Object of type {type(obj)} is not JSON serializable")
 
-                json_str = json.dumps(analysis_result, default=json_serializer, indent=2)
+                json_str = json.dumps(
+                    analysis_result, default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump(analysis_result, default_flow_style=False))
+                    console.print(yaml.dump(analysis_result,
+                                  default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
@@ -763,7 +795,8 @@ def analyze(
         raise typer.Exit(1)
     except PermissionError as e:
         console.print(f"[red]✗ Permission denied:[/red] {e}")
-        console.print("[dim]💡 Hint: Make sure you have read permissions for the repository.[/dim]")
+        console.print(
+            "[dim]💡 Hint: Make sure you have read permissions for the repository.[/dim]")
         raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]✗ Unexpected error:[/red] {e}")
@@ -779,7 +812,8 @@ def analyze(
 
 @app.command()
 def blame(
-    repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
+    repo_path: Path = typer.Argument(
+        Path("."), help="Path to the Git repository"),
     file_path: str = typer.Argument(..., help="Path to the file to analyze"),
     commit: str | None = typer.Option(
         None, "--commit", "-c", help="Specific commit to blame (default: HEAD)"
@@ -787,7 +821,8 @@ def blame(
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", "-f", help="Output format"
     ),
-    output_file: Path | None = typer.Option(None, "--output", "-o", help="Output file path"),
+    output_file: Path | None = typer.Option(
+        None, "--output", "-o", help="Output file path"),
     show_line_numbers: bool = typer.Option(
         True, "--line-numbers/--no-line-numbers", help="Show line numbers"
     ),
@@ -804,7 +839,8 @@ def blame(
 
         # Input validation
         if not repo_path.exists():
-            console.print(f"[red]✗ Repository path does not exist:[/red] {repo_path}")
+            console.print(
+                f"[red]✗ Repository path does not exist:[/red] {repo_path}")
             raise typer.Exit(1)
 
         git_dir = repo_path / ".git"
@@ -821,7 +857,8 @@ def blame(
             )
             raise typer.Exit(1)
 
-        console.print(f"[bold blue]📝 Analyzing blame for:[/bold blue] {file_path}")
+        console.print(
+            f"[bold blue]📝 Analyzing blame for:[/bold blue] {file_path}")
         if commit:
             console.print(f"[bold blue]📍 At commit:[/bold blue] {commit}")
 
@@ -839,33 +876,39 @@ def blame(
         ) as progress:
             task = progress.add_task("Analyzing file blame...", total=None)
             blame_result = gh.analyze_blame(file_path, commit)
-            progress.update(task, completed=True, description="✓ File blame analysis complete")
+            progress.update(task, completed=True,
+                            description="✓ File blame analysis complete")
 
         # Output results
         if output_file:
             from githound.schemas import ExportOptions
 
-            export_options = ExportOptions(format=output_format, include_metadata=True)
+            export_options = ExportOptions(
+                format=output_format, include_metadata=True)
             gh.export_with_options(blame_result, output_file, export_options)
-            console.print(f"[green]Blame analysis exported to:[/green] {output_file}")
+            console.print(
+                f"[green]Blame analysis exported to:[/green] {output_file}")
         else:
             if output_format == OutputFormat.JSON:
                 # Convert to dict and handle datetime serialization
                 import json
                 from datetime import datetime
 
-                def json_serializer(obj):
+                def json_serializer(obj: Any) -> str:
                     if isinstance(obj, datetime):
                         return obj.isoformat()
-                    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+                    raise TypeError(
+                        f"Object of type {type(obj)} is not JSON serializable")
 
-                json_str = json.dumps(blame_result.dict(), default=json_serializer, indent=2)
+                json_str = json.dumps(
+                    blame_result.dict(), default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump(blame_result.dict(), default_flow_style=False))
+                    console.print(yaml.dump(blame_result.dict(),
+                                  default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
@@ -897,7 +940,8 @@ def blame(
 
 @app.command()
 def diff(
-    repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
+    repo_path: Path = typer.Argument(
+        Path("."), help="Path to the Git repository"),
     from_ref: str = typer.Argument(..., help="Source commit/branch reference"),
     to_ref: str = typer.Argument(..., help="Target commit/branch reference"),
     file_patterns: list[str] | None = typer.Option(
@@ -906,7 +950,8 @@ def diff(
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", "-F", help="Output format"
     ),
-    output_file: Path | None = typer.Option(None, "--output", "-o", help="Output file path"),
+    output_file: Path | None = typer.Option(
+        None, "--output", "-o", help="Output file path"),
     compare_branches: bool = typer.Option(
         False, "--branches", help="Compare as branches instead of commits"
     ),
@@ -922,7 +967,8 @@ def diff(
         from githound import GitHound
 
         ref_type = "branches" if compare_branches else "commits"
-        console.print(f"[bold blue]Comparing {ref_type}:[/bold blue] {from_ref} → {to_ref}")
+        console.print(
+            f"[bold blue]Comparing {ref_type}:[/bold blue] {from_ref} → {to_ref}")
 
         # Initialize GitHound
         gh = GitHound(repo_path)
@@ -930,35 +976,42 @@ def diff(
         # Perform comparison
         with console.status(f"[bold green]Comparing {ref_type}..."):
             if compare_branches:
-                diff_result = gh.compare_branches(from_ref, to_ref, file_patterns)
+                diff_result = gh.compare_branches(
+                    from_ref, to_ref, file_patterns)
             else:
-                diff_result = gh.compare_commits(from_ref, to_ref, file_patterns)
+                diff_result = gh.compare_commits(
+                    from_ref, to_ref, file_patterns)
 
         # Output results
         if output_file:
             from githound.schemas import ExportOptions
 
-            export_options = ExportOptions(format=output_format, include_metadata=True)
+            export_options = ExportOptions(
+                format=output_format, include_metadata=True)
             gh.export_with_options(diff_result, output_file, export_options)
-            console.print(f"[green]Diff analysis exported to:[/green] {output_file}")
+            console.print(
+                f"[green]Diff analysis exported to:[/green] {output_file}")
         else:
             if output_format == OutputFormat.JSON:
                 # Convert to dict and handle datetime serialization
                 import json
                 from datetime import datetime
 
-                def json_serializer(obj):
+                def json_serializer(obj: Any) -> str:
                     if isinstance(obj, datetime):
                         return obj.isoformat()
-                    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+                    raise TypeError(
+                        f"Object of type {type(obj)} is not JSON serializable")
 
-                json_str = json.dumps(diff_result.dict(), default=json_serializer, indent=2)
+                json_str = json.dumps(diff_result.dict(),
+                                      default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump(diff_result.dict(), default_flow_style=False))
+                    console.print(yaml.dump(diff_result.dict(),
+                                  default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
@@ -990,11 +1043,16 @@ def diff(
 
 @app.command()
 def web(
-    repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
-    host: str = typer.Option("localhost", "--host", "-h", help="Host to bind the server"),
-    port: int = typer.Option(8000, "--port", "-p", help="Port to bind the server"),
-    auto_open: bool = typer.Option(True, "--open/--no-open", help="Automatically open browser"),
-    dev_mode: bool = typer.Option(False, "--dev", help="Enable development mode with auto-reload"),
+    repo_path: Path = typer.Argument(
+        Path("."), help="Path to the Git repository"),
+    host: str = typer.Option("localhost", "--host",
+                             "-h", help="Host to bind the server"),
+    port: int = typer.Option(8000, "--port", "-p",
+                             help="Port to bind the server"),
+    auto_open: bool = typer.Option(
+        True, "--open/--no-open", help="Automatically open browser"),
+    dev_mode: bool = typer.Option(
+        False, "--dev", help="Enable development mode with auto-reload"),
     interactive: bool = typer.Option(
         False, "--interactive", "-i", help="Interactive configuration mode"
     ),
@@ -1010,12 +1068,14 @@ def web(
     try:
         # Interactive mode
         if interactive:
-            console.print("[bold blue]🌐 GitHound Web Interface Setup[/bold blue]")
+            console.print(
+                "[bold blue]🌐 GitHound Web Interface Setup[/bold blue]")
             console.print()
 
             # Repository path
             if not repo_path.exists() or repo_path == Path("."):
-                repo_input = typer.prompt("Repository path", default=str(repo_path))
+                repo_input = typer.prompt(
+                    "Repository path", default=str(repo_path))
                 repo_path = Path(repo_input)
 
             # Host and port
@@ -1023,21 +1083,25 @@ def web(
             port = typer.prompt("Port", default=port, type=int)
 
             # Options
-            auto_open = typer.confirm("Open browser automatically?", default=auto_open)
-            dev_mode = typer.confirm("Enable development mode?", default=dev_mode)
+            auto_open = typer.confirm(
+                "Open browser automatically?", default=auto_open)
+            dev_mode = typer.confirm(
+                "Enable development mode?", default=dev_mode)
 
             console.print()
 
         # Validation
         if not repo_path.exists():
-            console.print(f"[red]✗ Repository path does not exist:[/red] {repo_path}")
+            console.print(
+                f"[red]✗ Repository path does not exist:[/red] {repo_path}")
             if interactive or typer.confirm("Would you like to specify a different path?"):
                 repo_input = typer.prompt("Repository path")
                 repo_path = Path(repo_input)
             else:
                 raise typer.Exit(1)
 
-        console.print("[bold blue]🌐 Starting GitHound web interface...[/bold blue]")
+        console.print(
+            "[bold blue]🌐 Starting GitHound web interface...[/bold blue]")
         console.print(f"[blue]📁 Repository:[/blue] {repo_path}")
         console.print(f"[blue]🌍 Server:[/blue] http://{host}:{port}")
 
@@ -1055,15 +1119,19 @@ def web(
 
             webbrowser.open(f"http://{host}:{port}")
 
-        console.print(f"[green]Web interface starting at http://{host}:{port}[/green]")
+        console.print(
+            f"[green]Web interface starting at http://{host}:{port}[/green]")
         console.print("[yellow]Press Ctrl+C to stop the server[/yellow]")
 
         # Start the server
-        uvicorn.run(app_instance, host=host, port=port, reload=dev_mode, access_log=dev_mode)
+        uvicorn.run(app_instance, host=host, port=port,
+                    reload=dev_mode, access_log=dev_mode)
 
     except ImportError as e:
-        console.print(f"[red]Missing dependencies for web interface:[/red] {e}")
-        console.print("[yellow]Install with: pip install 'githound[web]'[/yellow]")
+        console.print(
+            f"[red]Missing dependencies for web interface:[/red] {e}")
+        console.print(
+            "[yellow]Install with: pip install 'githound[web]'[/yellow]")
         raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]Error starting web interface:[/red] {e}")
@@ -1072,9 +1140,12 @@ def web(
 
 @app.command(name="mcp-server")
 def mcp_server(
-    repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
-    port: int = typer.Option(3000, "--port", "-p", help="Port to bind the MCP server"),
-    host: str = typer.Option("localhost", "--host", "-h", help="Host to bind the server"),
+    repo_path: Path = typer.Argument(
+        Path("."), help="Path to the Git repository"),
+    port: int = typer.Option(3000, "--port", "-p",
+                             help="Port to bind the MCP server"),
+    host: str = typer.Option("localhost", "--host",
+                             "-h", help="Host to bind the server"),
     log_level: str = typer.Option("INFO", "--log-level", help="Logging level"),
 ) -> None:
     """Start the GitHound MCP (Model Context Protocol) server.
@@ -1091,22 +1162,19 @@ def mcp_server(
         console.print(f"[blue]Server:[/blue] {host}:{port}")
 
         # Import and start the MCP server
-        import asyncio
-
         from githound.mcp_server import run_mcp_server
-
-        # Run the MCP server
-        run_mcp_server(transport="stdio", host=host, port=port, log_level=log_level)
 
         console.print(f"[green]MCP server starting at {host}:{port}[/green]")
         console.print("[yellow]Press Ctrl+C to stop the server[/yellow]")
 
-        # Start the server
-        asyncio.run(run_server())
+        # Run the MCP server (this is synchronous and handles async internally)
+        run_mcp_server(transport="stdio", host=host,
+                       port=port, log_level=log_level)
 
     except ImportError as e:
         console.print(f"[red]Missing dependencies for MCP server:[/red] {e}")
-        console.print("[yellow]Install with: pip install 'githound[mcp]'[/yellow]")
+        console.print(
+            "[yellow]Install with: pip install 'githound[mcp]'[/yellow]")
         raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]Error starting MCP server:[/red] {e}")
@@ -1137,7 +1205,8 @@ def version() -> None:
         # Dependencies
         console.print(f"[green]GitPython:[/green] {git_version}")
         console.print(f"[green]Python:[/green] {sys.version.split()[0]}")
-        console.print(f"[green]Platform:[/green] {platform.system()} {platform.release()}")
+        console.print(
+            f"[green]Platform:[/green] {platform.system()} {platform.release()}")
 
         # Optional dependencies
         optional_deps = []
@@ -1169,9 +1238,12 @@ def version() -> None:
 
 @app.command()
 def cleanup(
-    repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
-    cache_only: bool = typer.Option(False, "--cache-only", help="Only clean cache files"),
-    force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation prompts"),
+    repo_path: Path = typer.Argument(
+        Path("."), help="Path to the Git repository"),
+    cache_only: bool = typer.Option(
+        False, "--cache-only", help="Only clean cache files"),
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Skip confirmation prompts"),
 ) -> None:
     """Clean up GitHound cache and temporary files.
 
@@ -1215,7 +1287,8 @@ def cleanup(
                     cleanup_targets.append(("Temporary file", temp_file))
 
         if not cleanup_targets:
-            console.print("[green]✓ No cleanup needed - repository is clean![/green]")
+            console.print(
+                "[green]✓ No cleanup needed - repository is clean![/green]")
             return
 
         # Show what will be cleaned
@@ -1228,13 +1301,16 @@ def cleanup(
                     total_size += size
                     console.print(f"  • {item_type}: {path} ({size:,} bytes)")
                 elif path.is_dir():
-                    dir_size = sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
+                    dir_size = sum(
+                        f.stat().st_size for f in path.rglob("*") if f.is_file())
                     total_size += dir_size
-                    console.print(f"  • {item_type}: {path} ({dir_size:,} bytes)")
+                    console.print(
+                        f"  • {item_type}: {path} ({dir_size:,} bytes)")
             except (OSError, PermissionError):
                 console.print(f"  • {item_type}: {path} (size unknown)")
 
-        console.print(f"\n[bold]Total size to be freed: {total_size:,} bytes[/bold]")
+        console.print(
+            f"\n[bold]Total size to be freed: {total_size:,} bytes[/bold]")
 
         # Confirmation
         if not force:
@@ -1253,7 +1329,8 @@ def cleanup(
             console=console,
             transient=True,
         ) as progress:
-            task = progress.add_task("Cleaning up files...", total=len(cleanup_targets))
+            task = progress.add_task(
+                "Cleaning up files...", total=len(cleanup_targets))
 
             for item_type, path in cleanup_targets:
                 try:
@@ -1273,10 +1350,12 @@ def cleanup(
         # Results
         console.print()
         if cleaned_count > 0:
-            console.print(f"[green]✓ Successfully cleaned {cleaned_count} items[/green]")
+            console.print(
+                f"[green]✓ Successfully cleaned {cleaned_count} items[/green]")
 
         if errors:
-            console.print(f"[yellow]⚠️  {len(errors)} items could not be cleaned:[/yellow]")
+            console.print(
+                f"[yellow]⚠️  {len(errors)} items could not be cleaned:[/yellow]")
             for error in errors[:5]:  # Show first 5 errors
                 console.print(f"  • {error}")
             if len(errors) > 5:
@@ -1310,14 +1389,16 @@ def quickstart(repo_path: Path = typer.Argument(Path("."), help="Path to the Git
 
         # Repository validation
         if not repo_path.exists():
-            console.print(f"[red]✗ Repository path does not exist:[/red] {repo_path}")
+            console.print(
+                f"[red]✗ Repository path does not exist:[/red] {repo_path}")
             repo_input = typer.prompt("Please enter a valid repository path")
             repo_path = Path(repo_input)
 
         git_dir = repo_path / ".git"
         if not git_dir.exists():
             console.print(f"[red]✗ Not a Git repository:[/red] {repo_path}")
-            console.print("[dim]💡 Make sure you're in a Git repository directory[/dim]")
+            console.print(
+                "[dim]💡 Make sure you're in a Git repository directory[/dim]")
             raise typer.Exit(1)
 
         console.print(f"[green]✓ Using repository:[/green] {repo_path}")
@@ -1327,7 +1408,8 @@ def quickstart(repo_path: Path = typer.Argument(Path("."), help="Path to the Git
         while True:
             console.print("[bold]What would you like to do?[/bold]")
             console.print()
-            console.print("1. 📊 Analyze repository (get overview and statistics)")
+            console.print(
+                "1. 📊 Analyze repository (get overview and statistics)")
             console.print("2. 🔍 Search commits (find specific changes)")
             console.print("3. 📝 Analyze file blame (see who changed what)")
             console.print("4. 🔄 Compare commits/branches (see differences)")
@@ -1341,7 +1423,8 @@ def quickstart(repo_path: Path = typer.Argument(Path("."), help="Path to the Git
 
             if choice == 1:
                 console.print("[bold blue]📊 Repository Analysis[/bold blue]")
-                console.print("This will analyze your repository and show statistics.")
+                console.print(
+                    "This will analyze your repository and show statistics.")
                 if typer.confirm("Proceed with analysis?"):
                     console.print("[dim]Running: githound analyze .[/dim]")
                     # Import and run analyze function
@@ -1351,9 +1434,12 @@ def quickstart(repo_path: Path = typer.Argument(Path("."), help="Path to the Git
 
             elif choice == 2:
                 console.print("[bold blue]🔍 Search Commits[/bold blue]")
-                console.print("Search for commits by content, author, message, or date.")
-                search_term = typer.prompt("What would you like to search for?")
-                console.print(f"[dim]Running: githound search --content '{search_term}'[/dim]")
+                console.print(
+                    "Search for commits by content, author, message, or date.")
+                search_term = typer.prompt(
+                    "What would you like to search for?")
+                console.print(
+                    f"[dim]Running: githound search --content '{search_term}'[/dim]")
                 console.print(
                     "[yellow]Note: Full search functionality requires the complete GitHound setup[/yellow]"
                 )
@@ -1361,22 +1447,28 @@ def quickstart(repo_path: Path = typer.Argument(Path("."), help="Path to the Git
             elif choice == 3:
                 console.print("[bold blue]📝 File Blame Analysis[/bold blue]")
                 console.print("Analyze who changed each line in a file.")
-                file_path = typer.prompt("Enter file path (relative to repository)")
-                console.print(f"[dim]Running: githound blame . {file_path}[/dim]")
+                file_path = typer.prompt(
+                    "Enter file path (relative to repository)")
+                console.print(
+                    f"[dim]Running: githound blame . {file_path}[/dim]")
                 # Could call blame function here
 
             elif choice == 4:
-                console.print("[bold blue]🔄 Compare Commits/Branches[/bold blue]")
-                console.print("Compare two commits or branches to see differences.")
+                console.print(
+                    "[bold blue]🔄 Compare Commits/Branches[/bold blue]")
+                console.print(
+                    "Compare two commits or branches to see differences.")
                 from_ref = typer.prompt("From commit/branch", default="HEAD~1")
                 to_ref = typer.prompt("To commit/branch", default="HEAD")
-                console.print(f"[dim]Running: githound diff {from_ref} {to_ref}[/dim]")
+                console.print(
+                    f"[dim]Running: githound diff {from_ref} {to_ref}[/dim]")
 
             elif choice == 5:
                 console.print("[bold blue]🌐 Web Interface[/bold blue]")
                 console.print("Start the interactive web interface.")
                 if typer.confirm("Start web interface on localhost:8000?"):
-                    console.print("[dim]Running: githound web --interactive[/dim]")
+                    console.print(
+                        "[dim]Running: githound web --interactive[/dim]")
                     console.print(
                         "[yellow]Note: Web interface requires additional dependencies[/yellow]"
                     )
@@ -1392,7 +1484,8 @@ def quickstart(repo_path: Path = typer.Argument(Path("."), help="Path to the Git
                 console.print("• version  - Version information")
                 console.print("• cleanup  - Clean cache files")
                 console.print()
-                console.print("Use 'githound <command> --help' for detailed help")
+                console.print(
+                    "Use 'githound <command> --help' for detailed help")
 
             elif choice == 7:
                 console.print("[green]👋 Thanks for using GitHound![/green]")
@@ -1423,9 +1516,12 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
     # Basic info
     if "repository_info" in analysis:
         info = analysis["repository_info"]
-        console.print(f"\n[bold]Repository Path:[/bold] {info.get('path', 'N/A')}")
-        console.print(f"[bold]Current Branch:[/bold] {info.get('current_branch', 'N/A')}")
-        console.print(f"[bold]Total Branches:[/bold] {len(info.get('branches', []))}")
+        console.print(
+            f"\n[bold]Repository Path:[/bold] {info.get('path', 'N/A')}")
+        console.print(
+            f"[bold]Current Branch:[/bold] {info.get('current_branch', 'N/A')}")
+        console.print(
+            f"[bold]Total Branches:[/bold] {len(info.get('branches', []))}")
         console.print(f"[bold]Total Tags:[/bold] {len(info.get('tags', []))}")
         console.print(f"[bold]Remotes:[/bold] {len(info.get('remotes', []))}")
 
@@ -1434,8 +1530,10 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         stats = analysis["commit_statistics"]
         console.print("\n[bold]Commit Statistics:[/bold]")
         console.print(f"  Total Commits: {stats.get('total_commits', 'N/A')}")
-        console.print(f"  Contributors: {stats.get('total_contributors', 'N/A')}")
-        console.print(f"  First Commit: {stats.get('first_commit_date', 'N/A')}")
+        console.print(
+            f"  Contributors: {stats.get('total_contributors', 'N/A')}")
+        console.print(
+            f"  First Commit: {stats.get('first_commit_date', 'N/A')}")
         console.print(f"  Last Commit: {stats.get('last_commit_date', 'N/A')}")
 
     # Author statistics
@@ -1495,7 +1593,8 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
         console.print(table)
 
         if len(blame_result.lines) > 50:
-            console.print(f"[dim]... and {len(blame_result.lines) - 50} more lines[/dim]")
+            console.print(
+                f"[dim]... and {len(blame_result.lines) - 50} more lines[/dim]")
 
 
 def _print_diff_text(diff_result: Any) -> None:
@@ -1528,8 +1627,10 @@ def _print_diff_text(diff_result: Any) -> None:
         stats = diff_result.statistics
         console.print("\n[bold]Summary:[/bold]")
         console.print(f"  Files Changed: {stats.get('files_changed', 0)}")
-        console.print(f"  Total Lines Added: {stats.get('total_lines_added', 0)}")
-        console.print(f"  Total Lines Deleted: {stats.get('total_lines_deleted', 0)}")
+        console.print(
+            f"  Total Lines Added: {stats.get('total_lines_added', 0)}")
+        console.print(
+            f"  Total Lines Deleted: {stats.get('total_lines_deleted', 0)}")
 
 
 if __name__ == "__main__":

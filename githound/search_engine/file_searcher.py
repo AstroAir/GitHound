@@ -14,7 +14,7 @@ from .base import CacheableSearcher, ParallelSearcher, SearchContext
 class FilePathSearcher(CacheableSearcher):
     """Searcher for files by path patterns."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("file_path", "file_path")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -36,7 +36,8 @@ class FilePathSearcher(CacheableSearcher):
         if not file_pattern:
             return
 
-        self._report_progress(context, f"Searching for files matching '{file_pattern}'...", 0.0)
+        self._report_progress(
+            context, f"Searching for files matching '{file_pattern}'...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -93,7 +94,8 @@ class FilePathSearcher(CacheableSearcher):
                                 files_changed=len(commit.stats.files),
                                 insertions=commit.stats.total["insertions"],
                                 deletions=commit.stats.total["deletions"],
-                                parents=[parent.hexsha for parent in commit.parents],
+                                parents=[
+                                    parent.hexsha for parent in commit.parents],
                             )
 
                             result = SearchResult(
@@ -123,7 +125,8 @@ class FilePathSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(context, f"Error searching file paths: {e}", 1.0)
+            self._report_progress(
+                context, f"Error searching file paths: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -139,7 +142,7 @@ class FilePathSearcher(CacheableSearcher):
 class FileTypeSearcher(CacheableSearcher):
     """Searcher for files by extension/type."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("file_type", "file_type")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -210,7 +213,8 @@ class FileTypeSearcher(CacheableSearcher):
                                 files_changed=len(commit.stats.files),
                                 insertions=commit.stats.total["insertions"],
                                 deletions=commit.stats.total["deletions"],
-                                parents=[parent.hexsha for parent in commit.parents],
+                                parents=[
+                                    parent.hexsha for parent in commit.parents],
                             )
 
                             result = SearchResult(
@@ -241,7 +245,8 @@ class FileTypeSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(context, f"Error searching file types: {e}", 1.0)
+            self._report_progress(
+                context, f"Error searching file types: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -257,7 +262,7 @@ class FileTypeSearcher(CacheableSearcher):
 class ContentSearcher(ParallelSearcher, CacheableSearcher):
     """Enhanced content searcher with ranking and performance optimizations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("content", 4)  # Use 4 parallel workers
         self.cache_prefix = "content"
 
@@ -289,7 +294,8 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         if not content_pattern:
             return
 
-        self._report_progress(context, f"Searching file content for '{content_pattern}'...", 0.0)
+        self._report_progress(
+            context, f"Searching file content for '{content_pattern}'...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -343,7 +349,8 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                     files_changed=len(commit.stats.files),
                                     insertions=commit.stats.total["insertions"],
                                     deletions=commit.stats.total["deletions"],
-                                    parents=[parent.hexsha for parent in commit.parents],
+                                    parents=[
+                                        parent.hexsha for parent in commit.parents],
                                 )
 
                                 # Calculate relevance score based on match quality
@@ -385,7 +392,8 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(context, f"Error searching content: {e}", 1.0)
+            self._report_progress(
+                context, f"Error searching content: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -468,7 +476,8 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
             score += 0.3
 
         # Boost score for matches in important file types
-        important_extensions = [".py", ".js", ".java", ".cpp", ".c", ".h", ".md", ".txt"]
+        important_extensions = [".py", ".js", ".java",
+                                ".cpp", ".c", ".h", ".md", ".txt"]
         if any(file_path.endswith(ext) for ext in important_extensions):
             score += 0.1
 

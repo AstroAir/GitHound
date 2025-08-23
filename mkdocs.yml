@@ -58,6 +58,7 @@ nav:
     - Setup: mcp-server/setup.md
     - Tools Reference: mcp-server/tools-reference.md
     - Integration Examples: mcp-server/integration-examples.md
+    - Integration Guide: mcp_integration.md
   - API Reference:
     - REST API: api-reference/rest-api.md
     - WebSocket API: api-reference/websocket-api.md
@@ -70,6 +71,7 @@ nav:
   - Development:
     - Contributing: development/contributing.md
     - Testing: development/testing.md
+    - Testing Guide: TESTING.md
     - Type Checking: development/type-checking.md
     - Release Process: development/release-process.md
   - API Documentation:
@@ -81,7 +83,6 @@ nav:
 plugins:
   - search:
       lang: en
-      prebuild_index: false
   - gen-files:
       scripts:
         - docs/gen_ref_pages.py

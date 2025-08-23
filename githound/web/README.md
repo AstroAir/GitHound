@@ -7,6 +7,7 @@ This directory contains the web interface and API for GitHound, providing a mode
 The web interface consists of three main components:
 
 ### 1. FastAPI Backend (`api.py`)
+
 - **RESTful API**: Complete REST API for all search functionality
 - **Async Operations**: Non-blocking search operations with background tasks
 - **Real-time Updates**: WebSocket support for live progress updates
@@ -15,6 +16,7 @@ The web interface consists of three main components:
 - **Auto Documentation**: Automatic OpenAPI/Swagger documentation
 
 ### 2. WebSocket Support (`websocket.py`)
+
 - **Real-time Progress**: Live progress updates during search operations
 - **Connection Management**: Robust connection handling with automatic cleanup
 - **Broadcasting**: Efficient message broadcasting to multiple clients
@@ -22,6 +24,7 @@ The web interface consists of three main components:
 - **Error Recovery**: Graceful handling of connection failures
 
 ### 3. Web Frontend (`static/`)
+
 - **Modern Interface**: Responsive Bootstrap-based UI
 - **Multi-tab Search**: Organized search options across multiple tabs
 - **Real-time Updates**: Live progress bars and result streaming
@@ -31,6 +34,7 @@ The web interface consists of three main components:
 ## API Endpoints
 
 ### Core Search Endpoints
+
 - `POST /api/search` - Start a new search operation
 - `GET /api/search/{search_id}/status` - Get search status
 - `GET /api/search/{search_id}/results` - Get search results
@@ -38,26 +42,31 @@ The web interface consists of three main components:
 - `POST /api/search/{search_id}/export` - Export results
 
 ### Management Endpoints
+
 - `GET /health` - Health check
 - `GET /api/searches` - List all searches
 - `DELETE /api/searches/cleanup` - Clean up old searches
 
 ### WebSocket Endpoint
+
 - `WS /ws/{search_id}` - Real-time progress updates
 
 ### Documentation
+
 - `GET /api/docs` - Swagger UI documentation
 - `GET /api/redoc` - ReDoc documentation
 
 ## Features
 
 ### Search Capabilities
+
 - **Multi-Modal Search**: Content, commit hash, author, message, date range, file path, file type
 - **Fuzzy Search**: Configurable fuzzy matching with threshold control
 - **Advanced Filtering**: Include/exclude patterns, file size limits, result limits
 - **Real-time Results**: Live streaming of search results as they're found
 
 ### User Experience
+
 - **Intuitive Interface**: Clean, organized search form with tabbed sections
 - **Progress Tracking**: Real-time progress bars with detailed status messages
 - **Result Display**: Rich result cards with syntax highlighting and metadata
@@ -65,6 +74,7 @@ The web interface consists of three main components:
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ### Performance
+
 - **Async Operations**: Non-blocking search operations
 - **Background Processing**: Search runs in background with real-time updates
 - **Connection Pooling**: Efficient WebSocket connection management
@@ -131,12 +141,14 @@ ws.onmessage = (event) => {
 ## Configuration
 
 ### Environment Variables
+
 - `GITHOUND_HOST`: Server host (default: 0.0.0.0)
 - `GITHOUND_PORT`: Server port (default: 8000)
 - `GITHOUND_RELOAD`: Enable auto-reload (default: False)
 - `GITHOUND_LOG_LEVEL`: Log level (default: info)
 
 ### CORS Configuration
+
 The API is configured to allow all origins by default. For production, update the CORS settings in `api.py`:
 
 ```python
@@ -152,6 +164,7 @@ app.add_middleware(
 ## Security Considerations
 
 ### Production Deployment
+
 - **CORS**: Restrict allowed origins to your domain
 - **Authentication**: Add authentication middleware if needed
 - **Rate Limiting**: Implement rate limiting for API endpoints
@@ -159,6 +172,7 @@ app.add_middleware(
 - **Path Traversal**: Repository paths are validated to prevent directory traversal
 
 ### File System Access
+
 - The API requires read access to Git repositories
 - Repository paths are validated before access
 - No write operations are performed on repositories
@@ -166,12 +180,14 @@ app.add_middleware(
 ## Development
 
 ### Adding New Features
+
 1. **API Endpoints**: Add new endpoints in `api.py`
 2. **WebSocket Messages**: Extend message types in `websocket.py`
 3. **Frontend**: Update the JavaScript application in `static/app.js`
 4. **Models**: Add new Pydantic models in `models.py`
 
 ### Testing
+
 ```bash
 # Run the development server
 uvicorn githound.web.api:app --reload
@@ -185,12 +201,14 @@ curl -X POST http://localhost:8000/api/search \
 ## Troubleshooting
 
 ### Common Issues
+
 1. **WebSocket Connection Failed**: Check firewall settings and proxy configuration
 2. **Search Timeout**: Increase timeout_seconds in search request
 3. **Large Repository Performance**: Use max_results and file filters to limit scope
 4. **Export Failures**: Check disk space and file permissions
 
 ### Logging
+
 Enable debug logging to troubleshoot issues:
 
 ```python

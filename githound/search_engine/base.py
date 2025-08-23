@@ -2,7 +2,7 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -53,12 +53,14 @@ class BaseSearcher(ABC):
         if context.progress_callback:
             context.progress_callback(f"[{self.name}] {message}", progress)
 
-    def _update_metrics(self, **kwargs):
-        """Update search metrics."""
+    def _update_metrics(self, **kwargs: Any) -> None:
+        """Update search metrics.
+        Accepts numeric fields of SearchMetrics and increments or sets appropriately.
+        """
         for key, value in kwargs.items():
             if hasattr(self._metrics, key):
                 current_value = getattr(self._metrics, key)
-                if isinstance(current_value, (int, float)):
+                if isinstance(current_value, (int, float)) and isinstance(value, (int, float)):
                     setattr(self._metrics, key, current_value + value)
                 else:
                     setattr(self._metrics, key, value)
@@ -115,10 +117,14 @@ class ParallelSearcher(BaseSearcher):
         self.max_workers = max_workers
         self._semaphore = asyncio.Semaphore(max_workers)
 
-    async def _run_parallel(self, tasks: list[Callable], context: SearchContext) -> list[Any]:
+    async def _run_parallel(
+        self,
+        tasks: list[Callable[[], Awaitable[Any]]],
+        context: SearchContext,
+    ) -> list[Any]:
         """Run tasks in parallel with concurrency control."""
 
-        async def _run_task(task: Callable) -> Any:
+        async def _run_task(task: Callable[[], Awaitable[Any]]) -> Any:
             async with self._semaphore:
                 return await task()
 
