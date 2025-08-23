@@ -196,23 +196,23 @@ async def get_results(repo: Repo, query: SearchQuery) -> List[SearchResult]:
 ### 5. Pydantic Models
 
 ```python
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
 class CommitSchema(BaseModel):
     """Type-safe commit schema with Pydantic."""
-    
+
+    model_config = ConfigDict(
+        validate_assignment=True,
+        use_enum_values=True
+    )
+
     hash: str = Field(..., description="Commit hash")
     message: str = Field(..., description="Commit message")
     author: str = Field(..., description="Author name and email")
     date: datetime = Field(..., description="Commit date")
     files_changed: List[str] = Field(default_factory=list, description="Changed files")
-    
-    class Config:
-        # Enable Pydantic MyPy plugin features
-        validate_assignment = True
-        use_enum_values = True
 ```
 
 ## Common Type Issues and Solutions

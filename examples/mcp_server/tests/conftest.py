@@ -13,8 +13,8 @@ from typing import AsyncGenerator, Dict, Any, Optional
 import pytest
 import pytest_asyncio
 
-from fastmcp.client import FastMCPClient
-from fastmcp.client.transports import StdioTransport, InMemoryTransport
+from fastmcp.client import Client as FastMCPClient
+from fastmcp.client import StdioTransport
 
 # Configure test logging
 logging.basicConfig(level=logging.INFO)

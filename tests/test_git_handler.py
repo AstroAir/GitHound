@@ -1,8 +1,10 @@
+
 import pytest
 from git import Repo
-from pathlib import Path
-from githound.git_handler import get_repository, walk_history, process_commit
-from githound.models import GitHoundConfig, SearchConfig
+
+from githound.git_handler import get_repository, process_commit, walk_history
+from githound.models import GitHoundConfig
+
 
 @pytest.fixture
 def temp_repo(tmp_path):
@@ -27,10 +29,12 @@ def temp_repo(tmp_path):
 
     return repo_path
 
+
 def test_get_repository(temp_repo):
     repo = get_repository(temp_repo)
     assert repo is not None
     assert isinstance(repo, Repo)
+
 
 def test_walk_history(temp_repo):
     config = GitHoundConfig(
@@ -40,6 +44,7 @@ def test_walk_history(temp_repo):
     repo = get_repository(temp_repo)
     commits = list(walk_history(repo, config))
     assert len(commits) == 2  # Now we have 2 commits
+
 
 def test_process_commit(temp_repo):
     config = GitHoundConfig(

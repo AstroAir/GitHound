@@ -1,10 +1,10 @@
 """Search engine package for GitHound."""
 
-from .base import BaseSearcher, SearchContext, CacheableSearcher, ParallelSearcher
-from .orchestrator import SearchOrchestrator
-from .commit_searcher import CommitHashSearcher, AuthorSearcher, MessageSearcher, DateRangeSearcher
-from .file_searcher import FilePathSearcher, FileTypeSearcher, ContentSearcher
+from .base import BaseSearcher, CacheableSearcher, ParallelSearcher, SearchContext
+from .commit_searcher import AuthorSearcher, CommitHashSearcher, DateRangeSearcher, MessageSearcher
+from .file_searcher import ContentSearcher, FilePathSearcher, FileTypeSearcher
 from .fuzzy_searcher import FuzzySearcher
+from .orchestrator import SearchOrchestrator
 
 __all__ = [
     "BaseSearcher",
@@ -19,5 +19,5 @@ __all__ = [
     "FilePathSearcher",
     "FileTypeSearcher",
     "ContentSearcher",
-    "FuzzySearcher"
+    "FuzzySearcher",
 ]

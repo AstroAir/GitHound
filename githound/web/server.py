@@ -5,12 +5,11 @@ GitHound Web Server
 A simple server script to run the GitHound web interface.
 """
 
-import os
 import sys
 from pathlib import Path
 
-import uvicorn
 import typer
+import uvicorn
 
 # Add the parent directory to the path so we can import githound
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -28,29 +27,29 @@ def serve(
 ) -> None:
     """
     Start the GitHound web server.
-    
+
     This will start a FastAPI server with the GitHound web interface,
     providing both a REST API and a web-based GUI for Git history searching.
-    
+
     Examples:
-    
+
     \b
     # Start server on default port (8000)
     python -m githound.web.server serve
-    
+
     \b
     # Start with auto-reload for development
     python -m githound.web.server serve --reload
-    
+
     \b
     # Start on custom host and port
     python -m githound.web.server serve --host 127.0.0.1 --port 8080
-    
+
     \b
     # Start with multiple workers for production
     python -m githound.web.server serve --workers 4
     """
-    
+
     print("🐕 Starting GitHound Web Server...")
     print(f"   Host: {host}")
     print(f"   Port: {port}")
@@ -65,7 +64,7 @@ def serve(
     print()
     print("Press Ctrl+C to stop the server")
     print()
-    
+
     try:
         uvicorn.run(
             "githound.web.api:app",
@@ -74,7 +73,7 @@ def serve(
             reload=reload,
             log_level=log_level,
             workers=workers if not reload else 1,  # Can't use workers with reload
-            access_log=True
+            access_log=True,
         )
     except KeyboardInterrupt:
         print("\n👋 GitHound server stopped")
@@ -87,18 +86,12 @@ def serve(
 def dev() -> None:
     """
     Start the development server with auto-reload and debug logging.
-    
+
     This is equivalent to:
     serve --reload --log-level debug --host 127.0.0.1
     """
     print("🚀 Starting GitHound Development Server...")
-    serve(
-        host="127.0.0.1",
-        port=8000,
-        reload=True,
-        log_level="debug",
-        workers=1
-    )
+    serve(host="127.0.0.1", port=8000, reload=True, log_level="debug", workers=1)
 
 
 @app.command()
@@ -109,20 +102,14 @@ def prod(
 ) -> None:
     """
     Start the production server with optimized settings.
-    
+
     This configures the server for production use with:
     - Multiple workers
     - Info-level logging
     - No auto-reload
     """
     print("🏭 Starting GitHound Production Server...")
-    serve(
-        host=host,
-        port=port,
-        reload=False,
-        log_level="info",
-        workers=workers
-    )
+    serve(host=host, port=port, reload=False, log_level="info", workers=workers)
 
 
 @app.command()
@@ -134,10 +121,10 @@ def health(
     Check if the GitHound server is running and healthy.
     """
     import requests
-    
+
     try:
         response = requests.get(f"http://{host}:{port}/health", timeout=5)
-        
+
         if response.status_code == 200:
             data = response.json()
             print("✅ GitHound server is healthy!")
@@ -148,7 +135,7 @@ def health(
         else:
             print(f"❌ Server returned status code: {response.status_code}")
             sys.exit(1)
-            
+
     except requests.exceptions.ConnectionError:
         print(f"❌ Could not connect to server at {host}:{port}")
         print("   Make sure the server is running.")

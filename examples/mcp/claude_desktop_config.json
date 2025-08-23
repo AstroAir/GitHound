@@ -1,0 +1,50 @@
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound"
+      },
+      "description": "GitHound MCP Server - Comprehensive Git repository analysis and search",
+      "capabilities": {
+        "tools": [
+          "advanced_search",
+          "fuzzy_search",
+          "content_search",
+          "analyze_repository",
+          "analyze_commit",
+          "get_filtered_commits",
+          "get_file_history_mcp",
+          "analyze_file_blame",
+          "compare_commits_diff",
+          "compare_branches_diff",
+          "get_author_stats",
+          "get_commit_history",
+          "get_file_blame",
+          "export_repository_data",
+          "list_branches",
+          "list_tags",
+          "list_remotes",
+          "validate_repository",
+          "start_web_server",
+          "generate_repository_report"
+        ],
+        "resources": [
+          "githound://repository/{repo_path}/config",
+          "githound://repository/{repo_path}/branches",
+          "githound://repository/{repo_path}/contributors",
+          "githound://repository/{repo_path}/summary",
+          "githound://repository/{repo_path}/files/{file_path}/history",
+          "githound://repository/{repo_path}/commits/{commit_hash}/details",
+          "githound://repository/{repo_path}/blame/{file_path}"
+        ],
+        "prompts": [
+          "investigate_bug",
+          "prepare_code_review",
+          "analyze_performance_regression"
+        ]
+      }
+    }
+  }
+}

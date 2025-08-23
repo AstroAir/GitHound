@@ -5,30 +5,39 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, WebSocket
+from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
-from git import Repo, GitCommandError
+from git import GitCommandError
 
 from ..git_handler import get_repository
 from ..search_engine import (
-    SearchOrchestrator, CommitHashSearcher, AuthorSearcher, MessageSearcher,
-    DateRangeSearcher, FilePathSearcher, FileTypeSearcher, ContentSearcher, FuzzySearcher
+    AuthorSearcher,
+    CommitHashSearcher,
+    ContentSearcher,
+    DateRangeSearcher,
+    FilePathSearcher,
+    FileTypeSearcher,
+    FuzzySearcher,
+    MessageSearcher,
+    SearchOrchestrator,
 )
-from ..models import SearchMetrics
 from ..utils import ExportManager
 from .models import (
-    SearchRequest, SearchResponse, SearchStatusResponse, ExportRequest,
-    HealthResponse, ErrorResponse
+    ErrorResponse,
+    ExportRequest,
+    HealthResponse,
+    SearchRequest,
+    SearchResponse,
+    SearchStatusResponse,
 )
 from .websocket import connection_manager, websocket_endpoint
 
-
 # Global state for managing searches
-active_searches: Dict[str, Dict] = {}
+active_searches: dict[str, dict] = {}
 app_start_time = time.time()
 
 
@@ -38,7 +47,7 @@ app = FastAPI(
     description="Advanced Git history search API with multi-modal search capabilities",
     version="1.0.0",
     docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    redoc_url="/api/redoc",
 )
 
 # Add CORS middleware
@@ -59,7 +68,7 @@ if static_path.exists():
 def create_search_orchestrator() -> SearchOrchestrator:
     """Create and configure a search orchestrator."""
     orchestrator = SearchOrchestrator()
-    
+
     # Register all searchers
     orchestrator.register_searcher(CommitHashSearcher())
     orchestrator.register_searcher(AuthorSearcher())
@@ -69,7 +78,7 @@ def create_search_orchestrator() -> SearchOrchestrator:
     orchestrator.register_searcher(FileTypeSearcher())
     orchestrator.register_searcher(ContentSearcher())
     orchestrator.register_searcher(FuzzySearcher())
-    
+
     return orchestrator
 
 
@@ -79,24 +88,26 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
         # Update search status
         active_searches[search_id]["status"] = "running"
         active_searches[search_id]["message"] = "Initializing search..."
-        
+
         # Validate repository path
         repo_path = Path(request.repo_path)
         if not repo_path.exists():
-            raise HTTPException(status_code=400, detail=f"Repository path does not exist: {repo_path}")
-        
+            raise HTTPException(
+                status_code=400, detail=f"Repository path does not exist: {repo_path}"
+            )
+
         # Get repository
         try:
             repo = get_repository(repo_path)
         except GitCommandError as e:
             raise HTTPException(status_code=400, detail=f"Invalid Git repository: {e}")
-        
+
         # Create search orchestrator
         orchestrator = create_search_orchestrator()
-        
+
         # Convert request to search query
         query = request.to_search_query()
-        
+
         # Set up progress callback with WebSocket broadcasting
         def progress_callback(message: str, progress: float) -> None:
             if search_id in active_searches:
@@ -104,10 +115,12 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
                 active_searches[search_id]["message"] = message
 
                 # Broadcast progress via WebSocket
-                asyncio.create_task(connection_manager.broadcast_progress(
-                    search_id, progress, message, active_searches[search_id]["results_count"]
-                ))
-        
+                asyncio.create_task(
+                    connection_manager.broadcast_progress(
+                        search_id, progress, message, active_searches[search_id]["results_count"]
+                    )
+                )
+
         # Perform search
         results = []
         async for result in orchestrator.search(
@@ -115,23 +128,23 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
             query=query,
             branch=request.branch,
             progress_callback=progress_callback,
-            max_results=request.max_results
+            max_results=request.max_results,
         ):
             results.append(result)
             active_searches[search_id]["results_count"] = len(results)
-        
+
         # Get metrics
         metrics = orchestrator.metrics
-        
+
         # Create response
         response = SearchResponse.from_results(
             results=results,
             search_id=search_id,
             metrics=metrics,
             include_metadata=True,
-            status="completed"
+            status="completed",
         )
-        
+
         # Store results
         active_searches[search_id]["status"] = "completed"
         active_searches[search_id]["progress"] = 1.0
@@ -141,10 +154,8 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
         active_searches[search_id]["metrics"] = metrics
 
         # Broadcast completion via WebSocket
-        await connection_manager.broadcast_completion(
-            search_id, "completed", len(results)
-        )
-        
+        await connection_manager.broadcast_completion(search_id, "completed", len(results))
+
     except Exception as e:
         # Handle errors
         error_message = str(e)
@@ -206,7 +217,7 @@ async def health_check() -> HealthResponse:
         status="healthy",
         version="1.0.0",
         uptime_seconds=uptime,
-        active_searches=len(active_searches)
+        active_searches=len(active_searches),
     )
 
 
@@ -215,7 +226,7 @@ async def start_search(request: SearchRequest, background_tasks: BackgroundTasks
     """Start a new search operation."""
     # Generate unique search ID
     search_id = str(uuid.uuid4())
-    
+
     # Initialize search state
     active_searches[search_id] = {
         "id": search_id,
@@ -224,12 +235,12 @@ async def start_search(request: SearchRequest, background_tasks: BackgroundTasks
         "message": "Search queued",
         "results_count": 0,
         "started_at": datetime.now(),
-        "request": request
+        "request": request,
     }
-    
+
     # Start search in background
     background_tasks.add_task(perform_search, search_id, request)
-    
+
     # Return immediate response with search ID
     return SearchResponse(
         results=[],
@@ -238,7 +249,7 @@ async def start_search(request: SearchRequest, background_tasks: BackgroundTasks
         status="started",
         commits_searched=0,
         files_searched=0,
-        search_duration_ms=0.0
+        search_duration_ms=0.0,
     )
 
 
@@ -247,16 +258,16 @@ async def get_search_status(search_id: str) -> SearchStatusResponse:
     """Get the status of a search operation."""
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
-    
+
     search_info = active_searches[search_id]
-    
+
     return SearchStatusResponse(
         search_id=search_id,
         status=search_info["status"],
         progress=search_info["progress"],
         message=search_info["message"],
         results_count=search_info["results_count"],
-        started_at=search_info["started_at"]
+        started_at=search_info["started_at"],
     )
 
 
@@ -265,15 +276,15 @@ async def get_search_results(search_id: str, include_metadata: bool = False) -> 
     """Get the results of a completed search."""
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
-    
+
     search_info = active_searches[search_id]
-    
+
     if search_info["status"] == "error":
         raise HTTPException(status_code=500, detail=search_info.get("error", "Search failed"))
-    
+
     if search_info["status"] != "completed":
         raise HTTPException(status_code=202, detail="Search not yet completed")
-    
+
     # Return stored response or create new one
     if "response" in search_info:
         response: SearchResponse = search_info["response"]
@@ -286,7 +297,7 @@ async def get_search_results(search_id: str, include_metadata: bool = False) -> 
                 search_id=search_id,
                 metrics=metrics,
                 include_metadata=include_metadata,
-                status="completed"
+                status="completed",
             )
         return response
     else:
@@ -294,37 +305,39 @@ async def get_search_results(search_id: str, include_metadata: bool = False) -> 
 
 
 @app.delete("/api/search/{search_id}")
-async def cancel_search(search_id: str) -> Dict[str, str]:
+async def cancel_search(search_id: str) -> dict[str, str]:
     """Cancel a running search operation."""
     if search_id not in active_searches:
         raise HTTPException(status_code=404, detail="Search not found")
-    
+
     search_info = active_searches[search_id]
-    
+
     if search_info["status"] in ["completed", "error", "cancelled"]:
         return {"message": f"Search already {search_info['status']}"}
-    
+
     # Mark as cancelled
     active_searches[search_id]["status"] = "cancelled"
     active_searches[search_id]["message"] = "Search cancelled by user"
-    
+
     return {"message": "Search cancelled successfully"}
 
 
 @app.get("/api/searches")
-async def list_searches() -> Dict[str, Any]:
+async def list_searches() -> dict[str, Any]:
     """List all searches (active and completed)."""
     searches = []
     for search_id, info in active_searches.items():
-        searches.append({
-            "search_id": search_id,
-            "status": info["status"],
-            "progress": info["progress"],
-            "message": info["message"],
-            "results_count": info["results_count"],
-            "started_at": info["started_at"]
-        })
-    
+        searches.append(
+            {
+                "search_id": search_id,
+                "status": info["status"],
+                "progress": info["progress"],
+                "message": info["message"],
+                "results_count": info["results_count"],
+                "started_at": info["started_at"],
+            }
+        )
+
     return {"searches": searches}
 
 
@@ -362,25 +375,23 @@ async def export_search_results(search_id: str, export_request: ExportRequest) -
 
     try:
         if export_request.format.value == "json":
-            export_manager.export_to_json(
-                results, export_path, export_request.include_metadata
-            )
+            export_manager.export_to_json(results, export_path, export_request.include_metadata)
         elif export_request.format.value == "csv":
-            export_manager.export_to_csv(
-                results, export_path, export_request.include_metadata
-            )
+            export_manager.export_to_csv(results, export_path, export_request.include_metadata)
         elif export_request.format.value == "text":
             export_manager.export_to_text(
                 results, export_path, "detailed" if export_request.include_metadata else "simple"
             )
         else:
-            raise HTTPException(status_code=400, detail=f"Unsupported export format: {export_request.format}")
+            raise HTTPException(
+                status_code=400, detail=f"Unsupported export format: {export_request.format}"
+            )
 
         # Return file for download
         return FileResponse(
             path=export_path,
             filename=export_request.filename,
-            media_type="application/octet-stream"
+            media_type="application/octet-stream",
         )
 
     except Exception as e:
@@ -389,7 +400,7 @@ async def export_search_results(search_id: str, export_request: ExportRequest) -
 
 # Cleanup endpoint for removing old searches
 @app.delete("/api/searches/cleanup")
-async def cleanup_searches(max_age_hours: int = 24) -> Dict[str, str]:
+async def cleanup_searches(max_age_hours: int = 24) -> dict[str, str]:
     """Clean up old search results."""
     cutoff_time = datetime.now().timestamp() - (max_age_hours * 3600)
 
@@ -409,9 +420,7 @@ async def cleanup_searches(max_age_hours: int = 24) -> Dict[str, str]:
 async def http_exception_handler(request: Any, exc: HTTPException) -> ErrorResponse:
     """Handle HTTP exceptions."""
     return ErrorResponse(
-        error="HTTPException",
-        message=exc.detail,
-        details={"status_code": exc.status_code}
+        error="HTTPException", message=exc.detail, details={"status_code": exc.status_code}
     )
 
 
@@ -419,7 +428,5 @@ async def http_exception_handler(request: Any, exc: HTTPException) -> ErrorRespo
 async def general_exception_handler(request: Any, exc: Exception) -> ErrorResponse:
     """Handle general exceptions."""
     return ErrorResponse(
-        error=type(exc).__name__,
-        message=str(exc),
-        details={"request_url": str(request.url)}
+        error=type(exc).__name__, message=str(exc), details={"request_url": str(request.url)}
     )

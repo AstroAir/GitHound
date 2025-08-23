@@ -46,10 +46,17 @@ GitHound is a comprehensive Git repository analysis tool that provides advanced 
 ### Export and Integration
 - **Multiple Export Formats**: JSON, YAML, CSV, XML, Excel, and text formats
 - **Data Filtering**: Advanced filtering and sorting options
-- **MCP Server**: Model Context Protocol server for AI integration
+- **🆕 MCP Server 2.0**: Full Model Context Protocol support with FastMCP 2.0
 - **REST API**: Comprehensive API for external integrations
 - **Web Interface**: Modern web UI with real-time updates
 - **CLI Interface**: Rich command-line interface
+
+### 🤖 MCP Integration (New!)
+- **25+ MCP Tools**: Advanced search, analysis, and repository management
+- **7 MCP Resources**: Dynamic access to repository data and metadata
+- **3 MCP Prompts**: Structured workflows for bug investigation, code review, and performance analysis
+- **FastMCP 2.0**: Latest MCP protocol with enhanced capabilities
+- **LLM-Ready**: Direct integration with Claude, GPT, and other AI models
 
 ## 🛠 Installation
 
@@ -65,6 +72,47 @@ git clone https://github.com/your-org/githound.git
 cd githound
 pip install -e ".[dev]"
 ```
+
+## 🤖 MCP Integration
+
+GitHound now provides full Model Context Protocol (MCP) support, allowing LLMs to directly access all repository analysis capabilities.
+
+### Starting the MCP Server
+
+```bash
+# Start with stdio transport (default)
+python -m githound.mcp_server
+
+# Start with HTTP transport
+python -m githound.mcp_server --http --port 3000
+
+# Start with SSE transport
+python -m githound.mcp_server --sse --host 0.0.0.0 --port 3001
+```
+
+### MCP Tools Available
+
+- **Search Tools**: `advanced_search`, `fuzzy_search`, `content_search`
+- **Analysis Tools**: `analyze_repository`, `analyze_commit`, `analyze_file_blame`
+- **Comparison Tools**: `compare_commits_diff`, `compare_branches_diff`
+- **Management Tools**: `list_branches`, `list_tags`, `validate_repository`
+- **Export Tools**: `export_repository_data`, `generate_repository_report`
+- **Web Tools**: `start_web_server`
+
+### MCP Resources
+
+- `githound://repository/{repo_path}/config` - Repository configuration
+- `githound://repository/{repo_path}/summary` - Repository summary
+- `githound://repository/{repo_path}/files/{file_path}/history` - File history
+- `githound://repository/{repo_path}/commits/{commit_hash}/details` - Commit details
+
+### MCP Prompts
+
+- `investigate_bug` - Structured bug investigation workflow
+- `prepare_code_review` - Code review preparation workflow
+- `analyze_performance_regression` - Performance regression analysis
+
+For detailed MCP documentation, see [docs/mcp_integration.md](docs/mcp_integration.md).
 
 ## 🚀 Quick Start
 

@@ -1,21 +1,20 @@
 """Shared test fixtures and configuration for GitHound tests."""
 
 import asyncio
-import tempfile
 import shutil
-import pytest
+import tempfile
+from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from pathlib import Path
-from typing import Generator, Dict, Any, AsyncGenerator
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock
 
-from git import Repo
-from fastapi.testclient import TestClient
+import pytest
 from fastmcp import Client as MCPClient
+from git import Repo
 
-from githound.models import SearchQuery, CommitInfo, RepositoryInfo
-from githound.search_engine import SearchOrchestrator
 from githound.mcp_server import mcp
+from githound.models import CommitInfo, RepositoryInfo, SearchQuery
+from githound.search_engine import SearchOrchestrator
 
 
 @pytest.fixture(scope="session")
@@ -38,31 +37,70 @@ def temp_dir() -> Generator[Path, None, None]:
 def temp_repo(temp_dir: Path) -> Generator[Repo, None, None]:
     """Create a temporary Git repository for testing."""
     repo = Repo.init(temp_dir)
-    
+
     # Configure user for commits
     with repo.config_writer() as config:
         config.set_value("user", "name", "Test User")
         config.set_value("user", "email", "test@example.com")
-    
+
     # Create initial commit
     test_file = temp_dir / "README.md"
     test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.")
     repo.index.add([str(test_file)])
     repo.index.commit("Initial commit")
-    
+
     # Create a second commit
     test_file2 = temp_dir / "src" / "main.py"
     test_file2.parent.mkdir(exist_ok=True)
-    test_file2.write_text("def main():\n    print('Hello, World!')\n\nif __name__ == '__main__':\n    main()")
+    test_file2.write_text(
+        "def main():\n    print('Hello, World!')\n\nif __name__ == '__main__':\n    main()"
+    )
     repo.index.add([str(test_file2)])
     repo.index.commit("Add main.py")
-    
+
     # Create a third commit
-    test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.\n\n## Features\n- Testing\n- Git operations")
+    test_file.write_text(
+        "# Test Repository\n\nThis is a test repository for GitHound tests.\n\n## Features\n- Testing\n- Git operations"
+    )
     repo.index.add([str(test_file)])
     repo.index.commit("Update README with features")
-    
+
     yield repo
+
+
+@pytest.fixture
+def temp_repo_with_commits(temp_dir: Path) -> Generator[tuple, None, None]:
+    """Create a temporary Git repository with commit references for performance testing."""
+    repo = Repo.init(temp_dir)
+
+    # Configure user for commits
+    with repo.config_writer() as config:
+        config.set_value("user", "name", "Test User")
+        config.set_value("user", "email", "test@example.com")
+
+    # Create initial commit
+    test_file = temp_dir / "README.md"
+    test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.")
+    repo.index.add([str(test_file)])
+    initial_commit = repo.index.commit("Initial commit")
+
+    # Create a second commit
+    test_file2 = temp_dir / "src" / "main.py"
+    test_file2.parent.mkdir(exist_ok=True)
+    test_file2.write_text(
+        "def main():\n    print('Hello, World!')\n\nif __name__ == '__main__':\n    main()"
+    )
+    repo.index.add([str(test_file2)])
+    second_commit = repo.index.commit("Add main.py")
+
+    # Create a third commit
+    test_file.write_text(
+        "# Test Repository\n\nThis is a test repository for GitHound tests.\n\n## Features\n- Testing\n- Git operations"
+    )
+    repo.index.add([str(test_file)])
+    third_commit = repo.index.commit("Update README with features")
+
+    yield (repo, temp_dir, initial_commit, second_commit)
 
 
 @pytest.fixture
@@ -73,7 +111,7 @@ def sample_search_query() -> SearchQuery:
         author_pattern="Test User",
         message_pattern="commit",
         fuzzy_search=True,
-        fuzzy_threshold=0.8
+        fuzzy_threshold=0.8,
     )
 
 
@@ -91,7 +129,7 @@ def sample_commit_info() -> CommitInfo:
         date=datetime(2024, 1, 1, 12, 0, 0),
         files_changed=2,
         insertions=10,
-        deletions=5
+        deletions=5,
     )
 
 
@@ -103,7 +141,7 @@ def sample_repository_info() -> RepositoryInfo:
         name="test-repo",
         is_bare=False,
         total_commits=100,
-        contributors=["Test User", "Another User"]
+        contributors=["Test User", "Another User"],
     )
 
 
@@ -170,7 +208,7 @@ def large_repo_mock() -> Mock:
     mock_repo = Mock(spec=Repo)
     mock_repo.git_dir = "/large/repo/.git"
     mock_repo.working_dir = "/large/repo"
-    
+
     # Simulate large repository
     mock_commits = []
     for i in range(10000):
@@ -180,7 +218,7 @@ def large_repo_mock() -> Mock:
         commit.author.email = f"user{i % 100}@example.com"
         commit.message = f"Commit {i}: Some changes"
         mock_commits.append(commit)
-    
+
     mock_repo.iter_commits.return_value = mock_commits
     return mock_repo
 
@@ -190,6 +228,7 @@ def large_repo_mock() -> Mock:
 def git_error_mock():
     """Create a mock that raises GitCommandError."""
     from git import GitCommandError
+
     mock = Mock()
     mock.side_effect = GitCommandError("git command failed", 1)
     return mock

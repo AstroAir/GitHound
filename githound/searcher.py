@@ -3,14 +3,13 @@
 import json
 import subprocess
 from pathlib import Path
-from typing import List
 
 from githound.models import SearchConfig, SearchResult, SearchType
 
 
 def search_blob_content(
     content: bytes, query: str, config: SearchConfig, commit_hash: str, file_path: str
-) -> List[SearchResult]:
+) -> list[SearchResult]:
     """
     Searches the given content for the query using the ripgrep (rg) command.
 
@@ -29,14 +28,12 @@ def search_blob_content(
         rg_args.append("-i")
 
     try:
-        process = subprocess.run(
-            rg_args, input=content, capture_output=True, check=True, text=True
-        )
+        process = subprocess.run(rg_args, input=content, capture_output=True, check=True, text=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         # ripgrep not found or returned an error (e.g., no matches)
         return []
 
-    results: List[SearchResult] = []
+    results: list[SearchResult] = []
     for line in process.stdout.strip().split("\n"):
         if not line:
             continue
@@ -53,7 +50,7 @@ def search_blob_content(
                     search_type=SearchType.CONTENT,
                     relevance_score=0.0,
                     match_context=None,
-                    search_time_ms=None
+                    search_time_ms=None,
                 )
             )
     return results

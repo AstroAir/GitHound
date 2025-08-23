@@ -1,27 +1,26 @@
 """File-based searchers for GitHound."""
 
 import fnmatch
-import os
+import json
 import re
 import subprocess
-import json
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator, List, Set
 
-from ..models import SearchQuery, SearchResult, SearchType, CommitInfo
-from .base import BaseSearcher, CacheableSearcher, ParallelSearcher, SearchContext
+from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
+from .base import CacheableSearcher, ParallelSearcher, SearchContext
 
 
 class FilePathSearcher(CacheableSearcher):
     """Searcher for files by path patterns."""
-    
+
     def __init__(self):
         super().__init__("file_path", "file_path")
-    
+
     async def can_handle(self, query: SearchQuery) -> bool:
         """Check if this searcher can handle the query."""
         return query.file_path_pattern is not None
-    
+
     async def estimate_work(self, context: SearchContext) -> int:
         """Estimate work based on repository size."""
         try:
@@ -30,17 +29,17 @@ class FilePathSearcher(CacheableSearcher):
             return min(len(commits), 500)
         except:
             return 100
-    
+
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
         """Search for files by path pattern."""
         file_pattern = context.query.file_path_pattern
         if not file_pattern:
             return
-        
+
         self._report_progress(context, f"Searching for files matching '{file_pattern}'...", 0.0)
-        
+
         branch = context.branch or context.repo.active_branch.name
-        
+
         # Compile regex pattern
         regex_pattern = None
         try:
@@ -49,38 +48,38 @@ class FilePathSearcher(CacheableSearcher):
         except re.error:
             # If regex is invalid, use glob pattern
             pass
-        
+
         commits_searched = 0
         results_found = 0
         seen_files = set()  # Track unique file paths
-        
+
         try:
             for commit in context.repo.iter_commits(branch):
                 commits_searched += 1
-                
+
                 # Get files changed in this commit
                 for parent in commit.parents:
                     diffs = commit.diff(parent)
                     for diff in diffs:
                         if diff.b_blob is None or diff.b_path is None:
                             continue
-                        
+
                         file_path = diff.b_path
-                        
+
                         # Skip if we've already seen this file
                         if file_path in seen_files:
                             continue
-                        
+
                         match = False
                         if regex_pattern:
                             match = regex_pattern.search(file_path) is not None
                         else:
                             # Use glob pattern matching
                             match = fnmatch.fnmatch(file_path, file_pattern)
-                        
+
                         if match:
                             seen_files.add(file_path)
-                            
+
                             # Create commit info
                             commit_info = CommitInfo(
                                 hash=commit.hexsha,
@@ -92,11 +91,11 @@ class FilePathSearcher(CacheableSearcher):
                                 message=commit.message.strip(),
                                 date=commit.committed_date,
                                 files_changed=len(commit.stats.files),
-                                insertions=commit.stats.total['insertions'],
-                                deletions=commit.stats.total['deletions'],
-                                parents=[parent.hexsha for parent in commit.parents]
+                                insertions=commit.stats.total["insertions"],
+                                deletions=commit.stats.total["deletions"],
+                                parents=[parent.hexsha for parent in commit.parents],
                             )
-                            
+
                             result = SearchResult(
                                 commit_hash=commit.hexsha,
                                 file_path=Path(file_path),
@@ -107,40 +106,46 @@ class FilePathSearcher(CacheableSearcher):
                                 commit_info=commit_info,
                                 match_context={
                                     "search_pattern": file_pattern,
-                                    "matched_path": file_path
+                                    "matched_path": file_path,
                                 },
-                                search_time_ms=None
+                                search_time_ms=None,
                             )
-                            
+
                             results_found += 1
                             yield result
-                
+
                 if commits_searched % 50 == 0:
                     progress = min(commits_searched / 500, 0.9)
-                    self._report_progress(context, f"Searched {commits_searched} commits, found {results_found} file matches", progress)
-        
+                    self._report_progress(
+                        context,
+                        f"Searched {commits_searched} commits, found {results_found} file matches",
+                        progress,
+                    )
+
         except Exception as e:
             self._report_progress(context, f"Error searching file paths: {e}", 1.0)
-        
+
         finally:
             self._update_metrics(
                 total_commits_searched=commits_searched,
                 total_files_searched=len(seen_files),
-                total_results_found=results_found
+                total_results_found=results_found,
             )
-            self._report_progress(context, f"File path search completed: {results_found} matches", 1.0)
+            self._report_progress(
+                context, f"File path search completed: {results_found} matches", 1.0
+            )
 
 
 class FileTypeSearcher(CacheableSearcher):
     """Searcher for files by extension/type."""
-    
+
     def __init__(self):
         super().__init__("file_type", "file_type")
-    
+
     async def can_handle(self, query: SearchQuery) -> bool:
         """Check if this searcher can handle the query."""
         return query.file_extensions is not None and len(query.file_extensions) > 0
-    
+
     async def estimate_work(self, context: SearchContext) -> int:
         """Estimate work based on repository size."""
         try:
@@ -149,48 +154,50 @@ class FileTypeSearcher(CacheableSearcher):
             return min(len(commits), 500)
         except:
             return 100
-    
+
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
         """Search for files by extension."""
         extensions = context.query.file_extensions
         if not extensions:
             return
-        
+
         # Normalize extensions (ensure they start with .)
         normalized_extensions = []
         for ext in extensions:
-            if not ext.startswith('.'):
-                ext = '.' + ext
+            if not ext.startswith("."):
+                ext = "." + ext
             normalized_extensions.append(ext.lower())
-        
-        self._report_progress(context, f"Searching for files with extensions: {', '.join(normalized_extensions)}", 0.0)
-        
+
+        self._report_progress(
+            context, f"Searching for files with extensions: {', '.join(normalized_extensions)}", 0.0
+        )
+
         branch = context.branch or context.repo.active_branch.name
-        
+
         commits_searched = 0
         results_found = 0
         seen_files = set()
-        
+
         try:
             for commit in context.repo.iter_commits(branch):
                 commits_searched += 1
-                
+
                 for parent in commit.parents:
                     diffs = commit.diff(parent)
                     for diff in diffs:
                         if diff.b_blob is None or diff.b_path is None:
                             continue
-                        
+
                         file_path = diff.b_path
-                        
+
                         if file_path in seen_files:
                             continue
-                        
+
                         # Check file extension
                         file_ext = Path(file_path).suffix.lower()
                         if file_ext in normalized_extensions:
                             seen_files.add(file_path)
-                            
+
                             commit_info = CommitInfo(
                                 hash=commit.hexsha,
                                 short_hash=commit.hexsha[:8],
@@ -201,11 +208,11 @@ class FileTypeSearcher(CacheableSearcher):
                                 message=commit.message.strip(),
                                 date=commit.committed_date,
                                 files_changed=len(commit.stats.files),
-                                insertions=commit.stats.total['insertions'],
-                                deletions=commit.stats.total['deletions'],
-                                parents=[parent.hexsha for parent in commit.parents]
+                                insertions=commit.stats.total["insertions"],
+                                deletions=commit.stats.total["deletions"],
+                                parents=[parent.hexsha for parent in commit.parents],
                             )
-                            
+
                             result = SearchResult(
                                 commit_hash=commit.hexsha,
                                 file_path=Path(file_path),
@@ -217,28 +224,34 @@ class FileTypeSearcher(CacheableSearcher):
                                 match_context={
                                     "search_extensions": extensions,
                                     "matched_extension": file_ext,
-                                    "file_path": file_path
+                                    "file_path": file_path,
                                 },
-                                search_time_ms=None
+                                search_time_ms=None,
                             )
-                            
+
                             results_found += 1
                             yield result
-                
+
                 if commits_searched % 50 == 0:
                     progress = min(commits_searched / 500, 0.9)
-                    self._report_progress(context, f"Searched {commits_searched} commits, found {results_found} file type matches", progress)
-        
+                    self._report_progress(
+                        context,
+                        f"Searched {commits_searched} commits, found {results_found} file type matches",
+                        progress,
+                    )
+
         except Exception as e:
             self._report_progress(context, f"Error searching file types: {e}", 1.0)
-        
+
         finally:
             self._update_metrics(
                 total_commits_searched=commits_searched,
                 total_files_searched=len(seen_files),
-                total_results_found=results_found
+                total_results_found=results_found,
             )
-            self._report_progress(context, f"File type search completed: {results_found} matches", 1.0)
+            self._report_progress(
+                context, f"File type search completed: {results_found} matches", 1.0
+            )
 
 
 class ContentSearcher(ParallelSearcher, CacheableSearcher):
@@ -306,7 +319,10 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                             content = diff.b_blob.data_stream.read()
 
                             # Check file size limit
-                            if context.query.max_file_size and len(content) > context.query.max_file_size:
+                            if (
+                                context.query.max_file_size
+                                and len(content) > context.query.max_file_size
+                            ):
                                 continue
 
                             # Search content using ripgrep
@@ -325,9 +341,9 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                     message=commit.message.strip(),
                                     date=commit.committed_date,
                                     files_changed=len(commit.stats.files),
-                                    insertions=commit.stats.total['insertions'],
-                                    deletions=commit.stats.total['deletions'],
-                                    parents=[parent.hexsha for parent in commit.parents]
+                                    insertions=commit.stats.total["insertions"],
+                                    deletions=commit.stats.total["deletions"],
+                                    parents=[parent.hexsha for parent in commit.parents],
                                 )
 
                                 # Calculate relevance score based on match quality
@@ -338,19 +354,19 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                 result = SearchResult(
                                     commit_hash=commit.hexsha,
                                     file_path=Path(file_path),
-                                    line_number=match.get('line_number'),
-                                    matching_line=match.get('text'),
+                                    line_number=match.get("line_number"),
+                                    matching_line=match.get("text"),
                                     search_type=SearchType.CONTENT,
                                     relevance_score=relevance_score,
                                     commit_info=commit_info,
                                     match_context={
                                         "search_pattern": content_pattern,
                                         "file_path": file_path,
-                                        "line_number": match.get('line_number'),
-                                        "column_start": match.get('column_start'),
-                                        "column_end": match.get('column_end')
+                                        "line_number": match.get("line_number"),
+                                        "column_start": match.get("column_start"),
+                                        "column_end": match.get("column_end"),
                                     },
-                                    search_time_ms=None
+                                    search_time_ms=None,
                                 )
 
                                 results_found += 1
@@ -365,7 +381,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                     self._report_progress(
                         context,
                         f"Searched {commits_searched} commits, {files_searched} files, found {results_found} matches",
-                        progress
+                        progress,
                     )
 
         except Exception as e:
@@ -375,9 +391,11 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
             self._update_metrics(
                 total_commits_searched=commits_searched,
                 total_files_searched=files_searched,
-                total_results_found=results_found
+                total_results_found=results_found,
             )
-            self._report_progress(context, f"Content search completed: {results_found} matches", 1.0)
+            self._report_progress(
+                context, f"Content search completed: {results_found} matches", 1.0
+            )
 
     def _should_search_file(self, file_path: str, query: SearchQuery) -> bool:
         """Check if file should be searched based on filters."""
@@ -394,13 +412,17 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         # Check file extensions
         if query.file_extensions:
             file_ext = Path(file_path).suffix.lower()
-            normalized_extensions = [ext if ext.startswith('.') else '.' + ext for ext in query.file_extensions]
+            normalized_extensions = [
+                ext if ext.startswith(".") else "." + ext for ext in query.file_extensions
+            ]
             if file_ext not in [ext.lower() for ext in normalized_extensions]:
                 return False
 
         return True
 
-    async def _search_content_with_ripgrep(self, content: bytes, pattern: str, query: SearchQuery) -> List[dict]:
+    async def _search_content_with_ripgrep(
+        self, content: bytes, pattern: str, query: SearchQuery
+    ) -> list[dict]:
         """Search content using ripgrep and return structured results."""
         rg_args = ["rg", "--json", pattern, "-"]
 
@@ -421,12 +443,14 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                     match = json.loads(line)
                     if match["type"] == "match":
                         data = match["data"]
-                        results.append({
-                            "line_number": data["line_number"],
-                            "text": data["lines"]["text"].strip(),
-                            "column_start": data.get("submatches", [{}])[0].get("start", 0),
-                            "column_end": data.get("submatches", [{}])[0].get("end", 0)
-                        })
+                        results.append(
+                            {
+                                "line_number": data["line_number"],
+                                "text": data["lines"]["text"].strip(),
+                                "column_start": data.get("submatches", [{}])[0].get("start", 0),
+                                "column_end": data.get("submatches", [{}])[0].get("end", 0),
+                            }
+                        )
                 except (json.JSONDecodeError, KeyError):
                     continue
 
@@ -440,11 +464,11 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         score = 0.5  # Base score
 
         # Boost score for exact matches
-        if pattern.lower() in match.get('text', '').lower():
+        if pattern.lower() in match.get("text", "").lower():
             score += 0.3
 
         # Boost score for matches in important file types
-        important_extensions = ['.py', '.js', '.java', '.cpp', '.c', '.h', '.md', '.txt']
+        important_extensions = [".py", ".js", ".java", ".cpp", ".c", ".h", ".md", ".txt"]
         if any(file_path.endswith(ext) for ext in important_extensions):
             score += 0.1
 
