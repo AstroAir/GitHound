@@ -419,9 +419,9 @@ def legacy_main(
             f"Error: Invalid output format '{output_format}'. Must be 'text' or 'json'.")
         raise typer.Exit(1)
 
-    # Cast to Literal type for type safety
-    # type: ignore[assignment]
-    validated_output_format: Literal["text", "json"] = output_format
+    # Cast to Literal type for type safety after validation
+    from typing import cast
+    validated_output_format: Literal["text", "json"] = cast(Literal["text", "json"], output_format)
 
     search_config = LegacySearchConfig(
         include_globs=include_glob,

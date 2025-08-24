@@ -6,11 +6,11 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from git import GitCommandError
 
@@ -203,7 +203,7 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
         await connection_manager.broadcast_error(search_id, error_message)
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, response_model=None)
 async def root() -> Response | str:
     """Serve the main web interface."""
     static_path = Path(__file__).parent / "static" / "index.html"
@@ -360,7 +360,7 @@ async def cancel_search(search_id: str) -> dict[str, str]:
     return {"message": "Search cancelled successfully"}
 
 
-@app.get("/api/searches")
+@app.get("/api/searches", response_model=None)
 async def list_searches() -> dict[str, list[SearchListItem]]:
     """List all searches (active and completed)."""
     searches: list[SearchListItem] = []
@@ -459,16 +459,24 @@ async def cleanup_searches(max_age_hours: int = 24) -> dict[str, str]:
 
 # Error handlers
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Any, exc: HTTPException) -> ErrorResponse:
+async def http_exception_handler(request: Any, exc: HTTPException) -> JSONResponse:
     """Handle HTTP exceptions."""
-    return ErrorResponse(
+    error_response = ErrorResponse(
         error="HTTPException", message=exc.detail, details={"status_code": exc.status_code}
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_response.model_dump()
     )
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Any, exc: Exception) -> ErrorResponse:
+async def general_exception_handler(request: Any, exc: Exception) -> JSONResponse:
     """Handle general exceptions."""
-    return ErrorResponse(
+    error_response = ErrorResponse(
         error=type(exc).__name__, message=str(exc), details={"request_url": str(request.url)}
+    )
+    return JSONResponse(
+        status_code=500,
+        content=error_response.model_dump()
     )

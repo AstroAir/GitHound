@@ -4,8 +4,23 @@ This module provides the main GitHound class for comprehensive Git repository an
 including search, blame, diff, and export functionality.
 """
 
-from .schemas import ExportOptions
+import asyncio
+import functools
+import platform
+import time
+import warnings
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, TypeVar
+
+from git import GitCommandError
+
+from .git_blame import FileBlameResult, get_file_blame
+from .git_diff import CommitDiffResult, compare_branches, compare_commits
+from .git_handler import get_repository, get_repository_metadata
 from .models import SearchQuery, SearchResult
+from .schemas import ExportOptions, OutputFormat
 from .search_engine import (
     AuthorSearcher,
     CommitHashSearcher,
@@ -17,22 +32,6 @@ from .search_engine import (
     MessageSearcher,
     SearchOrchestrator,
 )
-from .schemas import ExportOptions, OutputFormat
-from .models import RepositoryInfo, SearchQuery, SearchResult
-from .git_handler import get_repository, get_repository_metadata
-from .git_diff import CommitDiffResult, compare_branches, compare_commits
-from .git_blame import FileBlameResult, get_file_blame
-from git import GitCommandError, Repo
-import asyncio
-import functools
-import platform
-import threading
-import time
-import warnings
-from collections.abc import Callable
-from contextlib import contextmanager
-from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, TypeVar, Union
 
 # Suppress NumPy compatibility warnings for better user experience
 warnings.filterwarnings("ignore", message=".*NumPy.*")

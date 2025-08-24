@@ -1,13 +1,12 @@
 """GitHound MCP (Model Context Protocol) Server implementation using FastMCP 2.0."""
 
-import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncGenerator
+from typing import Any
 
 from fastmcp import Context, FastMCP
-from git import GitCommandError, Repo
+from git import GitCommandError
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .git_blame import get_author_statistics, get_file_blame as get_file_blame_impl
@@ -19,7 +18,7 @@ from .git_handler import (
     get_repository,
     get_repository_metadata,
 )
-from .models import SearchQuery, SearchResult
+from .models import SearchQuery
 from .schemas import ExportOptions, OutputFormat, PaginationInfo
 from .search_engine import SearchOrchestrator
 from .search_engine import (

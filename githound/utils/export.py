@@ -557,14 +557,20 @@ class ExportManager:
             return self._compare_numeric(field_value, filter_criteria.value, lambda x, y: x <= y)
         elif filter_criteria.operator == FilterOperator.IN:
             try:
-                # type: ignore[operator]
-                return bool(field_value in filter_criteria.value)
+                # Ensure the value is a container type for 'in' operator
+                if isinstance(filter_criteria.value, (list, tuple, set, str)):
+                    return bool(field_value in filter_criteria.value)
+                else:
+                    return False
             except TypeError:
                 return False
         elif filter_criteria.operator == FilterOperator.NOT_IN:
             try:
-                # type: ignore[operator]
-                return bool(field_value not in filter_criteria.value)
+                # Ensure the value is a container type for 'not in' operator
+                if isinstance(filter_criteria.value, (list, tuple, set, str)):
+                    return bool(field_value not in filter_criteria.value)
+                else:
+                    return True
             except TypeError:
                 return True
         elif filter_criteria.operator == FilterOperator.REGEX:

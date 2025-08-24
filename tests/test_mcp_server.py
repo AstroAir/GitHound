@@ -585,13 +585,15 @@ class TestMCPRepositoryManagement:
 class TestMCPInputValidation:
     """Tests for MCP input validation."""
 
-    def test_advanced_search_input_validation(self):
+    def test_advanced_search_input_validation(self, temp_repo):
         """Test AdvancedSearchInput validation."""
         from githound.mcp_server import AdvancedSearchInput
 
+        repo, temp_dir, initial_commit, second_commit = temp_repo
+
         # Test valid input
         valid_input = AdvancedSearchInput(
-            repo_path="/tmp/test",
+            repo_path=temp_dir,
             content_pattern="test",
             fuzzy_threshold=0.8,
             max_results=100
@@ -601,7 +603,7 @@ class TestMCPInputValidation:
         # Test invalid fuzzy threshold
         with pytest.raises(ValueError, match="Fuzzy threshold must be between 0.0 and 1.0"):
             AdvancedSearchInput(
-                repo_path="/tmp/test",
+                repo_path=temp_dir,
                 content_pattern="test",
                 fuzzy_threshold=1.5
             )
@@ -609,18 +611,20 @@ class TestMCPInputValidation:
         # Test invalid max_results
         with pytest.raises(ValueError, match="max_results must be positive"):
             AdvancedSearchInput(
-                repo_path="/tmp/test",
+                repo_path=temp_dir,
                 content_pattern="test",
                 max_results=-1
             )
 
-    def test_fuzzy_search_input_validation(self):
+    def test_fuzzy_search_input_validation(self, temp_repo):
         """Test FuzzySearchInput validation."""
         from githound.mcp_server import FuzzySearchInput
 
+        repo, temp_dir, initial_commit, second_commit = temp_repo
+
         # Test valid input
         valid_input = FuzzySearchInput(
-            repo_path="/tmp/test",
+            repo_path=temp_dir,
             search_term="test",
             threshold=0.7
         )
@@ -629,7 +633,7 @@ class TestMCPInputValidation:
         # Test empty search term
         with pytest.raises(ValueError, match="Search term cannot be empty"):
             FuzzySearchInput(
-                repo_path="/tmp/test",
+                repo_path=temp_dir,
                 search_term="   ",
                 threshold=0.7
             )
@@ -637,18 +641,20 @@ class TestMCPInputValidation:
         # Test invalid search types
         with pytest.raises(ValueError, match="Invalid search types"):
             FuzzySearchInput(
-                repo_path="/tmp/test",
+                repo_path=temp_dir,
                 search_term="test",
                 search_types=["invalid_type"]
             )
 
-    def test_web_server_input_validation(self):
+    def test_web_server_input_validation(self, temp_repo):
         """Test WebServerInput validation."""
         from githound.mcp_server import WebServerInput
 
+        repo, temp_dir, initial_commit, second_commit = temp_repo
+
         # Test valid input
         valid_input = WebServerInput(
-            repo_path="/tmp/test",
+            repo_path=temp_dir,
             host="localhost",
             port=8000
         )
@@ -657,7 +663,7 @@ class TestMCPInputValidation:
         # Test invalid port
         with pytest.raises(ValueError, match="Port must be between 1024 and 65535"):
             WebServerInput(
-                repo_path="/tmp/test",
+                repo_path=temp_dir,
                 port=80
             )
 
@@ -695,50 +701,38 @@ class TestMCPAdvancedErrorHandling:
     @pytest.mark.asyncio
     async def test_invalid_repository_path_advanced_search(self, mcp_client):
         """Test error handling for invalid repository path in advanced search."""
+        from fastmcp.exceptions import ToolError
+
         async with mcp_client:
-            result = await mcp_client.call_tool(
-                "advanced_search",
-                {
-                    "input_data": {
-                        "repo_path": "/nonexistent/path",
-                        "content_pattern": "test",
-                    }
-                },
-            )
-
-            assert result is not None
-            result_data = result.content[0].text
-
-            import json
-
-            response = json.loads(result_data)
-
-            assert response["status"] == "error"
-            assert "error" in response
+            # The Pydantic validator should catch the invalid path and raise a ToolError
+            with pytest.raises(ToolError, match="Repository path does not exist"):
+                await mcp_client.call_tool(
+                    "advanced_search",
+                    {
+                        "input_data": {
+                            "repo_path": "/nonexistent/path",
+                            "content_pattern": "test",
+                        }
+                    },
+                )
 
     @pytest.mark.asyncio
     async def test_invalid_repository_path_fuzzy_search(self, mcp_client):
         """Test error handling for invalid repository path in fuzzy search."""
+        from fastmcp.exceptions import ToolError
+
         async with mcp_client:
-            result = await mcp_client.call_tool(
-                "fuzzy_search",
-                {
-                    "input_data": {
-                        "repo_path": "/nonexistent/path",
-                        "search_term": "test",
-                    }
-                },
-            )
-
-            assert result is not None
-            result_data = result.content[0].text
-
-            import json
-
-            response = json.loads(result_data)
-
-            assert response["status"] == "error"
-            assert "error" in response
+            # The Pydantic validator should catch the invalid path and raise a ToolError
+            with pytest.raises(ToolError, match="Repository path does not exist"):
+                await mcp_client.call_tool(
+                    "fuzzy_search",
+                    {
+                        "input_data": {
+                            "repo_path": "/nonexistent/path",
+                            "search_term": "test",
+                        }
+                    },
+                )
 
     @pytest.mark.asyncio
     async def test_invalid_repository_validation(self, mcp_client):

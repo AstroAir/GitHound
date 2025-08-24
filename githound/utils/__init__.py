@@ -4,7 +4,7 @@ from .progress import CancellationToken, ProgressManager
 
 
 # Lazy import for ExportManager to avoid pandas dependency issues
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 TExportManager = TypeVar("TExportManager")
 

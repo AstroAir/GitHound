@@ -81,9 +81,8 @@ def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> Fil
                 )
 
                 blame_info.append(blame_entry)
-                # type: ignore
                 contributors.add(
-                    f"{commit_info.author.name} <{commit_info.author.email}>")
+                    f"{commit_info.author.name} <{commit_info.author.email}>")  # type: ignore
                 dates.append(blame_entry.commit_date)
                 line_number += 1
 
@@ -137,16 +136,12 @@ def get_line_history(
                                 {
                                     "commit_hash": commit.hexsha,
                                     "commit_date": datetime.fromtimestamp(commit.committed_date),
-                                    # type: ignore
-                                    "author": f"{commit_info.author.name} <{commit_info.author.email}>",
-                                    # type: ignore
-                                    "message": str(commit_info.message).strip(),
+                                    "author": f"{commit_info.author.name} <{commit_info.author.email}>",  # type: ignore
+                                    "message": str(commit_info.message).strip(),  # type: ignore
                                     "line_content": str(line).rstrip("\n\r"),
                                     "line_commit_hash": commit_info.hexsha,  # type: ignore
-                                    # type: ignore
-                                    "line_author": f"{commit_info.author.name} <{commit_info.author.email}>",
-                                    # type: ignore
-                                    "line_date": datetime.fromtimestamp(commit_info.committed_date),
+                                    "line_author": f"{commit_info.author.name} <{commit_info.author.email}>",  # type: ignore
+                                    "line_date": datetime.fromtimestamp(commit_info.committed_date),  # type: ignore
                                 }
                             )
                             break
