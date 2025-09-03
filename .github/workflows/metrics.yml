@@ -213,7 +213,7 @@ jobs:
             const metrics = ${{ needs.collect-metrics.outputs.metrics }};
             const workflowMetrics = ${{ needs.workflow-metrics.outputs.workflow_metrics }};
             
-            const reportType = '${{ github.event.inputs.report_type || "daily" }}';
+            const reportType = '${{ github.event.inputs.report_type }}' || 'daily';
             const date = new Date().toISOString().split('T')[0];
             
             // Generate markdown report

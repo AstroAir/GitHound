@@ -2,26 +2,30 @@
 
 GitHound is a comprehensive Git repository analysis tool that provides advanced search capabilities, detailed metadata extraction, blame analysis, diff comparison, and multiple integration options including MCP (Model Context Protocol) server support and REST API.
 
-## 🚀 New Features (v2.0)
+## 🚀 Key Features
 
 ### Enhanced Git Information Retrieval
+
 - **Advanced Metadata Extraction**: Comprehensive commit, branch, tag, and repository information
 - **Advanced Git Log Parsing**: Filter by date range, author, file patterns, and commit message keywords
 - **Git Blame Functionality**: Line-by-line authorship tracking with detailed history
 - **Git Diff Analysis**: Compare commits, branches, and files with detailed change analysis
 
 ### Structured Data Output
+
 - **JSON/YAML Schemas**: Standardized data formats for all git information types
 - **Enhanced Export Capabilities**: Export in JSON, YAML, CSV, XML formats with filtering and sorting
 - **Data Filtering and Sorting**: Comprehensive options for data manipulation and presentation
 
 ### MCP (Model Context Protocol) Server Support
+
 - **FastMCP Integration**: Full MCP server implementation exposing all GitHound functionality
 - **MCP Tools**: Repository analysis, commit history, blame analysis, diff comparison
 - **MCP Resources**: Repository configuration, branch information, contributor statistics
 - **Error Handling**: Comprehensive error handling and response formatting
 
 ### Complete API Interface
+
 - **Enhanced REST API**: Comprehensive endpoints for all functionality
 - **OpenAPI Documentation**: Detailed Swagger/OpenAPI documentation
 - **Authentication & Authorization**: JWT-based authentication with role-based access
@@ -31,12 +35,14 @@ GitHound is a comprehensive Git repository analysis tool that provides advanced 
 ## 📋 Features
 
 ### Core Functionality
+
 - **Multi-modal Search**: Search by content, commit hash, author, message, date range, file path, and file type
 - **Fuzzy Search**: Find approximate matches with configurable similarity thresholds
 - **Advanced Filtering**: Filter results by file patterns, commit size, and other criteria
 - **Progress Tracking**: Real-time progress reporting with cancellation support
 
 ### Analysis Capabilities
+
 - **Repository Analysis**: Comprehensive repository metadata and statistics
 - **Commit Analysis**: Detailed commit information with file changes
 - **Blame Analysis**: Line-by-line authorship tracking
@@ -44,14 +50,16 @@ GitHound is a comprehensive Git repository analysis tool that provides advanced 
 - **Author Statistics**: Contribution analysis and statistics
 
 ### Export and Integration
+
 - **Multiple Export Formats**: JSON, YAML, CSV, XML, Excel, and text formats
 - **Data Filtering**: Advanced filtering and sorting options
-- **🆕 MCP Server 2.0**: Full Model Context Protocol support with FastMCP 2.0
+- **🆕 MCP Server**: Full Model Context Protocol support with FastMCP 2.0
 - **REST API**: Comprehensive API for external integrations
 - **Web Interface**: Modern web UI with real-time updates
 - **CLI Interface**: Rich command-line interface
 
 ### 🤖 MCP Integration (New!)
+
 - **25+ MCP Tools**: Advanced search, analysis, and repository management
 - **7 MCP Resources**: Dynamic access to repository data and metadata
 - **3 MCP Prompts**: Structured workflows for bug investigation, code review, and performance analysis
@@ -61,16 +69,19 @@ GitHound is a comprehensive Git repository analysis tool that provides advanced 
 ## 🛠 Installation
 
 ```bash
-# Install from PyPI
-pip install githound
+# Install development version (currently the only way to install)
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
+pip install -e .
+
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Install with test dependencies
+pip install -e ".[test]"
 
 # Install with all dependencies
-pip install githound[all]
-
-# Install development version
-git clone https://github.com/your-org/githound.git
-cd githound
-pip install -e ".[dev]"
+pip install -e ".[dev,test,docs,build]"
 ```
 
 ## 🤖 MCP Integration
@@ -80,14 +91,17 @@ GitHound now provides full Model Context Protocol (MCP) support, allowing LLMs t
 ### Starting the MCP Server
 
 ```bash
-# Start with stdio transport (default)
+# Start MCP server (stdio transport by default)
+githound mcp-server
+
+# Start with custom host and port
+githound mcp-server --host 0.0.0.0 --port 3000
+
+# Start with custom log level
+githound mcp-server --log-level DEBUG
+
+# Or run directly
 python -m githound.mcp_server
-
-# Start with HTTP transport
-python -m githound.mcp_server --http --port 3000
-
-# Start with SSE transport
-python -m githound.mcp_server --sse --host 0.0.0.0 --port 3001
 ```
 
 ### MCP Tools Available
@@ -120,10 +134,10 @@ For detailed MCP documentation, see [docs/mcp_integration.md](docs/mcp_integrati
 
 ```bash
 # Basic content search
-githound search "function" /path/to/repo
+githound search --repo-path /path/to/repo --content "function"
 
 # Advanced search with multiple criteria
-githound search --author "john.doe" --date-from "2023-01-01" --message "bug fix" /path/to/repo
+githound search --repo-path /path/to/repo --author "john.doe" --date-from "2023-01-01" --message "bug fix"
 
 # Repository analysis
 githound analyze /path/to/repo
@@ -132,7 +146,7 @@ githound analyze /path/to/repo
 githound blame /path/to/repo src/main.py
 
 # Export results
-githound search "function" /path/to/repo --export results.yaml --format yaml
+githound search --repo-path /path/to/repo --content "function" --export results.yaml --format yaml
 ```
 
 ### MCP Server
@@ -178,7 +192,7 @@ query = SearchQuery(
     fuzzy_search=True,
     fuzzy_threshold=0.8
 )
-results = gh.search_advanced(query)
+results = await gh.search_advanced(query)
 
 # Blame analysis
 blame_info = gh.analyze_blame("src/main.py")
@@ -203,11 +217,13 @@ gh.export_with_options(results, "output.yaml", export_options)
 
 ```python
 from githound.git_handler import (
-    get_repository_metadata, get_commits_with_filters,
+    get_repository, get_repository_metadata, get_commits_with_filters,
     extract_commit_metadata
 )
 from githound.git_blame import get_file_blame, get_author_statistics
 from githound.git_diff import compare_commits, compare_branches
+from pathlib import Path
+from datetime import datetime
 
 # Repository metadata
 repo = get_repository(Path("/path/to/repo"))
@@ -308,6 +324,7 @@ pytest tests/performance/ --benchmark-only
 ### Test Requirements
 
 All tests maintain:
+
 - **Zero errors** for both pytest and mypy
 - **Comprehensive coverage** of all functionality
 - **Type safety** with proper annotations
@@ -327,37 +344,37 @@ pytest --cov=githound --cov-report=term --cov-fail-under=90
 
 GitHound provides comprehensive MCP tools for AI integration:
 
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `analyze_repository` | Repository metadata analysis | `repo_path` |
-| `analyze_commit` | Detailed commit analysis | `repo_path`, `commit_hash` |
-| `get_commit_history` | Filtered commit history | `repo_path`, `max_count`, `author`, `date_from`, `date_to` |
-| `get_file_history` | File change history | `repo_path`, `file_path`, `max_count` |
-| `get_file_blame` | Line-by-line blame info | `repo_path`, `file_path` |
-| `compare_commits` | Commit comparison | `repo_path`, `from_commit`, `to_commit` |
-| `compare_branches` | Branch comparison | `repo_path`, `from_branch`, `to_branch` |
-| `get_author_stats` | Author statistics | `repo_path` |
-| `export_repository_data` | Data export | `repo_path`, `output_path`, `format` |
+| Tool                     | Description                  | Parameters                                                 |
+| ------------------------ | ---------------------------- | ---------------------------------------------------------- |
+| `analyze_repository`     | Repository metadata analysis | `repo_path`                                                |
+| `analyze_commit`         | Detailed commit analysis     | `repo_path`, `commit_hash`                                 |
+| `get_commit_history`     | Filtered commit history      | `repo_path`, `max_count`, `author`, `date_from`, `date_to` |
+| `get_file_history`       | File change history          | `repo_path`, `file_path`, `max_count`                      |
+| `get_file_blame`         | Line-by-line blame info      | `repo_path`, `file_path`                                   |
+| `compare_commits`        | Commit comparison            | `repo_path`, `from_commit`, `to_commit`                    |
+| `compare_branches`       | Branch comparison            | `repo_path`, `from_branch`, `to_branch`                    |
+| `get_author_stats`       | Author statistics            | `repo_path`                                                |
+| `export_repository_data` | Data export                  | `repo_path`, `output_path`, `format`                       |
 
-### MCP Resources
+### MCP Resource URIs
 
-| Resource | Description |
-|----------|-------------|
-| `githound://repository/{path}/config` | Repository configuration |
-| `githound://repository/{path}/contributors` | Contributor information |
-| `githound://repository/{path}/summary` | Repository summary |
+| Resource                                    | Description              |
+| ------------------------------------------- | ------------------------ |
+| `githound://repository/{path}/config`       | Repository configuration |
+| `githound://repository/{path}/contributors` | Contributor information  |
+| `githound://repository/{path}/summary`      | Repository summary       |
 
 ### REST API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | API health check |
-| `/api/search` | POST | Start new search |
-| `/api/search/{id}` | GET | Get search results |
-| `/api/search/{id}/status` | GET | Get search status |
-| `/api/searches` | GET | List all searches |
-| `/api/export` | POST | Export data |
-| `/ws/{search_id}` | WebSocket | Real-time search progress |
+| Endpoint                  | Method    | Description               |
+| ------------------------- | --------- | ------------------------- |
+| `/health`                 | GET       | API health check          |
+| `/api/search`             | POST      | Start new search          |
+| `/api/search/{id}`        | GET       | Get search results        |
+| `/api/search/{id}/status` | GET       | Get search status         |
+| `/api/searches`           | GET       | List all searches         |
+| `/api/export`             | POST      | Export data               |
+| `/ws/{search_id}`         | WebSocket | Real-time search progress |
 
 ## 🤝 Contributing
 
@@ -367,8 +384,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/githound.git
-cd githound
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
 
 # Create virtual environment
 python -m venv .venv
@@ -407,7 +424,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [Full documentation](https://githound.readthedocs.io/)
-- **Issues**: [GitHub Issues](https://github.com/your-org/githound/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/githound/discussions)
+- **Documentation**: [Full documentation](https://github.com/AstroAir/GitHound/tree/master/docs)
+- **Issues**: [GitHub Issues](https://github.com/AstroAir/GitHound/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/AstroAir/GitHound/discussions)
 - **Examples**: See `examples/` directory for comprehensive usage examples

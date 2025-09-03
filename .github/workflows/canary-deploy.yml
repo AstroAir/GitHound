@@ -79,9 +79,7 @@ jobs:
     name: Deploy Canary
     runs-on: ubuntu-latest
     needs: validate
-    environment: 
-      name: production-canary
-      url: https://canary.githound.dev
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,7 +95,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: '${{ needs.validate.outputs.version }}',
-              environment: 'production-canary',
+              environment: 'staging',
               description: 'Canary deployment - ${{ needs.validate.outputs.canary_percentage }}% traffic',
               auto_merge: false,
               required_contexts: []
@@ -178,6 +176,8 @@ jobs:
     name: Monitor Canary
     runs-on: ubuntu-latest
     needs: [validate, deploy-canary]
+    outputs:
+      healthy: ${{ steps.health.outputs.healthy }}
     steps:
       - name: Wait for initial metrics
         run: |
@@ -321,7 +321,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate, decide-action]
     if: needs.decide-action.outputs.action == 'promote'
-    environment: production
+
     steps:
       - name: Promote to full deployment
         run: |

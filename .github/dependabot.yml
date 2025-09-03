@@ -10,10 +10,8 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-      timezone: "UTC"
+      timezone: "Etc/UTC"
     open-pull-requests-limit: 10
-    reviewers:
-      - "AstroAir"
     assignees:
       - "AstroAir"
     commit-message:
@@ -29,6 +27,8 @@ updates:
         patterns:
           - "pytest*"
           - "*test*"
+          - "httpx"
+          - "respx"
         update-types:
           - "minor"
           - "patch"
@@ -38,6 +38,8 @@ updates:
           - "black"
           - "isort"
           - "mypy*"
+          - "types-*"
+          - "*-stubs"
         update-types:
           - "minor"
           - "patch"
@@ -48,10 +50,19 @@ updates:
         update-types:
           - "minor"
           - "patch"
-      security:
+      web-framework:
         patterns:
-          - "safety"
-          - "bandit*"
+          - "fastapi"
+          - "uvicorn*"
+          - "websockets"
+        update-types:
+          - "minor"
+          - "patch"
+      build-tools:
+        patterns:
+          - "build"
+          - "twine"
+          - "hatchling"
         update-types:
           - "minor"
           - "patch"
@@ -68,10 +79,8 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "10:00"
-      timezone: "UTC"
+      timezone: "Etc/UTC"
     open-pull-requests-limit: 5
-    reviewers:
-      - "AstroAir"
     assignees:
       - "AstroAir"
     commit-message:
@@ -87,23 +96,3 @@ updates:
         update-types:
           - "minor"
           - "patch"
-
-  # Docker (if we add Docker support later)
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "09:00"
-      timezone: "UTC"
-    open-pull-requests-limit: 3
-    reviewers:
-      - "AstroAir"
-    assignees:
-      - "AstroAir"
-    commit-message:
-      prefix: "docker"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "docker"

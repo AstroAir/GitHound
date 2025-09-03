@@ -5,9 +5,11 @@ This directory contains the GitHub Actions workflows and configurations for the 
 ## 🚀 Workflows Overview
 
 ### Core CI/CD Pipeline (`ci.yml`)
+
 The main CI/CD pipeline that runs on every push and pull request.
 
 **Features:**
+
 - 🎯 **Smart execution**: Path-based filtering to skip unnecessary jobs
 - 🏗️ **Multi-platform testing**: Ubuntu, Windows, macOS with Python 3.11 & 3.12
 - 📊 **Code quality**: Black, isort, ruff, mypy with caching
@@ -19,6 +21,7 @@ The main CI/CD pipeline that runs on every push and pull request.
 - 🚀 **PyPI deployment**: Secure publishing on releases
 
 **Optimizations:**
+
 - Advanced caching for pip, mypy, ruff, and other tools
 - Conditional job execution based on file changes
 - Performance regression detection
@@ -26,9 +29,11 @@ The main CI/CD pipeline that runs on every push and pull request.
 - Failure notifications and auto-issue creation
 
 ### Security Analysis (`codeql.yml`)
+
 Advanced security scanning with multiple tools.
 
 **Features:**
+
 - 🔍 **CodeQL analysis**: Semantic code analysis for vulnerabilities
 - 🛡️ **Semgrep scanning**: Additional security rule checks
 - 📦 **Dependency scanning**: Safety and pip-audit for vulnerabilities
@@ -36,9 +41,11 @@ Advanced security scanning with multiple tools.
 - ⏰ **Scheduled scans**: Weekly security audits
 
 ### PR Automation (`pr-automation.yml`)
+
 Intelligent pull request automation and management.
 
 **Features:**
+
 - 🏷️ **Auto-labeling**: Based on file changes and content
 - 📏 **Size detection**: Automatic PR size labeling (XS/S/M/L/XL)
 - 🔍 **Breaking change detection**: Identifies breaking changes
@@ -48,9 +55,11 @@ Intelligent pull request automation and management.
 - 🔄 **Conflict detection**: Automatic merge conflict detection
 
 ### Auto-fix (`auto-fix.yml`)
+
 Automated code formatting and linting fixes.
 
 **Features:**
+
 - 🤖 **Automatic fixes**: Black, isort, and ruff auto-fixes
 - 💬 **PR comments**: Notification of applied fixes
 - 🏷️ **Auto-labeling**: Marks PRs with auto-fixes applied
@@ -58,9 +67,11 @@ Automated code formatting and linting fixes.
 - ✅ **Status checks**: Indicates when auto-fix is needed
 
 ### Staging Deployment (`staging-deploy.yml`)
+
 Environment-specific deployment automation.
 
 **Features:**
+
 - 🌍 **Multi-environment**: Staging and preview deployments
 - 🔄 **Conditional deployment**: Based on branch and labels
 - 🧪 **Pre-deployment checks**: Tests before deployment
@@ -71,9 +82,11 @@ Environment-specific deployment automation.
 ## 🔧 Configuration Files
 
 ### Dependabot (`dependabot.yml`)
+
 Automated dependency management configuration.
 
 **Features:**
+
 - 📦 **Python dependencies**: Weekly updates with grouping
 - 🎬 **GitHub Actions**: Automated action updates
 - 🐳 **Docker support**: Ready for container deployments
@@ -82,9 +95,11 @@ Automated dependency management configuration.
 - 🚫 **Ignore rules**: Skip major updates for critical packages
 
 ### Code Owners (`CODEOWNERS`)
+
 Automatic reviewer assignment based on file changes.
 
 **Coverage:**
+
 - Core application components
 - Critical functionality (search engine, MCP server)
 - Configuration and build files
@@ -92,33 +107,38 @@ Automatic reviewer assignment based on file changes.
 - Documentation and examples
 
 ### Auto-labeling (`labeler.yml`)
+
 Comprehensive labeling rules for automatic PR categorization.
 
 **Categories:**
+
 - Component-based labels (core, search-engine, mcp-server, etc.)
 - Type-based labels (tests, documentation, build, etc.)
 - Priority levels (high, medium, low)
 - Change types (enhancement, bug, refactor, etc.)
 
 ### Issue Templates
+
 Structured templates for bug reports and feature requests.
 
 **Templates:**
+
 - 🐛 **Bug Report** (`bug_report.yml`): Comprehensive bug reporting
 - ✨ **Feature Request** (`feature_request.yml`): Detailed feature proposals
 
 ### PR Template (`pull_request_template.md`)
+
 Comprehensive pull request template with checklists and guidelines.
 
 ## 🎯 Workflow Triggers
 
-| Workflow | Push | PR | Schedule | Manual | Labels |
-|----------|------|----|---------|---------|---------| 
-| CI/CD | ✅ | ✅ | ❌ | ✅ | ❌ |
-| CodeQL | ✅ | ✅ | ✅ (weekly) | ✅ | ❌ |
-| PR Automation | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Auto-fix | ❌ | ✅ | ❌ | ✅ | ❌ |
-| Staging Deploy | ✅ (develop) | ❌ | ❌ | ✅ | ✅ (deploy-preview) |
+| Workflow       | Push         | PR  | Schedule    | Manual | Labels              |
+| -------------- | ------------ | --- | ----------- | ------ | ------------------- |
+| CI/CD          | ✅           | ✅  | ❌          | ✅     | ❌                  |
+| CodeQL         | ✅           | ✅  | ✅ (weekly) | ✅     | ❌                  |
+| PR Automation  | ❌           | ✅  | ❌          | ❌     | ❌                  |
+| Auto-fix       | ❌           | ✅  | ❌          | ✅     | ❌                  |
+| Staging Deploy | ✅ (develop) | ❌  | ❌          | ✅     | ✅ (deploy-preview) |
 
 ## 🔒 Security Features
 
@@ -139,6 +159,7 @@ Comprehensive pull request template with checklists and guidelines.
 ## 🚀 Getting Started
 
 1. **Required Secrets**: Set up the following repository secrets:
+
    - `PYPI_API_TOKEN`: For PyPI publishing
    - `CODECOV_TOKEN`: For coverage reporting (optional)
    - `SLACK_WEBHOOK_URL`: For failure notifications (optional)
@@ -153,18 +174,21 @@ Comprehensive pull request template with checklists and guidelines.
 ## 🔧 Customization
 
 ### Adding New Workflows
+
 1. Create workflow file in `.github/workflows/`
 2. Update this documentation
 3. Add appropriate triggers and permissions
 4. Test with workflow dispatch first
 
 ### Modifying Existing Workflows
+
 1. Test changes in a feature branch
 2. Use workflow dispatch for testing
 3. Monitor workflow runs for issues
 4. Update documentation as needed
 
 ### Environment-Specific Configuration
+
 - Modify `staging-deploy.yml` for your deployment targets
 - Update environment URLs and deployment scripts
 - Configure environment-specific secrets
@@ -190,6 +214,7 @@ Add these badges to your README.md to show workflow status:
 ## 🤝 Contributing
 
 When contributing to workflows:
+
 1. Test changes thoroughly
 2. Update documentation
 3. Consider backward compatibility
