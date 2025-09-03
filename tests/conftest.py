@@ -183,7 +183,8 @@ async def mcp_server():
     """
     if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE:
         pytest.skip("FastMCP or MCP server not available")
-    return get_mcp_server()
+    from githound.mcp_server import mcp
+    return mcp
 
 
 @pytest_asyncio.fixture

@@ -1,0 +1,257 @@
+# Auto-fix Workflow
+# Automatically fixes code formatting and other issues
+
+name: Auto-fix
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to auto-fix'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-fix:
+    name: Auto-fix Code Issues
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Get PR details
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let prNumber;
+            if (context.eventName === 'workflow_dispatch') {
+              prNumber = context.payload.inputs.pr_number;
+            } else {
+              prNumber = context.payload.pull_request.number;
+            }
+            
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            
+            return {
+              number: prNumber,
+              head_ref: pr.head.ref,
+              head_sha: pr.head.sha,
+              base_ref: pr.base.ref,
+              head_repo_full_name: pr.head.repo.full_name,
+              base_repo_full_name: pr.base.repo.full_name
+            };
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ fromJson(steps.pr.outputs.result).head_ref }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run auto-fixes
+        id: fixes
+        run: |
+          echo "Starting auto-fixes..."
+          
+          # Track if any changes were made
+          CHANGES_MADE=false
+          
+          # Run black formatter
+          echo "Running black formatter..."
+          if ! black --check githound tests; then
+            black githound tests
+            CHANGES_MADE=true
+            echo "✅ Applied black formatting"
+          else
+            echo "✅ Code already formatted with black"
+          fi
+          
+          # Run isort
+          echo "Running isort..."
+          if ! isort --check-only githound tests; then
+            isort githound tests
+            CHANGES_MADE=true
+            echo "✅ Applied isort import sorting"
+          else
+            echo "✅ Imports already sorted"
+          fi
+          
+          # Run ruff auto-fixes
+          echo "Running ruff auto-fixes..."
+          if ruff check --fix githound tests; then
+            if git diff --quiet; then
+              echo "✅ No ruff fixes needed"
+            else
+              CHANGES_MADE=true
+              echo "✅ Applied ruff auto-fixes"
+            fi
+          else
+            echo "⚠️ Some ruff issues require manual fixing"
+          fi
+          
+          # Check if any changes were made
+          if [ "$CHANGES_MADE" = true ]; then
+            echo "changes_made=true" >> $GITHUB_OUTPUT
+            echo "📝 Auto-fixes applied"
+          else
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+            echo "✅ No auto-fixes needed"
+          fi
+
+      - name: Commit and push changes
+        if: steps.fixes.outputs.changes_made == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add -A
+          git commit -m "🤖 Auto-fix: Apply code formatting and linting fixes
+          
+          - Applied black code formatting
+          - Fixed import sorting with isort
+          - Applied ruff auto-fixes
+          
+          Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          
+          git push
+
+      - name: Comment on PR
+        if: steps.fixes.outputs.changes_made == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ fromJson(steps.pr.outputs.result).number }};
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `🤖 **Auto-fix Applied**
+              
+              I've automatically applied the following fixes to your PR:
+              
+              - ✅ Code formatting with \`black\`
+              - ✅ Import sorting with \`isort\`
+              - ✅ Auto-fixable linting issues with \`ruff\`
+              
+              Your code should now pass the formatting and basic linting checks. Please review the changes and ensure they look correct.
+              
+              If there are still failing checks, they may require manual attention.`
+            });
+
+      - name: Add auto-fix label
+        if: steps.fixes.outputs.changes_made == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ fromJson(steps.pr.outputs.result).number }};
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: ['auto-fixed']
+            });
+
+  # Check if auto-fix is needed (for status checks)
+  check-formatting:
+    name: Check if Auto-fix Needed
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      needs_autofix: ${{ steps.check.outputs.needs_autofix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort ruff
+
+      - name: Check formatting
+        id: check
+        run: |
+          NEEDS_FIX=false
+          
+          # Check black
+          if ! black --check githound tests; then
+            echo "❌ Black formatting needed"
+            NEEDS_FIX=true
+          fi
+          
+          # Check isort
+          if ! isort --check-only githound tests; then
+            echo "❌ Import sorting needed"
+            NEEDS_FIX=true
+          fi
+          
+          # Check ruff
+          if ! ruff check githound tests; then
+            echo "❌ Ruff fixes needed"
+            NEEDS_FIX=true
+          fi
+          
+          echo "needs_autofix=$NEEDS_FIX" >> $GITHUB_OUTPUT
+          
+          if [ "$NEEDS_FIX" = true ]; then
+            echo "🔧 Auto-fix is recommended for this PR"
+            exit 1
+          else
+            echo "✅ No auto-fixes needed"
+          fi
+
+      - name: Comment suggestion
+        if: failure() && steps.check.outputs.needs_autofix == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🔧 **Auto-fix Available**
+              
+              This PR has formatting or linting issues that can be automatically fixed.
+              
+              **Option 1: Automatic Fix**
+              Comment \`/autofix\` on this PR to trigger automatic fixes.
+              
+              **Option 2: Manual Fix**
+              Run these commands locally:
+              \`\`\`bash
+              black githound tests
+              isort githound tests
+              ruff check --fix githound tests
+              \`\`\`
+              
+              The auto-fix will be triggered automatically, or you can run it manually using the workflow dispatch.`
+            });

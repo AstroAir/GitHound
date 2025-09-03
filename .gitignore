@@ -1,3 +1,7 @@
+# =============================================================================
+# Python
+# =============================================================================
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -110,6 +114,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+test_env/
 
 # Spyder project settings
 .spyderproject
@@ -121,8 +126,146 @@ venv.bak/
 # mkdocs documentation
 /site
 
-# my
+# mypy
 .mypy_cache/
 .mypy_cache_temp
 
-.benchmarks
+# =============================================================================
+# Modern Python Tooling
+# =============================================================================
+
+# UV package manager
+.uv-cache/
+
+# Ruff
+.ruff_cache/
+
+# Pre-commit
+.pre-commit-cache/
+
+# Black
+.black_cache/
+
+# Benchmarks
+.benchmarks/
+
+# =============================================================================
+# IDEs and Editors
+# =============================================================================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# Operating System
+# =============================================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# Project Specific
+# =============================================================================
+
+# Test outputs and temporary files
+test_output.txt
+test_*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+
+# Configuration files with secrets
+.env.local
+.env.production
+.env.staging
+config/secrets.yml
+secrets.json
+
+# =============================================================================
+# Development Tools
+# =============================================================================
+
+# Docker
+.dockerignore
+
+# Git
+*.orig
+*.rej
+
+# Profiling
+*.prof
+*.pstats
+
+# Memory dumps
+*.dmp

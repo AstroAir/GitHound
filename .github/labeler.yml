@@ -1,0 +1,126 @@
+# Labeler configuration for automatic PR labeling
+# https://github.com/actions/labeler
+
+# Core components
+"core":
+  - "githound/**/*.py"
+  - "!githound/web/**"
+  - "!githound/search_engine/**"
+  - "!githound/mcp_server.py"
+
+"search-engine":
+  - "githound/search_engine/**"
+  - "githound/searcher.py"
+
+"mcp-server":
+  - "githound/mcp_server.py"
+  - "examples/mcp/**"
+
+"web-api":
+  - "githound/web/**"
+
+"cli":
+  - "githound/cli.py"
+
+"git-operations":
+  - "githound/git_*.py"
+
+# Testing
+"tests":
+  - "tests/**"
+  - "**/*test*.py"
+
+"integration-tests":
+  - "tests/integration/**"
+
+"performance-tests":
+  - "tests/performance/**"
+
+# Documentation
+"documentation":
+  - "docs/**"
+  - "README.md"
+  - "*.md"
+  - "mkdocs.yml"
+
+# Configuration and build
+"build":
+  - "pyproject.toml"
+  - "requirements.txt"
+  - "uv.lock"
+  - "Makefile"
+  - "build.*"
+  - "setup.py"
+  - "setup.cfg"
+
+"ci-cd":
+  - ".github/workflows/**"
+  - ".github/dependabot.yml"
+  - ".github/CODEOWNERS"
+
+"dependencies":
+  - "pyproject.toml"
+  - "requirements.txt"
+  - "uv.lock"
+
+# Examples and scripts
+"examples":
+  - "examples/**"
+
+"scripts":
+  - "scripts/**"
+
+# Language-specific
+"python":
+  - "**/*.py"
+
+# File types
+"config":
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.toml"
+  - "**/*.json"
+  - "**/*.ini"
+  - "**/*.cfg"
+
+# Priority labels based on file patterns
+"priority-high":
+  - "githound/search_engine/**"
+  - "githound/mcp_server.py"
+  - ".github/workflows/ci.yml"
+
+"priority-medium":
+  - "githound/web/**"
+  - "githound/cli.py"
+  - "tests/**"
+
+"priority-low":
+  - "docs/**"
+  - "examples/**"
+  - "scripts/**"
+
+# Type of changes
+"enhancement":
+  - "githound/**/*.py"
+
+"bug":
+  - any: ["**/fix/**", "**/bug/**", "**/hotfix/**"]
+
+"refactor":
+  - any: ["**/refactor/**", "**/cleanup/**"]
+
+"performance":
+  - "tests/performance/**"
+  - any: ["**/perf/**", "**/performance/**", "**/optimize/**"]
+
+"security":
+  - ".github/workflows/**"
+  - ".github/dependabot.yml"
+  - any: ["**/security/**", "**/auth/**"]
+
+# Maintenance
+"maintenance":
+  - ".github/**"
+  - "pyproject.toml"
+  - "requirements.txt"
+  - "uv.lock"

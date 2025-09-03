@@ -1,0 +1,57 @@
+# GitHound Code Owners
+# This file defines who should be automatically requested for review
+# when changes are made to specific parts of the codebase.
+#
+# Order is important; the last matching pattern takes precedence.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @AstroAir
+
+# Core application code
+/githound/ @AstroAir
+
+# Search engine components (critical functionality)
+/githound/search_engine/ @AstroAir
+
+# MCP server functionality
+/githound/mcp_server.py @AstroAir
+/examples/mcp/ @AstroAir
+
+# Web API components
+/githound/web/ @AstroAir
+
+# CLI interface
+/githound/cli.py @AstroAir
+
+# Git operations (critical for core functionality)
+/githound/git_*.py @AstroAir
+
+# Configuration and build files
+/pyproject.toml @AstroAir
+/requirements.txt @AstroAir
+/uv.lock @AstroAir
+/Makefile @AstroAir
+/build.* @AstroAir
+
+# CI/CD and GitHub workflows
+/.github/ @AstroAir
+/.github/workflows/ @AstroAir
+
+# Documentation
+/docs/ @AstroAir
+/README.md @AstroAir
+/mkdocs.yml @AstroAir
+
+# Tests (require review for quality assurance)
+/tests/ @AstroAir
+
+# Scripts and utilities
+/scripts/ @AstroAir
+
+# Examples (important for user experience)
+/examples/ @AstroAir
+
+# Security-sensitive files
+/.github/dependabot.yml @AstroAir
+/.github/workflows/ci.yml @AstroAir

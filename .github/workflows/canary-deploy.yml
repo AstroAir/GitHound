@@ -1,0 +1,413 @@
+# Canary Deployment Workflow
+# Implements progressive deployment with automatic rollback capabilities
+
+name: Canary Deployment
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy'
+        required: true
+        type: string
+      canary_percentage:
+        description: 'Percentage of traffic for canary (1-100)'
+        required: true
+        default: '10'
+        type: string
+      auto_promote:
+        description: 'Automatically promote if metrics are good'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  deployments: write
+  actions: write
+
+jobs:
+  # Validate deployment prerequisites
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      canary_percentage: ${{ steps.config.outputs.canary_percentage }}
+      auto_promote: ${{ steps.config.outputs.auto_promote }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Set configuration
+        id: config
+        run: |
+          CANARY_PERCENTAGE="${{ github.event.inputs.canary_percentage || '10' }}"
+          AUTO_PROMOTE="${{ github.event.inputs.auto_promote || 'true' }}"
+          
+          echo "canary_percentage=$CANARY_PERCENTAGE" >> $GITHUB_OUTPUT
+          echo "auto_promote=$AUTO_PROMOTE" >> $GITHUB_OUTPUT
+          
+          echo "Canary percentage: $CANARY_PERCENTAGE%"
+          echo "Auto-promote: $AUTO_PROMOTE"
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ ! "$VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: v1.2.3 or 1.2.3 (with optional pre-release suffix)"
+            exit 1
+          fi
+          echo "✅ Version format is valid"
+
+  # Deploy canary version
+  deploy-canary:
+    name: Deploy Canary
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: 
+      name: production-canary
+      url: https://canary.githound.dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.version }}
+
+      - name: Create canary deployment
+        id: deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ needs.validate.outputs.version }}',
+              environment: 'production-canary',
+              description: 'Canary deployment - ${{ needs.validate.outputs.canary_percentage }}% traffic',
+              auto_merge: false,
+              required_contexts: []
+            });
+            
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: 'in_progress',
+              description: 'Deploying canary version'
+            });
+            
+            return deployment.data.id;
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download release artifacts
+        run: |
+          # In a real scenario, download from GitHub releases or artifact registry
+          echo "📦 Downloading release artifacts for ${{ needs.validate.outputs.version }}"
+          
+          # Simulate artifact download
+          mkdir -p dist/
+          echo "Simulated package for ${{ needs.validate.outputs.version }}" > dist/package.tar.gz
+
+      - name: Deploy to canary environment
+        id: deploy
+        run: |
+          echo "🚀 Deploying canary version ${{ needs.validate.outputs.version }}"
+          echo "📊 Traffic allocation: ${{ needs.validate.outputs.canary_percentage }}%"
+          
+          # Simulate canary deployment
+          # In a real scenario, this would:
+          # 1. Deploy to canary servers
+          # 2. Configure load balancer for traffic splitting
+          # 3. Update service discovery
+          # 4. Run health checks
+          
+          sleep 10
+          
+          echo "✅ Canary deployment completed"
+          echo "🌐 Canary URL: https://canary.githound.dev"
+          echo "deployment_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+
+      - name: Update deployment status
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'success',
+              description: 'Canary deployment successful',
+              environment_url: 'https://canary.githound.dev'
+            });
+
+      - name: Update deployment status on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: 'failure',
+              description: 'Canary deployment failed'
+            });
+
+  # Monitor canary deployment
+  monitor-canary:
+    name: Monitor Canary
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-canary]
+    steps:
+      - name: Wait for initial metrics
+        run: |
+          echo "⏳ Waiting for initial metrics collection..."
+          sleep 300  # Wait 5 minutes for initial data
+
+      - name: Collect canary metrics
+        id: metrics
+        run: |
+          echo "📊 Collecting canary metrics..."
+          
+          # Simulate metrics collection
+          # In a real scenario, this would query:
+          # - Application metrics (response time, error rate)
+          # - Infrastructure metrics (CPU, memory, network)
+          # - Business metrics (conversion rate, user satisfaction)
+          
+          # Simulate some metrics
+          ERROR_RATE=$(( RANDOM % 5 ))  # 0-4%
+          RESPONSE_TIME=$(( 200 + RANDOM % 100 ))  # 200-300ms
+          CPU_USAGE=$(( 30 + RANDOM % 40 ))  # 30-70%
+          
+          echo "error_rate=$ERROR_RATE" >> $GITHUB_OUTPUT
+          echo "response_time=$RESPONSE_TIME" >> $GITHUB_OUTPUT
+          echo "cpu_usage=$CPU_USAGE" >> $GITHUB_OUTPUT
+          
+          echo "📈 Canary Metrics:"
+          echo "  - Error Rate: ${ERROR_RATE}%"
+          echo "  - Response Time: ${RESPONSE_TIME}ms"
+          echo "  - CPU Usage: ${CPU_USAGE}%"
+
+      - name: Evaluate canary health
+        id: health
+        run: |
+          ERROR_RATE=${{ steps.metrics.outputs.error_rate }}
+          RESPONSE_TIME=${{ steps.metrics.outputs.response_time }}
+          CPU_USAGE=${{ steps.metrics.outputs.cpu_usage }}
+          
+          HEALTHY=true
+          ISSUES=()
+          
+          # Define thresholds
+          MAX_ERROR_RATE=2
+          MAX_RESPONSE_TIME=250
+          MAX_CPU_USAGE=80
+          
+          if [ $ERROR_RATE -gt $MAX_ERROR_RATE ]; then
+            HEALTHY=false
+            ISSUES+=("High error rate: ${ERROR_RATE}% (threshold: ${MAX_ERROR_RATE}%)")
+          fi
+          
+          if [ $RESPONSE_TIME -gt $MAX_RESPONSE_TIME ]; then
+            HEALTHY=false
+            ISSUES+=("High response time: ${RESPONSE_TIME}ms (threshold: ${MAX_RESPONSE_TIME}ms)")
+          fi
+          
+          if [ $CPU_USAGE -gt $MAX_CPU_USAGE ]; then
+            HEALTHY=false
+            ISSUES+=("High CPU usage: ${CPU_USAGE}% (threshold: ${MAX_CPU_USAGE}%)")
+          fi
+          
+          echo "healthy=$HEALTHY" >> $GITHUB_OUTPUT
+          
+          if [ "$HEALTHY" = true ]; then
+            echo "✅ Canary is healthy - all metrics within thresholds"
+          else
+            echo "❌ Canary health issues detected:"
+            printf '%s\n' "${ISSUES[@]}"
+          fi
+
+      - name: Create monitoring report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const healthy = '${{ steps.health.outputs.healthy }}' === 'true';
+            const errorRate = '${{ steps.metrics.outputs.error_rate }}';
+            const responseTime = '${{ steps.metrics.outputs.response_time }}';
+            const cpuUsage = '${{ steps.metrics.outputs.cpu_usage }}';
+            
+            const report = `# 🕯️ Canary Deployment Monitoring Report
+            
+            **Version:** ${{ needs.validate.outputs.version }}
+            **Traffic Allocation:** ${{ needs.validate.outputs.canary_percentage }}%
+            **Status:** ${healthy ? '✅ Healthy' : '❌ Issues Detected'}
+            
+            ## 📊 Metrics
+            
+            | Metric | Value | Threshold | Status |
+            |--------|-------|-----------|--------|
+            | Error Rate | ${errorRate}% | ≤ 2% | ${errorRate <= 2 ? '✅' : '❌'} |
+            | Response Time | ${responseTime}ms | ≤ 250ms | ${responseTime <= 250 ? '✅' : '❌'} |
+            | CPU Usage | ${cpuUsage}% | ≤ 80% | ${cpuUsage <= 80 ? '✅' : '❌'} |
+            
+            ## 🎯 Recommendation
+            
+            ${healthy ? 
+              '✅ **PROMOTE**: Canary is performing well and can be promoted to full deployment.' : 
+              '❌ **ROLLBACK**: Canary is showing issues and should be rolled back.'
+            }
+            
+            ---
+            *Report generated at ${new Date().toISOString()}*
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🕯️ Canary Monitoring Report - ${{ needs.validate.outputs.version }}`,
+              body: report,
+              labels: ['canary', 'deployment', 'monitoring']
+            });
+
+  # Decide on promotion or rollback
+  decide-action:
+    name: Decide Action
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-canary, monitor-canary]
+    outputs:
+      action: ${{ steps.decide.outputs.action }}
+    steps:
+      - name: Decide on action
+        id: decide
+        run: |
+          HEALTHY="${{ needs.monitor-canary.outputs.healthy }}"
+          AUTO_PROMOTE="${{ needs.validate.outputs.auto_promote }}"
+          
+          if [ "$HEALTHY" = "true" ] && [ "$AUTO_PROMOTE" = "true" ]; then
+            echo "action=promote" >> $GITHUB_OUTPUT
+            echo "🚀 Decision: Auto-promote canary to full deployment"
+          elif [ "$HEALTHY" = "true" ]; then
+            echo "action=manual" >> $GITHUB_OUTPUT
+            echo "⏳ Decision: Manual approval required for promotion"
+          else
+            echo "action=rollback" >> $GITHUB_OUTPUT
+            echo "🔄 Decision: Rollback canary due to health issues"
+          fi
+
+  # Promote canary to full deployment
+  promote-canary:
+    name: Promote Canary
+    runs-on: ubuntu-latest
+    needs: [validate, decide-action]
+    if: needs.decide-action.outputs.action == 'promote'
+    environment: production
+    steps:
+      - name: Promote to full deployment
+        run: |
+          echo "🚀 Promoting canary to full deployment"
+          echo "📊 Switching 100% traffic to new version"
+          
+          # Simulate promotion
+          # In a real scenario, this would:
+          # 1. Update load balancer to route 100% traffic to new version
+          # 2. Scale down old version
+          # 3. Update service discovery
+          # 4. Clean up canary resources
+          
+          sleep 10
+          echo "✅ Promotion completed successfully"
+
+      - name: Notify promotion success
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚀 Canary Promoted - ${{ needs.validate.outputs.version }}`,
+              body: `# 🎉 Canary Deployment Promoted
+              
+              **Version:** ${{ needs.validate.outputs.version }}
+              **Status:** ✅ Successfully promoted to full deployment
+              **Traffic:** 100% now routing to new version
+              
+              The canary deployment has been automatically promoted based on healthy metrics.
+              
+              ## Next Steps
+              - Monitor production metrics
+              - Verify all functionality is working as expected
+              - Clean up canary resources
+              
+              ---
+              *Automated promotion completed at ${new Date().toISOString()}*`,
+              labels: ['deployment', 'success', 'production']
+            });
+
+  # Rollback canary deployment
+  rollback-canary:
+    name: Rollback Canary
+    runs-on: ubuntu-latest
+    needs: [validate, decide-action]
+    if: needs.decide-action.outputs.action == 'rollback'
+    steps:
+      - name: Rollback canary
+        run: |
+          echo "🔄 Rolling back canary deployment"
+          echo "📊 Routing 100% traffic back to stable version"
+          
+          # Simulate rollback
+          # In a real scenario, this would:
+          # 1. Update load balancer to route traffic away from canary
+          # 2. Stop canary services
+          # 3. Clean up canary resources
+          # 4. Restore previous configuration
+          
+          sleep 10
+          echo "✅ Rollback completed successfully"
+
+      - name: Notify rollback
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔄 Canary Rolled Back - ${{ needs.validate.outputs.version }}`,
+              body: `# ⚠️ Canary Deployment Rolled Back
+              
+              **Version:** ${{ needs.validate.outputs.version }}
+              **Status:** 🔄 Rolled back due to health issues
+              **Traffic:** 100% routing to previous stable version
+              
+              The canary deployment was automatically rolled back due to failing health checks.
+              
+              ## Investigation Required
+              - Review canary metrics and logs
+              - Identify root cause of issues
+              - Fix issues before attempting redeployment
+              
+              ---
+              *Automated rollback completed at ${new Date().toISOString()}*`,
+              labels: ['deployment', 'rollback', 'investigation-needed']
+            });

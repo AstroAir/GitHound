@@ -185,9 +185,9 @@ class ProgressManager:
         """Get statistics for a specific task."""
         return self._stats.get(name, {})
 
-    def get_all_stats(self) -> dict[str, dict[str, Any]]:
+    def get_all_stats(self) -> dict[str, Any]:
         """Get statistics for all tasks."""
-        stats = self._stats.copy()
+        stats: dict[str, Any] = self._stats.copy()
         if self._start_time:
             stats["total_duration"] = time.time() - self._start_time
         return stats

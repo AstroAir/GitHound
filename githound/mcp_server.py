@@ -33,6 +33,46 @@ from .search_engine import (
 )
 from .utils.export import ExportManager
 
+# Authentication and Configuration Models
+
+
+class ServerConfig(BaseModel):
+    """Configuration for the MCP server."""
+
+    name: str = Field(default="GitHound MCP Server", description="Server name")
+    version: str = Field(default="2.0.0", description="Server version")
+    transport: str = Field(default="stdio", description="Transport type")
+    host: str = Field(default="localhost", description="Host for HTTP/SSE transports")
+    port: int = Field(default=3000, description="Port for HTTP/SSE transports")
+    log_level: str = Field(default="INFO", description="Logging level")
+    enable_auth: bool = Field(default=False, description="Enable authentication")
+    rate_limit_enabled: bool = Field(default=False, description="Enable rate limiting")
+
+
+class User(BaseModel):
+    """User model for authentication."""
+
+    username: str = Field(..., description="Username")
+    role: str = Field(default="user", description="User role (admin, user, readonly)")
+    permissions: list[str] = Field(default_factory=list, description="User permissions")
+
+
+# Authentication Functions
+
+def get_current_user() -> User | None:
+    """Get the current authenticated user."""
+    # This is a placeholder implementation for testing
+    # In a real implementation, this would extract user info from the request context
+    return None
+
+
+def check_rate_limit(user: User | None = None) -> bool:
+    """Check if the current user/request is within rate limits."""
+    # This is a placeholder implementation for testing
+    # In a real implementation, this would check rate limiting rules
+    return True
+
+
 # MCP Tool Input/Output Models
 
 

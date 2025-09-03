@@ -701,36 +701,39 @@ class TestFastMCPInMemoryPatterns:
     async def test_in_memory_client_connection(self, mcp_client: Client):
         """Test in-memory client connection following FastMCP best practices."""
         # Test basic connectivity - this is the key FastMCP in-memory pattern
-        await mcp_client.ping()
+        async with mcp_client:
+            await mcp_client.ping()
 
-        # Test server capabilities
-        tools = await mcp_client.list_tools()
-        assert isinstance(tools, list)
-        assert len(tools) > 0
+            # Test server capabilities
+            tools = await mcp_client.list_tools()
+            assert isinstance(tools, list)
+            assert len(tools) > 0
 
-        resources = await mcp_client.list_resources()
-        assert isinstance(resources, list)
+            resources = await mcp_client.list_resources()
+            assert isinstance(resources, list)
 
-        prompts = await mcp_client.list_prompts()
-        assert isinstance(prompts, list)
+            prompts = await mcp_client.list_prompts()
+            assert isinstance(prompts, list)
 
     @pytest.mark.asyncio
     async def test_deterministic_tool_execution(self, mcp_client: Client, temp_repo):
         """Test deterministic tool execution with in-memory testing."""
-        repo_path = str(temp_repo.working_dir)
+        repo, temp_dir, initial_commit, second_commit = temp_repo
+        repo_path = str(temp_dir)
 
         # Test repository validation tool
-        try:
-            result = await mcp_client.call_tool(
-                "validate_repository",
-                {"repo_path": repo_path}
-            )
-            assert result is not None
-            # Tool should execute deterministically
-        except Exception as e:
-            if "not found" in str(e).lower():
-                pytest.skip("Tool not implemented")
-            raise
+        async with mcp_client:
+            try:
+                result = await mcp_client.call_tool(
+                    "validate_repository",
+                    {"input_data": {"repo_path": repo_path}}
+                )
+                assert result is not None
+                # Tool should execute deterministically
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    pytest.skip("Tool not implemented")
+                raise
 
     @pytest.mark.asyncio
     async def test_mocked_dependencies_pattern(self, mcp_server: FastMCP, mock_external_dependencies):
@@ -745,7 +748,7 @@ class TestFastMCPInMemoryPatterns:
             try:
                 result = await client.call_tool(
                     "validate_repository",
-                    {"repo_path": "/mock/repo"}
+                    {"input_data": {"repo_path": "/mock/repo"}}
                 )
                 # Should work with mocked dependencies
                 assert result is not None
@@ -774,7 +777,8 @@ class TestFastMCPInMemoryPatterns:
     @pytest.mark.asyncio
     async def test_resource_access_patterns(self, mcp_client: Client, temp_repo):
         """Test resource access following FastMCP patterns."""
-        repo_path = str(temp_repo.working_dir)
+        repo, temp_dir, initial_commit, second_commit = temp_repo
+        repo_path = str(temp_dir)
 
         # Test dynamic resource access
         resource_uri = f"githound://repository/{repo_path}/metadata"

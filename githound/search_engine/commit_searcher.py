@@ -11,7 +11,8 @@ except ImportError:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from mock_rapidfuzz import fuzz
+    import mock_rapidfuzz
+    fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext

@@ -1,0 +1,109 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "AstroAir"
+    assignees:
+      - "AstroAir"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+    # Group related updates together
+    groups:
+      testing:
+        patterns:
+          - "pytest*"
+          - "*test*"
+        update-types:
+          - "minor"
+          - "patch"
+      linting:
+        patterns:
+          - "ruff"
+          - "black"
+          - "isort"
+          - "mypy*"
+        update-types:
+          - "minor"
+          - "patch"
+      docs:
+        patterns:
+          - "mkdocs*"
+          - "*docs*"
+        update-types:
+          - "minor"
+          - "patch"
+      security:
+        patterns:
+          - "safety"
+          - "bandit*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Ignore specific packages that need manual updates
+    ignore:
+      - dependency-name: "fastmcp"
+        # Ignore major version updates for MCP - needs manual testing
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "AstroAir"
+    assignees:
+      - "AstroAir"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker (if we add Docker support later)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "AstroAir"
+    assignees:
+      - "AstroAir"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
