@@ -29,7 +29,7 @@ default_repo: "/path/to/default/repo"
 cache:
   directory: "~/.githound/cache"
   max_size: "1GB"
-  ttl: 3600  # seconds
+  ttl: 3600 # seconds
 
 # Search defaults
 search:
@@ -106,7 +106,7 @@ export_templates:
     fields: ["commit_hash", "message", "author", "date", "files"]
     filters:
       message_pattern: "bug|fix|error"
-  
+
   changelog:
     format: "markdown"
     template: |
@@ -169,16 +169,16 @@ githound search "pattern" . --export results.yaml --format yaml --pretty
 search:
   # Maximum number of results to return
   max_results: 1000
-  
+
   # Fuzzy search similarity threshold (0.0 - 1.0)
   fuzzy_threshold: 0.8
-  
+
   # Include binary files in search
   include_binary_files: false
-  
+
   # Case-sensitive search
   case_sensitive: false
-  
+
   # Default file patterns to search
   file_patterns:
     - "*.py"
@@ -186,7 +186,7 @@ search:
     - "*.ts"
     - "*.md"
     - "*.txt"
-  
+
   # Patterns to exclude from search
   exclude_patterns:
     - "node_modules/"
@@ -194,13 +194,13 @@ search:
     - "*.pyc"
     - ".git/"
     - "build/"
-  
+
   # Search timeout in seconds
   timeout: 300
-  
+
   # Enable parallel processing
   parallel: true
-  
+
   # Number of worker threads
   max_workers: 4
 ```
@@ -211,19 +211,19 @@ search:
 cache:
   # Cache directory
   directory: "~/.githound/cache"
-  
+
   # Maximum cache size
   max_size: "1GB"
-  
+
   # Cache entry time-to-live in seconds
   ttl: 3600
-  
+
   # Enable cache compression
   compress: true
-  
+
   # Cache cleanup interval in seconds
   cleanup_interval: 300
-  
+
   # Enable persistent cache
   persistent: true
 ```
@@ -234,22 +234,22 @@ cache:
 export:
   # Default export format
   default_format: "json"
-  
+
   # Include metadata in exports
   include_metadata: true
-  
+
   # Pretty-print output
   pretty_print: true
-  
+
   # Default output directory
   output_directory: "./exports"
-  
+
   # Timestamp format for filenames
   timestamp_format: "%Y%m%d_%H%M%S"
-  
+
   # Compression for large exports
   compress_large_files: true
-  
+
   # Size threshold for compression (in MB)
   compression_threshold: 10
 ```
@@ -260,32 +260,32 @@ export:
 web:
   # Server host
   host: "localhost"
-  
+
   # Server port
   port: 8000
-  
+
   # Auto-open browser on start
   auto_open_browser: true
-  
+
   # CORS origins
   cors_origins:
     - "http://localhost:3000"
     - "https://yourdomain.com"
-  
+
   # Enable authentication
   auth_enabled: false
-  
+
   # JWT secret key
   jwt_secret: "your-secret-key"
-  
+
   # Session timeout in seconds
   session_timeout: 3600
-  
+
   # Rate limiting
   rate_limit:
     requests_per_minute: 100
     burst_size: 20
-  
+
   # Static file serving
   static_files:
     enabled: true
@@ -299,30 +299,30 @@ web:
 mcp:
   # Server host
   host: "localhost"
-  
+
   # Server port
   port: 3000
-  
+
   # Maximum concurrent connections
   max_connections: 100
-  
+
   # Authentication required
   auth_required: false
-  
+
   # API key for authentication
   api_key: "your-api-key"
-  
+
   # Request timeout in seconds
   request_timeout: 60
-  
+
   # Enable request logging
   log_requests: true
-  
+
   # Allowed repositories
   allowed_repos:
     - "/path/to/repo1"
     - "/path/to/repo2"
-  
+
   # Rate limiting per client
   rate_limit:
     requests_per_minute: 60
@@ -335,28 +335,28 @@ mcp:
 logging:
   # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
   level: "INFO"
-  
+
   # Log file path
   file: "~/.githound/logs/githound.log"
-  
+
   # Maximum log file size
   max_file_size: "10MB"
-  
+
   # Number of backup files to keep
   backup_count: 5
-  
+
   # Log format
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  
+
   # Date format
   date_format: "%Y-%m-%d %H:%M:%S"
-  
+
   # Enable console logging
   console: true
-  
+
   # Console log level
   console_level: "WARNING"
-  
+
   # Enable structured logging (JSON)
   structured: false
 ```
@@ -371,19 +371,19 @@ Define custom search aliases for common patterns:
 aliases:
   # Bug-related commits
   bugs: "--message 'bug|fix|error|issue' --date-from '30 days ago'"
-  
+
   # Feature commits
   features: "--message 'feat|feature|add|implement' --date-from '30 days ago'"
-  
+
   # Refactoring commits
   refactor: "--message 'refactor|cleanup|improve|optimize'"
-  
+
   # Security-related commits
   security: "--message 'security|vulnerability|cve|exploit'"
-  
+
   # Documentation commits
   docs: "--message 'doc|documentation|readme' --file-type 'md'"
-  
+
   # Recent changes by specific author
   my_changes: "--author '$(git config user.email)' --date-from '7 days ago'"
 ```
@@ -410,30 +410,38 @@ export_templates:
       date_from: "30 days ago"
     sort_by: "date"
     sort_order: "desc"
-  
+
   # Changelog template
   changelog:
     format: "markdown"
     template: |
       # Changelog
-      
+
       {% for commit in commits %}
       ## {{ commit.date.strftime('%Y-%m-%d') }} - {{ commit.author }}
-      
+
       **{{ commit.message }}**
-      
+
       Files changed:
       {% for file in commit.files_changed %}
       - {{ file }}
       {% endfor %}
-      
+
       ---
       {% endfor %}
-  
+
   # CSV export for analysis
   analysis:
     format: "csv"
-    fields: ["date", "author", "message", "files_count", "lines_added", "lines_removed"]
+    fields:
+      [
+        "date",
+        "author",
+        "message",
+        "files_count",
+        "lines_added",
+        "lines_removed",
+      ]
     include_headers: true
 ```
 
@@ -443,25 +451,25 @@ export_templates:
 performance:
   # Number of worker threads
   max_workers: 4
-  
+
   # Chunk size for processing
   chunk_size: 1000
-  
+
   # Memory limit for operations
   memory_limit: "2GB"
-  
+
   # Enable result streaming
   stream_results: true
-  
+
   # Batch size for database operations
   batch_size: 100
-  
+
   # Connection pool size
   connection_pool_size: 10
-  
+
   # Query timeout
   query_timeout: 300
-  
+
   # Enable query optimization
   optimize_queries: true
 ```
@@ -500,7 +508,7 @@ web:
   cors_origins: ["*"]
 
 cache:
-  ttl: 60  # Short TTL for development
+  ttl: 60 # Short TTL for development
 ```
 
 ### Production Environment
@@ -560,14 +568,17 @@ export:
 ### Common Issues
 
 1. **Configuration file not found**
+
    - Check file path and permissions
    - Verify YAML syntax
 
 2. **Invalid configuration values**
+
    - Run `githound config validate`
    - Check data types and ranges
 
 3. **Environment variable conflicts**
+
    - Use `githound config sources` to see precedence
    - Unset conflicting variables
 

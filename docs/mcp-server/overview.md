@@ -109,19 +109,19 @@ import asyncio
 async def analyze_codebase():
     # Connect to GitHound MCP server
     mcp = FastMCP.connect("githound-mcp://localhost:3000")
-    
+
     # Get repository overview
     overview = await mcp.analyze_repository({
         "repo_path": "/path/to/project"
     })
-    
+
     # Analyze recent changes
     recent_commits = await mcp.get_commit_history({
         "repo_path": "/path/to/project",
         "date_from": "2023-11-01",
         "max_count": 50
     })
-    
+
     # Generate insights
     insights = analyze_patterns(overview, recent_commits)
     return insights
@@ -173,19 +173,19 @@ server:
   host: "localhost"
   port: 3000
   max_connections: 100
-  
+
 security:
   enable_auth: true
   token_expiry: 3600
   allowed_repos:
     - "/path/to/allowed/repo1"
     - "/path/to/allowed/repo2"
-    
+
 performance:
   cache_size: "1GB"
   max_concurrent_operations: 10
   request_timeout: 300
-  
+
 logging:
   level: "INFO"
   file: "/var/log/githound-mcp.log"

@@ -6,7 +6,7 @@ GitHound maintains strict type safety through comprehensive MyPy type checking. 
 
 ✅ **Zero MyPy Errors**: GitHound currently passes MyPy type checking with zero errors  
 ✅ **Full Type Coverage**: All modules are fully type-annotated  
-✅ **Strict Configuration**: Comprehensive MyPy configuration for maximum type safety  
+✅ **Strict Configuration**: Comprehensive MyPy configuration for maximum type safety
 
 ## MyPy Configuration
 
@@ -137,7 +137,7 @@ class SearchResult:
     file_path: Path
     line_number: int
     relevance_score: float
-    
+
     def __init__(
         self,
         commit_hash: str,
@@ -160,13 +160,13 @@ T = TypeVar('T')
 
 class SearchCache(Generic[T]):
     """Type-safe cache implementation."""
-    
+
     def __init__(self) -> None:
         self._cache: Dict[str, T] = {}
-    
+
     def get(self, key: str) -> Optional[T]:
         return self._cache.get(key)
-    
+
     def set(self, key: str, value: T) -> None:
         self._cache[key] = value
 ```
@@ -326,10 +326,8 @@ repos:
 ```json
 // .vscode/settings.json
 {
-    "python.linting.mypyEnabled": true,
-    "python.linting.mypyArgs": [
-        "--config-file=pyproject.toml"
-    ]
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyArgs": ["--config-file=pyproject.toml"]
 }
 ```
 

@@ -59,22 +59,22 @@ graph TB
     Web[Web Interface] --> Core
     MCP[MCP Server] --> Core
     API[REST API] --> Core
-    
+
     Core --> SearchEngine[Search Engine]
     Core --> GitHandler[Git Handler]
     Core --> Models[Data Models]
     Core --> Utils[Utilities]
-    
+
     SearchEngine --> Orchestrator[Search Orchestrator]
     SearchEngine --> Searchers[Individual Searchers]
-    
+
     GitHandler --> Blame[Git Blame]
     GitHandler --> Diff[Git Diff]
     GitHandler --> Metadata[Metadata Extraction]
-    
+
     Models --> Schemas[Pydantic Schemas]
     Models --> Types[Type Definitions]
-    
+
     Utils --> Export[Export Manager]
     Utils --> Progress[Progress Tracking]
 ```

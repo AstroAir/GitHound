@@ -338,25 +338,27 @@ Real-time updates and streaming results via WebSocket.
 ### Connection
 
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws');
+const ws = new WebSocket("ws://localhost:8000/ws");
 ```
 
 ### Search Streaming
 
 ```javascript
 // Start streaming search
-ws.send(JSON.stringify({
-  "type": "search",
-  "data": {
-    "repo_path": "/path/to/repo",
-    "query": {
-      "content_pattern": "function"
-    }
-  }
-}));
+ws.send(
+  JSON.stringify({
+    type: "search",
+    data: {
+      repo_path: "/path/to/repo",
+      query: {
+        content_pattern: "function",
+      },
+    },
+  })
+);
 
 // Receive results
-ws.onmessage = function(event) {
+ws.onmessage = function (event) {
   const message = JSON.parse(event.data);
   if (message.type === "search_result") {
     console.log("New result:", message.data);
@@ -385,14 +387,14 @@ ws.onmessage = function(event) {
 
 ### Common Error Codes
 
-| Code | Description | HTTP Status |
-|------|-------------|-------------|
-| `REPOSITORY_NOT_FOUND` | Repository path not found | 404 |
-| `INVALID_QUERY` | Invalid search query parameters | 400 |
-| `AUTHENTICATION_REQUIRED` | Authentication token required | 401 |
-| `PERMISSION_DENIED` | Insufficient permissions | 403 |
-| `RATE_LIMIT_EXCEEDED` | Too many requests | 429 |
-| `INTERNAL_ERROR` | Internal server error | 500 |
+| Code                      | Description                     | HTTP Status |
+| ------------------------- | ------------------------------- | ----------- |
+| `REPOSITORY_NOT_FOUND`    | Repository path not found       | 404         |
+| `INVALID_QUERY`           | Invalid search query parameters | 400         |
+| `AUTHENTICATION_REQUIRED` | Authentication token required   | 401         |
+| `PERMISSION_DENIED`       | Insufficient permissions        | 403         |
+| `RATE_LIMIT_EXCEEDED`     | Too many requests               | 429         |
+| `INTERNAL_ERROR`          | Internal server error           | 500         |
 
 ## Rate Limiting
 
@@ -451,7 +453,7 @@ class GitHoundClient:
     def __init__(self, base_url="http://localhost:8000/api"):
         self.base_url = base_url
         self.session = requests.Session()
-    
+
     def search(self, repo_path, query):
         response = self.session.post(
             f"{self.base_url}/search/advanced",
@@ -473,20 +475,20 @@ results = client.search("/path/to/repo", {
 
 ```javascript
 class GitHoundClient {
-  constructor(baseUrl = 'http://localhost:8000/api') {
+  constructor(baseUrl = "http://localhost:8000/api") {
     this.baseUrl = baseUrl;
   }
-  
+
   async search(repoPath, query) {
     const response = await fetch(`${this.baseUrl}/search/advanced`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         repo_path: repoPath,
-        query: query
-      })
+        query: query,
+      }),
     });
     return response.json();
   }
@@ -494,8 +496,8 @@ class GitHoundClient {
 
 // Usage
 const client = new GitHoundClient();
-const results = await client.search('/path/to/repo', {
-  content_pattern: 'function'
+const results = await client.search("/path/to/repo", {
+  content_pattern: "function",
 });
 ```
 

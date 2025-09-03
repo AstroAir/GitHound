@@ -402,7 +402,7 @@ fi
   run: |
     githound analyze . --export analysis.json
     githound search "TODO\|FIXME" . --export todos.json
-    
+
 - name: Upload artifacts
   uses: actions/upload-artifact@v2
   with:

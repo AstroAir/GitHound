@@ -118,6 +118,7 @@ pytest -m "performance and not slow"
 ```
 
 Available markers:
+
 - `slow` - Tests that take longer than 5 seconds
 - `performance` - Performance benchmark tests
 - `integration` - Integration tests
@@ -160,7 +161,7 @@ pytest -n 4                 # Use 4 processes
 ```ini
 [tool:pytest]
 minversion = 6.0
-addopts = 
+addopts =
     -ra
     --strict-markers
     --strict-config
@@ -193,37 +194,40 @@ export GITHOUND_TEST_TIMEOUT=30
 ### Test Structure Guidelines
 
 1. **Arrange-Act-Assert Pattern**:
+
    ```python
    def test_function_behavior():
        # Arrange
        input_data = create_test_data()
-       
+
        # Act
        result = function_under_test(input_data)
-       
+
        # Assert
        assert result.status == "success"
        assert len(result.items) == 5
    ```
 
 2. **Descriptive Test Names**:
+
    ```python
    def test_get_repository_metadata_returns_correct_commit_count():
        # Test implementation
        pass
-   
+
    def test_analyze_commit_handles_invalid_hash_gracefully():
        # Test implementation
        pass
    ```
 
 3. **Use Fixtures for Setup**:
+
    ```python
    @pytest.fixture
    def sample_repository():
        # Create test repository
        return create_test_repo()
-   
+
    def test_repository_analysis(sample_repository):
        # Use fixture in test
        result = analyze_repository(sample_repository)
@@ -262,26 +266,26 @@ import pytest
 from tests.fixtures.performance import PerformanceMonitor
 
 class TestGitOperationPerformance:
-    
+
     @pytest.mark.performance
     def test_repository_loading_performance(self, temp_repo, performance_monitor):
         """Test repository loading completes within time limit."""
         performance_monitor.start_monitoring()
-        
+
         # Perform operation
         repo = get_repository(temp_repo.working_dir)
-        
+
         metrics = performance_monitor.stop_monitoring()
-        
+
         # Assert performance requirements
         assert metrics['duration_seconds'] < 2.0
         assert metrics['memory_increase_mb'] < 50
-    
+
     @pytest.mark.benchmark
     def test_commit_metadata_extraction_benchmark(self, temp_repo, benchmark):
         """Benchmark commit metadata extraction."""
         commit = temp_repo.head.commit
-        
+
         result = benchmark(extract_commit_metadata, commit)
         assert result.hash == commit.hexsha
 ```
@@ -326,28 +330,28 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9, 3.10, 3.11]
-    
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install dependencies
-      run: |
-        pip install -e ".[dev]"
-    
-    - name: Run tests
-      run: |
-        pytest --cov=githound --cov-report=xml
-    
-    - name: Run type checking
-      run: |
-        mypy githound
-    
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          pytest --cov=githound --cov-report=xml
+
+      - name: Run type checking
+        run: |
+          mypy githound
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
 ```
 
 ## Test Data Management
@@ -360,7 +364,7 @@ from tests.fixtures.builders import RepositoryBuilder
 def create_test_repository():
     """Create a test repository with specific characteristics."""
     builder = RepositoryBuilder()
-    
+
     repo, path = (builder
                   .initialize_repository()
                   .add_realistic_project_structure()
@@ -369,7 +373,7 @@ def create_test_repository():
                   .add_commits_with_pattern(10, "test")
                   .create_tag("v1.0.0")
                   .build())
-    
+
     return repo, path
 ```
 
@@ -386,7 +390,7 @@ def test_commit_analysis():
               .with_message("Test commit message")
               .with_file_changes("test.py", insertions=10, deletions=5)
               .build())
-    
+
     result = analyze_commit_metadata(commit)
     assert result.hash == "abc123"
 ```

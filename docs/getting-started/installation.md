@@ -45,10 +45,10 @@ pip install githound
 
    ```bash
    python -m venv venv
-   
+
    # On Windows
    venv\Scripts\activate
-   
+
    # On macOS/Linux
    source venv/bin/activate
    ```
@@ -172,7 +172,7 @@ log_level: "INFO"
 search:
   max_results: 1000
   fuzzy_threshold: 0.8
-  
+
 # Export defaults
 export:
   default_format: "json"
@@ -182,7 +182,7 @@ export:
 web:
   host: "localhost"
   port: 8000
-  
+
 # MCP server defaults
 mcp:
   port: 3000

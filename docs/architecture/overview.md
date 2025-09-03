@@ -12,69 +12,69 @@ graph TB
         API[REST API]
         MCP[MCP Server]
     end
-    
+
     subgraph "Core Engine"
         Core[Core Engine]
         Router[Request Router]
         Auth[Authentication]
         Cache[Caching Layer]
     end
-    
+
     subgraph "Analysis Modules"
         SearchEngine[Search Engine]
         GitHandler[Git Handler]
         BlameAnalyzer[Blame Analyzer]
         DiffAnalyzer[Diff Analyzer]
     end
-    
+
     subgraph "Data Layer"
         Models[Data Models]
         Schemas[Pydantic Schemas]
         Validation[Data Validation]
         Serialization[Serialization]
     end
-    
+
     subgraph "Utilities"
         Export[Export Manager]
         Progress[Progress Tracking]
         Logging[Logging System]
         Config[Configuration]
     end
-    
+
     subgraph "External Dependencies"
         Git[Git Repository]
         FileSystem[File System]
         Cache_Store[Cache Store]
     end
-    
+
     CLI --> Core
     Web --> Core
     API --> Core
     MCP --> Core
-    
+
     Core --> Router
     Router --> Auth
     Router --> Cache
-    
+
     Core --> SearchEngine
     Core --> GitHandler
     Core --> BlameAnalyzer
     Core --> DiffAnalyzer
-    
+
     SearchEngine --> Models
     GitHandler --> Models
     BlameAnalyzer --> Models
     DiffAnalyzer --> Models
-    
+
     Models --> Schemas
     Schemas --> Validation
     Validation --> Serialization
-    
+
     Core --> Export
     Core --> Progress
     Core --> Logging
     Core --> Config
-    
+
     GitHandler --> Git
     Export --> FileSystem
     Cache --> Cache_Store
@@ -224,7 +224,7 @@ sequenceDiagram
     participant Cache
     participant Analyzer
     participant Git
-    
+
     User->>Interface: Request
     Interface->>Core: Validated Request
     Core->>Cache: Check Cache
