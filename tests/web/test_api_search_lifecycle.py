@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+from typing import Generator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,7 +16,7 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-def temp_repo(tmp_path: Path):
+def temp_repo(tmp_path: Path) -> Generator[str, None, None]:
     # Create a temporary git repo structure; tests rely only on path existence
     repo_dir = tmp_path / "repo"
     repo_dir.mkdir(parents=True, exist_ok=True)

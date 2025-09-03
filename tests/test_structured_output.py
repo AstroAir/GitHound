@@ -368,12 +368,14 @@ class TestDataValidation:
     def test_datetime_serialization(self, sample_commit_info):
         """Test datetime serialization in models."""
         # Test that datetime fields are properly handled
-        commit_dict = sample_commit_info.model_dump()
+        # Use dict() for Pydantic v1 compatibility instead of model_dump()
+        commit_dict = sample_commit_info.dict()
 
         assert isinstance(commit_dict["date"], datetime)
 
         # Test JSON serialization
-        json_str = sample_commit_info.model_dump_json()
+        # Use json() for Pydantic v1 compatibility instead of model_dump_json()
+        json_str = sample_commit_info.json()
         assert isinstance(json_str, str)
 
         # Parse back and verify

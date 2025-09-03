@@ -30,15 +30,25 @@ def search_blob_content(
     try:
         process = subprocess.run(
             rg_args, input=content, capture_output=True, check=True, text=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # ripgrep not found or returned an error (e.g., no matches)
+    except subprocess.CalledProcessError as e:
+        # ripgrep exit code 1 means no matches found, which is not an error
+        if e.returncode == 1:
+            return []
+        # Other exit codes are actual errors, re-raise them
+        raise
+    except FileNotFoundError:
+        # ripgrep not found
         return []
 
     results: list[SearchResult] = []
     for line in process.stdout.strip().split("\n"):
         if not line:
             continue
-        match = json.loads(line)
+        try:
+            match = json.loads(line)
+        except json.JSONDecodeError:
+            # Skip invalid JSON lines
+            continue
         if match["type"] == "match":
             data = match["data"]
             results.append(

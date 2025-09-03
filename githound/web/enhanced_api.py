@@ -242,7 +242,7 @@ async def analyze_commit(
             commit = repo.head.commit
 
         commit_info = extract_commit_metadata(commit)
-        commit_data = commit_info.model_dump()
+        commit_data = commit_info.dict()  # Use dict() for Pydantic v1 compatibility
 
         if request.include_file_changes:
             # Add detailed file change information
@@ -310,7 +310,7 @@ async def get_filtered_commits(
         commit_list = []
         for commit in commits:
             commit_info = extract_commit_metadata(commit)
-            commit_list.append(commit_info.model_dump())
+            commit_list.append(commit_info.dict())  # Use dict() for Pydantic v1 compatibility
 
         return CommitListResponse(
             success=True,
@@ -353,7 +353,7 @@ async def compare_commits_endpoint(
         return ApiResponse(
             success=True,
             message=f"Diff analysis completed: {diff_result.files_changed} files changed",
-            data=diff_result.model_dump(),
+            data=diff_result.dict(),  # Use dict() for Pydantic v1 compatibility
         )
 
     except HTTPException:
@@ -387,7 +387,7 @@ async def compare_branches_endpoint(
         return ApiResponse(
             success=True,
             message=f"Branch diff analysis completed: {diff_result.files_changed} files changed",
-            data=diff_result.model_dump(),
+            data=diff_result.dict(),  # Use dict() for Pydantic v1 compatibility
         )
 
     except HTTPException:
@@ -501,7 +501,7 @@ async def export_data(
             "type": "export",
             "status": "queued",
             "created_at": datetime.now(),
-            "request": request.model_dump(),
+            "request": request.dict(),  # Use dict() for Pydantic v1 compatibility
             "user": current_user["user_id"],
         }
 
@@ -695,7 +695,7 @@ async def analyze_file_blame_endpoint(
         return ApiResponse(
             success=True,
             message=f"Blame analysis completed for {request.file_path}",
-            data=blame_result.model_dump(),
+            data=blame_result.dict(),  # Use dict() for Pydantic v1 compatibility
         )
 
     except HTTPException:

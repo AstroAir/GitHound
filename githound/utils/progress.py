@@ -45,6 +45,11 @@ class CancellationToken:
         with self._lock:
             return self._reason
 
+    @property
+    def cancellation_reason(self) -> str | None:
+        """Get the cancellation reason (alias for reason)."""
+        return self.reason
+
     def check_cancelled(self) -> None:
         """Raise an exception if cancellation has been requested."""
         if self.is_cancelled:
@@ -171,6 +176,25 @@ class ProgressManager:
                 description=description or f"✓ {self._stats[name]['description']}",
             )
         self._stats[name]["completed"] = total
+
+    def advance_task(self, name: str, advance: int) -> None:
+        """Advance a task by a specific amount."""
+        self.update_task(name, advance=advance)
+
+    def get_stats(self, name: str) -> dict[str, Any]:
+        """Get statistics for a specific task."""
+        return self._stats.get(name, {})
+
+    def get_all_stats(self) -> dict[str, dict[str, Any]]:
+        """Get statistics for all tasks."""
+        stats = self._stats.copy()
+        if self._start_time:
+            stats["total_duration"] = time.time() - self._start_time
+        return stats
+
+    def check_cancellation(self) -> None:
+        """Check if cancellation has been requested and raise exception if so."""
+        self.cancellation_token.check_cancelled()
 
     def get_progress_callback(self, task_name: str) -> Callable[[str, float], None]:
         """Get a progress callback function for a specific task."""

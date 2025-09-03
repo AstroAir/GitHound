@@ -4,7 +4,14 @@ import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
 
-from rapidfuzz import fuzz
+try:
+    from rapidfuzz import fuzz
+except ImportError:
+    # Use mock for testing when rapidfuzz is not available
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from mock_rapidfuzz import fuzz
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext

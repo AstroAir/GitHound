@@ -9,10 +9,33 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from fastmcp import Client as MCPClient
+import pytest_asyncio
 from git import Repo
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from githound.mcp_server import mcp
+# Try to import FastMCP components, skip if not available
+try:
+    from fastmcp import FastMCP, Client
+    from fastmcp.client.transports import StreamableHttpTransport
+    from fastmcp.exceptions import ToolError, McpError
+    FASTMCP_AVAILABLE = True
+except ImportError:
+    # Create mock classes for when FastMCP is not available
+    FastMCP = None
+    Client = None
+    StreamableHttpTransport = None
+    ToolError = Exception
+    McpError = Exception
+    FASTMCP_AVAILABLE = False
+
+try:
+    from githound.mcp_server import mcp, get_mcp_server
+    MCP_SERVER_AVAILABLE = True
+except ImportError:
+    mcp = None
+    get_mcp_server = None
+    MCP_SERVER_AVAILABLE = False
+
 from githound.models import CommitInfo, RepositoryInfo, SearchQuery
 from githound.search_engine import SearchOrchestrator
 
@@ -151,13 +174,54 @@ def search_orchestrator() -> SearchOrchestrator:
     return SearchOrchestrator()
 
 
-@pytest.fixture
-async def mcp_client() -> AsyncGenerator[MCPClient, None]:
-    """Create an MCP client for testing."""
-    client = MCPClient(mcp)
-    await client._connect()
-    yield client
-    await client._disconnect()
+@pytest_asyncio.fixture
+async def mcp_server():
+    """Create a fresh GitHound MCP server instance for testing.
+
+    This fixture provides a clean server instance for in-memory testing
+    following FastMCP best practices.
+    """
+    if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE:
+        pytest.skip("FastMCP or MCP server not available")
+    return get_mcp_server()
+
+
+@pytest_asyncio.fixture
+async def mcp_client(mcp_server):
+    """Create a FastMCP client connected to the GitHound server using in-memory testing.
+
+    This fixture demonstrates the FastMCP in-memory testing pattern where the server
+    instance is passed directly to the client for zero-overhead testing.
+    """
+    if not FASTMCP_AVAILABLE:
+        pytest.skip("FastMCP not available")
+    async with Client(mcp_server) as client:
+        yield client
+
+
+@pytest_asyncio.fixture
+async def mcp_client_legacy():
+    """Create an MCP client for testing with the global server instance."""
+    if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE:
+        pytest.skip("FastMCP or MCP server not available")
+    async with Client(mcp) as client:
+        yield client
+
+
+@pytest_asyncio.fixture
+async def http_mcp_client():
+    """Create an HTTP transport MCP client for integration testing.
+
+    This fixture is for testing actual HTTP transport behavior.
+    Note: Requires a running MCP server on localhost:3000
+    """
+    if not FASTMCP_AVAILABLE:
+        pytest.skip("FastMCP not available")
+    try:
+        async with Client("http://localhost:3000/mcp/") as client:
+            yield client
+    except Exception:
+        pytest.skip("HTTP MCP server not available for integration testing")
 
 
 @pytest.fixture
@@ -232,3 +296,85 @@ def git_error_mock():
     mock = Mock()
     mock.side_effect = GitCommandError("git command failed", 1)
     return mock
+
+
+# FastMCP Testing Fixtures following latest documentation patterns
+
+@pytest.fixture
+def mock_search_data():
+    """Provide mock search data for testing search functionality."""
+    return {
+        "commits": [
+            {
+                "hash": "abc123",
+                "message": "Add feature X",
+                "author": "Test User",
+                "date": "2024-01-01T00:00:00Z"
+            },
+            {
+                "hash": "def456",
+                "message": "Fix bug Y",
+                "author": "Another User",
+                "date": "2024-01-02T00:00:00Z"
+            }
+        ],
+        "files": [
+            {"path": "src/main.py", "content": "def main(): pass"},
+            {"path": "README.md", "content": "# Project"}
+        ]
+    }
+
+
+@pytest.fixture
+def auth_headers():
+    """Provide authentication headers for testing."""
+    return {
+        "bearer": {"Authorization": "Bearer test-token-123"},
+        "oauth": {"Authorization": "Bearer oauth-token-456"}
+    }
+
+
+@pytest.fixture
+def mock_external_dependencies():
+    """Mock external dependencies for deterministic testing."""
+    with patch('githound.git_handler.get_repository') as mock_get_repo, \
+         patch('githound.search_engine.SearchOrchestrator') as mock_orchestrator, \
+         patch('pathlib.Path.exists') as mock_path_exists:
+
+        mock_path_exists.return_value = True
+        mock_get_repo.return_value = Mock()
+        mock_orchestrator.return_value = Mock()
+
+        yield {
+            'get_repository': mock_get_repo,
+            'search_orchestrator': mock_orchestrator,
+            'path_exists': mock_path_exists
+        }
+
+
+@pytest.fixture
+def performance_test_data():
+    """Generate test data for performance testing."""
+    return {
+        "large_commit_list": [f"commit_{i:06d}" for i in range(10000)],
+        "large_file_list": [f"file_{i:04d}.py" for i in range(1000)],
+        "complex_search_patterns": [
+            "function.*test.*",
+            "class.*[A-Z][a-z]+.*",
+            "import.*numpy.*",
+            "def.*async.*"
+        ]
+    }
+
+
+@pytest.fixture
+def error_scenarios():
+    """Provide various error scenarios for testing."""
+    return {
+        "invalid_repo_path": "/nonexistent/repo/path",
+        "permission_denied": "/root/restricted/repo",
+        "corrupted_git": "/corrupted/.git",
+        "network_timeout": "https://timeout.example.com/repo.git",
+        "invalid_commit_hash": "invalid_hash_123",
+        "malformed_search_query": {"invalid": "query", "structure": None}
+    }

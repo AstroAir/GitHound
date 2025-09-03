@@ -466,7 +466,7 @@ async def http_exception_handler(request: Any, exc: HTTPException) -> JSONRespon
     )
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response.model_dump()
+        content=error_response.dict()  # Use dict() for Pydantic v1 compatibility
     )
 
 
@@ -478,5 +478,5 @@ async def general_exception_handler(request: Any, exc: Exception) -> JSONRespons
     )
     return JSONResponse(
         status_code=500,
-        content=error_response.model_dump()
+        content=error_response.dict()  # Use dict() for Pydantic v1 compatibility
     )

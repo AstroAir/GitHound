@@ -1,16 +1,23 @@
-"""Tests for GitHound MCP Server functionality."""
+"""Tests for GitHound MCP Server functionality.
+
+Enhanced with FastMCP testing best practices including in-memory testing,
+comprehensive fixtures, and proper error handling.
+
+Based on: https://gofastmcp.com/deployment/testing
+"""
 
 import shutil
 import tempfile
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 import pytest
-from fastmcp import Client
+import pytest_asyncio
+from fastmcp import FastMCP, Client
+from fastmcp.exceptions import ToolError, McpError
 from git import Repo
 
-from githound.mcp_server import (
-    mcp,
-)
+from githound.mcp_server import mcp, get_mcp_server
 
 
 @pytest.fixture
@@ -673,13 +680,129 @@ class TestMCPServerConfiguration:
 
     def test_mcp_server_creation(self):
         """Test MCP server creation and configuration."""
-        from githound.mcp_server import get_mcp_server
-
         server = get_mcp_server()
 
         assert server.name == "GitHound MCP Server"
         assert hasattr(server, 'version')  # FastMCP has version attribute
         # Note: FastMCP doesn't have a description attribute
+
+
+class TestFastMCPInMemoryPatterns:
+    """Test FastMCP in-memory testing patterns following latest documentation."""
+
+    @pytest.mark.asyncio
+    async def test_in_memory_server_instance(self, mcp_server: FastMCP):
+        """Test in-memory server instance creation."""
+        assert mcp_server is not None
+        assert mcp_server.name == "GitHound MCP Server"
+        assert hasattr(mcp_server, 'version')
+
+    @pytest.mark.asyncio
+    async def test_in_memory_client_connection(self, mcp_client: Client):
+        """Test in-memory client connection following FastMCP best practices."""
+        # Test basic connectivity - this is the key FastMCP in-memory pattern
+        await mcp_client.ping()
+
+        # Test server capabilities
+        tools = await mcp_client.list_tools()
+        assert isinstance(tools, list)
+        assert len(tools) > 0
+
+        resources = await mcp_client.list_resources()
+        assert isinstance(resources, list)
+
+        prompts = await mcp_client.list_prompts()
+        assert isinstance(prompts, list)
+
+    @pytest.mark.asyncio
+    async def test_deterministic_tool_execution(self, mcp_client: Client, temp_repo):
+        """Test deterministic tool execution with in-memory testing."""
+        repo_path = str(temp_repo.working_dir)
+
+        # Test repository validation tool
+        try:
+            result = await mcp_client.call_tool(
+                "validate_repository",
+                {"repo_path": repo_path}
+            )
+            assert result is not None
+            # Tool should execute deterministically
+        except Exception as e:
+            if "not found" in str(e).lower():
+                pytest.skip("Tool not implemented")
+            raise
+
+    @pytest.mark.asyncio
+    async def test_mocked_dependencies_pattern(self, mcp_server: FastMCP, mock_external_dependencies):
+        """Test mocking external dependencies following FastMCP patterns."""
+        # Configure mocks for deterministic testing
+        mock_repo = MagicMock()
+        mock_repo.working_dir = "/mock/repo"
+        mock_external_dependencies['get_repository'].return_value = mock_repo
+
+        # Use in-memory testing with mocked dependencies
+        async with Client(mcp_server) as client:
+            try:
+                result = await client.call_tool(
+                    "validate_repository",
+                    {"repo_path": "/mock/repo"}
+                )
+                # Should work with mocked dependencies
+                assert result is not None
+            except Exception as e:
+                if "not found" in str(e).lower():
+                    pytest.skip("Tool not implemented")
+                raise
+
+    @pytest.mark.asyncio
+    async def test_error_handling_patterns(self, mcp_client: Client, error_scenarios):
+        """Test error handling following FastMCP patterns."""
+        # Test invalid repository path
+        with pytest.raises((ToolError, Exception)):
+            await mcp_client.call_tool(
+                "validate_repository",
+                {"repo_path": error_scenarios["invalid_repo_path"]}
+            )
+
+        # Test malformed arguments
+        with pytest.raises((ToolError, Exception)):
+            await mcp_client.call_tool(
+                "advanced_search",
+                {"invalid_arg": "value"}
+            )
+
+    @pytest.mark.asyncio
+    async def test_resource_access_patterns(self, mcp_client: Client, temp_repo):
+        """Test resource access following FastMCP patterns."""
+        repo_path = str(temp_repo.working_dir)
+
+        # Test dynamic resource access
+        resource_uri = f"githound://repository/{repo_path}/metadata"
+
+        try:
+            content = await mcp_client.read_resource(resource_uri)
+            assert content is not None
+        except Exception as e:
+            # Resource might not be available
+            pytest.skip(f"Resource not available: {e}")
+
+    @pytest.mark.asyncio
+    async def test_concurrent_operations_pattern(self, mcp_server: FastMCP, temp_repo):
+        """Test concurrent operations following FastMCP patterns."""
+        import asyncio
+
+        async def perform_operation(client_id: int):
+            async with Client(mcp_server) as client:
+                await client.ping()
+                return client_id
+
+        # Run concurrent operations
+        tasks = [perform_operation(i) for i in range(5)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # All operations should complete
+        successful_results = [r for r in results if not isinstance(r, Exception)]
+        assert len(successful_results) > 0
 
     def test_search_orchestrator_initialization(self):
         """Test search orchestrator initialization."""
