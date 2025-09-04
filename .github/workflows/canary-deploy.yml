@@ -39,7 +39,7 @@ jobs:
       auto_promote: ${{ steps.config.outputs.auto_promote }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Determine version
         id: version
@@ -84,7 +84,7 @@ jobs:
       url: https://canary.githound.dev
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ needs.validate.outputs.version }}
 

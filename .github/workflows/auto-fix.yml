@@ -51,7 +51,7 @@ jobs:
             };
 
       - name: Checkout PR branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ fromJson(steps.pr.outputs.result).head_ref }}
@@ -183,7 +183,7 @@ jobs:
       needs_autofix: ${{ steps.check.outputs.needs_autofix }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
