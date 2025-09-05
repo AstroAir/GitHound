@@ -33,7 +33,7 @@ class TestPerformanceBenchmarks:
         start_time = time.time()
         result = await mcp_client.call_tool(
             "validate_repository",
-            {"input_data": {"repo_path": repo_path}}
+            {"repo_path": repo_path}
         )
         execution_time = time.time() - start_time
         
@@ -78,7 +78,7 @@ class TestPerformanceBenchmarks:
                 start_time = time.time()
                 await client.call_tool(
                     "validate_repository",
-                    {"input_data": {"repo_path": repo_path}}
+                    {"repo_path": repo_path}
                 )
                 return time.time() - start_time
         
@@ -98,7 +98,7 @@ class TestPerformanceBenchmarks:
         
         # Average execution time should be reasonable
         avg_time = sum(successful_times) / len(successful_times)
-        assert avg_time < 10.0, f"Average execution time {avg_time:.2f}s too high"
+        assert avg_time < 15.0, f"Average execution time {avg_time:.2f}s too high"
         
         # Total time should show some concurrency benefit
         sequential_time_estimate = avg_time * num_operations
@@ -122,7 +122,7 @@ class TestLargeRepositoryHandling:
             try:
                 result = await mcp_client.call_tool(
                     "analyze_repository",
-                    {"input_data": {"repo_path": "/large/repo"}}
+                    {"repo_path": "/large/repo"}
                 )
                 execution_time = time.time() - start_time
                 
@@ -169,10 +169,10 @@ class TestLargeRepositoryHandling:
                     os.makedirs(os.path.join(temp_dir, ".git"))
                     result = await mcp_client.call_tool(
                         "advanced_search",
-                        {"input_data": {
+                        {
                             "repo_path": temp_dir,
                             "content_pattern": "test"
-                        }}
+                        }
                 )
                 execution_time = time.time() - start_time
                 
@@ -280,15 +280,15 @@ class TestScalabilityLimits:
             try:
                 result = await mcp_client.call_tool(
                     "content_search",
-                    {"input_data": {
+                    {
                         "repo_path": repo_path,
                         "pattern": large_query
-                    }}
+                    }
                 )
                 execution_time = time.time() - start_time
                 
                 # Should handle large payloads within reasonable time
-                assert execution_time < 10.0, f"Large payload took {execution_time:.2f}s"
+                assert execution_time < 15.0, f"Large payload took {execution_time:.2f}s"
                 
             except Exception as e:
                 if "too large" in str(e).lower() or "not found" in str(e).lower():

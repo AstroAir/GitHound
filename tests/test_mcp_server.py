@@ -66,7 +66,7 @@ class TestMCPRepositoryAnalysis:
 
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "analyze_repository", {"input_data": {"repo_path": temp_dir}}
+                "analyze_repository", {"repo_path": temp_dir}
             )
 
             assert result is not None
@@ -90,7 +90,7 @@ class TestMCPRepositoryAnalysis:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_commit",
-                {"input_data": {"repo_path": temp_dir, "commit_hash": second_commit.hexsha}},
+                {"repo_path": temp_dir, "commit_hash": second_commit.hexsha},
             )
 
             assert result is not None
@@ -114,11 +114,9 @@ class TestMCPRepositoryAnalysis:
             result = await mcp_client.call_tool(
                 "get_filtered_commits",
                 {
-                    "input_data": {
-                        "repo_path": temp_dir,
-                        "author_pattern": "Test User",
-                        "max_count": 10,
-                    }
+                    "repo_path": temp_dir,
+                    "author": "Test User",
+                    "max_count": 10,
                 },
             )
 
@@ -142,7 +140,7 @@ class TestMCPRepositoryAnalysis:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "get_file_history_mcp",
-                {"input_data": {"repo_path": temp_dir, "file_path": "test.py", "max_count": 10}},
+                {"repo_path": temp_dir, "file_path": "test.py", "max_count": 10},
             )
 
             assert result is not None
@@ -169,7 +167,7 @@ class TestMCPBlameAndDiff:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_file_blame",
-                {"input_data": {"repo_path": temp_dir, "file_path": "test.py"}},
+                {"repo_path": temp_dir, "file_path": "test.py"},
             )
 
             assert result is not None
@@ -193,11 +191,9 @@ class TestMCPBlameAndDiff:
             result = await mcp_client.call_tool(
                 "compare_commits_diff",
                 {
-                    "input_data": {
-                        "repo_path": temp_dir,
-                        "from_commit": initial_commit.hexsha,
-                        "to_commit": second_commit.hexsha,
-                    }
+                    "repo_path": temp_dir,
+                    "from_commit": initial_commit.hexsha,
+                    "to_commit": second_commit.hexsha,
                 },
             )
 
@@ -221,7 +217,7 @@ class TestMCPBlameAndDiff:
 
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "get_author_stats", {"input_data": {"repo_path": temp_dir}}
+                "get_author_stats", {"repo_path": temp_dir}
             )
 
             assert result is not None
@@ -308,12 +304,10 @@ class TestMCPExport:
                 result = await mcp_client.call_tool(
                     "export_repository_data",
                     {
-                        "input_data": {
-                            "repo_path": temp_dir,
-                            "output_path": output_file,
-                            "format": "json",
-                            "include_metadata": True,
-                        }
+                        "repo_path": temp_dir,
+                        "output_path": output_file,
+                        "format": "json",
+                        "include_metadata": True,
                     },
                 )
 
@@ -347,7 +341,7 @@ class TestMCPErrorHandling:
         """Test error handling for invalid repository path."""
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "analyze_repository", {"input_data": {"repo_path": "/nonexistent/path"}}
+                "analyze_repository", {"repo_path": "/nonexistent/path"}
             )
 
             assert result is not None
@@ -368,7 +362,7 @@ class TestMCPErrorHandling:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_commit",
-                {"input_data": {"repo_path": temp_dir, "commit_hash": "invalid_hash_123"}},
+                {"repo_path": temp_dir, "commit_hash": "invalid_hash_123"},
             )
 
             assert result is not None
@@ -389,7 +383,7 @@ class TestMCPErrorHandling:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "analyze_file_blame",
-                {"input_data": {"repo_path": temp_dir, "file_path": "nonexistent.py"}},
+                {"repo_path": temp_dir, "file_path": "nonexistent.py"},
             )
 
             assert result is not None
@@ -415,11 +409,9 @@ class TestMCPAdvancedSearch:
             result = await mcp_client.call_tool(
                 "advanced_search",
                 {
-                    "input_data": {
-                        "repo_path": temp_dir,
-                        "content_pattern": "hello",
-                        "max_results": 10,
-                    }
+                    "repo_path": temp_dir,
+                    "content_pattern": "hello",
+                    "max_results": 10,
                 },
             )
 
@@ -443,12 +435,10 @@ class TestMCPAdvancedSearch:
             result = await mcp_client.call_tool(
                 "fuzzy_search",
                 {
-                    "input_data": {
-                        "repo_path": temp_dir,
-                        "search_term": "hello",
-                        "threshold": 0.7,
-                        "max_results": 5,
-                    }
+                    "repo_path": temp_dir,
+                    "search_term": "hello",
+                    "threshold": 0.7,
+                    "max_results": 5,
                 },
             )
 
@@ -473,12 +463,10 @@ class TestMCPAdvancedSearch:
             result = await mcp_client.call_tool(
                 "content_search",
                 {
-                    "input_data": {
-                        "repo_path": temp_dir,
-                        "pattern": "def",
-                        "file_extensions": [".py"],
-                        "max_results": 10,
-                    }
+                    "repo_path": temp_dir,
+                    "pattern": "def",
+                    "file_extensions": [".py"],
+                    "max_results": 10,
                 },
             )
 
@@ -505,7 +493,7 @@ class TestMCPRepositoryManagement:
 
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "list_branches", {"input_data": {"repo_path": temp_dir}}
+                "list_branches", {"repo_path": temp_dir}
             )
 
             assert result is not None
@@ -527,7 +515,7 @@ class TestMCPRepositoryManagement:
 
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "list_tags", {"input_data": {"repo_path": temp_dir}}
+                "list_tags", {"repo_path": temp_dir}
             )
 
             assert result is not None
@@ -548,7 +536,7 @@ class TestMCPRepositoryManagement:
 
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "validate_repository", {"input_data": {"repo_path": temp_dir}}
+                "validate_repository", {"repo_path": temp_dir}
             )
 
             assert result is not None
@@ -571,7 +559,7 @@ class TestMCPRepositoryManagement:
 
         async with mcp_client:
             result = await mcp_client.call_tool(
-                "generate_repository_report", {"input_data": {"repo_path": temp_dir}}
+                "generate_repository_report", {"repo_path": temp_dir}
             )
 
             assert result is not None
@@ -726,7 +714,7 @@ class TestFastMCPInMemoryPatterns:
             try:
                 result = await mcp_client.call_tool(
                     "validate_repository",
-                    {"input_data": {"repo_path": repo_path}}
+                    {"repo_path": repo_path}
                 )
                 assert result is not None
                 # Tool should execute deterministically
@@ -748,7 +736,7 @@ class TestFastMCPInMemoryPatterns:
             try:
                 result = await client.call_tool(
                     "validate_repository",
-                    {"input_data": {"repo_path": "/mock/repo"}}
+                    {"repo_path": "/mock/repo"}
                 )
                 # Should work with mocked dependencies
                 assert result is not None
@@ -781,7 +769,7 @@ class TestFastMCPInMemoryPatterns:
         repo_path = str(temp_dir)
 
         # Test dynamic resource access
-        resource_uri = f"githound://repository/{repo_path}/metadata"
+        resource_uri = f"githound://repository/{repo_path}/config"
 
         try:
             content = await mcp_client.read_resource(resource_uri)
@@ -836,10 +824,8 @@ class TestMCPAdvancedErrorHandling:
                 await mcp_client.call_tool(
                     "advanced_search",
                     {
-                        "input_data": {
-                            "repo_path": "/nonexistent/path",
-                            "content_pattern": "test",
-                        }
+                        "repo_path": "/nonexistent/path",
+                        "content_pattern": "test",
                     },
                 )
 
@@ -854,10 +840,8 @@ class TestMCPAdvancedErrorHandling:
                 await mcp_client.call_tool(
                     "fuzzy_search",
                     {
-                        "input_data": {
-                            "repo_path": "/nonexistent/path",
-                            "search_term": "test",
-                        }
+                        "repo_path": "/nonexistent/path",
+                        "search_term": "test",
                     },
                 )
 
@@ -867,7 +851,7 @@ class TestMCPAdvancedErrorHandling:
         async with mcp_client:
             result = await mcp_client.call_tool(
                 "validate_repository",
-                {"input_data": {"repo_path": "/nonexistent/path"}},
+                {"repo_path": "/nonexistent/path"},
             )
 
             assert result is not None

@@ -132,7 +132,7 @@ class TestAuthorizationScenarios:
             try:
                 result = await mcp_client.call_tool(
                     "export_repository_data",
-                    {"input_data": {"repo_path": "/test/repo", "format": "json", "output_path": "/tmp/test.json"}}
+                    {"repo_path": "/test/repo", "format": "json", "output_path": "/tmp/test.json"}
                 )
                 # Should not raise permission error
                 assert result is not None or True  # Tool might not be fully implemented

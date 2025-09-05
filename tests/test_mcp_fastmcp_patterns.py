@@ -59,7 +59,7 @@ class TestFastMCPInMemoryTesting:
         # Test repository validation tool
         result = await mcp_client.call_tool(
             "validate_repository",
-            {"input_data": {"repo_path": str(temp_repo.working_dir)}}
+            {"repo_path": str(temp_repo.working_dir)}
         )
         assert result.data is not None
         assert "valid" in str(result.data).lower()
@@ -67,14 +67,20 @@ class TestFastMCPInMemoryTesting:
     @pytest.mark.asyncio
     async def test_resource_access_in_memory(self, mcp_client: Client, temp_repo):
         """Test resource access using in-memory testing pattern."""
-        # Test repository metadata resource
+        # Test repository config resource (which actually exists)
         repo_path = str(temp_repo.working_dir)
-        resource_uri = f"githound://repository/{repo_path}/metadata"
+        resource_uri = f"githound://repository/{repo_path}/config"
         
         try:
             content = await mcp_client.read_resource(resource_uri)
             assert content is not None
-            assert len(content.contents) > 0
+            # Handle different response formats
+            if hasattr(content, 'contents'):
+                assert len(content.contents) > 0
+            elif isinstance(content, list):
+                assert len(content) > 0
+            else:
+                assert content  # Just check it's not empty/None
         except Exception as e:
             # Resource might not be available without proper setup
             pytest.skip(f"Resource not available: {e}")
@@ -98,7 +104,7 @@ class TestMockingExternalDependencies:
             # Test with mocked repository
             result = await client.call_tool(
                 "validate_repository",
-                {"input_data": {"repo_path": "/mock/repo"}}
+                {"repo_path": "/mock/repo"}
             )
             assert result.data is not None
     
@@ -115,10 +121,10 @@ class TestMockingExternalDependencies:
                 # Test search functionality
                 result = await client.call_tool(
                     "advanced_search",
-                    {"input_data": {
+                    {
                         "repo_path": str(temp_repo.working_dir),
                         "content_pattern": "test"
-                    }}
+                    }
                 )
                 # Verify the tool was called (may not return data due to mocking)
                 assert result is not None
@@ -130,11 +136,15 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_invalid_repository_path(self, mcp_client: Client, error_scenarios):
         """Test handling of invalid repository paths."""
-        with pytest.raises((ToolError, Exception)):
-            await mcp_client.call_tool(
-                "validate_repository",
-                {"repo_path": error_scenarios["invalid_repo_path"]}
-            )
+        result = await mcp_client.call_tool(
+            "validate_repository",
+            {"repo_path": error_scenarios["invalid_repo_path"]}
+        )
+        # Should return an error response instead of raising an exception
+        assert result is not None
+        # Check that the response indicates an error
+        result_text = str(result.content[0].text).lower() if result.content else ""
+        assert "error" in result_text or "invalid" in result_text or "not found" in result_text
     
     @pytest.mark.asyncio
     async def test_malformed_tool_arguments(self, mcp_client: Client):
@@ -152,11 +162,14 @@ class TestErrorHandling:
             mock_get_repo.side_effect = GitCommandError("git command failed", 1)
             
             async with Client(mcp_server) as client:
-                with pytest.raises((ToolError, Exception)):
-                    await client.call_tool(
-                        "analyze_repository",
-                        {"repo_path": "/some/path"}
-                    )
+                result = await client.call_tool(
+                    "analyze_repository",
+                    {"repo_path": "/some/path"}
+                )
+                # Should return an error response instead of raising an exception
+                assert result is not None
+                result_text = str(result.content[0].text).lower() if result.content else ""
+                assert "error" in result_text
 
 
 class TestToolFunctionality:
@@ -195,8 +208,8 @@ class TestToolFunctionality:
     async def test_search_tools(self, mcp_client: Client, temp_repo):
         """Test various search tools."""
         search_tools = [
-            ("advanced_search", {"repo_path": str(temp_repo.working_dir), "query": "test"}),
-            ("fuzzy_search", {"repo_path": str(temp_repo.working_dir), "query": "main"}),
+            ("advanced_search", {"repo_path": str(temp_repo.working_dir), "content_pattern": "test"}),
+            ("fuzzy_search", {"repo_path": str(temp_repo.working_dir), "search_term": "main"}),
             ("content_search", {"repo_path": str(temp_repo.working_dir), "pattern": "def"})
         ]
         
@@ -228,10 +241,10 @@ class TestResourceAccess:
         """Test accessing dynamic resources."""
         repo_path = str(temp_repo.working_dir)
         
-        # Test various resource URIs
+        # Test various resource URIs that actually exist
         resource_uris = [
-            f"githound://repository/{repo_path}/metadata",
-            f"githound://repository/{repo_path}/commits",
+            f"githound://repository/{repo_path}/config",
+            f"githound://repository/{repo_path}/summary",
             f"githound://repository/{repo_path}/branches"
         ]
         
@@ -261,10 +274,10 @@ class TestPromptFunctionality:
     async def test_prompt_execution(self, mcp_client: Client, temp_repo):
         """Test executing prompts with arguments."""
         try:
-            # Test repository analysis prompt
+            # Test bug investigation prompt
             result = await mcp_client.get_prompt(
-                "analyze_repository_prompt",
-                {"repo_path": str(temp_repo.working_dir)}
+                "investigate_bug_prompt",
+                {"bug_description": "Test bug", "suspected_files": "test.py"}
             )
             assert result is not None
         except Exception as e:
@@ -298,7 +311,7 @@ class TestPerformancePatterns:
             async with Client(mcp_server) as client:
                 return await client.call_tool(
                     "validate_repository",
-                    {"input_data": {"repo_path": str(temp_repo.working_dir)}}
+                    {"repo_path": str(temp_repo.working_dir)}
                 )
         
         # Run multiple concurrent operations
