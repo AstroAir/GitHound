@@ -14,19 +14,24 @@ class ServerConfig(BaseModel):
     name: str = Field(default="GitHound MCP Server", description="Server name")
     version: str = Field(default="2.0.0", description="Server version")
     transport: str = Field(default="stdio", description="Transport type")
-    host: str = Field(default="localhost", description="Host for HTTP/SSE transports")
+    host: str = Field(default="localhost",
+                      description="Host for HTTP/SSE transports")
     port: int = Field(default=3000, description="Port for HTTP/SSE transports")
     log_level: str = Field(default="INFO", description="Logging level")
-    enable_auth: bool = Field(default=False, description="Enable authentication")
-    rate_limit_enabled: bool = Field(default=False, description="Enable rate limiting")
+    enable_auth: bool = Field(
+        default=False, description="Enable authentication")
+    rate_limit_enabled: bool = Field(
+        default=False, description="Enable rate limiting")
 
 
 class User(BaseModel):
     """User model for authentication."""
 
     username: str = Field(..., description="Username")
-    role: str = Field(default="user", description="User role (admin, user, readonly)")
-    permissions: list[str] = Field(default_factory=list, description="User permissions")
+    role: str = Field(
+        default="user", description="User role (admin, user, readonly)")
+    permissions: list[str] = Field(
+        default_factory=list, description="User permissions")
 
 
 # MCP Tool Input/Output Models

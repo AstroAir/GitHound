@@ -11,7 +11,7 @@ from ...models import User
 @dataclass
 class AuthResult:
     """Result of authentication attempt."""
-    
+
     success: bool
     user: Optional[User] = None
     error: Optional[str] = None
@@ -35,82 +35,82 @@ class TokenInfo:
 
 class AuthProvider(ABC):
     """Base class for all authentication providers."""
-    
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the authentication provider."""
         self.config = kwargs
         self._load_from_environment()
-    
+
     def _load_from_environment(self) -> None:
         """Load configuration from environment variables."""
         # Override in subclasses to load specific environment variables
         pass
-    
+
     @abstractmethod
     async def authenticate(self, token: str) -> AuthResult:
         """
         Authenticate a user with the provided token.
-        
+
         Args:
             token: The authentication token
-            
+
         Returns:
             AuthResult with authentication status and user info
         """
         pass
-    
+
     @abstractmethod
     async def validate_token(self, token: str) -> Optional[TokenInfo]:
         """
         Validate a token and extract user information.
-        
+
         Args:
             token: The token to validate
-            
+
         Returns:
             TokenInfo if valid, None otherwise
         """
         pass
-    
+
     async def get_user_permissions(self, user: User) -> List[str]:
         """
         Get permissions for a user.
-        
+
         Args:
             user: The user to get permissions for
-            
+
         Returns:
             List of permission strings
         """
         return user.permissions or []
-    
+
     async def check_permission(self, user: User, permission: str) -> bool:
         """
         Check if a user has a specific permission.
-        
+
         Args:
             user: The user to check
             permission: The permission to check for
-            
+
         Returns:
             True if user has permission, False otherwise
         """
         permissions = await self.get_user_permissions(user)
         return permission in permissions or "admin" in user.role
-    
+
     def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
         """
         Get OAuth 2.0 metadata for this provider.
-        
+
         Returns:
             OAuth metadata dict or None if not applicable
         """
         return None
-    
+
     def supports_dynamic_client_registration(self) -> bool:
         """
         Check if this provider supports Dynamic Client Registration (DCR).
-        
+
         Returns:
             True if DCR is supported, False otherwise
         """
@@ -119,24 +119,24 @@ class AuthProvider(ABC):
 
 class TokenVerifier(AuthProvider):
     """Base class for token-only verification providers."""
-    
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.issuer = kwargs.get("issuer")
         self.audience = kwargs.get("audience")
-    
+
     async def authenticate(self, token: str) -> AuthResult:
         """Authenticate by validating the token."""
         token_info = await self.validate_token(token)
         if not token_info:
             return AuthResult(success=False, error="Invalid token")
-        
+
         user = User(
             username=token_info.username,
             role=token_info.roles[0] if token_info.roles else "user",
             permissions=token_info.permissions or []
         )
-        
+
         return AuthResult(
             success=True,
             user=user,
@@ -147,11 +147,11 @@ class TokenVerifier(AuthProvider):
 
 class RemoteAuthProvider(TokenVerifier):
     """Base class for providers that work with external identity providers."""
-    
+
     def __init__(self, base_url: str, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.base_url = base_url.rstrip("/")
-    
+
     def get_oauth_metadata(self) -> Dict[str, Any]:
         """Get OAuth 2.0 metadata for MCP clients."""
         return {
@@ -166,7 +166,7 @@ class RemoteAuthProvider(TokenVerifier):
             "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
             "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register"
         }
-    
+
     def supports_dynamic_client_registration(self) -> bool:
         """Remote auth providers support DCR."""
         return True

@@ -8,6 +8,6 @@ from .server import get_mcp_server, mcp, run_mcp_server
 
 __all__ = [
     "get_mcp_server",
-    "mcp", 
+    "mcp",
     "run_mcp_server",
 ]

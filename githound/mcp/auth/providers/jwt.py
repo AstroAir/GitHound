@@ -15,6 +15,7 @@ try:
 except ImportError:
     JWT_AVAILABLE = False
     # Create dummy classes for type checking
+
     class PyJWKClient:  # type: ignore
         def __init__(self, uri: str) -> None: ...
         def get_signing_key_from_jwt(self, token: str) -> Any: ...
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class JWTVerifier(TokenVerifier):
     """JWT token verification provider."""
-    
+
     def __init__(self, jwks_uri: Optional[str] = None, issuer: Optional[str] = None, audience: Optional[str] = None, **kwargs: Any) -> None:
         """
         Initialize JWT verifier.
@@ -37,7 +38,8 @@ class JWTVerifier(TokenVerifier):
             audience: Expected token audience
         """
         if not JWT_AVAILABLE:
-            raise ImportError("PyJWT is required for JWT verification. Install with: pip install PyJWT[crypto]")
+            raise ImportError(
+                "PyJWT is required for JWT verification. Install with: pip install PyJWT[crypto]")
 
         super().__init__(issuer=issuer, audience=audience, **kwargs)
         self.jwks_uri = jwks_uri
@@ -48,18 +50,18 @@ class JWTVerifier(TokenVerifier):
             self.jwks_client = None
         self._cached_keys: Dict[str, Any] = {}
         self._cache_expiry = 0
-    
+
     def _load_from_environment(self) -> None:
         """Load JWT configuration from environment variables."""
         prefix = "FASTMCP_SERVER_AUTH_JWT_"
-        
+
         if not hasattr(self, 'jwks_uri'):
             self.jwks_uri = os.getenv(f"{prefix}JWKS_URI")
         if not hasattr(self, 'issuer'):
             self.issuer = os.getenv(f"{prefix}ISSUER")
         if not hasattr(self, 'audience'):
             self.audience = os.getenv(f"{prefix}AUDIENCE")
-        
+
         # Validate required configuration
         if not all([self.jwks_uri, self.issuer, self.audience]):
             missing = []
@@ -69,15 +71,16 @@ class JWTVerifier(TokenVerifier):
                 missing.append(f"{prefix}ISSUER")
             if not self.audience:
                 missing.append(f"{prefix}AUDIENCE")
-            raise ValueError(f"Missing required JWT configuration: {', '.join(missing)}")
-    
+            raise ValueError(
+                f"Missing required JWT configuration: {', '.join(missing)}")
+
     async def validate_token(self, token: str) -> Optional[TokenInfo]:
         """
         Validate JWT token and extract user information.
-        
+
         Args:
             token: JWT token to validate
-            
+
         Returns:
             TokenInfo if valid, None otherwise
         """
@@ -93,7 +96,7 @@ class JWTVerifier(TokenVerifier):
 
             # Get signing key
             signing_key = self.jwks_client.get_signing_key_from_jwt(token)
-            
+
             # Decode and validate token
             payload = jwt.decode(
                 token,
@@ -103,30 +106,32 @@ class JWTVerifier(TokenVerifier):
                 audience=self.audience,
                 options={"verify_exp": True}
             )
-            
+
             # Extract user information
             user_id = payload.get("sub")
-            username = payload.get("preferred_username") or payload.get("name") or user_id
+            username = payload.get(
+                "preferred_username") or payload.get("name") or user_id
             email = payload.get("email")
             roles = payload.get("roles", [])
             permissions = payload.get("permissions", [])
             expires_at = payload.get("exp")
-            
+
             if not user_id:
                 logger.warning("JWT token missing 'sub' claim")
                 return None
-            
+
             return TokenInfo(
                 user_id=user_id,
                 username=username,
                 email=email,
                 roles=roles if isinstance(roles, list) else [roles],
-                permissions=permissions if isinstance(permissions, list) else [permissions],
+                permissions=permissions if isinstance(
+                    permissions, list) else [permissions],
                 expires_at=expires_at,
                 issuer=payload.get("iss"),
                 audience=payload.get("aud")
             )
-            
+
         except jwt.ExpiredSignatureError:
             logger.warning("JWT token has expired")
             return None
@@ -136,11 +141,11 @@ class JWTVerifier(TokenVerifier):
         except Exception as e:
             logger.error(f"Error validating JWT token: {e}")
             return None
-    
+
     def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
         """JWT verifier doesn't provide OAuth metadata."""
         return None
-    
+
     def supports_dynamic_client_registration(self) -> bool:
         """JWT verifier doesn't support DCR."""
         return False
@@ -148,11 +153,11 @@ class JWTVerifier(TokenVerifier):
 
 class StaticJWTVerifier(TokenVerifier):
     """JWT verifier with static secret key (for development/testing)."""
-    
+
     def __init__(self, secret_key: Optional[str] = None, issuer: Optional[str] = None, audience: Optional[str] = None, algorithm: str = "HS256", **kwargs: Any) -> None:
         """
         Initialize static JWT verifier.
-        
+
         Args:
             secret_key: Secret key for token verification
             issuer: Expected token issuer
@@ -160,16 +165,17 @@ class StaticJWTVerifier(TokenVerifier):
             algorithm: JWT algorithm (default: HS256)
         """
         if not JWT_AVAILABLE:
-            raise ImportError("PyJWT is required for JWT verification. Install with: pip install PyJWT")
-        
+            raise ImportError(
+                "PyJWT is required for JWT verification. Install with: pip install PyJWT")
+
         super().__init__(issuer=issuer, audience=audience, **kwargs)
         self.secret_key = secret_key
         self.algorithm = algorithm
-    
+
     def _load_from_environment(self) -> None:
         """Load static JWT configuration from environment variables."""
         prefix = "FASTMCP_SERVER_AUTH_JWT_"
-        
+
         if not hasattr(self, 'secret_key'):
             self.secret_key = os.getenv(f"{prefix}SECRET_KEY")
         if not hasattr(self, 'issuer'):
@@ -178,7 +184,7 @@ class StaticJWTVerifier(TokenVerifier):
             self.audience = os.getenv(f"{prefix}AUDIENCE")
         if not hasattr(self, 'algorithm'):
             self.algorithm = os.getenv(f"{prefix}ALGORITHM", "HS256")
-        
+
         if not all([self.secret_key, self.issuer, self.audience]):
             missing = []
             if not self.secret_key:
@@ -187,15 +193,16 @@ class StaticJWTVerifier(TokenVerifier):
                 missing.append(f"{prefix}ISSUER")
             if not self.audience:
                 missing.append(f"{prefix}AUDIENCE")
-            raise ValueError(f"Missing required static JWT configuration: {', '.join(missing)}")
-    
+            raise ValueError(
+                f"Missing required static JWT configuration: {', '.join(missing)}")
+
     async def validate_token(self, token: str) -> Optional[TokenInfo]:
         """
         Validate JWT token with static secret.
-        
+
         Args:
             token: JWT token to validate
-            
+
         Returns:
             TokenInfo if valid, None otherwise
         """
@@ -217,30 +224,32 @@ class StaticJWTVerifier(TokenVerifier):
                 audience=self.audience,
                 options={"verify_exp": True}
             )
-            
+
             # Extract user information
             user_id = payload.get("sub")
-            username = payload.get("preferred_username") or payload.get("name") or user_id
+            username = payload.get(
+                "preferred_username") or payload.get("name") or user_id
             email = payload.get("email")
             roles = payload.get("roles", [])
             permissions = payload.get("permissions", [])
             expires_at = payload.get("exp")
-            
+
             if not user_id:
                 logger.warning("JWT token missing 'sub' claim")
                 return None
-            
+
             return TokenInfo(
                 user_id=user_id,
                 username=username,
                 email=email,
                 roles=roles if isinstance(roles, list) else [roles],
-                permissions=permissions if isinstance(permissions, list) else [permissions],
+                permissions=permissions if isinstance(
+                    permissions, list) else [permissions],
                 expires_at=expires_at,
                 issuer=payload.get("iss"),
                 audience=payload.get("aud")
             )
-            
+
         except jwt.ExpiredSignatureError:
             logger.warning("JWT token has expired")
             return None

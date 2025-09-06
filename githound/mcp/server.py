@@ -1,5 +1,17 @@
 """Main GitHound MCP server setup and orchestration."""
 
+from .prompts import investigate_bug, prepare_code_review, analyze_performance_regression
+from .resources import (
+    get_repository_config,
+    get_repository_branches,
+    get_repository_contributors,
+    get_repository_summary,
+    get_file_history_resource,
+    get_commit_details_resource,
+    get_file_blame_resource,
+)
+from .direct_wrappers import MockContext
+from .tools import search_tools, analysis_tools, blame_tools, export_tools, management_tools, web_tools
 import logging
 import importlib
 from typing import Optional, Any, Dict, List
@@ -10,18 +22,6 @@ from .config import configure_logging, get_server_config_from_environment, is_au
 
 # Import auth functions explicitly to avoid conflict with auth directory
 auth_module = importlib.import_module('.auth', package='githound.mcp')
-from .tools import search_tools, analysis_tools, blame_tools, export_tools, management_tools, web_tools
-from .direct_wrappers import MockContext
-from .resources import (
-    get_repository_config,
-    get_repository_branches,
-    get_repository_contributors,
-    get_repository_summary,
-    get_file_history_resource,
-    get_commit_details_resource,
-    get_file_blame_resource,
-)
-from .prompts import investigate_bug, prepare_code_review, analyze_performance_regression
 
 
 def get_mcp_server() -> FastMCP:
@@ -29,7 +29,8 @@ def get_mcp_server() -> FastMCP:
     config = get_server_config_from_environment()
 
     # Create server with authentication if enabled
-    auth_provider = auth_module.get_auth_provider() if is_authentication_enabled() else None
+    auth_provider = auth_module.get_auth_provider(
+    ) if is_authentication_enabled() else None
 
     server = FastMCP(
         name=config.name,
@@ -163,7 +164,8 @@ async def analyze_commit(repo_path: str, commit_hash: Optional[str] = None, ctx:
     """Analyze a specific commit and return detailed metadata."""
     from .models import CommitAnalysisInput
 
-    input_data = CommitAnalysisInput(repo_path=repo_path, commit_hash=commit_hash)
+    input_data = CommitAnalysisInput(
+        repo_path=repo_path, commit_hash=commit_hash)
     return await analysis_tools.analyze_commit(input_data, ensure_context(ctx))
 
 
@@ -249,7 +251,8 @@ async def analyze_file_blame(
     """Analyze line-by-line authorship for a file using git blame."""
     from .models import BlameInput
 
-    input_data = BlameInput(repo_path=repo_path, file_path=file_path, commit=commit)
+    input_data = BlameInput(repo_path=repo_path,
+                            file_path=file_path, commit=commit)
     return await blame_tools.analyze_file_blame(input_data, ensure_context(ctx))
 
 
@@ -323,7 +326,8 @@ async def get_file_blame(
     """Get file blame information showing line-by-line authorship."""
     from .models import FileBlameInput
 
-    input_data = FileBlameInput(repo_path=repo_path, file_path=file_path, commit=commit)
+    input_data = FileBlameInput(
+        repo_path=repo_path, file_path=file_path, commit=commit)
     return await blame_tools.get_file_blame(input_data, ensure_context(ctx))
 
 
@@ -418,7 +422,8 @@ async def start_web_server(
     """Start the GitHound web interface server."""
     from .models import WebServerInput
 
-    input_data = WebServerInput(repo_path=repo_path, host=host, port=port, auto_open=auto_open)
+    input_data = WebServerInput(
+        repo_path=repo_path, host=host, port=port, auto_open=auto_open)
     return await web_tools.start_web_server(input_data, ensure_context(ctx))
 
 

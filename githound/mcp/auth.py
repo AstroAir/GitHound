@@ -8,13 +8,17 @@ from importlib import import_module
 from .models import User
 
 # Define the protocol first to avoid import issues
+
+
 class AuthProvider(Protocol):
     """Protocol defining the interface for authentication providers."""
+
     async def authenticate(self, token: str) -> Any: ...
     async def validate_token(self, token: str) -> Any: ...
     async def check_permission(self, user: Any, permission: str) -> bool: ...
     def get_oauth_metadata(self) -> Optional[Dict[str, Any]]: ...
     def supports_dynamic_client_registration(self) -> bool: ...
+
 
 # Try to import concrete implementations, fall back to Any types
 try:
@@ -70,7 +74,8 @@ def _create_auth_provider_from_environment() -> Optional[AuthProvider]:
         return provider
 
     except Exception as e:
-        logger.error(f"Failed to create authentication provider from {provider_class_path}: {e}")
+        logger.error(
+            f"Failed to create authentication provider from {provider_class_path}: {e}")
         return None
 
 
@@ -93,7 +98,8 @@ def _wrap_with_authorization_provider(base_provider: AuthProvider) -> AuthProvid
             provider = EunomiaAuthorizationProvider(provider)
             logger.info("Wrapped provider with Eunomia authorization")
         except ImportError:
-            logger.warning("Eunomia authorization requested but eunomia-mcp not available")
+            logger.warning(
+                "Eunomia authorization requested but eunomia-mcp not available")
 
     # Check for Permit.io authorization
     if os.getenv("PERMIT_ENABLE", "false").lower() == "true":
@@ -102,7 +108,8 @@ def _wrap_with_authorization_provider(base_provider: AuthProvider) -> AuthProvid
             provider = PermitAuthorizationProvider(provider)
             logger.info("Wrapped provider with Permit.io authorization")
         except ImportError:
-            logger.warning("Permit.io authorization requested but permit-fastmcp not available")
+            logger.warning(
+                "Permit.io authorization requested but permit-fastmcp not available")
 
     return provider
 
