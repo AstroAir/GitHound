@@ -17,6 +17,7 @@ from ..models import (
     RepositoryInput,
     FileBlameInput,
     CommitComparisonInput,
+    AuthorStatsInput,
 )
 
 
@@ -126,7 +127,7 @@ async def compare_branches_diff(input_data: BranchDiffInput, ctx: Context) -> di
         return {"status": "error", "error": f"Unexpected error: {str(e)}"}
 
 
-async def get_author_stats(input_data: RepositoryInput, ctx: Context) -> dict[str, Any]:
+async def get_author_stats(input_data: AuthorStatsInput, ctx: Context) -> dict[str, Any]:
     """
     Get comprehensive author statistics for the repository.
 
@@ -138,7 +139,7 @@ async def get_author_stats(input_data: RepositoryInput, ctx: Context) -> dict[st
 
         repo = get_repository(Path(input_data.repo_path))
 
-        author_stats = get_author_statistics(repo)
+        author_stats = get_author_statistics(repo, branch=input_data.branch)
 
         await ctx.info(f"Author statistics complete: {len(author_stats)} contributors analyzed")
 
