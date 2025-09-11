@@ -88,7 +88,7 @@ jobs:
 
       - name: Create canary deployment
         id: deployment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const deployment = await github.rest.repos.createDeployment({
@@ -146,7 +146,7 @@ jobs:
 
       - name: Update deployment status
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.repos.createDeploymentStatus({
@@ -160,7 +160,7 @@ jobs:
 
       - name: Update deployment status on failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.repos.createDeploymentStatus({
@@ -249,7 +249,7 @@ jobs:
           fi
 
       - name: Create monitoring report
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const healthy = '${{ steps.health.outputs.healthy }}' === 'true';
@@ -339,7 +339,7 @@ jobs:
           echo "✅ Promotion completed successfully"
 
       - name: Notify promotion success
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.issues.create({
@@ -387,7 +387,7 @@ jobs:
           echo "✅ Rollback completed successfully"
 
       - name: Notify rollback
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.issues.create({
