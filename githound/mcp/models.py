@@ -48,9 +48,12 @@ class ServerConfig(BaseModel):
 class MCPServerConfig(BaseModel):
     """Configuration for a single MCP server in MCP.json format."""  # [attr-defined]
 
-    command: str = Field(..., description="Executable command to run the MCP server")
-    args: list[str] = Field(default_factory=list, description="Command-line arguments")
-    env: dict[str, str] = Field(default_factory=dict, description="Environment variables")
+    command: str = Field(...,
+                         description="Executable command to run the MCP server")
+    args: list[str] = Field(default_factory=list,
+                            description="Command-line arguments")
+    env: dict[str, str] = Field(
+        default_factory=dict, description="Environment variables")
     description: str | None = Field(None, description="Server description")
 
     @field_validator("command")

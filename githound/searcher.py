@@ -4,7 +4,8 @@ import json
 import subprocess
 from pathlib import Path
 
-from githound.models import SearchConfig, SearchResult, SearchType  # [attr-defined]
+# [attr-defined]
+from githound.models import SearchConfig, SearchResult, SearchType
 
 
 def search_blob_content(

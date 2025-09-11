@@ -201,7 +201,8 @@ class EunomiaAuthorizationProvider(AuthProvider):
             # Build the authorization request
             subject = f"role:{user.role}"
             action = permission
-            resource_name = resource or f"{self.config.server_name}:default"  # [attr-defined]
+            # [attr-defined]
+            resource_name = resource or f"{self.config.server_name}:default"
 
             # Add user context
             auth_context = {

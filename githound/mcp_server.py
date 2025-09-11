@@ -119,4 +119,5 @@ if __name__ == "__main__":
             elif arg == "--log-level" and i + 1 < len(sys.argv):
                 log_level = sys.argv[i + 1]
 
-    run_mcp_server(transport=transport, host=host, port=port, log_level=log_level)
+    run_mcp_server(transport=transport, host=host,
+                   port=port, log_level=log_level)

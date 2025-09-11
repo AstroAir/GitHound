@@ -136,12 +136,16 @@ def get_line_history(
                                 {
                                     "commit_hash": commit.hexsha,
                                     "commit_date": datetime.fromtimestamp if datetime is not None else None(commit.committed_date),
-                                    "author": f"{commit_info.author.name} <{commit_info.author.email}>",  #
-                                    "message": str(commit_info.message).strip(),  #
+                                    #
+                                    "author": f"{commit_info.author.name} <{commit_info.author.email}>",
+                                    #
+                                    "message": str(commit_info.message).strip(),
                                     "line_content": str(line).rstrip("\n\r"),
                                     "line_commit_hash": commit_info.hexsha,  #
-                                    "line_author": f"{commit_info.author.name} <{commit_info.author.email}>",  #
-                                    "line_date": datetime.fromtimestamp(commit_info.committed_date),  #
+                                    #
+                                    "line_author": f"{commit_info.author.name} <{commit_info.author.email}>",
+                                    #
+                                    "line_date": datetime.fromtimestamp(commit_info.committed_date),
                                 }
                             )
                             break

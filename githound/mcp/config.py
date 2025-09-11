@@ -65,11 +65,13 @@ def get_server_config_from_environment() -> ServerConfig:
 
     enable_auth = os.getenv("FASTMCP_SERVER_ENABLE_AUTH")
     if enable_auth:
-        config.enable_auth = enable_auth.lower() in ("true", "1", "yes")  # [attr-defined]
+        config.enable_auth = enable_auth.lower() in (
+            "true", "1", "yes")  # [attr-defined]
 
     rate_limit_enabled = os.getenv("FASTMCP_SERVER_RATE_LIMIT_ENABLED")
     if rate_limit_enabled:
-        config.rate_limit_enabled = rate_limit_enabled.lower() in ("true", "1", "yes")  # [attr-defined]
+        config.rate_limit_enabled = rate_limit_enabled.lower() in (
+            "true", "1", "yes")  # [attr-defined]
 
     return config
 
@@ -77,7 +79,8 @@ def get_server_config_from_environment() -> ServerConfig:
 def is_authentication_enabled() -> bool:
     """Check if authentication is enabled."""
     config = get_server_config_from_environment()
-    return config.enable_auth or _get_auth_provider() is not None  # [attr-defined]
+    # [attr-defined]
+    return config.enable_auth or _get_auth_provider() is not None
 
 
 def get_oauth_discovery_metadata() -> dict[str, Any] | None:
@@ -151,17 +154,24 @@ def load_mcp_json_config(config_path: Path) -> MCPJsonConfig | None:
 
         # Support both pydantic v1 and v2
         if hasattr(MCPJsonConfig, "model_validate"):
-            config = MCPJsonConfig.model_validate(data)  # type: ignore[attr-defined]
+            config = MCPJsonConfig.model_validate(
+                data)  # type: ignore[attr-defined]
         else:
             config = MCPJsonConfig.parse_obj(data)
-        logging.getLogger(__name__).info(f"Loaded MCP.json configuration from: {config_path}")  # [attr-defined]
+        logging.getLogger(__name__).info(
+            # [attr-defined]
+            f"Loaded MCP.json configuration from: {config_path}")
         return config
 
     except json.JSONDecodeError as e:
-        logging.getLogger(__name__).error(f"Invalid JSON in MCP config file {config_path}: {e}")  # [attr-defined]
+        logging.getLogger(__name__).error(
+            # [attr-defined]
+            f"Invalid JSON in MCP config file {config_path}: {e}")
         return None
     except Exception as e:
-        logging.getLogger(__name__).error(f"Failed to load MCP config file {config_path}: {e}")  # [attr-defined]
+        logging.getLogger(__name__).error(
+            # [attr-defined]
+            f"Failed to load MCP config file {config_path}: {e}")
         return None
 
 
@@ -213,10 +223,12 @@ def get_server_config_from_mcp_json(mcp_config: MCPJsonConfig) -> ServerConfig |
         config.log_level = env["FASTMCP_SERVER_LOG_LEVEL"]  # [attr-defined]
 
     if "FASTMCP_SERVER_ENABLE_AUTH" in env:
-        config.enable_auth = env["FASTMCP_SERVER_ENABLE_AUTH"].lower() in ("true", "1", "yes")  # [attr-defined]
+        config.enable_auth = env["FASTMCP_SERVER_ENABLE_AUTH"].lower() in (
+            "true", "1", "yes")  # [attr-defined]
 
     if "FASTMCP_SERVER_RATE_LIMIT_ENABLED" in env:
-        config.rate_limit_enabled = env["FASTMCP_SERVER_RATE_LIMIT_ENABLED"].lower() in ("true", "1", "yes")  # [attr-defined]
+        config.rate_limit_enabled = env["FASTMCP_SERVER_RATE_LIMIT_ENABLED"].lower() in (
+            "true", "1", "yes")  # [attr-defined]
 
     return config
 
@@ -237,20 +249,24 @@ def get_server_config() -> ServerConfig:
     mcp_json_files = find_mcp_json_files()
 
     for config_path in mcp_json_files:
-        logger.info(f"Found MCP.json configuration file: {config_path}")  # [attr-defined]
+        # [attr-defined]
+        logger.info(f"Found MCP.json configuration file: {config_path}")
 
         mcp_config = load_mcp_json_config(config_path)
         if mcp_config:
             mcp_server_config = get_server_config_from_mcp_json(mcp_config)
             if mcp_server_config:
-                logger.info(f"Using GitHound configuration from MCP.json: {config_path}")  # [attr-defined]
+                # [attr-defined]
+                logger.info(
+                    f"Using GitHound configuration from MCP.json: {config_path}")
 
                 # MCP.json configuration takes priority, but preserve environment variables  # [attr-defined]
                 # that are not overridden by MCP.json
                 env_config = config
                 # Support both pydantic v1 and v2
                 mcp_config_dict = (
-                    mcp_server_config.model_dump() if hasattr(mcp_server_config, "model_dump") else mcp_server_config.dict()
+                    mcp_server_config.model_dump() if hasattr(
+                        mcp_server_config, "model_dump") else mcp_server_config.dict()
                 )
                 env_config_dict = (
                     env_config.model_dump() if hasattr(env_config, "model_dump") else env_config.dict()
@@ -259,7 +275,8 @@ def get_server_config() -> ServerConfig:
                 # Merge configurations with MCP.json taking priority  # [attr-defined]
                 merged_config: dict[str, Any] = {}
                 defaults_dict = (
-                    ServerConfig().model_dump() if hasattr(ServerConfig(), "model_dump") else ServerConfig().dict()
+                    ServerConfig().model_dump() if hasattr(
+                        ServerConfig(), "model_dump") else ServerConfig().dict()
                 )
                 for key, default_value in defaults_dict.items():
                     if mcp_config_dict[key] != default_value:
@@ -273,9 +290,12 @@ def get_server_config() -> ServerConfig:
                         merged_config[key] = default_value
 
                 if hasattr(ServerConfig, "model_validate"):
-                    return ServerConfig.model_validate(merged_config)  # type: ignore[attr-defined]
+                    # type: ignore[attr-defined]
+                    return ServerConfig.model_validate(merged_config)
                 else:
                     return ServerConfig(**merged_config)
 
-    logger.info("No MCP.json configuration found, using environment variables and defaults")  # [attr-defined]
+    # [attr-defined]
+    logger.info(
+        "No MCP.json configuration found, using environment variables and defaults")
     return config

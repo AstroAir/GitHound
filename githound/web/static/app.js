@@ -1,4 +1,4 @@
-// GitHound Web Interface JavaScript
+// GitHound Web Interface JavaScript - Enhanced Version
 
 class GitHoundApp {
   constructor() {
@@ -6,9 +6,21 @@ class GitHoundApp {
     this.websocket = null;
     this.searchResults = [];
     this.isSearching = false;
+    this.searchHistory = this.loadSearchHistory();
+    this.searchTemplates = this.loadSearchTemplates();
+    this.stats = {
+      totalSearches: 0,
+      activeSearches: 0,
+      totalResults: 0,
+      lastSearchTime: null
+    };
 
     this.initializeEventListeners();
+    this.initializeTheme();
+    this.loadStats();
     this.updateConnectionStatus("disconnected");
+    this.updateDashboard();
+    this.loadQuickActions();
   }
 
   initializeEventListeners() {
@@ -43,6 +55,197 @@ class GitHoundApp {
     document.getElementById("fuzzySearch").addEventListener("change", (e) => {
       fuzzyThreshold.disabled = !e.target.checked;
     });
+
+    // Theme toggle
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      this.toggleTheme();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      this.handleKeyboardShortcuts(e);
+    });
+
+    // Auto-save form data
+    this.setupAutoSave();
+  }
+
+  initializeTheme() {
+    const savedTheme = localStorage.getItem('githound-theme') || 'light';
+    this.setTheme(savedTheme);
+  }
+
+  toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    this.setTheme(newTheme);
+  }
+
+  setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('githound-theme', theme);
+
+    const themeIcon = document.getElementById('themeIcon');
+    if (theme === 'dark') {
+      themeIcon.className = 'fas fa-sun';
+    } else {
+      themeIcon.className = 'fas fa-moon';
+    }
+  }
+
+  handleKeyboardShortcuts(e) {
+    // Ctrl/Cmd + Enter: Start search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      this.startSearch();
+    }
+
+    // Escape: Cancel search
+    if (e.key === 'Escape' && this.isSearching) {
+      this.cancelSearch();
+    }
+
+    // Ctrl/Cmd + K: Focus search input
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('contentPattern').focus();
+    }
+  }
+
+  setupAutoSave() {
+    const formInputs = document.querySelectorAll('#searchForm input, #searchForm select');
+    formInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        this.saveFormState();
+      });
+    });
+
+    // Load saved form state
+    this.loadFormState();
+  }
+
+  saveFormState() {
+    const formData = new FormData(document.getElementById('searchForm'));
+    const formState = {};
+    for (let [key, value] of formData.entries()) {
+      formState[key] = value;
+    }
+    localStorage.setItem('githound-form-state', JSON.stringify(formState));
+  }
+
+  loadFormState() {
+    const savedState = localStorage.getItem('githound-form-state');
+    if (savedState) {
+      try {
+        const formState = JSON.parse(savedState);
+        Object.keys(formState).forEach(key => {
+          const element = document.getElementById(key);
+          if (element) {
+            element.value = formState[key];
+          }
+        });
+      } catch (e) {
+        console.warn('Failed to load form state:', e);
+      }
+    }
+  }
+
+  loadSearchHistory() {
+    const history = localStorage.getItem('githound-search-history');
+    return history ? JSON.parse(history) : [];
+  }
+
+  saveSearchHistory() {
+    localStorage.setItem('githound-search-history', JSON.stringify(this.searchHistory));
+  }
+
+  loadSearchTemplates() {
+    const templates = localStorage.getItem('githound-search-templates');
+    return templates ? JSON.parse(templates) : this.getDefaultTemplates();
+  }
+
+  saveSearchTemplates() {
+    localStorage.setItem('githound-search-templates', JSON.stringify(this.searchTemplates));
+  }
+
+  getDefaultTemplates() {
+    return {
+      'recent-commits': {
+        name: 'Recent Commits',
+        description: 'Find commits from the last 7 days',
+        config: {
+          dateFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          dateTo: new Date().toISOString().split('T')[0]
+        }
+      },
+      'bug-fixes': {
+        name: 'Bug Fixes',
+        description: 'Find commits that fix bugs',
+        config: {
+          messagePattern: '(fix|bug|issue|resolve)',
+          caseSensitive: false
+        }
+      },
+      'code-changes': {
+        name: 'Code Changes',
+        description: 'Find code changes in specific file types',
+        config: {
+          fileExtensions: 'js,ts,py,java,cpp,c',
+          contentPattern: '(function|class|method)'
+        }
+      }
+    };
+  }
+
+  updateDashboard() {
+    document.getElementById('totalSearches').textContent = this.stats.totalSearches;
+    document.getElementById('activeSearches').textContent = this.stats.activeSearches;
+    document.getElementById('totalResults').textContent = this.stats.totalResults;
+
+    if (this.stats.lastSearchTime) {
+      const timeAgo = this.getTimeAgo(this.stats.lastSearchTime);
+      document.getElementById('lastSearchTime').textContent = timeAgo;
+    }
+
+    // Save stats to localStorage
+    this.saveStats();
+  }
+
+  saveStats() {
+    localStorage.setItem('githound-stats', JSON.stringify(this.stats));
+  }
+
+  loadStats() {
+    const savedStats = localStorage.getItem('githound-stats');
+    if (savedStats) {
+      try {
+        const stats = JSON.parse(savedStats);
+        this.stats = { ...this.stats, ...stats };
+        // Reset active searches on page load
+        this.stats.activeSearches = 0;
+      } catch (e) {
+        console.warn('Failed to load stats:', e);
+      }
+    }
+  }
+
+  getTimeAgo(timestamp) {
+    const now = new Date();
+    const searchTime = new Date(timestamp);
+    const diffMs = now - searchTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  }
+
+  loadQuickActions() {
+    // Quick actions are already defined in HTML
+    // This method can be used to dynamically update them if needed
   }
 
   async startSearch() {
@@ -62,6 +265,15 @@ class GitHoundApp {
     try {
       this.isSearching = true;
       this.updateUI("searching");
+
+      // Update stats
+      this.stats.totalSearches++;
+      this.stats.activeSearches++;
+      this.stats.lastSearchTime = new Date().toISOString();
+      this.updateDashboard();
+
+      // Save to search history
+      this.addToSearchHistory(searchRequest);
 
       // Start search
       const response = await fetch("/api/search", {
@@ -88,7 +300,237 @@ class GitHoundApp {
       console.error("Search failed:", error);
       this.showAlert(`Search failed: ${error.message}`, "danger");
       this.isSearching = false;
+      this.stats.activeSearches--;
+      this.updateDashboard();
       this.updateUI("idle");
+    }
+  }
+
+  addToSearchHistory(searchRequest) {
+    const historyItem = {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      request: searchRequest,
+      name: this.generateSearchName(searchRequest)
+    };
+
+    this.searchHistory.unshift(historyItem);
+
+    // Keep only last 50 searches
+    if (this.searchHistory.length > 50) {
+      this.searchHistory = this.searchHistory.slice(0, 50);
+    }
+
+    this.saveSearchHistory();
+  }
+
+  generateSearchName(searchRequest) {
+    const parts = [];
+
+    if (searchRequest.content_pattern) {
+      parts.push(`Content: "${searchRequest.content_pattern}"`);
+    }
+    if (searchRequest.commit_hash) {
+      parts.push(`Commit: ${searchRequest.commit_hash}`);
+    }
+    if (searchRequest.author_pattern) {
+      parts.push(`Author: ${searchRequest.author_pattern}`);
+    }
+    if (searchRequest.message_pattern) {
+      parts.push(`Message: "${searchRequest.message_pattern}"`);
+    }
+    if (searchRequest.file_path_pattern) {
+      parts.push(`Files: ${searchRequest.file_path_pattern}`);
+    }
+
+    return parts.length > 0 ? parts.join(', ') : 'General Search';
+  }
+
+  loadSearchTemplate(templateId) {
+    if (templateId && this.searchTemplates[templateId]) {
+      const template = this.searchTemplates[templateId];
+      this.applySearchConfig(template.config);
+      this.showAlert(`Loaded template: ${template.name}`, "success");
+    } else {
+      this.showSearchTemplateDialog();
+    }
+  }
+
+  showSearchTemplateDialog() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-folder-open me-2"></i>Load Search Template
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="list-group">
+              ${Object.entries(this.searchTemplates).map(([id, template]) => `
+                <button type="button" class="list-group-item list-group-item-action" onclick="app.loadTemplateById('${id}')">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 class="mb-1">${template.name}</h6>
+                      <small class="text-muted">${template.description}</small>
+                    </div>
+                    <small class="text-muted">Template</small>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+            ${Object.keys(this.searchTemplates).length === 0 ?
+              '<p class="text-muted text-center">No templates available. Create one by saving your current search configuration.</p>' :
+              ''
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+
+    modal.addEventListener('hidden.bs.modal', () => {
+      document.body.removeChild(modal);
+    });
+  }
+
+  loadTemplateById(templateId) {
+    const template = this.searchTemplates[templateId];
+    if (template) {
+      this.applySearchConfig(template.config);
+      this.showAlert(`Loaded template: ${template.name}`, "success");
+
+      // Close modal
+      const modal = document.querySelector('.modal.show');
+      if (modal) {
+        bootstrap.Modal.getInstance(modal).hide();
+      }
+    }
+  }
+
+  applySearchConfig(config) {
+    Object.keys(config).forEach(key => {
+      const element = document.getElementById(key);
+      if (element) {
+        if (element.type === 'checkbox') {
+          element.checked = config[key];
+        } else {
+          element.value = config[key];
+        }
+      }
+    });
+  }
+
+  saveSearchTemplate() {
+    const name = prompt('Enter template name:');
+    if (!name) return;
+
+    const config = this.getCurrentSearchConfig();
+    const templateId = name.toLowerCase().replace(/\s+/g, '-');
+
+    this.searchTemplates[templateId] = {
+      name: name,
+      description: `Custom template: ${name}`,
+      config: config
+    };
+
+    this.saveSearchTemplates();
+    this.showAlert(`Template "${name}" saved successfully`, "success");
+  }
+
+  getCurrentSearchConfig() {
+    const config = {};
+    const formInputs = document.querySelectorAll('#searchForm input, #searchForm select');
+
+    formInputs.forEach(input => {
+      if (input.id && input.value) {
+        if (input.type === 'checkbox') {
+          config[input.id] = input.checked;
+        } else {
+          config[input.id] = input.value;
+        }
+      }
+    });
+
+    return config;
+  }
+
+  clearForm() {
+    document.getElementById('searchForm').reset();
+    document.getElementById('repoPath').value = '.';
+    this.showAlert('Form cleared', 'info');
+  }
+
+  showSearchHistory() {
+    if (this.searchHistory.length === 0) {
+      this.showAlert('No search history available', 'info');
+      return;
+    }
+
+    // Create and show search history modal
+    this.showSearchHistoryModal();
+  }
+
+  showSearchHistoryModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Search History</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="list-group">
+              ${this.searchHistory.map(item => `
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 class="mb-1">${item.name}</h6>
+                      <small class="text-muted">${new Date(item.timestamp).toLocaleString()}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="app.loadHistoryItem(${item.id})">
+                      Load
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+
+    modal.addEventListener('hidden.bs.modal', () => {
+      document.body.removeChild(modal);
+    });
+  }
+
+  loadHistoryItem(itemId) {
+    const item = this.searchHistory.find(h => h.id === itemId);
+    if (item) {
+      this.applySearchConfig(item.request);
+      this.showAlert('Search configuration loaded from history', 'success');
+
+      // Close modal
+      const modal = document.querySelector('.modal.show');
+      if (modal) {
+        bootstrap.Modal.getInstance(modal).hide();
+      }
     }
   }
 
@@ -284,25 +726,34 @@ class GitHoundApp {
         searchButton.disabled = true;
         searchButton.innerHTML =
           '<i class="fas fa-spinner fa-spin"></i> Searching...';
-        cancelButton.style.display = "inline-block";
-        progressCard.style.display = "block";
-        resultsCard.style.display = "none";
+        searchButton.classList.add('pulse');
+        cancelButton.classList.remove('d-none');
+        progressCard.classList.remove('d-none');
+        resultsCard.classList.add('d-none');
         this.clearResults();
         break;
 
       case "idle":
         searchButton.disabled = false;
         searchButton.innerHTML = '<i class="fas fa-search"></i> Start Search';
-        cancelButton.style.display = "none";
-        progressCard.style.display = "none";
+        searchButton.classList.remove('pulse');
+        cancelButton.classList.add('d-none');
+        progressCard.classList.add('d-none');
+        this.isSearching = false;
+        this.stats.activeSearches = Math.max(0, this.stats.activeSearches - 1);
+        this.updateDashboard();
         break;
 
       case "completed":
         searchButton.disabled = false;
         searchButton.innerHTML = '<i class="fas fa-search"></i> Start Search';
-        cancelButton.style.display = "none";
-        progressCard.style.display = "none";
-        resultsCard.style.display = "block";
+        searchButton.classList.remove('pulse');
+        cancelButton.classList.add('d-none');
+        progressCard.classList.add('d-none');
+        resultsCard.classList.remove('d-none');
+        this.isSearching = false;
+        this.stats.activeSearches = Math.max(0, this.stats.activeSearches - 1);
+        this.updateDashboard();
         break;
     }
   }
@@ -408,7 +859,8 @@ class GitHoundApp {
 
   createResultElement(result, index) {
     const div = document.createElement("div");
-    div.className = "result-item";
+    div.className = "result-item fade-in-up";
+    div.style.animationDelay = `${index * 0.1}s`;
 
     const searchTypeBadge = `<span class="badge search-type-${
       result.search_type
@@ -555,6 +1007,11 @@ class GitHoundApp {
       `Search completed! Found ${data.total_results} results.`,
       "success"
     );
+
+    // Update stats
+    this.stats.totalResults += data.total_results || 0;
+    this.updateDashboard();
+
     this.loadSearchResults();
     this.stopSearch();
     this.updateUI("completed");
@@ -679,7 +1136,119 @@ class GitHoundApp {
   }
 }
 
+// Global functions for HTML onclick handlers
+function loadSearchTemplate(templateId) {
+  if (window.app) {
+    window.app.loadSearchTemplate(templateId);
+  }
+}
+
+function saveSearchTemplate() {
+  if (window.app) {
+    window.app.saveSearchTemplate();
+  }
+}
+
+function clearForm() {
+  if (window.app) {
+    window.app.clearForm();
+  }
+}
+
+function showSearchHistory() {
+  if (window.app) {
+    window.app.showSearchHistory();
+  }
+}
+
+function loadTemplateById(templateId) {
+  if (window.app) {
+    window.app.loadTemplateById(templateId);
+  }
+}
+
+function showHelp() {
+  const modal = document.createElement('div');
+  modal.className = 'modal fade';
+  modal.innerHTML = `
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-question-circle me-2"></i>GitHound Help
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6><i class="fas fa-keyboard me-2"></i>Keyboard Shortcuts</h6>
+              <table class="table table-sm">
+                <tr><td><kbd>Ctrl/Cmd + Enter</kbd></td><td>Start search</td></tr>
+                <tr><td><kbd>Escape</kbd></td><td>Cancel search</td></tr>
+                <tr><td><kbd>Ctrl/Cmd + K</kbd></td><td>Focus search input</td></tr>
+              </table>
+
+              <h6 class="mt-3"><i class="fas fa-search me-2"></i>Search Tips</h6>
+              <ul class="list-unstyled">
+                <li>• Use regular expressions for advanced pattern matching</li>
+                <li>• Combine multiple search criteria for better results</li>
+                <li>• Use date ranges to narrow down results</li>
+                <li>• File patterns support glob syntax (*.js, src/**)</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="fas fa-lightbulb me-2"></i>Features</h6>
+              <ul class="list-unstyled">
+                <li>• <strong>Real-time progress:</strong> Live updates via WebSocket</li>
+                <li>• <strong>Export options:</strong> JSON and CSV formats</li>
+                <li>• <strong>Search templates:</strong> Save and reuse configurations</li>
+                <li>• <strong>Search history:</strong> Access previous searches</li>
+                <li>• <strong>Theme toggle:</strong> Light and dark modes</li>
+                <li>• <strong>Auto-save:</strong> Form data is automatically saved</li>
+              </ul>
+
+              <h6 class="mt-3"><i class="fas fa-code me-2"></i>Regex Examples</h6>
+              <ul class="list-unstyled">
+                <li>• <code>function.*test</code> - Functions containing "test"</li>
+                <li>• <code>\\b(bug|fix|issue)\\b</code> - Bug-related terms</li>
+                <li>• <code>TODO|FIXME</code> - Code comments</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  const bsModal = new bootstrap.Modal(modal);
+  bsModal.show();
+
+  modal.addEventListener('hidden.bs.modal', () => {
+    document.body.removeChild(modal);
+  });
+}
+
 // Initialize the application when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  window.gitHoundApp = new GitHoundApp();
+  window.app = new GitHoundApp();
+
+  // Load highlight.js if available
+  if (typeof hljs !== 'undefined') {
+    hljs.configure({
+      languages: ['javascript', 'python', 'java', 'cpp', 'html', 'css', 'json', 'xml', 'markdown', 'yaml', 'bash', 'sql']
+    });
+  }
+
+  // Add some initial animations
+  setTimeout(() => {
+    document.querySelectorAll('.fade-in-up').forEach((el, index) => {
+      el.style.animationDelay = `${index * 0.1}s`;
+      el.classList.add('animate');
+    });
+  }, 100);
 });

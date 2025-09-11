@@ -112,7 +112,8 @@ class GitHubProvider(OAuthProxy):
                     )
 
                     with urllib.request.urlopen(email_request) as email_response:
-                        emails = json.loads(email_response.read().decode("utf-8"))
+                        emails = json.loads(
+                            email_response.read().decode("utf-8"))
                         # Find primary email
                         for email_data in emails:
                             if email_data.get("primary"):

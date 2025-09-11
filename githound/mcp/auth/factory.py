@@ -119,7 +119,8 @@ def create_provider_from_config(config: dict[str, Any]) -> AuthProvider | None:
         auth_params = auth_config.get("config", {})  # [attr-defined]
 
         if not auth_type:
-            logger.error("No authentication type specified in configuration")  # [attr-defined]
+            # [attr-defined]
+            logger.error("No authentication type specified in configuration")
             return None
 
         base_provider = create_auth_provider(auth_type, **auth_params)
@@ -130,7 +131,8 @@ def create_provider_from_config(config: dict[str, Any]) -> AuthProvider | None:
         authorization_config = config.get("authorization")  # [attr-defined]
         if authorization_config:
             auth_type = authorization_config.get("type")  # [attr-defined]
-            auth_params = authorization_config.get("config", {})  # [attr-defined]
+            auth_params = authorization_config.get(
+                "config", {})  # [attr-defined]
 
             if auth_type:
                 base_provider = create_authorization_provider(
@@ -140,7 +142,8 @@ def create_provider_from_config(config: dict[str, Any]) -> AuthProvider | None:
         return base_provider
 
     except Exception as e:
-        logger.error(f"Failed to create provider from configuration: {e}")  # [attr-defined]
+        # [attr-defined]
+        logger.error(f"Failed to create provider from configuration: {e}")
         return None
 
 
@@ -258,12 +261,14 @@ def validate_provider_config(config: dict[str, Any]) -> bool:
     try:
         # Check required fields
         if "auth" not in config:
-            logger.error("Missing 'auth' section in configuration")  # [attr-defined]
+            # [attr-defined]
+            logger.error("Missing 'auth' section in configuration")
             return False
 
         auth_config = config["auth"]
         if "type" not in auth_config:
-            logger.error("Missing 'type' in auth configuration")  # [attr-defined]
+            # [attr-defined]
+            logger.error("Missing 'type' in auth configuration")
             return False
 
         # Validate authentication type
@@ -284,5 +289,6 @@ def validate_provider_config(config: dict[str, Any]) -> bool:
         return True
 
     except Exception as e:
-        logger.error(f"Error validating provider configuration: {e}")  # [attr-defined]
+        # [attr-defined]
+        logger.error(f"Error validating provider configuration: {e}")
         return False

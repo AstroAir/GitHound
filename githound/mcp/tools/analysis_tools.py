@@ -127,7 +127,8 @@ async def get_filtered_commits(input_data: CommitFilterInput, ctx: Context) -> d
         commit_list: list[Any] = []
         for commit in commits:
             commit_info = extract_commit_metadata(commit)
-            commit_list.append(commit_info.dict() if commit_info is not None else {})
+            commit_list.append(commit_info.dict()
+                               if commit_info is not None else {})
 
         await ctx.info(f"Retrieved {len(commit_list)} commits matching filter criteria")
 

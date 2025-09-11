@@ -24,7 +24,8 @@ async def get_repository_config(repo_path: str, ctx: Context) -> str:
     in a structured format for easy consumption by AI models.
     """
     try:
-        await ctx.info(f"Retrieving configuration for repository {repo_path}")  # [attr-defined]
+        # [attr-defined]
+        await ctx.info(f"Retrieving configuration for repository {repo_path}")
 
         repo = get_repository(Path(repo_path))
         metadata = get_repository_metadata(repo)
@@ -65,7 +66,8 @@ This repository contains {config_info['total_commits']} commits from {config_inf
 """
 
     except Exception as e:
-        await ctx.error(f"Error retrieving repository config: {str(e)}")  # [attr-defined]
+        # [attr-defined]
+        await ctx.error(f"Error retrieving repository config: {str(e)}")
         return f"Error: Could not retrieve repository configuration - {str(e)}"
 
 

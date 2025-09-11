@@ -1,36 +1,163 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GitHound - Advanced Git History Search</title>
+    <meta name="description" content="Advanced Git repository search with multi-modal capabilities" />
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
+      integrity="sha384-9ndCyUa6c+yl9KvkqWn6+3UOEJfgm6ddd6ZgMAr1rHyoQFNy+8dNdxjbyeVd4+BL"
+      crossorigin="anonymous"
     />
+
+    <!-- Font Awesome -->
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
     />
+
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+
+    <!-- Custom CSS -->
     <link href="style.css" rel="stylesheet" />
   </head>
   <body>
-    <nav class="navbar navbar-dark bg-dark">
+    <!-- Theme Toggle Button -->
+    <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
+    <!-- Connection Status Indicator will be created dynamically by JavaScript -->
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
       <div class="container">
         <span class="navbar-brand mb-0 h1">
-          <i class="fas fa-search"></i> GitHound
+          <i class="fas fa-dog"></i> GitHound
         </span>
-        <span class="navbar-text"> Advanced Git History Search </span>
+        <span class="navbar-text">
+          <i class="fas fa-search me-2"></i>Advanced Git History Search
+        </span>
+        <div class="navbar-nav ms-auto">
+          <button type="button" class="btn btn-outline-light btn-sm" onclick="showHelp()">
+            <i class="fas fa-question-circle"></i> Help
+          </button>
+        </div>
       </div>
     </nav>
 
     <div class="container mt-4">
+      <!-- Dashboard Section -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card glass fade-in-up">
+            <div class="card-body text-center">
+              <i class="fas fa-search fa-2x text-primary mb-2"></i>
+              <h6 class="card-title">Total Searches</h6>
+              <h4 class="gradient-text" id="totalSearches">0</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card glass fade-in-up animation-delay-1">
+            <div class="card-body text-center">
+              <i class="fas fa-clock fa-2x text-info mb-2"></i>
+              <h6 class="card-title">Active Searches</h6>
+              <h4 class="gradient-text" id="activeSearches">0</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card glass fade-in-up animation-delay-2">
+            <div class="card-body text-center">
+              <i class="fas fa-file-code fa-2x text-success mb-2"></i>
+              <h6 class="card-title">Results Found</h6>
+              <h4 class="gradient-text" id="totalResults">0</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card glass fade-in-up animation-delay-3">
+            <div class="card-body text-center">
+              <i class="fas fa-history fa-2x text-warning mb-2"></i>
+              <h6 class="card-title">Last Search</h6>
+              <small class="text-muted" id="lastSearchTime">Never</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-bolt"></i> Quick Actions
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-3 mb-2">
+                  <button type="button" class="btn btn-outline-primary w-100" onclick="loadSearchTemplate('recent-commits')">
+                    <i class="fas fa-clock"></i> Recent Commits
+                  </button>
+                </div>
+                <div class="col-md-3 mb-2">
+                  <button type="button" class="btn btn-outline-success w-100" onclick="loadSearchTemplate('bug-fixes')">
+                    <i class="fas fa-bug"></i> Bug Fixes
+                  </button>
+                </div>
+                <div class="col-md-3 mb-2">
+                  <button type="button" class="btn btn-outline-info w-100" onclick="loadSearchTemplate('code-changes')">
+                    <i class="fas fa-code"></i> Code Changes
+                  </button>
+                </div>
+                <div class="col-md-3 mb-2">
+                  <button type="button" class="btn btn-outline-warning w-100" onclick="showSearchHistory()">
+                    <i class="fas fa-history"></i> Search History
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Search Form -->
-      <div class="card mb-4">
+      <div class="card mb-4 fade-in-up">
         <div class="card-header">
-          <h5 class="mb-0">
-            <i class="fas fa-search"></i> Search Configuration
-          </h5>
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-search"></i> Search Configuration
+            </h5>
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-secondary" onclick="saveSearchTemplate()">
+                <i class="fas fa-save"></i> Save Template
+              </button>
+              <button type="button" class="btn btn-outline-secondary" onclick="loadSearchTemplate()">
+                <i class="fas fa-folder-open"></i> Load Template
+              </button>
+              <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                <i class="fas fa-eraser"></i> Clear
+              </button>
+            </div>
+          </div>
         </div>
         <div class="card-body">
           <form id="searchForm">
@@ -335,9 +462,8 @@
                 </button>
                 <button
                   type="button"
-                  class="btn btn-secondary btn-lg ms-2"
+                  class="btn btn-secondary btn-lg ms-2 d-none"
                   id="cancelButton"
-                  style="display: none"
                 >
                   <i class="fas fa-stop"></i> Cancel Search
                 </button>
@@ -348,7 +474,7 @@
       </div>
 
       <!-- Progress Section -->
-      <div class="card mb-4" id="progressCard" style="display: none">
+      <div class="card mb-4 d-none" id="progressCard">
         <div class="card-header">
           <h5 class="mb-0">
             <i class="fas fa-spinner fa-spin"></i> Search Progress
@@ -357,10 +483,13 @@
         <div class="card-body">
           <div class="progress mb-3">
             <div
-              class="progress-bar progress-bar-striped progress-bar-animated"
+              class="progress-bar progress-bar-striped progress-bar-animated progress-bar-initial"
               id="progressBar"
               role="progressbar"
-              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-label="Search progress"
             ></div>
           </div>
           <div id="progressMessage" class="text-muted">
@@ -387,7 +516,7 @@
       </div>
 
       <!-- Results Section -->
-      <div class="card" id="resultsCard" style="display: none">
+      <div class="card d-none" id="resultsCard">
         <div
           class="card-header d-flex justify-content-between align-items-center"
         >
@@ -418,7 +547,19 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+      crossorigin="anonymous">
+    </script>
+
+    <!-- Highlight.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
+
     <!-- Custom JS -->
     <script src="app.js"></script>
   </body>

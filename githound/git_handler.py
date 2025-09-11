@@ -9,7 +9,8 @@ from typing import Any
 import git
 from git import Commit, GitCommandError, Repo
 
-from githound.models import CommitInfo, GitHoundConfig, SearchConfig, SearchResult  # [attr-defined]
+# [attr-defined]
+from githound.models import CommitInfo, GitHoundConfig, SearchConfig, SearchResult
 from githound.searcher import search_blob_content
 
 
@@ -78,7 +79,8 @@ def process_commit(commit: Commit, config: GitHoundConfig) -> list[SearchResult]
                 and config.search_config.include_globs  # [attr-defined]
                 and not any(
                     fnmatch.fnmatch(file_path, pattern)
-                    for pattern in config.search_config.include_globs  # [attr-defined]
+                    # [attr-defined]
+                    for pattern in config.search_config.include_globs
                 )
             ):
                 continue
@@ -88,7 +90,8 @@ def process_commit(commit: Commit, config: GitHoundConfig) -> list[SearchResult]
                 and config.search_config.exclude_globs  # [attr-defined]
                 and any(
                     fnmatch.fnmatch(file_path, pattern)
-                    for pattern in config.search_config.exclude_globs  # [attr-defined]
+                    # [attr-defined]
+                    for pattern in config.search_config.exclude_globs
                 )
             ):
                 continue
@@ -99,7 +102,8 @@ def process_commit(commit: Commit, config: GitHoundConfig) -> list[SearchResult]
                 query_str = (
                     config.search_query  # [attr-defined]
                     if isinstance(config.search_query, str)  # [attr-defined]
-                    else config.search_query.content_pattern or ""  # [attr-defined]
+                    # [attr-defined]
+                    else config.search_query.content_pattern or ""
                 )
                 search_config = config.search_config or SearchConfig(  # [attr-defined]
                     include_globs=[],

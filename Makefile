@@ -118,6 +118,74 @@ benchmark: ## Run benchmark tests
 	@echo "$(BLUE)Running benchmarks...$(NC)"
 	$(PYTEST) $(TEST_DIR)/performance/ --benchmark-only
 
+# Web frontend testing targets
+.PHONY: test-web-install
+test-web-install: ## Install web frontend test dependencies
+	@echo "$(BLUE)Installing web frontend test dependencies...$(NC)"
+	pip install playwright pytest-playwright axe-playwright
+	playwright install
+	cd githound/web/tests && npm install
+
+.PHONY: test-web
+test-web: ## Run web frontend tests
+	@echo "$(BLUE)Running web frontend tests...$(NC)"
+	python githound/web/tests/run_tests.py all
+
+.PHONY: test-web-auth
+test-web-auth: ## Run web authentication tests
+	@echo "$(BLUE)Running web authentication tests...$(NC)"
+	python githound/web/tests/run_tests.py auth
+
+.PHONY: test-web-search
+test-web-search: ## Run web search functionality tests
+	@echo "$(BLUE)Running web search tests...$(NC)"
+	python githound/web/tests/run_tests.py search
+
+.PHONY: test-web-api
+test-web-api: ## Run web API integration tests
+	@echo "$(BLUE)Running web API tests...$(NC)"
+	python githound/web/tests/run_tests.py api
+
+.PHONY: test-web-ui
+test-web-ui: ## Run web UI/UX tests
+	@echo "$(BLUE)Running web UI/UX tests...$(NC)"
+	python githound/web/tests/run_tests.py ui
+
+.PHONY: test-web-performance
+test-web-performance: ## Run web performance tests
+	@echo "$(BLUE)Running web performance tests...$(NC)"
+	python githound/web/tests/run_tests.py performance
+
+.PHONY: test-web-accessibility
+test-web-accessibility: ## Run web accessibility tests
+	@echo "$(BLUE)Running web accessibility tests...$(NC)"
+	python githound/web/tests/run_tests.py accessibility
+
+.PHONY: test-web-smoke
+test-web-smoke: ## Run web smoke tests
+	@echo "$(BLUE)Running web smoke tests...$(NC)"
+	python githound/web/tests/run_tests.py smoke
+
+.PHONY: test-web-headed
+test-web-headed: ## Run web tests in headed mode (visible browser)
+	@echo "$(BLUE)Running web tests in headed mode...$(NC)"
+	python githound/web/tests/run_tests.py all --headed
+
+.PHONY: test-web-firefox
+test-web-firefox: ## Run web tests in Firefox
+	@echo "$(BLUE)Running web tests in Firefox...$(NC)"
+	python githound/web/tests/run_tests.py all --browser firefox
+
+.PHONY: test-web-webkit
+test-web-webkit: ## Run web tests in WebKit/Safari
+	@echo "$(BLUE)Running web tests in WebKit...$(NC)"
+	python githound/web/tests/run_tests.py all --browser webkit
+
+.PHONY: test-web-report
+test-web-report: ## Generate web test reports
+	@echo "$(BLUE)Generating web test reports...$(NC)"
+	python githound/web/tests/run_tests.py report
+
 # Build and distribution
 .PHONY: clean
 clean: ## Clean build artifacts

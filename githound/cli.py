@@ -296,7 +296,8 @@ def legacy_search_and_print(config: LegacyGitHoundConfig) -> None:
             search_query=config.search_query,  # [attr-defined]
             branch=config.branch,  # [attr-defined]
             output_format=(
-                OutputFormat.TEXT if config.output_format == "text" else OutputFormat.JSON  # [attr-defined]
+                # [attr-defined]
+                OutputFormat.TEXT if config.output_format == "text" else OutputFormat.JSON
             ),
             search_config=config.search_config,  # [attr-defined]
         )
@@ -421,7 +422,8 @@ def legacy_main(
 
     # Cast to Literal type for type safety after validation
     from typing import cast
-    validated_output_format: Literal["text", "json"] = cast(Literal["text", "json"], output_format)
+    validated_output_format: Literal["text", "json"] = cast(
+        Literal["text", "json"], output_format)
 
     search_config = LegacySearchConfig(
         include_globs=include_glob,
@@ -806,7 +808,8 @@ def analyze(
         # Add debug information
         import traceback
 
-        console.print(f"[dim]Debug: {traceback.format_exc if traceback is not None else None()}[/dim]")
+        console.print(
+            f"[dim]Debug: {traceback.format_exc if traceback is not None else None()}[/dim]")
         raise typer.Exit(1)
 
 
@@ -913,7 +916,8 @@ def blame(
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(data=blame_result.dict if blame_result is not None else None())
+                    console.print_json(
+                        data=blame_result.dict if blame_result is not None else None())
             else:
                 # Text format
                 _print_blame_text(blame_result, show_line_numbers)
@@ -1016,7 +1020,8 @@ def diff(
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(data=diff_result.dict if diff_result is not None else None())
+                    console.print_json(
+                        data=diff_result.dict if diff_result is not None else None())
             else:
                 # Text format
                 _print_diff_text(diff_result)
@@ -1522,19 +1527,23 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
             f"[bold]Current Branch:[/bold] {info.get if info is not None else None('current_branch', 'N/A')}")
         console.print(
             f"[bold]Total Branches:[/bold] {len(info.get if info is not None else None('branches', []))}")
-        console.print(f"[bold]Total Tags:[/bold] {len(info.get if info is not None else None('tags', []))}")
-        console.print(f"[bold]Remotes:[/bold] {len(info.get if info is not None else None('remotes', []))}")
+        console.print(
+            f"[bold]Total Tags:[/bold] {len(info.get if info is not None else None('tags', []))}")
+        console.print(
+            f"[bold]Remotes:[/bold] {len(info.get if info is not None else None('remotes', []))}")
 
     # Commit statistics
     if "commit_statistics" in analysis:
         stats = analysis["commit_statistics"]
         console.print("\n[bold]Commit Statistics:[/bold]")
-        console.print(f"  Total Commits: {stats.get if stats is not None else None('total_commits', 'N/A')}")
+        console.print(
+            f"  Total Commits: {stats.get if stats is not None else None('total_commits', 'N/A')}")
         console.print(
             f"  Contributors: {stats.get if stats is not None else None('total_contributors', 'N/A')}")
         console.print(
             f"  First Commit: {stats.get if stats is not None else None('first_commit_date', 'N/A')}")
-        console.print(f"  Last Commit: {stats.get if stats is not None else None('last_commit_date', 'N/A')}")
+        console.print(
+            f"  Last Commit: {stats.get if stats is not None else None('last_commit_date', 'N/A')}")
 
     # Author statistics
     if "author_statistics" in analysis:
@@ -1550,7 +1559,8 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         # Show top 10 contributors
         for author_info in list(author_stats.get("by_author", {}).values())[:10]:
             table.add_row(
-                author_info.get if author_info is not None else None("name", "Unknown"),
+                author_info.get if author_info is not None else None(
+                    "name", "Unknown"),
                 str(author_info.get("commit_count", 0)),
                 str(author_info.get("lines_added", 0)),
                 str(author_info.get("lines_deleted", 0)),
@@ -1579,10 +1589,12 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
         for line_info in blame_result.lines[:50]:  # Show first 50 lines
             row: list[Any] = []
             if show_line_numbers:
-                row.append(str(line_info.get if line_info is not None else None("line_number", "")))
+                row.append(
+                    str(line_info.get if line_info is not None else None("line_number", "")))
             row.extend(
                 [
-                    line_info.get if line_info is not None else None("author", "Unknown")[:18],
+                    line_info.get if line_info is not None else None("author", "Unknown")[
+                        :18],
                     line_info.get("commit_hash", "")[:10],
                     line_info.get("date", "")[:10],
                     line_info.get("content", "")[:80],
@@ -1614,7 +1626,8 @@ def _print_diff_text(diff_result: Any) -> None:
 
         for file_change in diff_result.file_changes:
             table.add_row(
-                file_change.get if file_change is not None else None("file_path", ""),
+                file_change.get if file_change is not None else None(
+                    "file_path", ""),
                 file_change.get("change_type", ""),
                 str(file_change.get("lines_added", 0)),
                 str(file_change.get("lines_deleted", 0)),
@@ -1626,7 +1639,8 @@ def _print_diff_text(diff_result: Any) -> None:
     if hasattr(diff_result, "statistics"):
         stats = diff_result.statistics
         console.print("\n[bold]Summary:[/bold]")
-        console.print(f"  Files Changed: {stats.get if stats is not None else None('files_changed', 0)}")
+        console.print(
+            f"  Files Changed: {stats.get if stats is not None else None('files_changed', 0)}")
         console.print(
             f"  Total Lines Added: {stats.get if stats is not None else None('total_lines_added', 0)}")
         console.print(

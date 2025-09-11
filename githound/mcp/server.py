@@ -557,7 +557,8 @@ def run_mcp_server(
 
     logger = logging.getLogger("githound.mcp_server")
     logger.info(f"Starting GitHound MCP Server 2.0 with {transport} transport")
-    logger.info(f"Server configuration: {config.name} v{config.version}")  # [attr-defined]
+    # [attr-defined]
+    logger.info(f"Server configuration: {config.name} v{config.version}")
 
     # Log server capabilities
     logger.info("Server capabilities:")

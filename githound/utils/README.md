@@ -31,11 +31,11 @@ with ProgressManager(enable_cancellation=True) as progress:
     # Add tasks
     task1 = progress.add_task("search", "Searching commits...", 100)
     task2 = progress.add_task("index", "Building index...", 50)
-    
+
     # Update progress
     progress.update_task("search", completed=25, description="Found 10 matches")
     progress.update_task("index", advance=10)
-    
+
     # Complete tasks
     progress.complete_task("search", "Search completed")
     progress.complete_task("index", "Index built")
@@ -75,33 +75,33 @@ export_manager = ExportManager()
 
 # Export to JSON with metadata
 export_manager.export_to_json(
-    results, 
-    Path("results.json"), 
+    results,
+    Path("results.json"),
     include_metadata=True
 )
 
 # Export to CSV
 export_manager.export_to_csv(
-    results, 
+    results,
     Path("results.csv")
 )
 
 # Export to Excel (requires openpyxl)
 export_manager.export_to_excel(
-    results, 
+    results,
     Path("results.xlsx")
 )
 
 # Export to text with detailed formatting
 export_manager.export_to_text(
-    results, 
-    Path("results.txt"), 
+    results,
+    Path("results.txt"),
     format_style="detailed"
 )
 
 # Stream export for large datasets
 export_manager.stream_export_csv(
-    result_iterator, 
+    result_iterator,
     Path("large_results.csv")
 )
 ```

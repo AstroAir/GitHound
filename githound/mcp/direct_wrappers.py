@@ -292,7 +292,8 @@ async def get_repository_config_direct(repo_path: str) -> str:
     """Direct wrapper for get_repository_config MCP resource."""
     ctx = MockContext()
     try:
-        await ctx.info(f"Getting repository configuration for {repo_path}")  # [attr-defined]
+        # [attr-defined]
+        await ctx.info(f"Getting repository configuration for {repo_path}")
 
         repo = get_repository(Path(repo_path))
         metadata = get_repository_metadata(repo)
@@ -331,7 +332,8 @@ Generated at: {datetime.now().isoformat()}
 """
 
     except Exception as e:
-        await ctx.error(f"Error retrieving repository config: {str(e)}")  # [attr-defined]
+        # [attr-defined]
+        await ctx.error(f"Error retrieving repository config: {str(e)}")
         return f"Error: Could not retrieve repository configuration - {str(e)}"
 
 

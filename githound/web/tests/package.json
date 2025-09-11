@@ -1,0 +1,39 @@
+{
+  "name": "githound-web-tests",
+  "version": "1.0.0",
+  "description": "Playwright tests for GitHound web interface",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
+    "test:auth": "playwright test --grep='@auth'",
+    "test:search": "playwright test --grep='@search'",
+    "test:api": "playwright test --grep='@api'",
+    "test:ui-tests": "playwright test --grep='@ui'",
+    "test:performance": "playwright test --grep='@performance'",
+    "test:accessibility": "playwright test --grep='@accessibility'",
+    "test:smoke": "playwright test --grep='@smoke'",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install",
+    "install-deps": "playwright install-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "axe-playwright": "^1.2.3"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "e2e",
+    "githound",
+    "web",
+    "frontend"
+  ],
+  "author": "GitHound Team",
+  "license": "MIT"
+}

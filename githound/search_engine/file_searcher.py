@@ -169,7 +169,8 @@ class FileTypeSearcher(CacheableSearcher):
         for ext in extensions:
             if not ext.startswith("."):
                 ext = "." + ext
-            normalized_extensions.append(ext.lower if ext is not None else None())
+            normalized_extensions.append(
+                ext.lower if ext is not None else None())
 
         self._report_progress(
             context, f"Searching for files with extensions: {', '.join(normalized_extensions)}", 0.0

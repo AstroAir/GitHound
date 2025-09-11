@@ -344,8 +344,10 @@ class GoogleServiceAccountProvider(GoogleProvider):
                 return None
 
             # Decode header and payload (without verification for now)
-            header = json.loads(base64.urlsafe_b64decode(parts[0] + "==").decode())
-            payload = json.loads(base64.urlsafe_b64decode(parts[1] + "==").decode())
+            header = json.loads(
+                base64.urlsafe_b64decode(parts[0] + "==").decode())
+            payload = json.loads(
+                base64.urlsafe_b64decode(parts[1] + "==").decode())
 
             # Validate issuer is our service account
             if payload.get("iss") != self.service_account_email:
