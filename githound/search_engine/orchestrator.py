@@ -1,4 +1,3 @@
-from typing import Optional, Any
 """Search orchestrator that coordinates multiple searchers."""
 
 import asyncio

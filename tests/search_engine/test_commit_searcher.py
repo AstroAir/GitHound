@@ -34,9 +34,11 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int(
+            (datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {
+            "insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -95,7 +97,7 @@ class TestCommitHashSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_commit_hash_searcher_name(self) -> None:
@@ -135,7 +137,7 @@ class TestAuthorSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_author_searcher_name(self) -> None:
@@ -177,7 +179,7 @@ class TestMessageSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_message_searcher_name(self) -> None:
@@ -217,7 +219,7 @@ class TestDateRangeSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_date_range_searcher_name(self) -> None:
@@ -291,8 +293,10 @@ class TestCacheableSearcher:
         query1 = SearchQuery(commit_hash="abc123")
         query2 = SearchQuery(commit_hash="def456")
 
-        context1 = SearchContext(repo=mock_repo, query=query1, branch="main", cache={})
-        context2 = SearchContext(repo=mock_repo, query=query2, branch="main", cache={})
+        context1 = SearchContext(
+            repo=mock_repo, query=query1, branch="main", cache={})
+        context2 = SearchContext(
+            repo=mock_repo, query=query2, branch="main", cache={})
 
         key1 = searcher._get_cache_key(context1)
         key2 = searcher._get_cache_key(context2)

@@ -6,12 +6,12 @@ Provides configurable rate limiting with Redis backend support.
 
 import os
 import time
-from typing import Any, Optional, Dict, List, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import redis
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-
 
 # Redis configuration
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -24,11 +24,11 @@ AUTH_RATE_LIMIT = os.getenv("AUTH_RATE_LIMIT", "5/minute")
 EXPORT_RATE_LIMIT = os.getenv("EXPORT_RATE_LIMIT", "3/minute")
 
 
-def get_redis_client() -> Optional[redis.Redis]:
+def get_redis_client() -> redis.Redis | None:
     """Get Redis client for rate limiting."""
     if not RATE_LIMIT_ENABLED:
         return None
-    
+
     try:
         client = redis.from_url(REDIS_URL, decode_responses=True)
         # Test connection
@@ -42,7 +42,7 @@ def get_redis_client() -> Optional[redis.Redis]:
 def get_limiter() -> Limiter:
     """Get configured rate limiter."""
     redis_client = get_redis_client()
-    
+
     if redis_client:
         # Use Redis for distributed rate limiting
         limiter = Limiter(
@@ -56,7 +56,7 @@ def get_limiter() -> Limiter:
             key_func=get_remote_address,
             default_limits=[DEFAULT_RATE_LIMIT]
         )
-    
+
     return limiter
 
 
@@ -73,19 +73,19 @@ def get_user_identifier(request: Any) -> str:
                 return f"user:{token_data.user_id}"
         except Exception:
             pass
-    
+
     # Fall back to IP address
     return cast(str, get_remote_address(request))
 
 
 class CustomLimiter:
     """Custom rate limiter with user-aware limits."""
-    
+
     def __init__(self) -> None:
         self.redis_client = get_redis_client()
         self.base_limiter = get_limiter()
-    
-    def get_user_rate_limit(self, user_roles: List[str]) -> str:
+
+    def get_user_rate_limit(self, user_roles: list[str]) -> str:
         """Get rate limit based on user roles."""
         if "admin" in user_roles:
             return "1000/minute"  # Higher limit for admins
@@ -93,26 +93,26 @@ class CustomLimiter:
             return "500/minute"   # Higher limit for premium users
         else:
             return DEFAULT_RATE_LIMIT  # Default limit
-    
-    def check_rate_limit(self, request, limit: str, identifier: Optional[str] = None) -> bool:
+
+    def check_rate_limit(self, request, limit: str, identifier: str | None = None) -> bool:
         """Check if request is within rate limit."""
         if not RATE_LIMIT_ENABLED:
             return True
-        
+
         key = identifier or get_user_identifier(request)
-        
+
         if self.redis_client:
             return self._check_redis_rate_limit(key, limit)
         else:
             return self._check_memory_rate_limit(key, limit)
-    
+
     def _check_redis_rate_limit(self, key: str, limit: str) -> bool:
         """Check rate limit using Redis."""
         try:
             # Parse limit (e.g., "100/minute")
             count_str, period = limit.split("/")
             count = int(count_str)
-            
+
             # Convert period to seconds
             if period == "second":
                 window = 1
@@ -124,34 +124,34 @@ class CustomLimiter:
                 window = 86400
             else:
                 window = 60  # Default to minute
-            
+
             # Use sliding window rate limiting
             now = int(time.time())
             client = self.redis_client
             assert client is not None
             pipeline = client.pipeline()
-            
+
             # Remove old entries
             pipeline.zremrangebyscore(key, 0, now - window)
-            
+
             # Count current requests
             pipeline.zcard(key)
-            
+
             # Add current request
             pipeline.zadd(key, {str(now): now})
-            
+
             # Set expiration
             pipeline.expire(key, window)
-            
+
             results = pipeline.execute()
             current_count = int(results[1]) if results and len(results) > 1 else 0
-            
+
             return current_count < count
-            
+
         except Exception:
             # If Redis fails, allow the request
             return True
-    
+
     def _check_memory_rate_limit(self, key: str, limit: str) -> bool:
         """Check rate limit using in-memory storage."""
         # This would use the slowapi limiter's internal logic

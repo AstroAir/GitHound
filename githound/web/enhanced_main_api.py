@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+
 """
 Enhanced GitHound API - Main application with comprehensive Git functionality.
 
@@ -7,10 +8,8 @@ for Git repository analysis and management.
 """
 
 import time
-import asyncio
-from typing import Any
 
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -18,7 +17,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from .analysis_api import router as analysis_router
-from .auth import auth_manager, Token, UserCreate, UserLogin
+from .auth import Token, UserCreate, UserLogin, auth_manager
 from .comprehensive_api import app as base_app
 from .integration_api import router as integration_router
 from .rate_limiting import get_limiter
@@ -31,54 +30,53 @@ async def lifespan(app: FastAPI) -> None:
     """Manage application lifespan events."""
     # Startup
     print("🚀 GitHound Enhanced API starting up...")
-    
+
     # Initialize components
     try:
         # Test Redis connection
         limiter = get_limiter()
         print("✅ Rate limiting initialized")
-        
+
         # Initialize webhook manager
-        from .webhooks import webhook_manager
         print("✅ Webhook manager initialized")
-        
+
         # Initialize search orchestrator
         from .search_api import create_enhanced_search_orchestrator
         orchestrator = create_enhanced_search_orchestrator()
         print("✅ Search orchestrator initialized")
-        
+
         print("🎉 GitHound Enhanced API startup complete!")
-        
+
     except Exception as e:
         print(f"❌ Startup error: {e}")
         raise
-    
+
     yield
-    
+
     # Shutdown
     print("🛑 GitHound Enhanced API shutting down...")
-    
+
     # Cleanup operations
     try:
         # Clean up active operations
         from .comprehensive_api import active_operations, operation_results
         active_operations.clear()
         operation_results.clear()
-        
+
         # Clean up search operations
         from .search_api import active_searches
         active_searches.clear()
-        
+
         # Clean up export operations
         from .integration_api import active_exports, batch_operations
         active_exports.clear()
         batch_operations.clear()
-        
+
         print("✅ Cleanup completed")
-        
+
     except Exception as e:
         print(f"❌ Shutdown error: {e}")
-    
+
     print("👋 GitHound Enhanced API shutdown complete!")
 
 
@@ -302,7 +300,7 @@ async def health_check() -> None:
             redis_status = "healthy"
         except Exception:
             redis_status = "unavailable"
-        
+
         # Check webhook manager
         webhook_status = "healthy"
         try:
@@ -311,7 +309,7 @@ async def health_check() -> None:
             webhook_status = f"healthy ({webhook_count} endpoints)"
         except Exception:
             webhook_status = "error"
-        
+
         return {
             "status": "healthy",
             "version": "3.0.0",

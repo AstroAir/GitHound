@@ -1,12 +1,11 @@
 """Google OAuth provider for GitHound MCP server."""
 
-import os
 import json
 import logging
-from typing import Any, Optional, Dict, List, cast
-import urllib.request
+import os
 import urllib.error
-import base64
+import urllib.request
+from typing import Any, cast
 
 from .oauth_proxy import OAuthProxy, TokenInfo
 
@@ -26,7 +25,7 @@ class GoogleProvider(OAuthProxy):
         client_id: str,
         client_secret: str,
         base_url: str,
-        scopes: Optional[List[str]] = None,
+        scopes: list[str] | None = None,
         **kwargs: Any
     ) -> None:
         """
@@ -71,7 +70,7 @@ class GoogleProvider(OAuthProxy):
             raise ValueError(
                 f"Missing required Google OAuth configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate Google access token and extract user information.
 
@@ -133,7 +132,7 @@ class GoogleProvider(OAuthProxy):
             logger.error(f"Error validating Google token: {e}")
             return None
 
-    def get_oauth_metadata(self) -> Dict[str, Any]:
+    def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for Google integration."""
         metadata = super().get_oauth_metadata()
         metadata.update({
@@ -145,7 +144,7 @@ class GoogleProvider(OAuthProxy):
             "provider": "google",
             "provider_name": "Google"
         })
-        return cast(Dict[str, Any], metadata)
+        return cast(dict[str, Any], metadata)
 
 
 class GoogleWorkspaceProvider(GoogleProvider):
@@ -160,8 +159,8 @@ class GoogleWorkspaceProvider(GoogleProvider):
         client_id: str,
         client_secret: str,
         base_url: str,
-        domain: Optional[str] = None,
-        scopes: Optional[List[str]] = None,
+        domain: str | None = None,
+        scopes: list[str] | None = None,
         **kwargs: Any
     ) -> None:
         """
@@ -214,7 +213,7 @@ class GoogleWorkspaceProvider(GoogleProvider):
             raise ValueError(
                 f"Missing required Google Workspace OAuth configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate Google Workspace access token with domain restriction.
 
@@ -248,7 +247,7 @@ class GoogleWorkspaceProvider(GoogleProvider):
 
         return token_info
 
-    def get_oauth_metadata(self) -> Dict[str, Any]:
+    def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for Google Workspace integration."""
         metadata = super().get_oauth_metadata()
         metadata.update({
@@ -320,7 +319,7 @@ class GoogleServiceAccountProvider(GoogleProvider):
             raise ValueError(
                 f"Missing required Google Service Account configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate Google Service Account JWT token.
 
@@ -345,8 +344,8 @@ class GoogleServiceAccountProvider(GoogleProvider):
                 return None
 
             # Decode header and payload (without verification for now)
-            header = json.loads(base64.urlsafe_b64decode((parts[0] + "==")).decode())
-            payload = json.loads(base64.urlsafe_b64decode((parts[1] + "==")).decode())
+            header = json.loads(base64.urlsafe_b64decode(parts[0] + "==").decode())
+            payload = json.loads(base64.urlsafe_b64decode(parts[1] + "==").decode())
 
             # Validate issuer is our service account
             if payload.get("iss") != self.service_account_email:

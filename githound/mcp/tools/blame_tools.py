@@ -7,17 +7,17 @@ from typing import Any
 from fastmcp import Context
 from git import GitCommandError
 
-from ...git_blame import get_author_statistics, get_file_blame as get_file_blame_impl
+from ...git_blame import get_author_statistics
+from ...git_blame import get_file_blame as get_file_blame_impl
 from ...git_diff import compare_branches, compare_commits
 from ...git_handler import get_repository
 from ..models import (
-    BlameInput,
-    DiffInput,
-    BranchDiffInput,
-    RepositoryInput,
-    FileBlameInput,
-    CommitComparisonInput,
     AuthorStatsInput,
+    BlameInput,
+    BranchDiffInput,
+    CommitComparisonInput,
+    DiffInput,
+    FileBlameInput,
 )
 
 
@@ -220,7 +220,7 @@ async def compare_commits_mcp(input_data: CommitComparisonInput, ctx: Context) -
         diff_result = compare_commits(
             repo, input_data.from_commit, input_data.to_commit)
 
-        await ctx.info(f"Commit comparison complete")
+        await ctx.info("Commit comparison complete")
 
         return {
             "status": "success",

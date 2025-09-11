@@ -8,42 +8,28 @@ This module provides a complete REST API for all Git operations including:
 - Integration features (export, webhooks, batch operations)
 """
 
-import asyncio
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any
 
-from fastapi import (
-    BackgroundTasks, 
-    Depends, 
-    FastAPI, 
-    HTTPException, 
-    Query, 
-    Request,
-    status
-)
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi.responses import FileResponse, JSONResponse
-from git import GitCommandError, Repo
+from fastapi.security import HTTPBearer
+from git import GitCommandError
 from pydantic import BaseModel, Field
 
-from .auth import get_current_active_user, require_roles
+from .auth import require_roles
 
 # Auth dependencies
 require_user = require_roles(["user", "admin"])
 require_admin = require_roles(["admin"])
-import redis
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from ..git_handler import get_repository
-from ..models import SearchResult, SearchMetrics
-from .models import ErrorResponse
+from .auth import AuthManager
 from .git_operations import GitOperationsManager
-from .auth import AuthManager, get_current_user
 from .rate_limiting import get_limiter
 from .webhooks import WebhookManager
 
@@ -98,8 +84,8 @@ git_ops_manager = GitOperationsManager()
 webhook_manager = WebhookManager()
 
 # Global state
-active_operations: Dict[str, Dict[str, Any]] = {}
-operation_results: Dict[str, Any] = {}
+active_operations: dict[str, dict[str, Any]] = {}
+operation_results: dict[str, Any] = {}
 
 # Security
 security = HTTPBearer()
@@ -109,18 +95,18 @@ class ApiResponse(BaseModel):
     """Standard API response format."""
     success: bool = Field(..., description="Operation success status")
     message: str = Field(..., description="Response message")
-    data: Optional[Any] = Field(None, description="Response data")
+    data: Any | None = Field(None, description="Response data")
     timestamp: datetime = Field(default_factory=datetime.now)
-    request_id: Optional[str] = Field(None, description="Request tracking ID")
+    request_id: str | None = Field(None, description="Request tracking ID")
 
 class PaginationParams(BaseModel):
     """Pagination parameters."""
     page: int = Field(1, ge=1, description="Page number")
     size: int = Field(50, ge=1, le=1000, description="Page size")
-    
+
 class SortParams(BaseModel):
     """Sorting parameters."""
-    sort_by: Optional[str] = Field(None, description="Field to sort by")
+    sort_by: str | None = Field(None, description="Field to sort by")
     sort_order: str = Field("asc", pattern="^(asc|desc)$", description="Sort order")
 
 # Repository Models
@@ -128,41 +114,41 @@ class RepositoryCreateRequest(BaseModel):
     """Request to create/initialize a repository."""
     path: str = Field(..., description="Repository path")
     bare: bool = Field(False, description="Create bare repository")
-    template: Optional[str] = Field(None, description="Template repository URL")
+    template: str | None = Field(None, description="Template repository URL")
 
 class RepositoryCloneRequest(BaseModel):
     """Request to clone a repository."""
     url: str = Field(..., description="Repository URL to clone")
     path: str = Field(..., description="Local path for cloned repository")
-    branch: Optional[str] = Field(None, description="Specific branch to clone")
-    depth: Optional[int] = Field(None, description="Clone depth")
+    branch: str | None = Field(None, description="Specific branch to clone")
+    depth: int | None = Field(None, description="Clone depth")
     recursive: bool = Field(False, description="Clone submodules recursively")
 
 class RepositoryStatusResponse(BaseModel):
     """Repository status information."""
     is_dirty: bool = Field(..., description="Repository has uncommitted changes")
-    untracked_files: List[str] = Field(..., description="Untracked files")
-    modified_files: List[str] = Field(..., description="Modified files")
-    staged_files: List[str] = Field(..., description="Staged files")
-    deleted_files: List[str] = Field(..., description="Deleted files")
-    current_branch: Optional[str] = Field(None, description="Current branch name")
-    ahead_behind: Optional[Dict[str, int]] = Field(None, description="Commits ahead/behind remote")
+    untracked_files: list[str] = Field(..., description="Untracked files")
+    modified_files: list[str] = Field(..., description="Modified files")
+    staged_files: list[str] = Field(..., description="Staged files")
+    deleted_files: list[str] = Field(..., description="Deleted files")
+    current_branch: str | None = Field(None, description="Current branch name")
+    ahead_behind: dict[str, int] | None = Field(None, description="Commits ahead/behind remote")
 
 # Branch Models
 class BranchCreateRequest(BaseModel):
     """Request to create a branch."""
     repo_path: str = Field(..., description="Repository path")
     branch_name: str = Field(..., description="New branch name")
-    start_point: Optional[str] = Field(None, description="Starting commit/branch")
+    start_point: str | None = Field(None, description="Starting commit/branch")
     checkout: bool = Field(True, description="Checkout new branch")
 
 class BranchMergeRequest(BaseModel):
     """Request to merge branches."""
     repo_path: str = Field(..., description="Repository path")
     source_branch: str = Field(..., description="Source branch to merge")
-    target_branch: Optional[str] = Field(None, description="Target branch (current if None)")
+    target_branch: str | None = Field(None, description="Target branch (current if None)")
     strategy: str = Field("merge", pattern="^(merge|rebase|squash)$", description="Merge strategy")
-    message: Optional[str] = Field(None, description="Merge commit message")
+    message: str | None = Field(None, description="Merge commit message")
 
 class BranchInfo(BaseModel):
     """Branch information."""
@@ -173,23 +159,23 @@ class BranchInfo(BaseModel):
     date: datetime = Field(..., description="Latest commit date")
     is_current: bool = Field(..., description="Is current branch")
     is_remote: bool = Field(..., description="Is remote branch")
-    tracking_branch: Optional[str] = Field(None, description="Tracking remote branch")
+    tracking_branch: str | None = Field(None, description="Tracking remote branch")
 
 # Commit Models
 class CommitCreateRequest(BaseModel):
     """Request to create a commit."""
     repo_path: str = Field(..., description="Repository path")
     message: str = Field(..., description="Commit message")
-    files: Optional[List[str]] = Field(None, description="Specific files to commit")
+    files: list[str] | None = Field(None, description="Specific files to commit")
     all_files: bool = Field(False, description="Commit all modified files")
-    author_name: Optional[str] = Field(None, description="Author name override")
-    author_email: Optional[str] = Field(None, description="Author email override")
+    author_name: str | None = Field(None, description="Author name override")
+    author_email: str | None = Field(None, description="Author email override")
 
 class CommitAmendRequest(BaseModel):
     """Request to amend the last commit."""
     repo_path: str = Field(..., description="Repository path")
-    message: Optional[str] = Field(None, description="New commit message")
-    files: Optional[List[str]] = Field(None, description="Additional files to include")
+    message: str | None = Field(None, description="New commit message")
+    files: list[str] | None = Field(None, description="Additional files to include")
 
 class CommitRevertRequest(BaseModel):
     """Request to revert a commit."""
@@ -208,17 +194,17 @@ class TagCreateRequest(BaseModel):
     """Request to create a tag."""
     repo_path: str = Field(..., description="Repository path")
     tag_name: str = Field(..., description="Tag name")
-    commit: Optional[str] = Field(None, description="Commit to tag (HEAD if None)")
-    message: Optional[str] = Field(None, description="Tag message (creates annotated tag)")
+    commit: str | None = Field(None, description="Commit to tag (HEAD if None)")
+    message: str | None = Field(None, description="Tag message (creates annotated tag)")
     force: bool = Field(False, description="Force tag creation")
 
 class TagInfo(BaseModel):
     """Tag information."""
     name: str = Field(..., description="Tag name")
     commit_hash: str = Field(..., description="Tagged commit hash")
-    message: Optional[str] = Field(None, description="Tag message")
-    tagger: Optional[str] = Field(None, description="Tagger name")
-    date: Optional[datetime] = Field(None, description="Tag date")
+    message: str | None = Field(None, description="Tag message")
+    tagger: str | None = Field(None, description="Tagger name")
+    date: datetime | None = Field(None, description="Tag date")
     is_annotated: bool = Field(..., description="Is annotated tag")
 
 # Remote Models
@@ -248,7 +234,7 @@ async def validate_repo_path(repo_path: str) -> Path:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Repository path does not exist: {repo_path}"
         )
-    
+
     try:
         get_repository(path)
     except GitCommandError as e:
@@ -256,7 +242,7 @@ async def validate_repo_path(repo_path: str) -> Path:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid Git repository: {e}"
         )
-    
+
     return path
 
 # Health and Info Endpoints
@@ -272,7 +258,7 @@ async def health_check(request_id: str = Depends(get_request_id)) -> ApiResponse
             "active_operations": len(active_operations),
             "features": [
                 "git_operations",
-                "advanced_analysis", 
+                "advanced_analysis",
                 "search_capabilities",
                 "webhooks",
                 "batch_operations",
@@ -320,7 +306,7 @@ async def api_info(request_id: str = Depends(get_request_id)) -> ApiResponse:
 async def init_repository(
     request: Request,
     repo_request: RepositoryCreateRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Initialize a new Git repository."""
@@ -360,7 +346,7 @@ async def clone_repository(
     request: Request,
     clone_request: RepositoryCloneRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Clone a remote repository."""
@@ -407,7 +393,7 @@ async def clone_repository(
 async def get_repository_status(
     request: Request,
     repo_path: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Get repository status information."""
@@ -477,7 +463,7 @@ async def list_branches(
     request: Request,
     repo_path: str,
     include_remote: bool = Query(True, description="Include remote branches"),
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """List all branches in the repository."""
@@ -513,7 +499,7 @@ async def create_branch(
     request: Request,
     repo_path: str,
     branch_request: BranchCreateRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Create a new branch."""
@@ -560,7 +546,7 @@ async def delete_branch(
     repo_path: str,
     branch_name: str,
     force: bool = Query(False, description="Force delete branch"),
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Delete a branch."""
@@ -605,7 +591,7 @@ async def checkout_branch(
     request: Request,
     repo_path: str,
     branch_name: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Checkout a branch."""
@@ -639,7 +625,7 @@ async def merge_branches(
     request: Request,
     repo_path: str,
     merge_request: BranchMergeRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Merge branches."""
@@ -688,7 +674,7 @@ async def create_commit(
     request: Request,
     repo_path: str,
     commit_request: CommitCreateRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Create a new commit."""
@@ -736,7 +722,7 @@ async def amend_commit(
     request: Request,
     repo_path: str,
     amend_request: CommitAmendRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Amend the last commit."""
@@ -772,7 +758,7 @@ async def revert_commit(
     repo_path: str,
     commit_hash: str,
     revert_request: CommitRevertRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Revert a commit."""
@@ -808,7 +794,7 @@ async def cherry_pick_commit(
     repo_path: str,
     commit_hash: str,
     cherry_pick_request: CommitCherryPickRequest,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Cherry-pick a commit."""

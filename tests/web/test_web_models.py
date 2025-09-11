@@ -36,7 +36,7 @@ class TestSearchRequest:
             fuzzy_search=False,
             max_results=50
         )
-        
+
         assert request.repo_path = = "/test/repo"
         assert request.branch = = "main"
         assert request.content_pattern = = "test"
@@ -48,7 +48,7 @@ class TestSearchRequest:
     def test_search_request_defaults(self) -> None:
         """Test SearchRequest default values."""
         request = SearchRequest(repo_path="/test/repo")
-        
+
         assert request.repo_path = = "/test/repo"
         assert request.branch is None
         assert request.content_pattern is None
@@ -66,13 +66,13 @@ class TestSearchRequest:
         """Test SearchRequest with date range."""
         date_from = datetime(2023, 1, 1)
         date_to = datetime(2023, 12, 31)
-        
+
         request = SearchRequest(
             repo_path="/test/repo",
             date_from=date_from,
             date_to=date_to
         )
-        
+
         assert request.date_from = = date_from
         assert request.date_to = = date_to
 
@@ -89,9 +89,9 @@ class TestSearchRequest:
             exclude_globs=["*.pyc"],
             max_file_size=1000000
         )
-        
+
         query = request.to_search_query()
-        
+
         assert isinstance(query, SearchQuery)
         assert query.content_pattern = = "test"
         assert query.author_pattern = = "john"
@@ -108,7 +108,7 @@ class TestSearchRequest:
             repo_path="/test/repo",
             file_extensions=["py", "js", "ts"]
         )
-        
+
         assert request.file_extensions = = ["py", "js", "ts"]
 
 
@@ -125,11 +125,12 @@ class TestSearchResultResponse:
             search_type="content",  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
-        
+
         assert response.commit_hash = = "abc123"
         assert response.file_path = = "test.py"
         assert response.line_number = = 10
-        assert response.matching_line = = "def test() -> None:"  # Fixed: line_content -> matching_line
+        # Fixed: line_content -> matching_line
+        assert response.matching_line = = "def test() -> None:"
         assert response.search_type = = "content"  # Fixed: match_type -> search_type
         assert response.relevance_score = = 0.95
 
@@ -146,7 +147,7 @@ class TestSearchResultResponse:
             date=datetime(2023, 1, 1, 12, 0, 0),
             files_changed=1  # Added required field
         )
-        
+
         search_result = SearchResult(
             commit_hash="abc123",
             file_path="test.py",
@@ -156,16 +157,19 @@ class TestSearchResultResponse:
             relevance_score=0.95,
             commit_info=commit_info
         )
-        
-        response = SearchResultResponse.from_search_result(search_result, include_metadata=True)
-        
+
+        response = SearchResultResponse.from_search_result(
+            search_result, include_metadata=True)
+
         assert response.commit_hash = = "abc123"
         assert response.file_path = = "test.py"
         assert response.line_number = = 10
-        assert response.matching_line = = "def test() -> None:"  # Fixed: line_content -> matching_line
+        # Fixed: line_content -> matching_line
+        assert response.matching_line = = "def test() -> None:"
         assert response.search_type = = "content"  # Fixed: match_type -> search_type
         assert response.relevance_score = = 0.95
-        assert response.author_name = = "John Doe"  # Fixed: commit_author -> author_name
+        # Fixed: commit_author -> author_name
+        assert response.author_name = = "John Doe"
         assert response.commit_message = = "Add test function"
         assert response.commit_date = = datetime(2023, 1, 1, 12, 0, 0)
 
@@ -179,9 +183,10 @@ class TestSearchResultResponse:
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
-        
-        response = SearchResultResponse.from_search_result(search_result, include_metadata=False)
-        
+
+        response = SearchResultResponse.from_search_result(
+            search_result, include_metadata=False)
+
         assert response.commit_hash = = "abc123"
         assert response.file_path = = "test.py"
         assert response.author_name is None  # Fixed: commit_author -> author_name
@@ -202,7 +207,7 @@ class TestSearchResponse:
             search_type="content",  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
-        
+
         response = SearchResponse(
             results=[result_response],
             total_count=1,
@@ -212,7 +217,7 @@ class TestSearchResponse:
             files_searched=50,
             search_duration_ms=1500.0
         )
-        
+
         assert len(response.results) == 1
         assert response.total_count = = 1
         assert response.search_id = = "search_123"
@@ -232,14 +237,14 @@ class TestSearchResponse:
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
-        
+
         metrics = SearchMetrics(
             total_commits_searched=10,
             total_files_searched=50,
             matches_found=1,
             search_duration_ms=1500.0
         )
-        
+
         response = SearchResponse.from_results(
             results=[search_result],
             search_id="search_123",
@@ -247,7 +252,7 @@ class TestSearchResponse:
             include_metadata=False,
             status="completed"
         )
-        
+
         assert len(response.results) == 1
         assert response.total_count = = 1
         assert response.search_id = = "search_123"
@@ -265,7 +270,7 @@ class TestSearchResponse:
             status="error",
             error_message="Repository not found"
         )
-        
+
         assert len(response.results) == 0
         assert response.total_count = = 0
         assert response.status = = "error"
@@ -285,7 +290,7 @@ class TestSearchStatusResponse:
             results_count=25,
             started_at=datetime.now()  # Required field
         )
-        
+
         assert response.search_id = = "search_123"
         assert response.status = = "running"
         assert response.progress = = 0.5
@@ -305,10 +310,11 @@ class TestSearchStatusResponse:
             results_count=0,
             started_at=datetime.now()  # Required field
         )
-        
+
         assert response.search_id = = "search_123"
         assert response.status = = "error"
-        assert response.message = = "Invalid repository path"  # Fixed: error_message -> message
+        # Fixed: error_message -> message
+        assert response.message = = "Invalid repository path"
 
 
 class TestExportRequest:
@@ -322,7 +328,7 @@ class TestExportRequest:
             include_metadata=True,
             filename="results.json"
         )
-        
+
         assert request.search_id = = "search_123"
         assert request.format = = OutputFormat.JSON
         assert request.include_metadata is True
@@ -334,7 +340,7 @@ class TestExportRequest:
             search_id="search_123",
             format=OutputFormat.CSV
         )
-        
+
         assert request.search_id = = "search_123"
         assert request.format = = OutputFormat.CSV
         assert request.include_metadata is False
@@ -352,7 +358,7 @@ class TestHealthResponse:
             uptime_seconds=3600.0,
             active_searches=5
         )
-        
+
         assert response.status = = "healthy"
         assert response.version = = "1.0.0"
         assert response.uptime_seconds = = 3600.0
@@ -366,7 +372,7 @@ class TestHealthResponse:
             uptime_seconds=100.0,
             active_searches=0
         )
-        
+
         assert response.status = = "unhealthy"
         assert response.version = = "1.0.0"
         assert response.uptime_seconds = = 100.0

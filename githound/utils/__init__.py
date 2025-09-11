@@ -1,10 +1,9 @@
 """Utility modules for GitHound."""
 
-from .progress import CancellationToken, ProgressManager
-
-
 # Lazy import for ExportManager to avoid pandas dependency issues
 from typing import Any
+
+from .progress import CancellationToken, ProgressManager
 
 
 def get_export_manager() -> type[Any]:

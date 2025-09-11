@@ -54,9 +54,11 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int(
+            (datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {
+            "insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -268,7 +270,8 @@ class TestSearchContext:
         )
 
         assert context.repo is mock_repo
-        assert context.query = = sample_search_query  # Use == for Pydantic model comparison
+        # Use == for Pydantic model comparison
+        assert context.query = = sample_search_query
         assert context.branch = = "main"
         assert context.cache = = {}
 

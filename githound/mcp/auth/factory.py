@@ -1,17 +1,17 @@
 """Factory functions for creating authentication and authorization providers."""
 
-import os
 import logging
-from typing import Any, Optional, Dict, List
+import os
+from typing import Any
 
-from .providers.base import AuthProvider
 from .providers import (
-    JWTVerifier,
-    GitHubProvider,
-    GoogleProvider,
     EUNOMIA_AVAILABLE,
     PERMIT_AVAILABLE,
+    GitHubProvider,
+    GoogleProvider,
+    JWTVerifier,
 )
+from .providers.base import AuthProvider
 
 if EUNOMIA_AVAILABLE:
     from .providers import EunomiaAuthorizationProvider
@@ -22,7 +22,7 @@ if PERMIT_AVAILABLE:
 logger = logging.getLogger(__name__)
 
 
-def create_auth_provider(provider_type: str, **config: Any) -> Optional[AuthProvider]:
+def create_auth_provider(provider_type: str, **config: Any) -> AuthProvider | None:
     """
     Create an authentication provider by type.
 
@@ -90,7 +90,7 @@ def create_authorization_provider(
         return base_provider
 
 
-def create_provider_from_config(config: Dict[str, Any]) -> Optional[AuthProvider]:
+def create_provider_from_config(config: dict[str, Any]) -> AuthProvider | None:
     """
     Create a complete authentication/authorization provider from configuration.
 
@@ -144,7 +144,7 @@ def create_provider_from_config(config: Dict[str, Any]) -> Optional[AuthProvider
         return None
 
 
-def create_provider_from_environment() -> Optional[AuthProvider]:
+def create_provider_from_environment() -> AuthProvider | None:
     """
     Create a provider from environment variables.
 
@@ -201,7 +201,7 @@ def create_provider_from_environment() -> Optional[AuthProvider]:
         return None
 
 
-def get_available_providers() -> Dict[str, Dict[str, Any]]:
+def get_available_providers() -> dict[str, dict[str, Any]]:
     """
     Get information about available authentication and authorization providers.
 
@@ -245,7 +245,7 @@ def get_available_providers() -> Dict[str, Dict[str, Any]]:
     return providers
 
 
-def validate_provider_config(config: Dict[str, Any]) -> bool:
+def validate_provider_config(config: dict[str, Any]) -> bool:
     """
     Validate a provider configuration.
 

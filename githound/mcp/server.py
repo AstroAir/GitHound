@@ -1,24 +1,35 @@
 """Main GitHound MCP server setup and orchestration."""
 
-from .prompts import investigate_bug, prepare_code_review, analyze_performance_regression
-from .resources import (
-    get_repository_config,
-    get_repository_branches,
-    get_repository_contributors,
-    get_repository_summary,
-    get_file_history_resource,
-    get_commit_details_resource,
-    get_file_blame_resource,
+import importlib
+import logging
+from typing import Any
+
+from fastmcp import Context, FastMCP
+
+from .config import (
+    configure_logging,
+    get_server_config,
+    is_authentication_enabled,
 )
 from .direct_wrappers import MockContext
-from .tools import search_tools, analysis_tools, blame_tools, export_tools, management_tools, web_tools
-import logging
-import importlib
-from typing import Any, Optional, Dict, List
-
-from fastmcp import FastMCP, Context
-
-from .config import configure_logging, get_server_config_from_environment, get_server_config, is_authentication_enabled
+from .prompts import analyze_performance_regression, investigate_bug, prepare_code_review
+from .resources import (
+    get_commit_details_resource,
+    get_file_blame_resource,
+    get_file_history_resource,
+    get_repository_branches,
+    get_repository_config,
+    get_repository_contributors,
+    get_repository_summary,
+)
+from .tools import (
+    analysis_tools,
+    blame_tools,
+    export_tools,
+    management_tools,
+    search_tools,
+    web_tools,
+)
 
 # Import auth functions explicitly to avoid conflict with auth directory
 auth_module = importlib.import_module('.auth', package='githound.mcp')
@@ -40,9 +51,9 @@ def get_mcp_server() -> FastMCP:
     return server
 
 
-def ensure_context(ctx: Optional[Context]) -> Context:
+def ensure_context(ctx: Context | None) -> Context:
     """Ensure we have a valid context object."""
-    return ctx if ctx is not None else MockContext()  # 
+    return ctx if ctx is not None else MockContext()  #
 
 
 # Global MCP server instance
@@ -53,25 +64,25 @@ mcp: FastMCP = get_mcp_server()
 @mcp.tool
 async def advanced_search(
     repo_path: str,
-    branch: Optional[str] = None,
-    content_pattern: Optional[str] = None,
-    commit_hash: Optional[str] = None,
-    author_pattern: Optional[str] = None,
-    message_pattern: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
-    file_path_pattern: Optional[str] = None,
-    file_extensions: Optional[List[str]] = None,
+    branch: str | None = None,
+    content_pattern: str | None = None,
+    commit_hash: str | None = None,
+    author_pattern: str | None = None,
+    message_pattern: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    file_path_pattern: str | None = None,
+    file_extensions: list[str] | None = None,
     case_sensitive: bool = False,
     fuzzy_search: bool = False,
     fuzzy_threshold: float = 0.8,
     max_results: int = 100,
-    include_globs: Optional[List[str]] = None,
-    exclude_globs: Optional[List[str]] = None,
-    max_file_size: Optional[int] = None,
-    min_commit_size: Optional[int] = None,
-    max_commit_size: Optional[int] = None,
-    ctx: Optional[Context] = None
+    include_globs: list[str] | None = None,
+    exclude_globs: list[str] | None = None,
+    max_file_size: int | None = None,
+    min_commit_size: int | None = None,
+    max_commit_size: int | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Advanced multi-modal search across the repository."""
     from .models import AdvancedSearchInput
@@ -105,10 +116,10 @@ async def fuzzy_search(
     repo_path: str,
     search_term: str,
     threshold: float = 0.8,
-    search_types: Optional[List[str]] = None,
-    branch: Optional[str] = None,
+    search_types: list[str] | None = None,
+    branch: str | None = None,
     max_results: int = 50,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Fuzzy search with configurable similarity threshold."""
     from .models import FuzzySearchInput
@@ -128,12 +139,12 @@ async def fuzzy_search(
 async def content_search(
     repo_path: str,
     pattern: str,
-    file_extensions: Optional[List[str]] = None,
+    file_extensions: list[str] | None = None,
     case_sensitive: bool = False,
     whole_word: bool = False,
-    branch: Optional[str] = None,
+    branch: str | None = None,
     max_results: int = 100,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Content-specific search with advanced pattern matching."""
     from .models import ContentSearchInput
@@ -151,7 +162,7 @@ async def content_search(
 
 
 @mcp.tool
-async def analyze_repository(repo_path: str, ctx: Optional[Context] = None) -> Any:
+async def analyze_repository(repo_path: str, ctx: Context | None = None) -> Any:
     """Analyze a Git repository and return comprehensive metadata."""
     from .models import RepositoryInput
 
@@ -160,7 +171,7 @@ async def analyze_repository(repo_path: str, ctx: Optional[Context] = None) -> A
 
 
 @mcp.tool
-async def analyze_commit(repo_path: str, commit_hash: Optional[str] = None, ctx: Optional[Context] = None) -> Any:
+async def analyze_commit(repo_path: str, commit_hash: str | None = None, ctx: Context | None = None) -> Any:
     """Analyze a specific commit and return detailed metadata."""
     from .models import CommitAnalysisInput
 
@@ -172,14 +183,14 @@ async def analyze_commit(repo_path: str, commit_hash: Optional[str] = None, ctx:
 @mcp.tool
 async def get_filtered_commits(
     repo_path: str,
-    branch: Optional[str] = None,
-    author: Optional[str] = None,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    message_pattern: Optional[str] = None,
-    file_patterns: Optional[List[str]] = None,
+    branch: str | None = None,
+    author: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    message_pattern: str | None = None,
+    file_patterns: list[str] | None = None,
     max_count: int = 100,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Retrieve commits with advanced filtering options."""
     from .models import CommitFilterInput
@@ -201,9 +212,9 @@ async def get_filtered_commits(
 async def get_file_history_mcp(
     repo_path: str,
     file_path: str,
-    branch: Optional[str] = None,
+    branch: str | None = None,
     max_count: int = 50,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Get the complete history of changes for a specific file."""
     from .models import FileHistoryInput
@@ -220,12 +231,12 @@ async def get_file_history_mcp(
 @mcp.tool
 async def get_commit_history(
     repo_path: str,
-    branch: Optional[str] = None,
+    branch: str | None = None,
     max_count: int = 100,
-    author: Optional[str] = None,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    ctx: Optional[Context] = None
+    author: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Get commit history with optional filtering and pagination."""
     from .models import CommitHistoryInput
@@ -245,8 +256,8 @@ async def get_commit_history(
 async def analyze_file_blame(
     repo_path: str,
     file_path: str,
-    commit: Optional[str] = None,
-    ctx: Optional[Context] = None
+    commit: str | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Analyze line-by-line authorship for a file using git blame."""
     from .models import BlameInput
@@ -261,8 +272,8 @@ async def compare_commits_diff(
     repo_path: str,
     from_commit: str,
     to_commit: str,
-    file_patterns: Optional[List[str]] = None,
-    ctx: Optional[Context] = None
+    file_patterns: list[str] | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Compare two commits and return detailed diff analysis."""
     from .models import DiffInput
@@ -281,8 +292,8 @@ async def compare_branches_diff(
     repo_path: str,
     from_branch: str,
     to_branch: str,
-    file_patterns: Optional[List[str]] = None,
-    ctx: Optional[Context] = None
+    file_patterns: list[str] | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Compare two branches and return detailed diff analysis."""
     from .models import BranchDiffInput
@@ -299,10 +310,10 @@ async def compare_branches_diff(
 @mcp.tool
 async def get_author_stats(
     repo_path: str,
-    branch: Optional[str] = None,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    ctx: Optional[Context] = None
+    branch: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Get comprehensive author statistics for the repository."""
     from .models import AuthorStatsInput
@@ -320,8 +331,8 @@ async def get_author_stats(
 async def get_file_blame(
     repo_path: str,
     file_path: str,
-    commit: Optional[str] = None,
-    ctx: Optional[Context] = None
+    commit: str | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Get file blame information showing line-by-line authorship."""
     from .models import FileBlameInput
@@ -336,7 +347,7 @@ async def compare_commits_mcp(
     repo_path: str,
     from_commit: str,
     to_commit: str,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Compare two commits and return detailed diff information."""
     from .models import CommitComparisonInput
@@ -355,10 +366,10 @@ async def export_repository_data(
     output_path: str,
     format: str = "json",
     include_metadata: bool = True,
-    pagination: Optional[Dict[Any, Any]] = None,
-    fields: Optional[List[str]] = None,
-    exclude_fields: Optional[List[str]] = None,
-    ctx: Optional[Context] = None
+    pagination: dict[Any, Any] | None = None,
+    fields: list[str] | None = None,
+    exclude_fields: list[str] | None = None,
+    ctx: Context | None = None
 ) -> Any:
     """Export repository analysis data in various formats."""
     from .models import ExportInput
@@ -376,7 +387,7 @@ async def export_repository_data(
 
 
 @mcp.tool
-async def list_branches(repo_path: str, ctx: Optional[Context] = None) -> Any:
+async def list_branches(repo_path: str, ctx: Context | None = None) -> Any:
     """List all branches in the repository with detailed information."""
     from .models import RepositoryManagementInput
 
@@ -385,7 +396,7 @@ async def list_branches(repo_path: str, ctx: Optional[Context] = None) -> Any:
 
 
 @mcp.tool
-async def list_tags(repo_path: str, ctx: Optional[Context] = None) -> Any:
+async def list_tags(repo_path: str, ctx: Context | None = None) -> Any:
     """List all tags in the repository with metadata."""
     from .models import RepositoryManagementInput
 
@@ -394,7 +405,7 @@ async def list_tags(repo_path: str, ctx: Optional[Context] = None) -> Any:
 
 
 @mcp.tool
-async def list_remotes(repo_path: str, ctx: Optional[Context] = None) -> Any:
+async def list_remotes(repo_path: str, ctx: Context | None = None) -> Any:
     """List all remote repositories with their URLs."""
     from .models import RepositoryManagementInput
 
@@ -403,7 +414,7 @@ async def list_remotes(repo_path: str, ctx: Optional[Context] = None) -> Any:
 
 
 @mcp.tool
-async def validate_repository(repo_path: str, ctx: Optional[Context] = None) -> Any:
+async def validate_repository(repo_path: str, ctx: Context | None = None) -> Any:
     """Validate repository integrity and check for issues."""
     from .models import RepositoryManagementInput
 
@@ -417,7 +428,7 @@ async def start_web_server(
     host: str = "localhost",
     port: int = 8000,
     auto_open: bool = True,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Start the GitHound web interface server."""
     from .models import WebServerInput
@@ -430,7 +441,7 @@ async def start_web_server(
 @mcp.tool
 async def generate_repository_report(
     repo_path: str,
-    ctx: Optional[Context] = None
+    ctx: Context | None = None
 ) -> Any:
     """Generate a comprehensive repository analysis report."""
     from .models import RepositoryInput

@@ -1,14 +1,14 @@
 """Authentication module for GitHound MCP server."""
 
 from .providers import (
-    AuthProvider,
-    JWTVerifier,
-    OAuthProxy,
-    OAuthProvider,
-    GitHubProvider,
-    GoogleProvider,
     EUNOMIA_AVAILABLE,
     PERMIT_AVAILABLE,
+    AuthProvider,
+    GitHubProvider,
+    GoogleProvider,
+    JWTVerifier,
+    OAuthProvider,
+    OAuthProxy,
 )
 
 # Import authorization providers if available

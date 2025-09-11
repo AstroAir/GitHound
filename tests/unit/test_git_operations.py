@@ -5,12 +5,12 @@ Tests all Git operations including repository management, branch operations,
 commit operations, tag management, and remote operations.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from git import GitCommandError, InvalidGitRepositoryError, Actor
+from unittest.mock import Mock, patch
 
-from githound.web.git_operations import GitOperationsManager, GitOperationError
+import pytest
+
+from githound.web.git_operations import GitOperationError, GitOperationsManager
 
 
 @pytest.fixture
@@ -21,54 +21,55 @@ def git_ops_manager() -> None:
 
 class TestRepositoryOperations:
     """Test repository initialization, cloning, and status operations."""
-    
+
     def test_init_repository_success(self, git_ops_manager, temp_dir) -> None:
         """Test successful repository initialization."""
         repo_path = str(temp_dir / "new_repo")
-        
+
         with patch('githound.web.git_operations.Repo') as mock_repo_class:
             mock_repo = Mock()
             mock_repo.bare = False
             mock_repo.git_dir = f"{repo_path}/.git"
             mock_repo.working_dir = repo_path
             mock_repo_class.init.return_value = mock_repo
-            
+
             result = git_ops_manager.init_repository(repo_path, bare=False)
-            
+
             assert result["path"] == repo_path
             assert result["bare"] is False
             assert result["status"] == "created"
             assert result["git_dir"] == f"{repo_path}/.git"
             assert result["working_dir"] == repo_path
-            
-            mock_repo_class.init.assert_called_once_with(Path(repo_path), bare=False)
-    
+
+            mock_repo_class.init.assert_called_once_with(
+                Path(repo_path), bare=False)
+
     def test_init_repository_already_exists(self, git_ops_manager, temp_repo) -> None:
         """Test initialization of existing repository."""
         repo_path = str(temp_repo.working_dir)
-        
+
         with patch('githound.web.git_operations.Repo') as mock_repo_class:
             mock_repo_class.return_value = temp_repo
-            
+
             result = git_ops_manager.init_repository(repo_path, bare=False)
-            
+
             assert result["status"] == "already_exists"
             assert result["path"] == repo_path
-    
+
     def test_init_repository_non_empty_directory(self, git_ops_manager, temp_dir) -> None:
         """Test initialization in non-empty, non-git directory."""
         repo_path = temp_dir / "non_empty"
         repo_path.mkdir()
         (repo_path / "existing_file.txt").write_text("content")
-        
+
         with pytest.raises(GitOperationError, match="not empty and not a Git repository"):
             git_ops_manager.init_repository(str(repo_path))
-    
+
     def test_clone_repository_success(self, git_ops_manager, temp_dir) -> None:
         """Test successful repository cloning."""
         clone_path = str(temp_dir / "cloned_repo")
         test_url = "https://github.com/test/repo.git"
-        
+
         with patch('githound.web.git_operations.Repo') as mock_repo_class:
             mock_repo = Mock()
             mock_repo.head.commit.hexsha = "abc123"
@@ -77,24 +78,24 @@ class TestRepositoryOperations:
             mock_repo.head.commit.author.email = "test@example.com"
             mock_repo.active_branch.name = "main"
             mock_repo.remotes = []
-            
+
             mock_repo_class.clone_from.return_value = mock_repo
-            
+
             result = git_ops_manager.clone_repository(test_url, clone_path)
-            
+
             assert result["path"] == clone_path
             assert result["url"] == test_url
             assert result["branch"] == "main"
             assert result["head_commit"] == "abc123"
             assert result["status"] == "cloned"
-            
+
             mock_repo_class.clone_from.assert_called_once()
-    
+
     def test_clone_repository_with_options(self, git_ops_manager, temp_dir) -> None:
         """Test repository cloning with additional options."""
         clone_path = str(temp_dir / "cloned_repo")
         test_url = "https://github.com/test/repo.git"
-        
+
         with patch('githound.web.git_operations.Repo') as mock_repo_class:
             mock_repo = Mock()
             mock_repo.head.commit.hexsha = "abc123"
@@ -103,29 +104,30 @@ class TestRepositoryOperations:
             mock_repo.head.commit.author.email = "test@example.com"
             mock_repo.active_branch.name = "develop"
             mock_repo.remotes = []
-            
+
             mock_repo_class.clone_from.return_value = mock_repo
-            
+
             result = git_ops_manager.clone_repository(
                 test_url, clone_path, branch="develop", depth=1, recursive=True
             )
-            
+
             assert result["branch"] == "develop"
             mock_repo_class.clone_from.assert_called_once()
             call_args = mock_repo_class.clone_from.call_args
             assert call_args[1]["branch"] == "develop"
             assert call_args[1]["depth"] == 1
             assert call_args[1]["recursive"] is True
-    
+
     def test_clone_repository_target_not_empty(self, git_ops_manager, temp_dir) -> None:
         """Test cloning to non-empty directory."""
         clone_path = temp_dir / "existing_dir"
         clone_path.mkdir()
         (clone_path / "file.txt").write_text("content")
-        
+
         with pytest.raises(GitOperationError, match="not empty"):
-            git_ops_manager.clone_repository("https://github.com/test/repo.git", str(clone_path))
-    
+            git_ops_manager.clone_repository(
+                "https://github.com/test/repo.git", str(clone_path))
+
     def test_get_repository_status_clean(self, git_ops_manager, temp_repo) -> None:
         """Test getting status of clean repository."""
         repo_path = str(temp_repo.working_dir)
@@ -151,7 +153,7 @@ class TestRepositoryOperations:
             assert result["current_branch"] == "master"
             assert result["head_commit"] == "abc123"
             assert result["total_commits"] == 2
-    
+
     def test_get_repository_status_dirty(self, git_ops_manager, temp_repo) -> None:
         """Test getting status of dirty repository."""
         repo_path = str(temp_repo.working_dir)
@@ -182,7 +184,7 @@ class TestRepositoryOperations:
 
 class TestBranchOperations:
     """Test branch management operations."""
-    
+
     def test_list_branches_local_only(self, git_ops_manager, temp_repo) -> None:
         """Test listing local branches only."""
         repo_path = str(temp_repo.working_dir)
@@ -205,14 +207,15 @@ class TestBranchOperations:
             mock_repo.remotes = []
             mock_get_repo.return_value = mock_repo
 
-            result = git_ops_manager.list_branches(repo_path, include_remote=False)
+            result = git_ops_manager.list_branches(
+                repo_path, include_remote=False)
 
             assert len(result) == 1
             assert result[0]["name"] == "main"
             assert result[0]["commit_hash"] == "abc123"
             assert result[0]["is_current"] is True
             assert result[0]["is_remote"] is False
-    
+
     def test_create_branch_success(self, git_ops_manager, temp_repo) -> None:
         """Test successful branch creation."""
         repo_path = str(temp_repo.working_dir)
@@ -230,7 +233,8 @@ class TestBranchOperations:
             mock_repo.create_head = Mock(return_value=mock_new_branch)
             mock_get_repo.return_value = mock_repo
 
-            result = git_ops_manager.create_branch(repo_path, branch_name, checkout=True)
+            result = git_ops_manager.create_branch(
+                repo_path, branch_name, checkout=True)
 
             assert result["name"] == branch_name
             assert result["commit_hash"] == "def456"
@@ -239,12 +243,12 @@ class TestBranchOperations:
 
             mock_repo.create_head.assert_called_once_with(branch_name)
             mock_new_branch.checkout.assert_called_once()
-    
+
     def test_create_branch_already_exists(self, git_ops_manager, temp_repo) -> None:
         """Test creating branch that already exists."""
         repo_path = str(temp_repo.working_dir)
         branch_name = "existing-branch"
-        
+
         with patch('githound.web.git_operations.get_repository') as mock_get_repo:
             mock_repo = Mock()
 
@@ -253,15 +257,15 @@ class TestBranchOperations:
             mock_branch.name = branch_name
             mock_repo.branches = [mock_branch]
             mock_get_repo.return_value = mock_repo
-            
+
             with pytest.raises(GitOperationError, match="already exists"):
                 git_ops_manager.create_branch(repo_path, branch_name)
-    
+
     def test_delete_branch_success(self, git_ops_manager, temp_repo) -> None:
         """Test successful branch deletion."""
         repo_path = str(temp_repo.working_dir)
         branch_name = "feature-branch"
-        
+
         with patch('githound.web.git_operations.get_repository') as mock_get_repo:
             mock_repo = Mock()
 
@@ -282,21 +286,23 @@ class TestBranchOperations:
             mock_repo.active_branch = mock_active_branch
             mock_repo.delete_head = Mock()
             mock_get_repo.return_value = mock_repo
-            
-            result = git_ops_manager.delete_branch(repo_path, branch_name, force=False)
-            
+
+            result = git_ops_manager.delete_branch(
+                repo_path, branch_name, force=False)
+
             assert result["name"] == branch_name
             assert result["last_commit"] == "abc123"
             assert result["forced"] is False
             assert result["status"] == "deleted"
-            
-            mock_repo.delete_head.assert_called_once_with(mock_branch, force=False)
-    
+
+            mock_repo.delete_head.assert_called_once_with(
+                mock_branch, force=False)
+
     def test_delete_current_branch(self, git_ops_manager, temp_repo) -> None:
         """Test deleting current branch (should fail)."""
         repo_path = str(temp_repo.working_dir)
         branch_name = "current-branch"
-        
+
         with patch('githound.web.git_operations.get_repository') as mock_get_repo:
             mock_repo = Mock()
 
@@ -312,15 +318,15 @@ class TestBranchOperations:
             mock_repo.branches = mock_branches
             mock_repo.active_branch = mock_branch
             mock_get_repo.return_value = mock_repo
-            
+
             with pytest.raises(GitOperationError, match="Cannot delete current branch"):
                 git_ops_manager.delete_branch(repo_path, branch_name)
-    
+
     def test_checkout_branch_success(self, git_ops_manager, temp_repo) -> None:
         """Test successful branch checkout."""
         repo_path = str(temp_repo.working_dir)
         branch_name = "feature-branch"
-        
+
         with patch('githound.web.git_operations.get_repository') as mock_get_repo:
             mock_repo = Mock()
 
@@ -339,25 +345,25 @@ class TestBranchOperations:
             mock_repo.branches = mock_branches
             mock_repo.head.commit.hexsha = "abc123"
             mock_get_repo.return_value = mock_repo
-            
+
             result = git_ops_manager.checkout_branch(repo_path, branch_name)
-            
+
             assert result["branch"] == branch_name
             assert result["commit_hash"] == "abc123"
             assert result["status"] == "checked_out"
-            
+
             mock_branch.checkout.assert_called_once()
-    
+
     def test_checkout_branch_dirty_repo(self, git_ops_manager, temp_repo) -> None:
         """Test checkout with uncommitted changes."""
         repo_path = str(temp_repo.working_dir)
         branch_name = "feature-branch"
-        
+
         with patch('githound.web.git_operations.get_repository') as mock_get_repo:
             mock_repo = Mock()
             mock_repo.is_dirty = Mock(return_value=True)
             mock_get_repo.return_value = mock_repo
-            
+
             with pytest.raises(GitOperationError, match="uncommitted changes"):
                 git_ops_manager.checkout_branch(repo_path, branch_name)
 
@@ -469,14 +475,16 @@ class TestCommitOperations:
             mock_repo.index.commit = Mock(return_value=mock_amended_commit)
             mock_get_repo.return_value = mock_repo
 
-            result = git_ops_manager.amend_commit(repo_path, message=new_message)
+            result = git_ops_manager.amend_commit(
+                repo_path, message=new_message)
 
             assert result["old_commit_hash"] == "old123"
             assert result["new_commit_hash"] == "new456"
             assert result["message"] == new_message
             assert result["status"] == "amended"
 
-            mock_repo.index.commit.assert_called_once_with(new_message, amend=True)
+            mock_repo.index.commit.assert_called_once_with(
+                new_message, amend=True)
 
     def test_revert_commit_success(self, git_ops_manager, temp_repo) -> None:
         """Test successful commit revert."""
@@ -498,13 +506,15 @@ class TestCommitOperations:
             mock_repo.git.revert = Mock()
             mock_get_repo.return_value = mock_repo
 
-            result = git_ops_manager.revert_commit(repo_path, commit_hash, no_commit=False)
+            result = git_ops_manager.revert_commit(
+                repo_path, commit_hash, no_commit=False)
 
             assert result["reverted_commit"] == commit_hash
             assert result["revert_commit"] == "revert456"
             assert result["status"] == "reverted"
 
-            mock_repo.git.revert.assert_called_once_with(commit_hash, no_commit=False)
+            mock_repo.git.revert.assert_called_once_with(
+                commit_hash, no_commit=False)
 
     def test_cherry_pick_commit_success(self, git_ops_manager, temp_repo) -> None:
         """Test successful commit cherry-pick."""
@@ -528,13 +538,15 @@ class TestCommitOperations:
             mock_repo.git.cherry_pick = Mock()
             mock_get_repo.return_value = mock_repo
 
-            result = git_ops_manager.cherry_pick_commit(repo_path, commit_hash, no_commit=False)
+            result = git_ops_manager.cherry_pick_commit(
+                repo_path, commit_hash, no_commit=False)
 
             assert result["original_commit"] == commit_hash
             assert result["cherry_pick_commit"] == "cherry456"
             assert result["status"] == "cherry_picked"
 
-            mock_repo.git.cherry_pick.assert_called_once_with(commit_hash, no_commit=False)
+            mock_repo.git.cherry_pick.assert_called_once_with(
+                commit_hash, no_commit=False)
 
 
 class TestTagOperations:
@@ -596,7 +608,8 @@ class TestTagOperations:
             assert result["is_annotated"] is False
             assert result["status"] == "created"
 
-            mock_repo.create_tag.assert_called_once_with(tag_name, ref=mock_commit, force=False)
+            mock_repo.create_tag.assert_called_once_with(
+                tag_name, ref=mock_commit, force=False)
 
     def test_create_annotated_tag(self, git_ops_manager, temp_repo) -> None:
         """Test creating annotated tag."""
@@ -614,7 +627,8 @@ class TestTagOperations:
             mock_repo.create_tag = Mock()
             mock_get_repo.return_value = mock_repo
 
-            result = git_ops_manager.create_tag(repo_path, tag_name, message=tag_message)
+            result = git_ops_manager.create_tag(
+                repo_path, tag_name, message=tag_message)
 
             assert result["name"] == tag_name
             assert result["message"] == tag_message

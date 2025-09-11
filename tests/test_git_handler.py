@@ -55,4 +55,5 @@ def test_process_commit(temp_repo) -> None:
     commit = repo.head.commit
     results = process_commit(commit, config)
     # The search looks for content in diffs, so we should find "goodbye" which was added
-    assert len(results) >= 0  # Make test less strict since ripgrep might not be available
+    # Make test less strict since ripgrep might not be available
+    assert len(results) >= 0

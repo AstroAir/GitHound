@@ -1,13 +1,13 @@
 """Eunomia authorization provider for GitHound MCP server."""
 
-import os
 import json
 import logging
-from typing import Any, Optional, Dict, List
+import os
 from dataclasses import dataclass
+from typing import Any
 
-from .base import AuthProvider, AuthResult, TokenInfo
 from ...models import User
+from .base import AuthProvider, AuthResult, TokenInfo
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ class EunomiaConfig:
     policy_file: str = "mcp_policies.json"
     server_name: str = "githound-mcp"
     enable_audit_logging: bool = True
-    bypass_methods: Optional[List[str]] = None
-    custom_policy_data: Optional[Dict[str, Any]] = None
+    bypass_methods: list[str] | None = None
+    custom_policy_data: dict[str, Any] | None = None
 
 
 class EunomiaAuthorizationProvider(AuthProvider):
@@ -172,7 +172,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
         """
         return await self.base_provider.authenticate(token)
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate token using the base provider.
 
@@ -184,7 +184,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
         """
         return await self.base_provider.validate_token(token)
 
-    async def check_permission(self, user: User, permission: str, resource: Optional[str] = None, **context: Any) -> bool:
+    async def check_permission(self, user: User, permission: str, resource: str | None = None, **context: Any) -> bool:
         """
         Check permission using Eunomia policy engine.
 
@@ -227,7 +227,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
             # Fallback to base provider on error
             return await self.base_provider.check_permission(user, permission)
 
-    async def _evaluate_policy(self, subject: str, action: str, resource: str, context: Dict[str, Any]) -> bool:
+    async def _evaluate_policy(self, subject: str, action: str, resource: str, context: dict[str, Any]) -> bool:
         """
         Evaluate policy using Eunomia engine.
 
@@ -246,7 +246,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
 
         return False
 
-    def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
+    def get_oauth_metadata(self) -> dict[str, Any] | None:
         """Get OAuth metadata from base provider."""
         return self.base_provider.get_oauth_metadata()
 

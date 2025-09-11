@@ -1,16 +1,15 @@
 """OAuth proxy provider for non-DCR OAuth providers."""
 
-import os
 import json
-import uuid
-import time
 import logging
-from typing import Any, Optional, Dict, List, cast
-from urllib.parse import urlencode, parse_qs, urlparse
-from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
+import time
+import uuid
+from typing import Any, cast
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
-from .base import RemoteAuthProvider, TokenInfo, AuthResult
+from .base import RemoteAuthProvider, TokenInfo
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +29,8 @@ class OAuthProxy(RemoteAuthProvider):
         base_url: str,
         authorization_endpoint: str,
         token_endpoint: str,
-        userinfo_endpoint: Optional[str] = None,
-        scopes: Optional[List[str]] = None,
+        userinfo_endpoint: str | None = None,
+        scopes: list[str] | None = None,
         **kwargs: Any
     ) -> None:
         """
@@ -55,14 +54,14 @@ class OAuthProxy(RemoteAuthProvider):
         self.scopes = scopes or ["openid", "profile", "email"]
 
         # Store dynamic client registrations
-        self._registered_clients: Dict[str, Dict[str, Any]] = {}
+        self._registered_clients: dict[str, dict[str, Any]] = {}
 
     def _load_from_environment(self) -> None:
         """Load OAuth proxy configuration from environment variables."""
         # Override in subclasses for provider-specific environment variables
         pass
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate token by calling the provider's userinfo endpoint.
 
@@ -124,7 +123,7 @@ class OAuthProxy(RemoteAuthProvider):
             logger.error(f"Unexpected error validating token: {e}")
             return None
 
-    def get_oauth_metadata(self) -> Dict[str, Any]:
+    def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for MCP clients."""
         return {
             "authorization_endpoint": f"{self.base_url}/oauth/authorize",
@@ -142,7 +141,7 @@ class OAuthProxy(RemoteAuthProvider):
         """OAuth proxy presents DCR interface to MCP clients."""
         return True
 
-    async def register_client(self, client_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    async def register_client(self, client_metadata: dict[str, Any]) -> dict[str, Any]:
         """
         Handle dynamic client registration request.
 
@@ -172,7 +171,7 @@ class OAuthProxy(RemoteAuthProvider):
 
         return self._registered_clients[client_id]
 
-    async def handle_authorization(self, params: Dict[str, str]) -> str:
+    async def handle_authorization(self, params: dict[str, str]) -> str:
         """
         Handle authorization request by redirecting to upstream provider.
 
@@ -199,7 +198,7 @@ class OAuthProxy(RemoteAuthProvider):
         auth_url = f"{self.authorization_endpoint}?{urlencode(auth_params)}"
         return auth_url
 
-    async def handle_token_exchange(self, params: Dict[str, str]) -> Dict[str, Any]:
+    async def handle_token_exchange(self, params: dict[str, str]) -> dict[str, Any]:
         """
         Handle token exchange by calling upstream provider.
 
@@ -232,7 +231,7 @@ class OAuthProxy(RemoteAuthProvider):
 
             with urlopen(request) as response:
                 token_response = cast(
-                    Dict[str, Any], json.loads(response.read().decode("utf-8")))
+                    dict[str, Any], json.loads(response.read().decode("utf-8")))
 
             return token_response
 
@@ -240,7 +239,7 @@ class OAuthProxy(RemoteAuthProvider):
             logger.error(f"Error exchanging token with upstream provider: {e}")
             raise ValueError("Token exchange failed")
 
-    async def handle_callback(self, params: Dict[str, str]) -> Dict[str, Any]:
+    async def handle_callback(self, params: dict[str, str]) -> dict[str, Any]:
         """
         Handle OAuth callback from upstream provider.
 

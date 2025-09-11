@@ -14,7 +14,8 @@ import pytest
 
 try:
     import psutil
-except ImportError: Optional[psutil] = None  # 
+except ImportError:
+    Optional[psutil] = None  #
 
 from githound.git_blame import get_author_statistics, get_file_blame
 from githound.git_diff import compare_commits
@@ -72,7 +73,8 @@ def performance_monitor() -> None:
 def performance_thresholds() -> None:
     """Define performance thresholds for different operations."""
     return {
-        "repository_loading": {"max_duration_seconds": 2.5, "max_memory_increase_mb": 50},  # Increased threshold for system load tolerance
+        # Increased threshold for system load tolerance
+        "repository_loading": {"max_duration_seconds": 2.5, "max_memory_increase_mb": 50},
         "commit_history_small": {"max_duration_seconds": 1.0, "max_memory_increase_mb": 25},
         "commit_history_large": {"max_duration_seconds": 5.0, "max_memory_increase_mb": 100},
         "file_blame": {"max_duration_seconds": 3.0, "max_memory_increase_mb": 30},
@@ -177,7 +179,8 @@ class TestGitOperationPerformance:
 
         # Create a file with multiple lines for blame testing
         test_file = Path(temp_dir) / "blame_test.py"
-        content = "\n".join([f"# Line {i+1}: This is test content" for i in range(100)])
+        content = "\n".join(
+            [f"# Line {i+1}: This is test content" for i in range(100)])
         test_file.write_text(content)
 
         repo.index.add(["blame_test.py"])
@@ -238,7 +241,8 @@ class TestGitOperationPerformance:
         thresholds = performance_thresholds["commit_comparison"]
 
         # Create additional commits for comparison
-        third_commit = self._create_additional_commits(repo, temp_dir, count=1)[0]
+        third_commit = self._create_additional_commits(
+            repo, temp_dir, count=1)[0]
 
         performance_monitor.start_monitoring()
 
@@ -267,7 +271,8 @@ class TestGitOperationPerformance:
 
         for i in range(count):
             file_path = Path(temp_dir) / f"perf_test_{i}.txt"
-            file_path.write_text(f"Performance test file {i}\nContent line 2\nContent line 3")
+            file_path.write_text(
+                f"Performance test file {i}\nContent line 2\nContent line 3")
 
             repo.index.add([f"perf_test_{i}.txt"])
             commit = repo.index.commit(f"Performance test commit {i}")
@@ -289,7 +294,8 @@ class TestGitOperationPerformance:
             # Configure author for this commit
             with repo.config_writer() as config:  # [attr-defined]
                 config.set_value("user", "name", author_name)  # [attr-defined]
-                config.set_value("user", "email", author_email)  # [attr-defined]
+                # [attr-defined]
+                config.set_value("user", "email", author_email)
 
             file_path = Path(temp_dir) / f"author_test_{i}.txt"
             file_path.write_text(f"File by {author_name}\nCommit number {i}")
@@ -350,7 +356,8 @@ class TestConcurrentOperations:
             )
 
         commits = [initial_commit, second_commit]
-        tasks = [extract_commit_async(commit) for commit in commits for _ in range(3)]
+        tasks = [extract_commit_async(commit)
+                 for commit in commits for _ in range(3)]
 
         results = await asyncio.gather(*tasks)
 

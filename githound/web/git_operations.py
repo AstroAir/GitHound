@@ -4,22 +4,10 @@ Git operations manager for comprehensive Git functionality.
 Provides high-level Git operations with proper error handling and validation.
 """
 
-import os
-import shutil
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any, Optional
 
-from git import (
-    Actor, 
-    Commit, 
-    GitCommandError, 
-    InvalidGitRepositoryError,
-    Repo, 
-    Remote,
-    TagReference
-)
-from git.exc import GitError
+from git import Actor, InvalidGitRepositoryError, Repo
 
 from ..git_handler import get_repository
 
@@ -31,17 +19,17 @@ class GitOperationError(Exception):
 
 class GitOperationsManager:
     """Manages all Git operations with comprehensive error handling."""
-    
+
     def __init__(self) -> None:
         self.operation_timeout = 300  # 5 minutes default timeout
-    
+
     # Repository Operations
-    
-    def init_repository(self, path: str, bare: bool = False) -> Dict[str, Any]:
+
+    def init_repository(self, path: str, bare: bool = False) -> dict[str, Any]:
         """Initialize a new Git repository."""
         try:
             repo_path = Path(path)
-            
+
             # Check if directory exists and is empty (or create it)
             if repo_path.exists():
                 if any(repo_path.iterdir()):
@@ -58,10 +46,10 @@ class GitOperationsManager:
                         raise GitOperationError(f"Directory {path} is not empty and not a Git repository")
             else:
                 repo_path.mkdir(parents=True, exist_ok=True)
-            
+
             # Initialize repository
             repo = Repo.init(repo_path, bare=bare)
-            
+
             return {
                 "path": str(repo_path),
                 "bare": bare,
@@ -69,26 +57,26 @@ class GitOperationsManager:
                 "git_dir": str(repo.git_dir),
                 "working_dir": str(repo.working_dir) if not bare else None
             }
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to initialize repository: {e}")
-    
+
     def clone_repository(
-        self, 
-        url: str, 
-        path: str, 
-        branch: Optional[str] = None,
-        depth: Optional[int] = None,
+        self,
+        url: str,
+        path: str,
+        branch: str | None = None,
+        depth: int | None = None,
         recursive: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Clone a remote repository."""
         try:
             repo_path = Path(path)
-            
+
             # Check if target directory exists
             if repo_path.exists() and any(repo_path.iterdir()):
                 raise GitOperationError(f"Target directory {path} is not empty")
-            
+
             # Clone repository
             if branch and depth and recursive:
                 repo = Repo.clone_from(url, str(repo_path), branch=branch, depth=depth, recursive=recursive)
@@ -106,11 +94,11 @@ class GitOperationsManager:
                 repo = Repo.clone_from(url, str(repo_path), recursive=recursive)
             else:
                 repo = Repo.clone_from(url, str(repo_path))
-            
+
             # Get repository info
             head_commit = repo.head.commit
             remotes = [{"name": remote.name, "url": list(remote.urls)[0]} for remote in repo.remotes]
-            
+
             return {
                 "path": str(repo_path),
                 "url": url,
@@ -121,26 +109,26 @@ class GitOperationsManager:
                 "remotes": remotes,
                 "status": "cloned"
             }
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to clone repository: {e}")
-    
-    def get_repository_status(self, repo_path: str) -> Dict[str, Any]:
+
+    def get_repository_status(self, repo_path: str) -> dict[str, Any]:
         """Get comprehensive repository status."""
         try:
             repo = get_repository(Path(repo_path))
-            
+
             # Get file status
             untracked_files = list(repo.untracked_files)
             modified_files = [item.a_path for item in repo.index.diff(None)]
             staged_files = [item.a_path for item in repo.index.diff("HEAD")]
             deleted_files = [item.a_path for item in repo.index.diff(None) if item.deleted_file]
-            
+
             # Get current branch
             try:
                 current_branch = repo.active_branch.name
             except TypeError: Optional[current_branch] = None  # Detached HEAD
-            
+
             # Get ahead/behind info if tracking remote
             ahead_behind = None
             if current_branch and repo.active_branch.tracking_branch():
@@ -152,7 +140,7 @@ class GitOperationsManager:
                     ahead_behind = {"ahead": int(ahead), "behind": int(behind)}
                 except Exception:
                     pass
-            
+
             return {
                 "is_dirty": repo.is_dirty(),
                 "untracked_files": untracked_files,
@@ -165,18 +153,18 @@ class GitOperationsManager:
                 "total_commits": len(list(repo.iter_commits())),
                 "stash_count": len(repo.git.stash("list").splitlines()) if repo.git.stash("list") else 0
             }
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to get repository status: {e}")
-    
+
     # Branch Operations
-    
-    def list_branches(self, repo_path: str, include_remote: bool = True) -> List[Dict[str, Any]]:
+
+    def list_branches(self, repo_path: str, include_remote: bool = True) -> list[dict[str, Any]]:
         """List all branches in the repository."""
         try:
             repo = get_repository(Path(repo_path))
             branches: list[Any] = []
-            
+
             # Local branches
             for branch in repo.branches:
                 branch_info = {
@@ -190,14 +178,14 @@ class GitOperationsManager:
                     "tracking_branch": branch.tracking_branch().name if branch.tracking_branch() else None
                 }
                 branches.append(branch_info)
-            
+
             # Remote branches
             if include_remote:
                 for remote in repo.remotes:
                     for ref in remote.refs:
                         if ref.name.endswith("/HEAD"):
                             continue
-                        
+
                         branch_info = {
                             "name": ref.name,
                             "commit_hash": ref.commit.hexsha,
@@ -209,38 +197,38 @@ class GitOperationsManager:
                             "tracking_branch": None
                         }
                         branches.append(branch_info)
-            
+
             return branches
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to list branches: {e}")
-    
+
     def create_branch(
-        self, 
-        repo_path: str, 
-        branch_name: str, 
-        start_point: Optional[str] = None,
+        self,
+        repo_path: str,
+        branch_name: str,
+        start_point: str | None = None,
         checkout: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new branch."""
         try:
             repo = get_repository(Path(repo_path))
-            
+
             # Check if branch already exists
             if branch_name in [b.name for b in repo.branches]:
                 raise GitOperationError(f"Branch '{branch_name}' already exists")
-            
+
             # Create branch
             if start_point:
                 start_commit = repo.commit(start_point)
                 new_branch = repo.create_head(branch_name, start_commit)
             else:
                 new_branch = repo.create_head(branch_name)
-            
+
             # Checkout if requested
             if checkout:
                 new_branch.checkout()
-            
+
             return {
                 "name": branch_name,
                 "commit_hash": new_branch.commit.hexsha,
@@ -248,48 +236,48 @@ class GitOperationsManager:
                 "checked_out": checkout,
                 "status": "created"
             }
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to create branch: {e}")
-    
-    def delete_branch(self, repo_path: str, branch_name: str, force: bool = False) -> Dict[str, Any]:
+
+    def delete_branch(self, repo_path: str, branch_name: str, force: bool = False) -> dict[str, Any]:
         """Delete a branch."""
         try:
             repo = get_repository(Path(repo_path))
-            
+
             # Check if branch exists
             if branch_name not in [b.name for b in repo.branches]:
                 raise GitOperationError(f"Branch '{branch_name}' does not exist")
-            
+
             # Check if it's the current branch
             if repo.active_branch.name == branch_name:
                 raise GitOperationError(f"Cannot delete current branch '{branch_name}'")
-            
+
             # Delete branch
             branch = repo.branches[branch_name]
             last_commit = branch.commit.hexsha
-            
+
             repo.delete_head(branch, force=force)
-            
+
             return {
                 "name": branch_name,
                 "last_commit": last_commit,
                 "forced": force,
                 "status": "deleted"
             }
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to delete branch: {e}")
-    
-    def checkout_branch(self, repo_path: str, branch_name: str) -> Dict[str, Any]:
+
+    def checkout_branch(self, repo_path: str, branch_name: str) -> dict[str, Any]:
         """Checkout a branch."""
         try:
             repo = get_repository(Path(repo_path))
-            
+
             # Check for uncommitted changes
             if repo.is_dirty():
                 raise GitOperationError("Repository has uncommitted changes")
-            
+
             # Checkout branch
             if branch_name in [b.name for b in repo.branches]:
                 # Local branch
@@ -302,55 +290,55 @@ class GitOperationsManager:
                     for ref in remote.refs:
                         if ref.name.endswith(f"/{branch_name}"):
                             remote_branches.append(ref)
-                
+
                 if not remote_branches:
                     raise GitOperationError(f"Branch '{branch_name}' not found")
-                
+
                 # Create local branch tracking remote
                 remote_ref = remote_branches[0]
                 local_branch = repo.create_head(branch_name, remote_ref)
                 local_branch.set_tracking_branch(remote_ref)
                 local_branch.checkout()
-            
+
             return {
                 "branch": branch_name,
                 "commit_hash": repo.head.commit.hexsha,
                 "status": "checked_out"
             }
-            
+
         except Exception as e:
             raise GitOperationError(f"Failed to checkout branch: {e}")
-    
+
     def merge_branch(
-        self, 
-        repo_path: str, 
+        self,
+        repo_path: str,
         source_branch: str,
-        target_branch: Optional[str] = None,
+        target_branch: str | None = None,
         strategy: str = "merge",
-        message: Optional[str] = None
-    ) -> Dict[str, Any]:
+        message: str | None = None
+    ) -> dict[str, Any]:
         """Merge branches."""
         try:
             repo = get_repository(Path(repo_path))
-            
+
             # Get target branch (current if not specified)
             if target_branch:
                 if target_branch != repo.active_branch.name:
                     repo.branches[target_branch].checkout()
             else:
                 target_branch = repo.active_branch.name
-            
+
             # Get source branch
             if source_branch not in [b.name for b in repo.branches]:
                 raise GitOperationError(f"Source branch '{source_branch}' not found")
-            
+
             source_ref = repo.branches[source_branch]
-            
+
             # Perform merge based on strategy
             if strategy == "merge":
                 merge_base = repo.merge_base(repo.head.commit, source_ref.commit)[0]
                 repo.index.merge_tree(source_ref.commit, base=merge_base)
-                
+
                 # Check for conflicts
                 if repo.index.unmerged_blobs():
                     return {
@@ -358,14 +346,14 @@ class GitOperationsManager:
                         "conflicts": list(repo.index.unmerged_blobs().keys()),
                         "message": "Merge conflicts detected"
                     }
-                
+
                 # Create merge commit
                 merge_msg = message or f"Merge branch '{source_branch}' into {target_branch}"
                 commit = repo.index.commit(
                     merge_msg,
                     parent_commits=(repo.head.commit, source_ref.commit)
                 )
-                
+
                 return {
                     "status": "merged",
                     "commit_hash": commit.hexsha,
@@ -374,18 +362,18 @@ class GitOperationsManager:
                     "strategy": strategy,
                     "message": merge_msg
                 }
-            
+
             elif strategy == "rebase":
                 # Rebase implementation would go here
                 raise GitOperationError("Rebase strategy not yet implemented")
-            
+
             elif strategy == "squash":
                 # Squash merge implementation would go here
                 raise GitOperationError("Squash strategy not yet implemented")
-            
+
             else:
                 raise GitOperationError(f"Unknown merge strategy: {strategy}")
-                
+
         except Exception as e:
             raise GitOperationError(f"Failed to merge branches: {e}")
 
@@ -395,11 +383,11 @@ class GitOperationsManager:
         self,
         repo_path: str,
         message: str,
-        files: Optional[List[str]] = None,
+        files: list[str] | None = None,
         all_files: bool = False,
-        author_name: Optional[str] = None,
-        author_email: Optional[str] = None
-    ) -> Dict[str, Any]:
+        author_name: str | None = None,
+        author_email: str | None = None
+    ) -> dict[str, Any]:
         """Create a new commit."""
         try:
             repo = get_repository(Path(repo_path))
@@ -443,9 +431,9 @@ class GitOperationsManager:
     def amend_commit(
         self,
         repo_path: str,
-        message: Optional[str] = None,
-        files: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        message: str | None = None,
+        files: list[str] | None = None
+    ) -> dict[str, Any]:
         """Amend the last commit."""
         try:
             repo = get_repository(Path(repo_path))
@@ -487,7 +475,7 @@ class GitOperationsManager:
         repo_path: str,
         commit_hash: str,
         no_commit: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Revert a commit."""
         try:
             repo = get_repository(Path(repo_path))
@@ -526,7 +514,7 @@ class GitOperationsManager:
         repo_path: str,
         commit_hash: str,
         no_commit: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Cherry-pick a commit."""
         try:
             repo = get_repository(Path(repo_path))
@@ -560,7 +548,7 @@ class GitOperationsManager:
 
     # Tag Operations
 
-    def list_tags(self, repo_path: str) -> List[Dict[str, Any]]:
+    def list_tags(self, repo_path: str) -> list[dict[str, Any]]:
         """List all tags in the repository."""
         try:
             repo = get_repository(Path(repo_path))
@@ -586,10 +574,10 @@ class GitOperationsManager:
         self,
         repo_path: str,
         tag_name: str,
-        commit: Optional[str] = None,
-        message: Optional[str] = None,
+        commit: str | None = None,
+        message: str | None = None,
         force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new tag."""
         try:
             repo = get_repository(Path(repo_path))
@@ -628,7 +616,7 @@ class GitOperationsManager:
         except Exception as e:
             raise GitOperationError(f"Failed to create tag: {e}")
 
-    def delete_tag(self, repo_path: str, tag_name: str) -> Dict[str, Any]:
+    def delete_tag(self, repo_path: str, tag_name: str) -> dict[str, Any]:
         """Delete a tag."""
         try:
             repo = get_repository(Path(repo_path))
@@ -655,7 +643,7 @@ class GitOperationsManager:
 
     # Remote Operations
 
-    def list_remotes(self, repo_path: str) -> List[Dict[str, Any]]:
+    def list_remotes(self, repo_path: str) -> list[dict[str, Any]]:
         """List all remotes in the repository."""
         try:
             repo = get_repository(Path(repo_path))
@@ -676,7 +664,7 @@ class GitOperationsManager:
         except Exception as e:
             raise GitOperationError(f"Failed to list remotes: {e}")
 
-    def add_remote(self, repo_path: str, name: str, url: str) -> Dict[str, Any]:
+    def add_remote(self, repo_path: str, name: str, url: str) -> dict[str, Any]:
         """Add a new remote."""
         try:
             repo = get_repository(Path(repo_path))
@@ -697,7 +685,7 @@ class GitOperationsManager:
         except Exception as e:
             raise GitOperationError(f"Failed to add remote: {e}")
 
-    def remove_remote(self, repo_path: str, name: str) -> Dict[str, Any]:
+    def remove_remote(self, repo_path: str, name: str) -> dict[str, Any]:
         """Remove a remote."""
         try:
             repo = get_repository(Path(repo_path))
@@ -727,7 +715,7 @@ class GitOperationsManager:
         repo_path: str,
         remote_name: str = "origin",
         prune: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Fetch from a remote repository."""
         try:
             repo = get_repository(Path(repo_path))
@@ -765,10 +753,10 @@ class GitOperationsManager:
         self,
         repo_path: str,
         remote_name: str = "origin",
-        branch: Optional[str] = None,
+        branch: str | None = None,
         force: bool = False,
         set_upstream: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Push to a remote repository."""
         try:
             repo = get_repository(Path(repo_path))
@@ -818,8 +806,8 @@ class GitOperationsManager:
         self,
         repo_path: str,
         remote_name: str = "origin",
-        branch: Optional[str] = None
-    ) -> Dict[str, Any]:
+        branch: str | None = None
+    ) -> dict[str, Any]:
         """Pull from a remote repository."""
         try:
             repo = get_repository(Path(repo_path))
@@ -868,7 +856,7 @@ class GitOperationsManager:
 
     # Utility Methods
 
-    def get_merge_conflicts(self, repo_path: str) -> Dict[str, Any]:
+    def get_merge_conflicts(self, repo_path: str) -> dict[str, Any]:
         """Get information about merge conflicts."""
         try:
             repo = get_repository(Path(repo_path))
@@ -913,7 +901,7 @@ class GitOperationsManager:
         repo_path: str,
         file_path: str,
         resolution: str = "ours"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Resolve a merge conflict for a specific file."""
         try:
             repo = get_repository(Path(repo_path))

@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Any, Optional, Dict, List, TypedDict, Literal, Union
+from typing import Any, Literal, TypedDict, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -59,7 +59,7 @@ class CompletedData(TypedDict):
     search_id: str
     status: str
     total_results: int
-    error_message: Optional[str]
+    error_message: str | None
     timestamp: str
 
 

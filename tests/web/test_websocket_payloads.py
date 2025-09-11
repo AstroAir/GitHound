@@ -1,4 +1,3 @@
-import asyncio
 import json
 from typing import Any
 
@@ -7,9 +6,6 @@ import pytest
 from githound.web.websocket import (
     ConnectionManager,
     ProgressMessage,
-    ResultMessage,
-    CompletedMessage,
-    ErrorMessage,
 )
 
 
@@ -140,4 +136,3 @@ async def test_send_personal_message_json_serializes(monkeypatch: pytest.MonkeyP
     parsed = json.loads(sent["text"])  # may raise if invalid
     assert parsed["type"] == "progress"
     assert parsed["data"]["search_id"] == "sid"
-

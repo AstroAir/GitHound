@@ -1,4 +1,4 @@
-"""Tests for GitHound schemas."""
+ji"""Tests for GitHound schemas."""
 
 from datetime import datetime
 from pathlib import Path

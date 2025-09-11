@@ -6,7 +6,8 @@ from typing import Any
 
 from git import GitCommandError
 
-from ..git_blame import get_author_statistics, get_file_blame as get_file_blame_impl
+from ..git_blame import get_author_statistics
+from ..git_blame import get_file_blame as get_file_blame_impl
 from ..git_diff import compare_commits
 from ..git_handler import (
     extract_commit_metadata,
@@ -15,13 +16,13 @@ from ..git_handler import (
     get_repository_metadata,
 )
 from .models import (
-    RepositoryInput,
-    CommitAnalysisInput,
-    ExportInput,
-    CommitHistoryInput,
-    FileBlameInput,
-    CommitComparisonInput,
     AuthorStatsInput,
+    CommitAnalysisInput,
+    CommitComparisonInput,
+    CommitHistoryInput,
+    ExportInput,
+    FileBlameInput,
+    RepositoryInput,
 )
 
 
@@ -110,6 +111,7 @@ async def export_repository_data_direct(input_data: ExportInput) -> dict[str, An
 
         # Write the export data to file
         import json
+
         import yaml
 
         output_path = Path(input_data.output_path)
@@ -243,7 +245,7 @@ async def compare_commits_direct(input_data: CommitComparisonInput) -> dict[str,
         diff_result = compare_commits(
             repo, input_data.from_commit, input_data.to_commit)
 
-        await ctx.info(f"Commit comparison complete")
+        await ctx.info("Commit comparison complete")
 
         return {
             "status": "success",
@@ -268,7 +270,7 @@ async def get_author_stats_direct(input_data: AuthorStatsInput) -> dict[str, Any
         repo = get_repository(Path(input_data.repo_path))
         author_stats = get_author_statistics(repo, branch=input_data.branch)
 
-        await ctx.info(f"Author statistics complete")
+        await ctx.info("Author statistics complete")
 
         return {
             "status": "success",

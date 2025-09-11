@@ -28,7 +28,8 @@ class RepositoryBuilder:
         self.commits: list[Any] = []
         self.branches: list[str] = []
         self.tags: list[str] = []
-        self.authors: list[tuple[str, str]] = [("Test User", "test@example.com")]
+        self.authors: list[tuple[str, str]] = [
+            ("Test User", "test@example.com")]
         self.current_author_index = 0
 
     def initialize_repository(self) -> "RepositoryBuilder":
@@ -37,8 +38,10 @@ class RepositoryBuilder:
 
         # Configure initial user
         with self.repo.config_writer() as config:  # [attr-defined]
-            config.set_value("user", "name", self.authors[0][0])  # [attr-defined]
-            config.set_value("user", "email", self.authors[0][1])  # [attr-defined]
+            # [attr-defined]
+            config.set_value("user", "name", self.authors[0][0])
+            # [attr-defined]
+            config.set_value("user", "email", self.authors[0][1])
 
         return self
 
@@ -97,7 +100,8 @@ class RepositoryBuilder:
         self.commits.append(commit)
 
         # Rotate to next author for subsequent commits
-        self.current_author_index = (self.current_author_index + 1) % len(self.authors)
+        self.current_author_index = (
+            self.current_author_index + 1) % len(self.authors)
 
         return self
 
@@ -333,7 +337,8 @@ htmlcov/
             # Randomly choose what to do this day
             import random
 
-            action = random.choice(["feature", "bugfix", "docs", "tests", "refactor"])
+            action = random.choice(
+                ["feature", "bugfix", "docs", "tests", "refactor"])
 
             if action == "feature":
                 self._add_feature_commit(day)

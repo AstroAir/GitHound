@@ -4,14 +4,15 @@ from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
+
 # Pydantic v1/v2 compatibility shims for validators
 try:  # Prefer v2-style if available
     from pydantic import field_validator as field_validator
     from pydantic import model_validator as model_validator
 except Exception:
     # Fallback to v1 validators
-    from pydantic import validator as _validator  # type: ignore
     from pydantic import root_validator as _root_validator  # type: ignore
+    from pydantic import validator as _validator  # type: ignore
 
     def field_validator(*fields):
         def _decorator(fn):

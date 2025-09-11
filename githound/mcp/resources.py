@@ -6,7 +6,8 @@ from typing import Any
 
 from fastmcp import Context
 
-from ..git_blame import get_author_statistics, get_file_blame as get_file_blame_impl
+from ..git_blame import get_author_statistics
+from ..git_blame import get_file_blame as get_file_blame_impl
 from ..git_handler import (
     extract_commit_metadata,
     get_file_history,
@@ -300,7 +301,7 @@ async def get_file_blame_resource(repo_path: str, file_path: str, ctx: Context) 
             f"# File Blame: {file_path}",
             f"## Repository: {repo_path}",
             "",
-            f"### Summary",
+            "### Summary",
             f"- **Total Lines**: {blame_result.total_lines}",
             f"- **Contributors**: {len(blame_result.contributors)}",
             f"- **Oldest Line**: {blame_result.oldest_line_date.isoformat() if blame_result.oldest_line_date else 'N/A'}",

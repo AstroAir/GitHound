@@ -45,8 +45,10 @@ def integration_test_repo() -> None:
 
     # Configure test user
     with repo.config_writer() as config:  # [attr-defined]
-        config.set_value("user", "name", "Integration Test User")  # [attr-defined]
-        config.set_value("user", "email", "integration@test.com")  # [attr-defined]
+        # [attr-defined]
+        config.set_value("user", "name", "Integration Test User")
+        # [attr-defined]
+        config.set_value("user", "email", "integration@test.com")
 
     # Create comprehensive project structure
     base_path = Path(temp_dir)
@@ -148,7 +150,8 @@ class FeatureProcessor:
     repo.git.merge("feature/new-functionality")
 
     # Create additional commits with different authors
-    authors = [("Alice Developer", "alice@example.com"), ("Bob Contributor", "bob@example.com")]
+    authors = [("Alice Developer", "alice@example.com"),
+               ("Bob Contributor", "bob@example.com")]
 
     for i, (author_name, author_email) in enumerate(authors):
         with repo.config_writer() as config:  # [attr-defined]
@@ -230,7 +233,8 @@ class TestCompleteWorkflows:
         from githound.mcp_server import FileBlameInput, get_file_blame_direct
 
         # Test with main.py file
-        blame_input = FileBlameInput(repo_path=temp_dir, file_path="src/main.py")
+        blame_input = FileBlameInput(
+            repo_path=temp_dir, file_path="src/main.py")
 
         blame_result = await get_file_blame_direct(blame_input)
 
@@ -299,7 +303,8 @@ class TestCompleteWorkflows:
         # Test 2: Invalid file path for blame
         from githound.mcp_server import FileBlameInput, get_file_blame_direct
 
-        invalid_blame_input = FileBlameInput(repo_path=temp_dir, file_path="nonexistent/file.py")
+        invalid_blame_input = FileBlameInput(
+            repo_path=temp_dir, file_path="nonexistent/file.py")
 
         blame_result = await get_file_blame_direct(invalid_blame_input)
         assert blame_result["status"] == "error"
@@ -316,7 +321,8 @@ class TestCompleteWorkflows:
 
         # Verify error messages were logged
         error_messages = [msg for msg in context.messages if "ERROR" in msg]
-        assert len(error_messages) >= 0  # Some operations might not log errors to context
+        # Some operations might not log errors to context
+        assert len(error_messages) >= 0
 
     @pytest.mark.asyncio
     async def test_concurrent_operations_workflow(self, integration_test_repo) -> None:
@@ -351,7 +357,8 @@ class TestCompleteWorkflows:
         assert len(results) == 3
 
         for i, result in enumerate(results):
-            assert not isinstance(result, Exception), f"Task {i} failed with exception: {result}"
+            assert not isinstance(
+                result, Exception), f"Task {i} failed with exception: {result}"
             assert (
                 result["status"] == "success"
             ), f"Task {i} failed: {result.get('error', 'Unknown error')}"
@@ -514,7 +521,8 @@ class TestDataConsistency:
             else:
                 author_name = author_with_email
 
-            author_commits = [c for c in commits if c["author_name"] == author_name]
+            author_commits = [
+                c for c in commits if c["author_name"] == author_name]
             assert stats.get("total_commits", 0) == len(author_commits), (
                 f"Author {author_with_email} stats show {stats.get('total_commits', 0)} commits, "
                 f"but found {len(author_commits)} in history for name '{author_name}'"

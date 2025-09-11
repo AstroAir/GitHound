@@ -4,7 +4,7 @@ import fnmatch
 from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any
 
 import git
 from git import Commit, GitCommandError, Repo
@@ -366,7 +366,7 @@ def get_file_history(
         for commit in repo.iter_commits(**kwargs):
             # Get the file content at this commit
             try:
-                file_content: Optional[str] = None
+                file_content: str | None = None
                 file_size = 0
 
                 # Try to get the file from this commit

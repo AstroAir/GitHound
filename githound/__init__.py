@@ -67,14 +67,14 @@ def timeout_context(seconds: int) -> Generator[None, None, None]:
                 raise TimeoutError("Operation timed out")
 
             old_handler = signal.signal(
-                signal.SIGALRM, timeout_handler)  # 
-            signal.alarm(seconds)  # 
+                signal.SIGALRM, timeout_handler)  #
+            signal.alarm(seconds)  #
 
             try:
                 yield
             finally:
-                signal.alarm(0)  # 
-                signal.signal(signal.SIGALRM, old_handler)  # 
+                signal.alarm(0)  #
+                signal.signal(signal.SIGALRM, old_handler)  #
         except (AttributeError, ImportError):
             # Fallback: no timeout
             yield

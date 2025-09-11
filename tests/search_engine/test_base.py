@@ -33,9 +33,11 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int(
+            (datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {
+            "insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -173,11 +175,11 @@ class TestBaseSearcher:
     async def test_concrete_searcher_search(self, search_context) -> None:
         """Test concrete searcher search method."""
         searcher = MockSearcher()
-        
+
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert len(results) == 1
         assert results[0].commit_hash == "abc123"
         assert str(results[0].file_path) == "test.py"
@@ -218,13 +220,15 @@ class TestCacheableSearcherClass:
     async def test_cacheable_searcher_cache_key_uniqueness(self, mock_repo) -> None:
         """Test that different contexts generate different cache keys."""
         searcher = MockCacheableSearcher()
-        
+
         query1 = SearchQuery(content_pattern="test1")
         query2 = SearchQuery(content_pattern="test2")
-        
-        context1 = SearchContext(repo=mock_repo, query=query1, branch="main", cache={})
-        context2 = SearchContext(repo=mock_repo, query=query2, branch="main", cache={})
-        
+
+        context1 = SearchContext(
+            repo=mock_repo, query=query1, branch="main", cache={})
+        context2 = SearchContext(
+            repo=mock_repo, query=query2, branch="main", cache={})
+
         key1 = searcher._get_cache_key(context1)
         key2 = searcher._get_cache_key(context2)
         assert key1 != key2
@@ -233,21 +237,21 @@ class TestCacheableSearcherClass:
     async def test_cacheable_searcher_caching_behavior(self, search_context) -> None:
         """Test that results are cached and retrieved correctly."""
         searcher = MockCacheableSearcher()
-        
+
         # First search - should cache results
         results1: list[Any] = []
         async for result in searcher.search(search_context):
             results1.append(result)
-        
+
         # Verify cache was populated
         cache_key = searcher._get_cache_key(search_context)
         assert cache_key in search_context.cache
-        
+
         # Second search - should use cached results
         results2: list[Any] = []
         async for result in searcher.search(search_context):
             results2.append(result)
-        
+
         # Results should be identical
         assert len(results1) == len(results2)
         assert results1[0].commit_hash == results2[0].commit_hash
@@ -257,14 +261,14 @@ class TestCacheableSearcherClass:
     async def test_cacheable_searcher_cache_miss(self, search_context) -> None:
         """Test behavior when cache is empty."""
         searcher = MockCacheableSearcher()
-        
+
         # Ensure cache is empty
         search_context.cache.clear()
-        
+
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert len(results) == 1
         assert results[0].commit_hash == "def456"
 
@@ -272,7 +276,7 @@ class TestCacheableSearcherClass:
     async def test_cacheable_searcher_cache_hit(self, search_context) -> None:
         """Test behavior when cache contains results."""
         searcher = MockCacheableSearcher()
-        
+
         # Pre-populate cache
         cache_key = searcher._get_cache_key(search_context)
         cached_result = SearchResult(
@@ -284,11 +288,11 @@ class TestCacheableSearcherClass:
             relevance_score=0.8
         )
         search_context.cache[cache_key] = [cached_result]
-        
+
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         # Should return cached result
         assert len(results) == 1
         assert results[0].commit_hash == "cached123"
@@ -299,14 +303,14 @@ class TestCacheableSearcherClass:
     async def test_cacheable_searcher_different_branches(self, mock_repo, sample_search_query) -> None:
         """Test that different branches generate different cache keys."""
         searcher = MockCacheableSearcher()
-        
+
         context_main = SearchContext(
             repo=mock_repo, query=sample_search_query, branch="main", cache={}
         )
         context_dev = SearchContext(
             repo=mock_repo, query=sample_search_query, branch="dev", cache={}
         )
-        
+
         key_main = searcher._get_cache_key(context_main)
         key_dev = searcher._get_cache_key(context_dev)
         assert key_main != key_dev
@@ -326,7 +330,8 @@ class TestSearchContextClass:
         )
 
         assert context.repo is mock_repo
-        assert context.query = = sample_search_query  # Use == for Pydantic model comparison
+        # Use == for Pydantic model comparison
+        assert context.query = = sample_search_query
         assert context.branch = = "main"
         assert context.progress_callback is None
         assert context.cache = = {}
@@ -344,7 +349,7 @@ class TestSearchContextClass:
     def test_search_context_with_cache(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with pre-populated cache."""
         cache = {"test_key": "test_value"}
-        
+
         context = SearchContext(
             repo=mock_repo, query=sample_search_query, cache=cache
         )
@@ -357,7 +362,8 @@ class TestSearchContextClass:
         context = SearchContext(repo=mock_repo, query=sample_search_query)
 
         assert context.repo is mock_repo
-        assert context.query = = sample_search_query  # Use == for Pydantic model comparison
+        # Use == for Pydantic model comparison
+        assert context.query = = sample_search_query
         assert context.branch is None
         assert context.progress_callback is None
         assert context.cache is None

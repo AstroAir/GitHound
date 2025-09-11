@@ -15,11 +15,11 @@ from ...git_handler import (
     get_repository_metadata,
 )
 from ..models import (
-    RepositoryInput,
     CommitAnalysisInput,
     CommitFilterInput,
-    FileHistoryInput,
     CommitHistoryInput,
+    FileHistoryInput,
+    RepositoryInput,
 )
 
 

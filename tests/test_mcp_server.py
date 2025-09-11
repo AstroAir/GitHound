@@ -245,7 +245,8 @@ class TestMCPResources:
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
         async with mcp_client:
-            result = await mcp_client.read_resource(f"githound://repository/{temp_dir}/config")  # [attr-defined]
+            # [attr-defined]
+            result = await mcp_client.read_resource(f"githound://repository/{temp_dir}/config")
 
             assert result is not None
             assert len(result) > 0
@@ -793,7 +794,8 @@ class TestFastMCPInMemoryPatterns:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # All operations should complete
-        successful_results = [r for r in results if not isinstance(r, Exception)]
+        successful_results = [
+            r for r in results if not isinstance(r, Exception)]
         assert len(successful_results) > 0
 
     def test_search_orchestrator_initialization(self) -> None:

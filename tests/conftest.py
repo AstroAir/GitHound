@@ -32,7 +32,8 @@ except ImportError:
 try:
     from githound.mcp_server import mcp, get_mcp_server
     MCP_SERVER_AVAILABLE = True
-except ImportError: Optional[mcp] = None
+except ImportError:
+    Optional[mcp] = None
     get_mcp_server = None
     MCP_SERVER_AVAILABLE = False
 
@@ -68,7 +69,8 @@ def temp_repo(temp_dir: Path) -> Generator[Repo, None, None]:
 
     # Create initial commit
     test_file = temp_dir / "README.md"
-    test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.")
+    test_file.write_text(
+        "# Test Repository\n\nThis is a test repository for GitHound tests.")
     repo.index.add([str(test_file)])
     repo.index.commit("Initial commit")
 
@@ -103,7 +105,8 @@ def temp_repo_with_commits(temp_dir: Path) -> Generator[tuple, None, None]:
 
     # Create initial commit
     test_file = temp_dir / "README.md"
-    test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.")
+    test_file.write_text(
+        "# Test Repository\n\nThis is a test repository for GitHound tests.")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
 
@@ -339,8 +342,8 @@ def auth_headers() -> None:
 def mock_external_dependencies() -> None:
     """Mock external dependencies for deterministic testing."""
     with patch('githound.git_handler.get_repository') as mock_get_repo, \
-         patch('githound.search_engine.SearchOrchestrator') as mock_orchestrator, \
-         patch('pathlib.Path.exists') as mock_path_exists:
+            patch('githound.search_engine.SearchOrchestrator') as mock_orchestrator, \
+            patch('pathlib.Path.exists') as mock_path_exists:
 
         mock_path_exists.return_value = True
         mock_get_repo.return_value = Mock()
@@ -469,7 +472,8 @@ def redis_client() -> None:
     """Redis client for testing rate limiting."""
     try:
         import redis
-        client = redis.from_url("redis://localhost:6379/15", decode_responses=True)
+        client = redis.from_url(
+            "redis://localhost:6379/15", decode_responses=True)
         client.ping()  # Test connection
         client.flushdb()  # Clear test database
         yield client
@@ -503,8 +507,10 @@ def complex_git_repo(temp_dir) -> None:
     repo = Repo.init(repo_path)
 
     # Configure user
-    repo.config_writer().set_value("user", "name", "Test User").release()  # [attr-defined]
-    repo.config_writer().set_value("user", "email", "test@example.com").release()  # [attr-defined]
+    repo.config_writer().set_value(
+        "user", "name", "Test User").release()  # [attr-defined]
+    repo.config_writer().set_value(
+        "user", "email", "test@example.com").release()  # [attr-defined]
 
     # Create main branch with multiple commits
     from git import Actor
@@ -548,7 +554,8 @@ function devFunction{i}() {{
 const devConstant{i} = {i * 10};
 """)
         repo.index.add([f"dev_file_{i}.js"])
-        repo.index.commit(f"Add dev_file_{i}.js", author=Actor("Charlie Developer", "charlie@example.com"))
+        repo.index.commit(f"Add dev_file_{i}.js", author=Actor(
+            "Charlie Developer", "charlie@example.com"))
 
     # Create feature branch from development
     feature_branch = repo.create_head("feature/new-api", dev_branch)
@@ -570,7 +577,8 @@ def read_item(item_id: int) -> None:
     return {"item_id": item_id}
 """)
     repo.index.add(["api.py"])
-    repo.index.commit("Add FastAPI implementation", author=Actor("Alice Developer", "alice@example.com"))
+    repo.index.commit("Add FastAPI implementation", author=Actor(
+        "Alice Developer", "alice@example.com"))
 
     # Switch back to main and create tags
     repo.heads.master.checkout()
@@ -590,19 +598,23 @@ def large_git_repo(temp_dir) -> None:
     repo = Repo.init(repo_path)
 
     # Configure user
-    repo.config_writer().set_value("user", "name", "Test User").release()  # [attr-defined]
-    repo.config_writer().set_value("user", "email", "test@example.com").release()  # [attr-defined]
+    repo.config_writer().set_value(
+        "user", "name", "Test User").release()  # [attr-defined]
+    repo.config_writer().set_value(
+        "user", "email", "test@example.com").release()  # [attr-defined]
 
     # Create many files and commits
     from git import Actor
     for commit_num in range(50):  # 50 commits
         for file_num in range(5):  # 5 files per commit
-            file_path = repo_path / f"dir_{commit_num % 10}" / f"file_{file_num}.txt"
+            file_path = repo_path / \
+                f"dir_{commit_num % 10}" / f"file_{file_num}.txt"
             file_path.parent.mkdir(exist_ok=True)
 
             # Create file with substantial content
             content = f"Commit {commit_num}, File {file_num}\n"
-            content += "\n".join([f"Line {i}: Some content here" for i in range(20)])
+            content += "\n".join(
+                [f"Line {i}: Some content here" for i in range(20)])
             file_path.write_text(content)
 
             repo.index.add([str(file_path.relative_to(repo_path))])
@@ -616,7 +628,8 @@ def large_git_repo(temp_dir) -> None:
         ]
         author = authors[commit_num % len(authors)]
 
-        repo.index.commit(f"Commit {commit_num}: Add batch of files", author=author)
+        repo.index.commit(
+            f"Commit {commit_num}: Add batch of files", author=author)
 
     yield repo
 
@@ -700,13 +713,20 @@ def test_utils() -> None:
 def pytest_configure(config) -> None:
     """Configure pytest with custom markers."""
     config.addinivalue_line("markers", "unit: Unit tests")  # [attr-defined]
-    config.addinivalue_line("markers", "integration: Integration tests")  # [attr-defined]
-    config.addinivalue_line("markers", "e2e: End-to-end tests")  # [attr-defined]
-    config.addinivalue_line("markers", "performance: Performance tests")  # [attr-defined]
-    config.addinivalue_line("markers", "security: Security tests")  # [attr-defined]
-    config.addinivalue_line("markers", "slow: Slow running tests")  # [attr-defined]
-    config.addinivalue_line("markers", "redis: Tests requiring Redis")  # [attr-defined]
-    config.addinivalue_line("markers", "websocket: WebSocket tests")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "integration: Integration tests")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "e2e: End-to-end tests")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "performance: Performance tests")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "security: Security tests")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "slow: Slow running tests")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "redis: Tests requiring Redis")  # [attr-defined]
+    config.addinivalue_line(
+        "markers", "websocket: WebSocket tests")  # [attr-defined]
 
 
 def pytest_collection_modifyitems(config, items) -> None:

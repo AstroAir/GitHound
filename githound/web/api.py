@@ -1,12 +1,12 @@
 """FastAPI application for GitHound web interface."""
 
-from typing import TypedDict, Any
 import asyncio
 import time
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from git import GitCommandError
 
 from ..git_handler import get_repository
+from ..models import SearchMetrics, SearchResult
 from ..search_engine import (
     AuthorSearcher,
     CommitHashSearcher,
@@ -27,7 +28,6 @@ from ..search_engine import (
     SearchOrchestrator,
 )
 from ..utils import get_export_manager
-from ..models import SearchMetrics, SearchResult
 from .models import (
     ErrorResponse,
     ExportRequest,
@@ -37,8 +37,6 @@ from .models import (
     SearchStatusResponse,
 )
 from .websocket import connection_manager, websocket_endpoint
-
-from dataclasses import dataclass, field
 
 
 @dataclass

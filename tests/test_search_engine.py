@@ -21,23 +21,10 @@ can be run separately for focused testing.
 # when running pytest on this file or the tests directory
 try:
     from tests.search_engine.test_base import *
-    from tests.search_engine.test_orchestrator import *
     from tests.search_engine.test_commit_searcher import *
     from tests.search_engine.test_file_searcher import *
     from tests.search_engine.test_fuzzy_searcher import *
+    from tests.search_engine.test_orchestrator import *
 except ImportError:
     # Fallback for when running from different contexts
     pass
-
-
-
-
-
-
-
-
-
-
-
-
-

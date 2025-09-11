@@ -1,11 +1,12 @@
 """Configuration management for GitHound MCP server."""
 
 import json
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Any, Optional, Dict, List, cast
-from .models import ServerConfig, MCPJsonConfig, MCPServerConfig
+from typing import Any, cast
+
+from .models import MCPJsonConfig, ServerConfig
 
 
 def _get_auth_provider() -> Any | None:
@@ -79,7 +80,7 @@ def is_authentication_enabled() -> bool:
     return config.enable_auth or _get_auth_provider() is not None  # [attr-defined]
 
 
-def get_oauth_discovery_metadata() -> Optional[Dict[str, Any]]:
+def get_oauth_discovery_metadata() -> dict[str, Any] | None:
     """
     Get OAuth 2.0 discovery metadata for the server.
 
@@ -106,7 +107,7 @@ def get_oauth_discovery_metadata() -> Optional[Dict[str, Any]]:
         "supports_dynamic_client_registration": bool(getattr(auth_provider, "supports_dynamic_client_registration", False))
     })
 
-    return cast(Dict[str, Any], metadata)
+    return cast(dict[str, Any], metadata)
 
 
 def find_mcp_json_files() -> list[Path]:
@@ -145,7 +146,7 @@ def load_mcp_json_config(config_path: Path) -> MCPJsonConfig | None:
         Parsed MCP.json configuration or None if loading fails  # [attr-defined]
     """
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, encoding='utf-8') as f:
             data = json.load(f)
 
         # Support both pydantic v1 and v2

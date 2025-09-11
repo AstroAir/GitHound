@@ -6,7 +6,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, TextIO, Optional
+from typing import Any, Literal, TextIO
 
 import typer
 from git import GitCommandError, Repo
@@ -23,7 +23,6 @@ from githound.models import (
     SearchResult,
 )
 from githound.schemas import OutputFormat
-from githound.utils.export import ExportManager
 from githound.search_engine import (
     AuthorSearcher,
     CommitHashSearcher,
@@ -36,6 +35,7 @@ from githound.search_engine import (
     SearchOrchestrator,
 )
 from githound.utils import ProgressManager
+from githound.utils.export import ExportManager
 
 app = typer.Typer(
     name="githound",

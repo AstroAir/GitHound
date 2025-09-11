@@ -1,12 +1,8 @@
 """JWT token verification provider for GitHound MCP server."""
 
-import os
-import json
-import time
 import logging
-from typing import Any, Optional, Dict, List
-from urllib.request import urlopen
-from urllib.error import URLError
+import os
+from typing import Any
 
 try:
     import jwt
@@ -16,11 +12,11 @@ except ImportError:
     JWT_AVAILABLE = False
     # Create dummy classes for type checking
 
-    class PyJWKClient:  # 
+    class PyJWKClient:  #
         def __init__(self, uri: str) -> None: ...
         def get_signing_key_from_jwt(self, token: str) -> Any: ...
 
-from .base import TokenVerifier, TokenInfo
+from .base import TokenInfo, TokenVerifier
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +24,7 @@ logger = logging.getLogger(__name__)
 class JWTVerifier(TokenVerifier):
     """JWT token verification provider."""
 
-    def __init__(self, jwks_uri: Optional[str] = None, issuer: Optional[str] = None, audience: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(self, jwks_uri: str | None = None, issuer: str | None = None, audience: str | None = None, **kwargs: Any) -> None:
         """
         Initialize JWT verifier.
 
@@ -43,10 +39,10 @@ class JWTVerifier(TokenVerifier):
 
         super().__init__(issuer=issuer, audience=audience, **kwargs)
         self.jwks_uri = jwks_uri
-        self.jwks_client: Optional[PyJWKClient] = None
+        self.jwks_client: PyJWKClient | None = None
         if jwks_uri:
             self.jwks_client = PyJWKClient(jwks_uri)
-        self._cached_keys: Dict[str, Any] = {}
+        self._cached_keys: dict[str, Any] = {}
         self._cache_expiry = 0
 
     def _load_from_environment(self) -> None:
@@ -72,7 +68,7 @@ class JWTVerifier(TokenVerifier):
             raise ValueError(
                 f"Missing required JWT configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate JWT token and extract user information.
 
@@ -140,7 +136,7 @@ class JWTVerifier(TokenVerifier):
             logger.error(f"Error validating JWT token: {e}")
             return None
 
-    def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
+    def get_oauth_metadata(self) -> dict[str, Any] | None:
         """JWT verifier doesn't provide OAuth metadata."""
         return None
 
@@ -152,7 +148,7 @@ class JWTVerifier(TokenVerifier):
 class StaticJWTVerifier(TokenVerifier):
     """JWT verifier with static secret key (for development/testing)."""
 
-    def __init__(self, secret_key: Optional[str] = None, issuer: Optional[str] = None, audience: Optional[str] = None, algorithm: str = "HS256", **kwargs: Any) -> None:
+    def __init__(self, secret_key: str | None = None, issuer: str | None = None, audience: str | None = None, algorithm: str = "HS256", **kwargs: Any) -> None:
         """
         Initialize static JWT verifier.
 
@@ -194,7 +190,7 @@ class StaticJWTVerifier(TokenVerifier):
             raise ValueError(
                 f"Missing required static JWT configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate JWT token with static secret.
 

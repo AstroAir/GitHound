@@ -93,7 +93,8 @@ class TestRepositoryAnalysis:
         """Test repository analysis with invalid path."""
         response = client.post(
             "/api/v2/repository/analyze",
-            json={"repo_path": "/nonexistent/path", "include_detailed_stats": False},
+            json={"repo_path": "/nonexistent/path",
+                  "include_detailed_stats": False},
             headers=auth_headers,
         )
 
@@ -128,7 +129,8 @@ class TestRepositoryAnalysis:
 
         response = client.post(
             "/api/v2/commits/filter",
-            json={"repo_path": temp_dir, "author_pattern": "Test User", "max_count": 10},
+            json={"repo_path": temp_dir,
+                  "author_pattern": "Test User", "max_count": 10},
             headers=auth_headers,
         )
 
@@ -227,7 +229,8 @@ class TestDiffAnalysis:
 
         response = client.post(
             "/api/v2/diff/branches",
-            json={"repo_path": temp_dir, "from_branch": "master", "to_branch": "feature-branch"},
+            json={"repo_path": temp_dir, "from_branch": "master",
+                  "to_branch": "feature-branch"},
             headers=auth_headers,
         )
 
@@ -295,7 +298,8 @@ class TestExport:
 
         # Test getting export status
         export_id = data["data"]["export_id"]
-        status_response = client.get(f"/api/v2/export/{export_id}/status", headers=auth_headers)
+        status_response = client.get(
+            f"/api/v2/export/{export_id}/status", headers=auth_headers)
 
         assert status_response.status_code == 200
         status_data = status_response.json()
@@ -303,7 +307,8 @@ class TestExport:
 
     def test_export_status_not_found(self, client, auth_headers) -> None:
         """Test export status for nonexistent export."""
-        response = client.get("/api/v2/export/nonexistent-id/status", headers=auth_headers)
+        response = client.get(
+            "/api/v2/export/nonexistent-id/status", headers=auth_headers)
 
         assert response.status_code == 404
 

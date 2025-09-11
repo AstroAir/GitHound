@@ -9,7 +9,6 @@ from git import GitCommandError
 
 from ...git_handler import get_repository
 from ...models import SearchQuery
-from ...search_engine import SearchOrchestrator
 from ...search_engine import (
     AuthorSearcher,
     CommitHashSearcher,
@@ -19,9 +18,9 @@ from ...search_engine import (
     FileTypeSearcher,
     FuzzySearcher,
     MessageSearcher,
+    SearchOrchestrator,
 )
-from ..models import AdvancedSearchInput, FuzzySearchInput, ContentSearchInput
-
+from ..models import AdvancedSearchInput, ContentSearchInput, FuzzySearchInput
 
 # Initialize search orchestrator with all searchers
 _search_orchestrator: SearchOrchestrator | None = None

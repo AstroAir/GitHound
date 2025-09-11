@@ -2,14 +2,14 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from fastmcp import Context
 from git import GitCommandError
 
 from ...git_blame import get_author_statistics
 from ...git_handler import get_repository, get_repository_metadata
-from ..models import WebServerInput, RepositoryInput
+from ..models import RepositoryInput, WebServerInput
 
 
 async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str, Any]:
@@ -24,10 +24,12 @@ async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str
 
         # Import web server components
         try:
-            from ...web.api import app
-            import uvicorn
             import threading
             import time
+
+            import uvicorn
+
+            from ...web.api import app
         except ImportError as e:
             return {
                 "status": "error",

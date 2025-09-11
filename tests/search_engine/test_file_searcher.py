@@ -33,9 +33,11 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int(
+            (datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {
+            "insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -96,7 +98,7 @@ class TestFilePathSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_file_path_searcher_name(self) -> None:
@@ -155,7 +157,7 @@ class TestFileTypeSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_file_type_searcher_name(self) -> None:
@@ -213,7 +215,7 @@ class TestContentSearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_content_searcher_name(self) -> None:
@@ -235,11 +237,13 @@ class TestContentSearcher:
         searcher = ContentSearcher()
 
         # Test case sensitive search
-        query_sensitive = SearchQuery(content_pattern="Test", case_sensitive=True)
+        query_sensitive = SearchQuery(
+            content_pattern="Test", case_sensitive=True)
         assert await searcher.can_handle(query_sensitive) is True
 
         # Test case insensitive search
-        query_insensitive = SearchQuery(content_pattern="test", case_sensitive=False)
+        query_insensitive = SearchQuery(
+            content_pattern="test", case_sensitive=False)
         assert await searcher.can_handle(query_insensitive) is True
 
     @pytest.mark.asyncio
@@ -268,7 +272,7 @@ class TestContentSearcher:
         context_include = SearchContext(
             repo=mock_repo, query=query_include, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_include):
             results.append(result)
@@ -282,7 +286,7 @@ class TestContentSearcher:
         context_exclude = SearchContext(
             repo=mock_repo, query=query_exclude, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_exclude):
             results.append(result)
@@ -300,7 +304,7 @@ class TestContentSearcher:
         context_with_limit = SearchContext(
             repo=mock_repo, query=query_with_limit, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_with_limit):
             results.append(result)

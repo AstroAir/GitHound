@@ -45,7 +45,8 @@ def temp_repo() -> None:
 
     # Create third commit with new file
     new_file = Path(temp_dir) / "utils.py"
-    new_file.write_text("def utility_function() -> None:\n    return 'utility'\n")
+    new_file.write_text(
+        "def utility_function() -> None:\n    return 'utility'\n")
     repo.index.add([str(new_file)])
     third_commit = repo.index.commit("Add utility file")
 
@@ -62,7 +63,8 @@ class TestCompareCommits:
         """Test successful commit comparison."""
         repo, temp_dir, initial_commit, second_commit, third_commit = temp_repo
 
-        comparison = compare_commits(repo, initial_commit.hexsha, third_commit.hexsha)
+        comparison = compare_commits(
+            repo, initial_commit.hexsha, third_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
         assert comparison.from_commit = = initial_commit.hexsha
@@ -70,7 +72,8 @@ class TestCompareCommits:
         assert len(comparison.file_diffs) >= 2  # test.py and utils.py
 
         # Check summary statistics
-        assert comparison.total_additions >= 0  # May be 0 if diff parsing doesn't work perfectly
+        # May be 0 if diff parsing doesn't work perfectly
+        assert comparison.total_additions >= 0
         assert comparison.total_deletions >= 0
         assert comparison.files_changed >= 2
 
@@ -78,20 +81,23 @@ class TestCompareCommits:
         """Test commit comparison in reverse order."""
         repo, temp_dir, initial_commit, second_commit, third_commit = temp_repo
 
-        comparison = compare_commits(repo, third_commit.hexsha, initial_commit.hexsha)
+        comparison = compare_commits(
+            repo, third_commit.hexsha, initial_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
         assert comparison.from_commit = = third_commit.hexsha
         assert comparison.to_commit = = initial_commit.hexsha
 
         # Should show deletions where forward comparison showed additions
-        assert comparison.total_deletions >= 0  # May be 0 if diff parsing doesn't work perfectly
+        # May be 0 if diff parsing doesn't work perfectly
+        assert comparison.total_deletions >= 0
 
     def test_compare_commits_same_commit(self, temp_repo) -> None:
         """Test comparing commit with itself."""
         repo, temp_dir, initial_commit, second_commit, third_commit = temp_repo
 
-        comparison = compare_commits(repo, second_commit.hexsha, second_commit.hexsha)
+        comparison = compare_commits(
+            repo, second_commit.hexsha, second_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
         assert comparison.total_additions = = 0
@@ -119,7 +125,8 @@ class TestCompareBranches:
 
         # Add commit to feature branch
         feature_file = Path(temp_dir) / "feature.py"
-        feature_file.write_text("def feature() -> None:\n    return 'feature'\n")
+        feature_file.write_text(
+            "def feature() -> None:\n    return 'feature'\n")
         repo.index.add([str(feature_file)])
         feature_commit = repo.index.commit("Add feature")
 
@@ -132,7 +139,7 @@ class TestCompareBranches:
         assert isinstance(comparison, CommitDiffResult)
         # Should show the feature.py file as added
         feature_diff = next(
-            (fd for fd in comparison.file_diffs if fd.file_path = = "feature.py"), None
+            (fd for fd in comparison.file_diffs if fd.file_path == "feature.py"), None
         )
         assert feature_diff is not None
         assert feature_diff.change_type = = ChangeType.ADDED

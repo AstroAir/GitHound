@@ -1,13 +1,13 @@
 """Permit.io authorization provider for GitHound MCP server."""
 
-import os
 import json
 import logging
-from typing import Any, Optional, Dict, List
+import os
 from dataclasses import dataclass
+from typing import Any
 
-from .base import AuthProvider, AuthResult, TokenInfo
 from ...models import User
+from .base import AuthProvider, AuthResult, TokenInfo
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ class PermitConfig:
     """Configuration for Permit.io authorization provider."""  # [attr-defined]
 
     permit_pdp_url: str = "http://localhost:7766"
-    permit_api_key: Optional[str] = None
+    permit_api_key: str | None = None
     server_name: str = "githound-mcp"
     enable_audit_logging: bool = True
     identity_mode: str = "fixed"  # fixed, header, jwt, source
-    identity_jwt_secret: Optional[str] = None
-    bypass_methods: Optional[List[str]] = None
-    known_methods: Optional[List[str]] = None
+    identity_jwt_secret: str | None = None
+    bypass_methods: list[str] | None = None
+    known_methods: list[str] | None = None
 
 
 class PermitAuthorizationProvider(AuthProvider):
@@ -140,7 +140,7 @@ class PermitAuthorizationProvider(AuthProvider):
         """
         return await self.base_provider.authenticate(token)
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate token using the base provider.
 
@@ -152,7 +152,7 @@ class PermitAuthorizationProvider(AuthProvider):
         """
         return await self.base_provider.validate_token(token)
 
-    async def check_permission(self, user: User, permission: str, resource: Optional[str] = None, **context: Any) -> bool:
+    async def check_permission(self, user: User, permission: str, resource: str | None = None, **context: Any) -> bool:
         """
         Check permission using Permit.io policy engine.
 
@@ -193,7 +193,7 @@ class PermitAuthorizationProvider(AuthProvider):
             # Fallback to base provider on error
             return await self.base_provider.check_permission(user, permission)
 
-    async def _evaluate_permit_policy(self, subject: str, action: str, resource: str, context: Dict[str, Any]) -> bool:
+    async def _evaluate_permit_policy(self, subject: str, action: str, resource: str, context: dict[str, Any]) -> bool:
         """
         Evaluate policy using Permit.io engine.
 
@@ -239,7 +239,7 @@ class PermitAuthorizationProvider(AuthProvider):
             logger.error(f"Error evaluating Permit.io policy: {e}")
             return False
 
-    def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
+    def get_oauth_metadata(self) -> dict[str, Any] | None:
         """Get OAuth metadata from base provider."""
         return self.base_provider.get_oauth_metadata()
 
@@ -261,7 +261,7 @@ class PermitAuthorizationProvider(AuthProvider):
         self._initialize_permit()
         logger.info("Permit.io configuration updated and reinitialized")  # [attr-defined]
 
-    async def check_tool_permission(self, user: User, tool_name: str, tool_args: Dict[str, Any]) -> bool:
+    async def check_tool_permission(self, user: User, tool_name: str, tool_args: dict[str, Any]) -> bool:
         """
         Check permission for a specific tool with its arguments.
 

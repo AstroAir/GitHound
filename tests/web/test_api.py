@@ -31,7 +31,7 @@ class TestWebAPI:
     def test_health_endpoint(self) -> None:
         """Test health check endpoint."""
         response = self.client.get("/health")
-        
+
         assert response.status_code = = 200
         data = response.json()
         assert data["status"] == "healthy"
@@ -45,10 +45,10 @@ class TestWebAPI:
             with patch('githound.web.api.SearchOrchestrator') as mock_orchestrator_class:
                 mock_repo = Mock()
                 mock_get_repo.return_value = mock_repo
-                
+
                 mock_orchestrator = Mock()
                 mock_orchestrator_class.return_value = mock_orchestrator
-                
+
                 # Mock async search results
                 async def mock_search(repo, query) -> None:
                     yield SearchResult(
@@ -59,11 +59,12 @@ class TestWebAPI:
                         match_type=SearchType.CONTENT,
                         relevance_score=0.95
                     )
-                
+
                 mock_orchestrator.search = mock_search
-                
-                response = self.client.post("/api/search", json=self.sample_search_request)
-                
+
+                response = self.client.post(
+                    "/api/search", json=self.sample_search_request)
+
                 assert response.status_code = = 200
                 data = response.json()
                 assert "search_id" in data
@@ -73,11 +74,14 @@ class TestWebAPI:
         """Test search endpoint with invalid repository."""
         # The API starts search asynchronously, so it returns 200 even for invalid repos
         # The error is detected in the background task
-        response = self.client.post("/api/search", json=self.sample_search_request)
+        response = self.client.post(
+            "/api/search", json=self.sample_search_request)
 
-        assert response.status_code = = 200  # Fixed: API returns 200 for async search start
+        # Fixed: API returns 200 for async search start
+        assert response.status_code = = 200
         data = response.json()
-        assert data["status"] == "started"  # Search is started but will fail in background
+        # Search is started but will fail in background
+        assert data["status"] == "started"
 
     def test_search_status_endpoint(self) -> None:
         """Test search status endpoint."""
@@ -86,10 +90,10 @@ class TestWebAPI:
             with patch('githound.web.api.SearchOrchestrator') as mock_orchestrator_class:
                 mock_repo = Mock()
                 mock_get_repo.return_value = mock_repo
-                
+
                 mock_orchestrator = Mock()
                 mock_orchestrator_class.return_value = mock_orchestrator
-                
+
                 async def mock_search(repo, query) -> None:
                     yield SearchResult(
                         commit_hash="abc123",
@@ -99,15 +103,17 @@ class TestWebAPI:
                         match_type=SearchType.CONTENT,
                         relevance_score=0.95
                     )
-                
+
                 mock_orchestrator.search = mock_search
-                
-                search_response = self.client.post("/api/search", json=self.sample_search_request)
+
+                search_response = self.client.post(
+                    "/api/search", json=self.sample_search_request)
                 search_id = search_response.json()["search_id"]
-                
+
                 # Now check status
-                status_response = self.client.get(f"/api/search/{search_id}/status")
-                
+                status_response = self.client.get(
+                    f"/api/search/{search_id}/status")
+
                 assert status_response.status_code = = 200
                 data = status_response.json()
                 assert data["search_id"] == search_id
@@ -116,7 +122,7 @@ class TestWebAPI:
     def test_search_status_not_found(self) -> None:
         """Test search status endpoint with non-existent search ID."""
         response = self.client.get("/api/search/nonexistent/status")
-        
+
         assert response.status_code = = 404
         data = response.json()
         assert "error" in data
@@ -135,7 +141,7 @@ class TestWebAPI:
                 relevance_score=0.95
             )
         ]
-        
+
         # Create a mock response with the actual results
         mock_response = SearchResponse(
             results=[SearchResultResponse.from_search_result(mock_results[0])],
@@ -159,7 +165,7 @@ class TestWebAPI:
             )
         }):
             response = self.client.get(f"/api/search/{search_id}/results")
-            
+
             assert response.status_code = = 200
             data = response.json()
             assert len(data["results"]) == 1
@@ -169,7 +175,7 @@ class TestWebAPI:
     def test_search_results_not_found(self) -> None:
         """Test search results endpoint with non-existent search ID."""
         response = self.client.get("/api/search/nonexistent/results")
-        
+
         assert response.status_code = = 404
         data = response.json()
         assert "error" in data
@@ -177,23 +183,26 @@ class TestWebAPI:
     def test_cancel_search_endpoint(self) -> None:
         """Test cancel search endpoint."""
         search_id = "test_search_123"
-        
+
         with patch.dict('githound.web.api.active_searches', {
             search_id: ActiveSearchState(
                 id=search_id,
                 status="running"
             )
         }):
-            response = self.client.delete(f"/api/search/{search_id}")  # Fixed: POST -> DELETE
-            
+            response = self.client.delete(
+                f"/api/search/{search_id}")  # Fixed: POST -> DELETE
+
             assert response.status_code = = 200
             data = response.json()
-            assert data["message"] == "Search cancelled successfully"  # Fixed: match actual API response
+            # Fixed: match actual API response
+            assert data["message"] == "Search cancelled successfully"
 
     def test_cancel_search_not_found(self) -> None:
         """Test cancel search endpoint with non-existent search ID."""
-        response = self.client.delete("/api/search/nonexistent")  # Fixed: POST -> DELETE
-        
+        response = self.client.delete(
+            "/api/search/nonexistent")  # Fixed: POST -> DELETE
+
         assert response.status_code = = 404
         data = response.json()
         assert "message" in data  # Fixed: API returns "message" in error response
@@ -211,13 +220,13 @@ class TestWebAPI:
                 relevance_score=0.95
             )
         ]
-        
+
         export_request = {
             "search_id": search_id,
             "format": "json",
             "include_metadata": True
         }
-        
+
         # Create a mock response for export
         mock_response = SearchResponse(
             results=[],
@@ -259,7 +268,8 @@ class TestWebAPI:
 
                     mock_export_manager.export_to_json.side_effect = mock_export_to_json
 
-                    response = self.client.post(f"/api/search/{search_id}/export", json=export_request)
+                    response = self.client.post(
+                        f"/api/search/{search_id}/export", json=export_request)
 
                     assert response.status_code = = 200
                 finally:
@@ -275,7 +285,7 @@ class TestActiveSearchState:
         """Test creating ActiveSearchState."""
         search_id = "test_123"
         state = ActiveSearchState(id=search_id)
-        
+
         assert state.id = = search_id
         assert state.status = = "starting"
         assert state.progress = = 0.0
@@ -307,7 +317,7 @@ class TestActiveSearchState:
             matches_found=1,
             search_duration_ms=1500.0
         )
-        
+
         state = ActiveSearchState(
             id=search_id,
             status="completed",
@@ -318,7 +328,7 @@ class TestActiveSearchState:
             results=results,
             metrics=metrics
         )
-        
+
         assert state.id = = search_id
         assert state.status = = "completed"
         assert state.progress = = 1.0

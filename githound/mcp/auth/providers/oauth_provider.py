@@ -1,18 +1,16 @@
 """Full OAuth 2.0 authorization server implementation."""
 
+import hashlib
+import logging
 import os
-import json
+import secrets
 import time
 import uuid
-import hashlib
-import secrets
-import logging
-from typing import Any, Optional, Dict, List
-from urllib.parse import urlencode, parse_qs
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Any
 
-from .base import AuthProvider, TokenInfo, AuthResult
 from ...models import User
+from .base import AuthProvider, TokenInfo
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +22,13 @@ class OAuthClient:
     client_id: str
     client_secret: str
     client_name: str
-    redirect_uris: List[str]
-    grant_types: List[str]
-    response_types: List[str]
+    redirect_uris: list[str]
+    grant_types: list[str]
+    response_types: list[str]
     scope: str
     created_at: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
 
@@ -45,8 +43,8 @@ class AuthorizationCode:
     redirect_uri: str
     scope: str
     expires_at: int
-    code_challenge: Optional[str] = None
-    code_challenge_method: Optional[str] = None
+    code_challenge: str | None = None
+    code_challenge_method: str | None = None
 
 
 @dataclass
@@ -58,17 +56,17 @@ class AccessToken:
     user_id: str
     scope: str
     expires_at: int
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
 
 
 class UserStore:
     """Abstract user storage interface."""
 
-    async def get_user(self, user_id: str) -> Optional[User]:
+    async def get_user(self, user_id: str) -> User | None:
         """Get user by ID."""
         raise NotImplementedError
 
-    async def authenticate_user(self, username: str, password: str) -> Optional[User]:
+    async def authenticate_user(self, username: str, password: str) -> User | None:
         """Authenticate user with username/password."""
         raise NotImplementedError
 
@@ -80,11 +78,11 @@ class UserStore:
 class ClientStore:
     """Abstract client storage interface."""
 
-    async def get_client(self, client_id: str) -> Optional[OAuthClient]:
+    async def get_client(self, client_id: str) -> OAuthClient | None:
         """Get client by ID."""
         raise NotImplementedError
 
-    async def create_client(self, client_metadata: Dict[str, Any]) -> OAuthClient:
+    async def create_client(self, client_metadata: dict[str, Any]) -> OAuthClient:
         """Create a new client."""
         raise NotImplementedError
 
@@ -97,8 +95,8 @@ class MemoryUserStore(UserStore):
     """In-memory user store for development/testing."""
 
     def __init__(self) -> None:
-        self._users: Dict[str, User] = {}
-        self._credentials: Dict[str, str] = {}  # username -> password hash
+        self._users: dict[str, User] = {}
+        self._credentials: dict[str, str] = {}  # username -> password hash
 
     def _hash_password(self, password: str) -> str:
         """Hash password with salt."""
@@ -117,11 +115,11 @@ class MemoryUserStore(UserStore):
         except ValueError:
             return False
 
-    async def get_user(self, user_id: str) -> Optional[User]:
+    async def get_user(self, user_id: str) -> User | None:
         """Get user by ID."""
         return self._users.get(user_id)
 
-    async def authenticate_user(self, username: str, password: str) -> Optional[User]:
+    async def authenticate_user(self, username: str, password: str) -> User | None:
         """Authenticate user with username/password."""
         if username not in self._credentials:
             return None
@@ -155,13 +153,13 @@ class MemoryClientStore(ClientStore):
     """In-memory client store for development/testing."""
 
     def __init__(self) -> None:
-        self._clients: Dict[str, OAuthClient] = {}
+        self._clients: dict[str, OAuthClient] = {}
 
-    async def get_client(self, client_id: str) -> Optional[OAuthClient]:
+    async def get_client(self, client_id: str) -> OAuthClient | None:
         """Get client by ID."""
         return self._clients.get(client_id)
 
-    async def create_client(self, client_metadata: Dict[str, Any]) -> OAuthClient:
+    async def create_client(self, client_metadata: dict[str, Any]) -> OAuthClient:
         """Create a new client."""
         client_id = str(uuid.uuid4())
         client_secret = secrets.token_urlsafe(32)
@@ -201,8 +199,8 @@ class OAuthProvider(AuthProvider):
     def __init__(
         self,
         base_url: str,
-        user_store: Optional[UserStore] = None,
-        client_store: Optional[ClientStore] = None,
+        user_store: UserStore | None = None,
+        client_store: ClientStore | None = None,
         **kwargs: Any
     ) -> None:
         """
@@ -219,8 +217,8 @@ class OAuthProvider(AuthProvider):
         self.client_store = client_store or MemoryClientStore()
 
         # In-memory stores for codes and tokens (use Redis in production)
-        self._authorization_codes: Dict[str, AuthorizationCode] = {}
-        self._access_tokens: Dict[str, AccessToken] = {}
+        self._authorization_codes: dict[str, AuthorizationCode] = {}
+        self._access_tokens: dict[str, AccessToken] = {}
 
         # Token expiry times (in seconds)
         self.code_expiry = 600  # 10 minutes
@@ -237,7 +235,7 @@ class OAuthProvider(AuthProvider):
         self.code_expiry = int(os.getenv(f"{prefix}CODE_EXPIRY", "600"))
         self.token_expiry = int(os.getenv(f"{prefix}TOKEN_EXPIRY", "3600"))
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate access token and extract user information.
 
@@ -277,7 +275,7 @@ class OAuthProvider(AuthProvider):
             audience=token_data.client_id
         )
 
-    def get_oauth_metadata(self) -> Dict[str, Any]:
+    def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata."""
         return {
             "issuer": self.base_url,

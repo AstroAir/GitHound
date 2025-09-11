@@ -5,7 +5,7 @@ import json
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict, List, TextIO
+from typing import Any, TextIO
 
 # Optional dependencies with graceful fallbacks
 try:
@@ -13,7 +13,7 @@ try:
 
     HAS_PANDAS = True
 except ImportError:
-    pd = None  # 
+    pd = None  #
     HAS_PANDAS = False
 
 try:
@@ -21,7 +21,7 @@ try:
 
     HAS_YAML = True
 except ImportError:
-    yaml = None  # 
+    yaml = None  #
     HAS_YAML = False
 
 from rich.console import Console

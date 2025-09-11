@@ -9,9 +9,9 @@ import asyncio
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -19,13 +19,10 @@ from ..schemas import OutputFormat
 from ..utils.export import ExportManager
 from .auth import require_admin, require_user
 from .comprehensive_api import ApiResponse, get_request_id, validate_repo_path
-from .rate_limiting import export_rate_limit_dependency, get_limiter
+from .rate_limiting import get_limiter
 from .webhooks import (
-    EventTypes,
     WebhookEndpoint,
-    WebhookEvent,
     webhook_manager,
-    trigger_repository_event
 )
 
 # Create router
@@ -33,8 +30,8 @@ router = APIRouter(prefix="/api/v3/integration", tags=["integration"])
 limiter = get_limiter()
 
 # Global state for operations
-active_exports: Dict[str, Dict[str, Any]] = {}
-batch_operations: Dict[str, Dict[str, Any]] = {}
+active_exports: dict[str, dict[str, Any]] = {}
+batch_operations: dict[str, dict[str, Any]] = {}
 
 
 # Export Models
@@ -42,18 +39,18 @@ class ExportRequest(BaseModel):
     """Request for data export."""
     export_type: str = Field(..., description="Type of data to export")
     format: OutputFormat = Field(OutputFormat.JSON, description="Export format")
-    repo_path: Optional[str] = Field(None, description="Repository path")
-    search_id: Optional[str] = Field(None, description="Search ID to export")
+    repo_path: str | None = Field(None, description="Repository path")
+    search_id: str | None = Field(None, description="Search ID to export")
     include_metadata: bool = Field(True, description="Include metadata")
-    filters: Optional[Dict[str, Any]] = Field(None, description="Export filters")
-    filename: Optional[str] = Field(None, description="Custom filename")
+    filters: dict[str, Any] | None = Field(None, description="Export filters")
+    filename: str | None = Field(None, description="Custom filename")
 
 
 class BatchOperationRequest(BaseModel):
     """Request for batch operations."""
     operation_type: str = Field(..., description="Type of batch operation")
-    repositories: List[str] = Field(..., description="Repository paths")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Operation parameters")
+    repositories: list[str] = Field(..., description="Repository paths")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Operation parameters")
     parallel: bool = Field(True, description="Execute operations in parallel")
     max_concurrent: int = Field(5, ge=1, le=20, description="Maximum concurrent operations")
 
@@ -61,17 +58,17 @@ class BatchOperationRequest(BaseModel):
 class WebhookCreateRequest(BaseModel):
     """Request to create a webhook endpoint."""
     url: str = Field(..., description="Webhook URL")
-    events: List[str] = Field(..., description="Events to subscribe to")
-    secret: Optional[str] = Field(None, description="Webhook secret")
+    events: list[str] = Field(..., description="Events to subscribe to")
+    secret: str | None = Field(None, description="Webhook secret")
     active: bool = Field(True, description="Whether endpoint is active")
 
 
 class WebhookUpdateRequest(BaseModel):
     """Request to update a webhook endpoint."""
-    url: Optional[str] = Field(None, description="Webhook URL")
-    events: Optional[List[str]] = Field(None, description="Events to subscribe to")
-    secret: Optional[str] = Field(None, description="Webhook secret")
-    active: Optional[bool] = Field(None, description="Whether endpoint is active")
+    url: str | None = Field(None, description="Webhook URL")
+    events: list[str] | None = Field(None, description="Events to subscribe to")
+    secret: str | None = Field(None, description="Webhook secret")
+    active: bool | None = Field(None, description="Whether endpoint is active")
 
 
 # Export Endpoints
@@ -82,7 +79,7 @@ async def create_export(
     request: Request,
     export_request: ExportRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """
@@ -94,11 +91,11 @@ async def create_export(
     try:
         # Generate export ID
         export_id = str(uuid.uuid4())
-        
+
         # Validate repository if specified
         if export_request.repo_path:
             await validate_repo_path(export_request.repo_path)
-        
+
         # Initialize export state
         export_state = {
             "id": export_id,
@@ -111,7 +108,7 @@ async def create_export(
             "download_url": None
         }
         active_exports[export_id] = export_state
-        
+
         # Start export in background
         background_tasks.add_task(
             perform_export_operation,
@@ -119,7 +116,7 @@ async def create_export(
             export_request,
             current_user["user_id"]
         )
-        
+
         return ApiResponse(
             success=True,
             message="Export operation started",
@@ -131,7 +128,7 @@ async def create_export(
             },
             request_id=request_id
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -146,7 +143,7 @@ async def create_export(
 async def get_export_status(
     request: Request,
     export_id: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Get the status of an export operation."""
@@ -155,17 +152,17 @@ async def get_export_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Export not found"
         )
-    
+
     export_state = active_exports[export_id]
-    
+
     # Check access
-    if (export_state["user_id"] != current_user["user_id"] and 
+    if (export_state["user_id"] != current_user["user_id"] and
         "admin" not in current_user.get("roles", [])):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this export"
         )
-    
+
     return ApiResponse(
         success=True,
         message="Export status retrieved",
@@ -187,7 +184,7 @@ async def get_export_status(
 async def download_export(
     request: Request,
     export_id: str,
-    current_user: Dict[str, Any] = Depends(require_user)
+    current_user: dict[str, Any] = Depends(require_user)
 ) -> FileResponse:
     """Download the exported file."""
     if export_id not in active_exports:
@@ -195,32 +192,32 @@ async def download_export(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Export not found"
         )
-    
+
     export_state = active_exports[export_id]
-    
+
     # Check access
-    if (export_state["user_id"] != current_user["user_id"] and 
+    if (export_state["user_id"] != current_user["user_id"] and
         "admin" not in current_user.get("roles", [])):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied to this export"
         )
-    
+
     if export_state["status"] != "completed":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Export not completed"
         )
-    
+
     file_path = export_state.get("file_path")
     if not file_path or not Path(file_path).exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Export file not found"
         )
-    
+
     filename = export_state.get("filename", f"export_{export_id}")
-    
+
     return FileResponse(
         path=file_path,
         filename=filename,
@@ -235,14 +232,14 @@ async def download_export(
 async def create_webhook(
     request: Request,
     webhook_request: WebhookCreateRequest,
-    current_user: Dict[str, Any] = Depends(require_admin),
+    current_user: dict[str, Any] = Depends(require_admin),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Create a new webhook endpoint."""
     try:
         # Generate webhook ID
         webhook_id = str(uuid.uuid4())
-        
+
         # Create webhook endpoint
         endpoint = WebhookEndpoint(
             id=webhook_id,
@@ -251,10 +248,10 @@ async def create_webhook(
             secret=webhook_request.secret,
             active=webhook_request.active
         )
-        
+
         # Add to webhook manager
         webhook_manager.add_endpoint(endpoint)
-        
+
         return ApiResponse(
             success=True,
             message="Webhook endpoint created successfully",
@@ -266,7 +263,7 @@ async def create_webhook(
             },
             request_id=request_id
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -278,12 +275,12 @@ async def create_webhook(
 @limiter.limit("30/minute")
 async def list_webhooks(
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_admin),
+    current_user: dict[str, Any] = Depends(require_admin),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """List all webhook endpoints."""
     endpoints = webhook_manager.list_endpoints()
-    
+
     webhook_data: list[Any] = []
     for endpoint in endpoints:
         stats = webhook_manager.get_endpoint_stats(endpoint.id)
@@ -297,7 +294,7 @@ async def list_webhooks(
             "failure_count": endpoint.failure_count,
             "stats": stats
         })
-    
+
     return ApiResponse(
         success=True,
         message=f"Retrieved {len(webhook_data)} webhook endpoints",
@@ -312,7 +309,7 @@ async def update_webhook(
     request: Request,
     webhook_id: str,
     webhook_update: WebhookUpdateRequest,
-    current_user: Dict[str, Any] = Depends(require_admin),
+    current_user: dict[str, Any] = Depends(require_admin),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Update a webhook endpoint."""
@@ -322,7 +319,7 @@ async def update_webhook(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Webhook not found"
         )
-    
+
     # Update endpoint
     updates: dict[str, Any] = {}
     if webhook_update.url is not None:
@@ -333,15 +330,15 @@ async def update_webhook(
         updates["secret"] = webhook_update.secret
     if webhook_update.active is not None:
         updates["active"] = webhook_update.active
-    
+
     success = webhook_manager.update_endpoint(webhook_id, updates)
-    
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update webhook"
         )
-    
+
     return ApiResponse(
         success=True,
         message="Webhook updated successfully",
@@ -355,18 +352,18 @@ async def update_webhook(
 async def delete_webhook(
     request: Request,
     webhook_id: str,
-    current_user: Dict[str, Any] = Depends(require_admin),
+    current_user: dict[str, Any] = Depends(require_admin),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Delete a webhook endpoint."""
     success = webhook_manager.remove_endpoint(webhook_id)
-    
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Webhook not found"
         )
-    
+
     return ApiResponse(
         success=True,
         message="Webhook deleted successfully",
@@ -383,7 +380,7 @@ async def create_batch_operation(
     request: Request,
     batch_request: BatchOperationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """
@@ -453,7 +450,7 @@ async def create_batch_operation(
 async def get_batch_status(
     request: Request,
     batch_id: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Get the status of a batch operation."""
@@ -497,7 +494,7 @@ async def get_batch_status(
 async def get_batch_results(
     request: Request,
     batch_id: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Get detailed results from a batch operation."""
@@ -649,7 +646,7 @@ async def perform_batch_operation(
 
 # Helper Functions
 
-def _get_batch_results_summary(batch_state: Dict[str, Any]) -> Dict[str, Any]:
+def _get_batch_results_summary(batch_state: dict[str, Any]) -> dict[str, Any]:
     """Get summary of batch operation results."""
     results = batch_state.get("results", {})
 
@@ -665,11 +662,11 @@ def _get_batch_results_summary(batch_state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def _execute_single_operation(
-    semaphore: Optional[asyncio.Semaphore],
+    semaphore: asyncio.Semaphore | None,
     batch_id: str,
     operation_type: str,
     repo_path: str,
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 ) -> None:
     """Execute a single operation in a batch."""
     if semaphore:
@@ -683,7 +680,7 @@ async def _perform_single_operation(
     batch_id: str,
     operation_type: str,
     repo_path: str,
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 ) -> None:
     """Perform a single operation on a repository."""
     try:

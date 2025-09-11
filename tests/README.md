@@ -27,40 +27,47 @@ tests/
 ## Test Categories
 
 ### Unit Tests (`tests/unit/`)
+
 - **Purpose**: Test individual components in isolation
 - **Speed**: Fast (< 1 second per test)
 - **Dependencies**: Minimal, mostly mocked
 - **Coverage**: Core business logic, utilities, data models
 
 **Key Test Files:**
+
 - `test_git_operations.py`: Tests for GitOperationsManager class
 - `test_auth.py`: Authentication and authorization logic
 - `test_webhooks.py`: Webhook event system
 
 ### Integration Tests (`tests/integration/`)
+
 - **Purpose**: Test API endpoints with real HTTP requests
 - **Speed**: Medium (1-5 seconds per test)
 - **Dependencies**: FastAPI test client, mocked external services
 - **Coverage**: API endpoints, request/response handling, validation
 
 **Key Test Files:**
+
 - `test_repository_api.py`: Repository management endpoints
 - `test_analysis_api.py`: Code analysis and blame endpoints
 - `test_search_api.py`: Search functionality endpoints
 
 ### End-to-End Tests (`tests/e2e/`)
+
 - **Purpose**: Test complete user workflows
 - **Speed**: Slow (5-30 seconds per test)
 - **Dependencies**: Full application stack
 - **Coverage**: User journeys, cross-component interactions
 
 ### Performance Tests (`tests/performance/`)
+
 - **Purpose**: Test system performance under load
 - **Speed**: Very slow (30+ seconds per test)
 - **Dependencies**: Load testing tools, potentially external services
 - **Coverage**: Rate limiting, concurrent operations, large datasets
 
 ### Security Tests (`tests/security/`)
+
 - **Purpose**: Test security measures and vulnerability protection
 - **Speed**: Medium (1-10 seconds per test)
 - **Dependencies**: Security testing tools
@@ -84,6 +91,7 @@ Tests are categorized using pytest markers:
 ### Prerequisites
 
 Install test dependencies:
+
 ```bash
 pip install pytest pytest-asyncio pytest-cov pytest-timeout pytest-xdist httpx fastapi[all] redis aiohttp
 ```
@@ -167,7 +175,7 @@ async def test_with_mocks(mcp_server: FastMCP, mock_external_dependencies):
     # Configure mocks
     mock_repo = MagicMock()
     mock_external_dependencies['get_repository'].return_value = mock_repo
-    
+
     async with Client(mcp_server) as client:
         result = await client.call_tool("validate_repository", {"repo_path": "/mock"})
         assert result is not None
@@ -186,12 +194,14 @@ async def test_error_scenarios(mcp_client: Client):
 ## Test Fixtures
 
 ### Core Fixtures
+
 - `mcp_server`: Fresh server instance for in-memory testing
 - `mcp_client`: Connected client using in-memory pattern
 - `temp_repo`: Temporary Git repository with test data
 - `mock_external_dependencies`: Mocked external services
 
 ### Data Fixtures
+
 - `mock_search_data`: Sample search results
 - `auth_headers`: Authentication headers for testing
 - `performance_test_data`: Large datasets for performance testing
@@ -252,14 +262,18 @@ Tests are organized using pytest markers:
 ## Configuration
 
 ### pytest.ini
+
 Main pytest configuration with:
+
 - Test discovery settings
 - Marker definitions
 - Coverage configuration
 - Async testing setup
 
 ### conftest.py
+
 Comprehensive fixtures including:
+
 - Server and client instances
 - Test repositories
 - Mock data and dependencies
@@ -268,28 +282,36 @@ Comprehensive fixtures including:
 ## Best Practices
 
 ### 1. Default to In-Memory Testing
+
 Use the FastMCP in-memory pattern for most tests:
+
 ```python
 async with Client(mcp_server) as client:
     # Test operations
 ```
 
 ### 2. Mock External Dependencies
+
 Keep tests deterministic by mocking external services:
+
 ```python
 with patch('githound.git_handler.get_repository') as mock_repo:
     # Test with mocked dependencies
 ```
 
 ### 3. Test Error Cases
+
 Always test error scenarios and edge cases:
+
 ```python
 with pytest.raises(ToolError):
     await client.call_tool("tool", {"invalid": "args"})
 ```
 
 ### 4. Use Appropriate Markers
+
 Mark tests appropriately for selective execution:
+
 ```python
 @pytest.mark.performance
 @pytest.mark.slow
@@ -324,6 +346,7 @@ python scripts/run_mcp_tests.py performance
 ### Debug Mode
 
 Run tests with debug logging:
+
 ```bash
 pytest --log-cli-level=DEBUG tests/test_mcp_fastmcp_patterns.py
 ```

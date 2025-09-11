@@ -31,9 +31,11 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int(
+            (datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {
+            "insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -86,7 +88,8 @@ class TestFuzzySearcher:
         searcher = FuzzySearcher()
 
         # Create query with fuzzy search disabled
-        query_no_fuzzy = SearchQuery(content_pattern="test", fuzzy_search=False)
+        query_no_fuzzy = SearchQuery(
+            content_pattern="test", fuzzy_search=False)
         assert await searcher.can_handle(query_no_fuzzy) is False
 
     @pytest.mark.asyncio
@@ -95,7 +98,8 @@ class TestFuzzySearcher:
         searcher = FuzzySearcher()
 
         # Create query with fuzzy search enabled but no content pattern
-        query_no_content = SearchQuery(author_pattern="test", fuzzy_search=True)
+        query_no_content = SearchQuery(
+            author_pattern="test", fuzzy_search=True)
         # FuzzySearcher might still handle queries without content pattern
         result = await searcher.can_handle(query_no_content)
         assert isinstance(result, bool)
@@ -108,7 +112,7 @@ class TestFuzzySearcher:
         results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
-        
+
         assert isinstance(results, list)
 
     def test_fuzzy_searcher_name(self) -> None:
@@ -138,9 +142,9 @@ class TestFuzzySearcher:
         context_high = SearchContext(
             repo=mock_repo, query=query_high_threshold, branch="main", cache={}
         )
-        
+
         assert await searcher.can_handle(query_high_threshold) is True
-        
+
         results_high: list[Any] = []
         async for result in searcher.search(context_high):
             results_high.append(result)
@@ -155,9 +159,9 @@ class TestFuzzySearcher:
         context_low = SearchContext(
             repo=mock_repo, query=query_low_threshold, branch="main", cache={}
         )
-        
+
         assert await searcher.can_handle(query_low_threshold) is True
-        
+
         results_low: list[Any] = []
         async for result in searcher.search(context_low):
             results_low.append(result)
@@ -177,7 +181,7 @@ class TestFuzzySearcher:
         context_multi = SearchContext(
             repo=mock_repo, query=query_multi_word, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_multi):
             results.append(result)
@@ -192,7 +196,7 @@ class TestFuzzySearcher:
         context_special = SearchContext(
             repo=mock_repo, query=query_special, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_special):
             results.append(result)
@@ -213,7 +217,7 @@ class TestFuzzySearcher:
         context_sensitive = SearchContext(
             repo=mock_repo, query=query_sensitive, branch="main", cache={}
         )
-        
+
         results_sensitive: list[Any] = []
         async for result in searcher.search(context_sensitive):
             results_sensitive.append(result)
@@ -229,7 +233,7 @@ class TestFuzzySearcher:
         context_insensitive = SearchContext(
             repo=mock_repo, query=query_insensitive, branch="main", cache={}
         )
-        
+
         results_insensitive: list[Any] = []
         async for result in searcher.search(context_insensitive):
             results_insensitive.append(result)
@@ -250,7 +254,7 @@ class TestFuzzySearcher:
         context_include = SearchContext(
             repo=mock_repo, query=query_include, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_include):
             results.append(result)
@@ -266,7 +270,7 @@ class TestFuzzySearcher:
         context_exclude = SearchContext(
             repo=mock_repo, query=query_exclude, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_exclude):
             results.append(result)
@@ -295,7 +299,7 @@ class TestFuzzySearcher:
         context_short = SearchContext(
             repo=mock_repo, query=query_short, branch="main", cache={}
         )
-        
+
         results: list[Any] = []
         async for result in searcher.search(context_short):
             results.append(result)

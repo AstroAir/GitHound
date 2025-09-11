@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, cast, Optional
+from typing import Any, cast
 
 from git import Diff, GitCommandError, Repo
 from pydantic import BaseModel, Field

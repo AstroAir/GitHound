@@ -9,13 +9,23 @@ import asyncio
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from pydantic import BaseModel, Field
 
 from ..git_handler import get_repository
-from ..models import SearchQuery, SearchResult, SearchMetrics
+from ..models import SearchQuery, SearchResult
 from ..search_engine import (
     AuthorSearcher,
     CommitHashSearcher,
@@ -29,7 +39,7 @@ from ..search_engine import (
 )
 from .auth import require_user
 from .comprehensive_api import ApiResponse, get_request_id, validate_repo_path
-from .rate_limiting import get_limiter, search_rate_limit_dependency
+from .rate_limiting import get_limiter
 from .websocket import connection_manager
 
 # Create router
@@ -37,62 +47,62 @@ router = APIRouter(prefix="/api/v3/search", tags=["search"])
 limiter = get_limiter()
 
 # Global state for search operations
-active_searches: Dict[str, Dict[str, Any]] = {}
+active_searches: dict[str, dict[str, Any]] = {}
 
 
 # Enhanced Search Models
 class AdvancedSearchRequest(BaseModel):
     """Advanced search request with comprehensive options."""
-    
+
     # Repository settings
     repo_path: str = Field(..., description="Path to the Git repository")
-    branch: Optional[str] = Field(None, description="Branch to search")
-    
+    branch: str | None = Field(None, description="Branch to search")
+
     # Multi-modal search criteria
-    content_pattern: Optional[str] = Field(None, description="Content pattern to search for")
-    commit_hash: Optional[str] = Field(None, description="Specific commit hash")
-    author_pattern: Optional[str] = Field(None, description="Author name or email pattern")
-    message_pattern: Optional[str] = Field(None, description="Commit message pattern")
-    
+    content_pattern: str | None = Field(None, description="Content pattern to search for")
+    commit_hash: str | None = Field(None, description="Specific commit hash")
+    author_pattern: str | None = Field(None, description="Author name or email pattern")
+    message_pattern: str | None = Field(None, description="Commit message pattern")
+
     # Date and time filtering
-    date_from: Optional[datetime] = Field(None, description="Search from this date")
-    date_to: Optional[datetime] = Field(None, description="Search until this date")
-    
+    date_from: datetime | None = Field(None, description="Search from this date")
+    date_to: datetime | None = Field(None, description="Search until this date")
+
     # File and path filtering
-    file_path_pattern: Optional[str] = Field(None, description="File path pattern")
-    file_extensions: Optional[List[str]] = Field(None, description="File extensions to include")
-    include_globs: Optional[List[str]] = Field(None, description="Glob patterns to include")
-    exclude_globs: Optional[List[str]] = Field(None, description="Glob patterns to exclude")
-    
+    file_path_pattern: str | None = Field(None, description="File path pattern")
+    file_extensions: list[str] | None = Field(None, description="File extensions to include")
+    include_globs: list[str] | None = Field(None, description="Glob patterns to include")
+    exclude_globs: list[str] | None = Field(None, description="Glob patterns to exclude")
+
     # Search behavior and options
     case_sensitive: bool = Field(False, description="Case-sensitive search")
     regex_mode: bool = Field(False, description="Use regular expressions")
     whole_words: bool = Field(False, description="Match whole words only")
-    
+
     # Fuzzy search options
     fuzzy_search: bool = Field(False, description="Enable fuzzy matching")
     fuzzy_threshold: float = Field(0.8, ge=0.0, le=1.0, description="Fuzzy matching threshold")
     fuzzy_max_distance: int = Field(2, ge=1, le=10, description="Maximum edit distance for fuzzy search")
-    
+
     # Performance and limits
-    max_results: Optional[int] = Field(1000, ge=1, le=10000, description="Maximum number of results")
-    max_file_size: Optional[int] = Field(None, description="Maximum file size in bytes")
+    max_results: int | None = Field(1000, ge=1, le=10000, description="Maximum number of results")
+    max_file_size: int | None = Field(None, description="Maximum file size in bytes")
     timeout_seconds: int = Field(300, ge=10, le=3600, description="Search timeout in seconds")
-    
+
     # Result formatting
     include_context: bool = Field(True, description="Include surrounding context lines")
     context_lines: int = Field(3, ge=0, le=20, description="Number of context lines")
     include_metadata: bool = Field(True, description="Include commit metadata")
-    
+
     # Historical search options
     search_history: bool = Field(False, description="Search across entire repository history")
-    max_commits: Optional[int] = Field(None, description="Maximum commits to search in history mode")
+    max_commits: int | None = Field(None, description="Maximum commits to search in history mode")
 
 
 class SearchFilters(BaseModel):
     """Additional search filters."""
-    min_commit_size: Optional[int] = Field(None, description="Minimum commit size")
-    max_commit_size: Optional[int] = Field(None, description="Maximum commit size")
+    min_commit_size: int | None = Field(None, description="Minimum commit size")
+    max_commit_size: int | None = Field(None, description="Maximum commit size")
     merge_commits_only: bool = Field(False, description="Search only merge commits")
     exclude_merge_commits: bool = Field(False, description="Exclude merge commits")
     binary_files: bool = Field(False, description="Include binary files")
@@ -102,21 +112,21 @@ class SearchResponse(BaseModel):
     """Enhanced search response."""
     search_id: str = Field(..., description="Unique search identifier")
     status: str = Field(..., description="Search status")
-    results: List[Dict[str, Any]] = Field(..., description="Search results")
+    results: list[dict[str, Any]] = Field(..., description="Search results")
     total_count: int = Field(..., description="Total number of results")
-    
+
     # Search metrics
     commits_searched: int = Field(0, description="Number of commits searched")
     files_searched: int = Field(0, description="Number of files searched")
     search_duration_ms: float = Field(0.0, description="Search duration in milliseconds")
-    
+
     # Search metadata
-    query_info: Dict[str, Any] = Field(..., description="Query information")
-    filters_applied: Dict[str, Any] = Field(..., description="Applied filters")
-    
+    query_info: dict[str, Any] = Field(..., description="Query information")
+    filters_applied: dict[str, Any] = Field(..., description="Applied filters")
+
     # Pagination info
-    page: Optional[int] = Field(None, description="Current page")
-    page_size: Optional[int] = Field(None, description="Page size")
+    page: int | None = Field(None, description="Current page")
+    page_size: int | None = Field(None, description="Page size")
     has_more: bool = Field(False, description="More results available")
 
 
@@ -128,14 +138,14 @@ class SearchStatusResponse(BaseModel):
     message: str = Field(..., description="Current status message")
     results_count: int = Field(0, description="Number of results found so far")
     started_at: datetime = Field(..., description="Search start time")
-    estimated_completion: Optional[datetime] = Field(None, description="Estimated completion time")
+    estimated_completion: datetime | None = Field(None, description="Estimated completion time")
 
 
 # Search orchestrator setup
 def create_enhanced_search_orchestrator() -> SearchOrchestrator:
     """Create and configure an enhanced search orchestrator."""
     orchestrator = SearchOrchestrator()
-    
+
     # Register all available searchers
     orchestrator.register_searcher(CommitHashSearcher())
     orchestrator.register_searcher(AuthorSearcher())
@@ -145,7 +155,7 @@ def create_enhanced_search_orchestrator() -> SearchOrchestrator:
     orchestrator.register_searcher(FileTypeSearcher())
     orchestrator.register_searcher(ContentSearcher())
     orchestrator.register_searcher(FuzzySearcher())
-    
+
     return orchestrator
 
 
@@ -156,9 +166,9 @@ def create_enhanced_search_orchestrator() -> SearchOrchestrator:
 async def advanced_search(
     request: Request,
     search_request: AdvancedSearchRequest,
-    filters: Optional[SearchFilters] = None,
-    background_tasks: Optional[BackgroundTasks] = None,
-    current_user: Dict[str, Any] = Depends(require_user),
+    filters: SearchFilters | None = None,
+    background_tasks: BackgroundTasks | None = None,
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> SearchResponse:
     """
@@ -170,10 +180,10 @@ async def advanced_search(
     try:
         # Validate repository
         await validate_repo_path(search_request.repo_path)
-        
+
         # Generate unique search ID
         search_id = str(uuid.uuid4())
-        
+
         # Initialize search state
         search_state = {
             "id": search_id,
@@ -187,7 +197,7 @@ async def advanced_search(
             "filters": filters
         }
         active_searches[search_id] = search_state
-        
+
         # Start search in background if requested
         if background_tasks:
             background_tasks.add_task(
@@ -197,7 +207,7 @@ async def advanced_search(
                 filters,
                 current_user["user_id"]
             )
-            
+
             return SearchResponse(
                 search_id=search_id,
                 status="started",
@@ -215,7 +225,7 @@ async def advanced_search(
                 filters,
                 current_user["user_id"]
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -233,8 +243,8 @@ async def fuzzy_search(
     pattern: str = Query(..., description="Search pattern"),
     threshold: float = Query(0.8, ge=0.0, le=1.0, description="Similarity threshold"),
     max_distance: int = Query(2, ge=1, le=10, description="Maximum edit distance"),
-    file_types: Optional[List[str]] = Query(None, description="File types to search"),
-    current_user: Dict[str, Any] = Depends(require_user),
+    file_types: list[str] | None = Query(None, description="File types to search"),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> SearchResponse:
     """
@@ -245,7 +255,7 @@ async def fuzzy_search(
     """
     try:
         await validate_repo_path(repo_path)
-        
+
         # Create fuzzy search request
         search_request = AdvancedSearchRequest(
             repo_path=repo_path,
@@ -256,7 +266,7 @@ async def fuzzy_search(
             file_extensions=file_types,
             max_results=500
         )
-        
+
         # Perform search
         search_id = str(uuid.uuid4())
         return await perform_advanced_search_sync(
@@ -265,7 +275,7 @@ async def fuzzy_search(
             None,
             current_user["user_id"]
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -282,10 +292,10 @@ async def historical_search(
     repo_path: str = Query(..., description="Repository path"),
     pattern: str = Query(..., description="Search pattern"),
     max_commits: int = Query(1000, ge=10, le=10000, description="Maximum commits to search"),
-    date_from: Optional[datetime] = Query(None, description="Start date"),
-    date_to: Optional[datetime] = Query(None, description="End date"),
-    background_tasks: Optional[BackgroundTasks] = None,
-    current_user: Dict[str, Any] = Depends(require_user),
+    date_from: datetime | None = Query(None, description="Start date"),
+    date_to: datetime | None = Query(None, description="End date"),
+    background_tasks: BackgroundTasks | None = None,
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> SearchResponse:
     """
@@ -296,7 +306,7 @@ async def historical_search(
     """
     try:
         await validate_repo_path(repo_path)
-        
+
         # Create historical search request
         search_request = AdvancedSearchRequest(
             repo_path=repo_path,
@@ -307,9 +317,9 @@ async def historical_search(
             date_to=date_to,
             timeout_seconds=600  # Longer timeout for historical search
         )
-        
+
         search_id = str(uuid.uuid4())
-        
+
         if background_tasks:
             # Start background search for historical queries
             active_searches[search_id] = {
@@ -322,7 +332,7 @@ async def historical_search(
                 "user_id": current_user["user_id"],
                 "request": search_request
             }
-            
+
             background_tasks.add_task(
                 perform_advanced_search,
                 search_id,
@@ -330,7 +340,7 @@ async def historical_search(
                 None,
                 current_user["user_id"]
             )
-            
+
             return SearchResponse(
                 search_id=search_id,
                 status="started",
@@ -347,7 +357,7 @@ async def historical_search(
                 None,
                 current_user["user_id"]
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -364,7 +374,7 @@ async def historical_search(
 async def get_search_status(
     request: Request,
     search_id: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> SearchStatusResponse:
     """Get the status of a running or completed search."""
@@ -401,7 +411,7 @@ async def get_search_results(
     search_id: str,
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=1000, description="Results per page"),
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> SearchResponse:
     """Get results from a completed search with pagination."""
@@ -463,7 +473,7 @@ async def get_search_results(
 async def cancel_search(
     request: Request,
     search_id: str,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """Cancel a running search operation."""
@@ -506,7 +516,7 @@ async def cancel_search(
 @limiter.limit("30/minute")
 async def list_active_searches(
     request: Request,
-    current_user: Dict[str, Any] = Depends(require_user),
+    current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
     """List all active searches for the current user."""
@@ -547,7 +557,7 @@ async def search_websocket(websocket: WebSocket, search_id: str) -> None:
             try:
                 data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
                 # Handle client messages if needed
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Send ping to keep connection alive
                 await connection_manager.send_personal_message(
                     websocket,
@@ -555,7 +565,7 @@ async def search_websocket(websocket: WebSocket, search_id: str) -> None:
                 )
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)
-    except Exception as e:
+    except Exception:
         connection_manager.disconnect(websocket)
 
 
@@ -564,7 +574,7 @@ async def search_websocket(websocket: WebSocket, search_id: str) -> None:
 async def perform_advanced_search(
     search_id: str,
     search_request: AdvancedSearchRequest,
-    filters: Optional[SearchFilters],
+    filters: SearchFilters | None,
     user_id: str
 ) -> None:
     """Perform advanced search in background task."""
@@ -643,7 +653,7 @@ async def perform_advanced_search(
 async def perform_advanced_search_sync(
     search_id: str,
     search_request: AdvancedSearchRequest,
-    filters: Optional[SearchFilters],
+    filters: SearchFilters | None,
     user_id: str
 ) -> SearchResponse:
     """Perform advanced search synchronously."""
@@ -695,7 +705,7 @@ async def perform_advanced_search_sync(
 
 def _convert_to_search_query(
     request: AdvancedSearchRequest,
-    filters: Optional[SearchFilters]
+    filters: SearchFilters | None
 ) -> SearchQuery:
     """Convert search request to internal SearchQuery."""
     return SearchQuery(
@@ -718,7 +728,7 @@ def _convert_to_search_query(
     )
 
 
-def _format_search_result(result: SearchResult) -> Dict[str, Any]:
+def _format_search_result(result: SearchResult) -> dict[str, Any]:
     """Format search result for API response."""
     formatted = {
         "commit_hash": result.commit_hash,
@@ -741,7 +751,7 @@ def _format_search_result(result: SearchResult) -> Dict[str, Any]:
     return formatted
 
 
-def _build_query_info(request: AdvancedSearchRequest) -> Dict[str, Any]:
+def _build_query_info(request: AdvancedSearchRequest) -> dict[str, Any]:
     """Build query information for response."""
     return {
         "content_pattern": request.content_pattern,
@@ -756,7 +766,7 @@ def _build_query_info(request: AdvancedSearchRequest) -> Dict[str, Any]:
     }
 
 
-def _build_filters_info(filters: Optional[SearchFilters]) -> Dict[str, Any]:
+def _build_filters_info(filters: SearchFilters | None) -> dict[str, Any]:
     """Build filters information for response."""
     if not filters:
         return {}

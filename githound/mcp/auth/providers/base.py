@@ -1,9 +1,8 @@
 """Base authentication provider for GitHound MCP server."""
 
-import os
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
+from typing import Any
 
 from ...models import User
 
@@ -13,10 +12,10 @@ class AuthResult:
     """Result of authentication attempt."""
 
     success: bool
-    user: Optional[User] = None
-    error: Optional[str] = None
-    token: Optional[str] = None
-    expires_in: Optional[int] = None
+    user: User | None = None
+    error: str | None = None
+    token: str | None = None
+    expires_in: int | None = None
 
 
 @dataclass
@@ -25,12 +24,12 @@ class TokenInfo:
 
     user_id: str
     username: str
-    email: Optional[str] = None
-    roles: Optional[List[str]] = None
-    permissions: Optional[List[str]] = None
-    expires_at: Optional[int] = None
-    issuer: Optional[str] = None
-    audience: Optional[str] = None
+    email: str | None = None
+    roles: list[str] | None = None
+    permissions: list[str] | None = None
+    expires_at: int | None = None
+    issuer: str | None = None
+    audience: str | None = None
 
 
 class AuthProvider(ABC):
@@ -60,7 +59,7 @@ class AuthProvider(ABC):
         pass
 
     @abstractmethod
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate a token and extract user information.
 
@@ -72,7 +71,7 @@ class AuthProvider(ABC):
         """
         pass
 
-    async def get_user_permissions(self, user: User) -> List[str]:
+    async def get_user_permissions(self, user: User) -> list[str]:
         """
         Get permissions for a user.
 
@@ -98,7 +97,7 @@ class AuthProvider(ABC):
         permissions = await self.get_user_permissions(user)
         return permission in permissions or "admin" in user.role
 
-    def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
+    def get_oauth_metadata(self) -> dict[str, Any] | None:
         """
         Get OAuth 2.0 metadata for this provider.
 
@@ -152,7 +151,7 @@ class RemoteAuthProvider(TokenVerifier):
         super().__init__(**kwargs)
         self.base_url = base_url.rstrip("/")
 
-    def get_oauth_metadata(self) -> Dict[str, Any]:
+    def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for MCP clients."""
         return {
             "authorization_endpoint": f"{self.base_url}/oauth/authorize",

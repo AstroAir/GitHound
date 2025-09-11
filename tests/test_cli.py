@@ -13,7 +13,8 @@ def test_cli_no_args() -> None:
 
 def test_cli_with_query_and_repo(mocker) -> None:
     mock_search = mocker.patch("githound.cli.search_and_print")
-    result = runner.invoke(app, ["search", "--repo-path", ".", "--content", "test_query"])
+    result = runner.invoke(
+        app, ["search", "--repo-path", ".", "--content", "test_query"])
     assert result.exit_code == 0
     mock_search.assert_called_once()
 
@@ -21,7 +22,8 @@ def test_cli_with_query_and_repo(mocker) -> None:
 def test_cli_with_branch(mocker) -> None:
     mock_search = mocker.patch("githound.cli.search_and_print")
     result = runner.invoke(
-        app, ["search", "--repo-path", ".", "--content", "test_query", "--branch", "develop"]
+        app, ["search", "--repo-path", ".", "--content",
+              "test_query", "--branch", "develop"]
     )
     assert result.exit_code == 0
     mock_search.assert_called_once()
@@ -30,7 +32,8 @@ def test_cli_with_branch(mocker) -> None:
 def test_cli_with_json_output(mocker) -> None:
     mock_search = mocker.patch("githound.cli.search_and_print")
     result = runner.invoke(
-        app, ["search", "--repo-path", ".", "--content", "test_query", "--format", "json"]
+        app, ["search", "--repo-path", ".", "--content",
+              "test_query", "--format", "json"]
     )
     assert result.exit_code == 0
     mock_search.assert_called_once()

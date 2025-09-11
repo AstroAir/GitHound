@@ -1,11 +1,11 @@
 """GitHub OAuth provider for GitHound MCP server."""
 
-import os
 import json
 import logging
-from typing import Any, Optional, Dict, List
-import urllib.request
+import os
 import urllib.error
+import urllib.request
+from typing import Any
 
 from .oauth_proxy import OAuthProxy, TokenInfo
 
@@ -25,7 +25,7 @@ class GitHubProvider(OAuthProxy):
         client_id: str,
         client_secret: str,
         base_url: str,
-        scopes: Optional[List[str]] = None,
+        scopes: list[str] | None = None,
         **kwargs: Any
     ) -> None:
         """
@@ -70,7 +70,7 @@ class GitHubProvider(OAuthProxy):
             raise ValueError(
                 f"Missing required GitHub OAuth configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate GitHub access token and extract user information.
 
@@ -158,7 +158,7 @@ class GitHubProvider(OAuthProxy):
             logger.error(f"Error validating GitHub token: {e}")
             return None
 
-    def get_oauth_metadata(self) -> Dict[str, Any]:
+    def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for GitHub integration."""
         metadata = super().get_oauth_metadata()
         metadata.update({
@@ -182,7 +182,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
         client_secret: str,
         base_url: str,
         github_base_url: str,
-        scopes: Optional[List[str]] = None,
+        scopes: list[str] | None = None,
         **kwargs: Any
     ) -> None:
         """
@@ -236,7 +236,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
             raise ValueError(
                 f"Missing required GitHub Enterprise OAuth configuration: {', '.join(missing)}")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """
         Validate GitHub Enterprise access token.
 

@@ -13,7 +13,8 @@ from githound.mcp.config import (  # [attr-defined]
     get_server_config_from_mcp_json,
     load_mcp_json_config,
 )
-from githound.mcp.models import MCPJsonConfig, MCPServerConfig, ServerConfig  # [attr-defined]
+# [attr-defined]
+from githound.mcp.models import MCPJsonConfig, MCPServerConfig, ServerConfig
 
 
 class TestMCPJsonModels:
@@ -30,7 +31,8 @@ class TestMCPJsonModels:
         )
         assert config.command = = "python"  # [attr-defined]
         assert config.args = = ["-m", "githound.mcp_server"]  # [attr-defined]
-        assert config.env = = {"PYTHONPATH": "/path/to/githound"}  # [attr-defined]
+        # [attr-defined]
+        assert config.env = = {"PYTHONPATH": "/path/to/githound"}
         assert config.description = = "Test server"  # [attr-defined]
 
         # Empty command should fail
@@ -49,7 +51,8 @@ class TestMCPJsonModels:
         assert "test" in config.mcpServers  # [attr-defined]
 
         # Empty servers should fail
-        with pytest.raises(ValueError, match="At least one MCP server must be configured"):  # [attr-defined]
+        # [attr-defined]
+        with pytest.raises(ValueError, match="At least one MCP server must be configured"):
             MCPJsonConfig(mcpServers={})
 
     def test_get_githound_server(self) -> None:
@@ -68,7 +71,8 @@ class TestMCPJsonModels:
         assert result[0] == "GitHound"
 
         # Test partial match
-        config = MCPJsonConfig(mcpServers={"my-githound-server": server_config})
+        config = MCPJsonConfig(
+            mcpServers={"my-githound-server": server_config})
         result = config.get_githound_server()  # [attr-defined]
         assert result is not None
         assert result[0] == "my-githound-server"
@@ -78,7 +82,8 @@ class TestMCPJsonModels:
             command="python",
             args=["-m", "githound.mcp_server"]
         )
-        config = MCPJsonConfig(mcpServers={"custom-server": server_config_with_module})
+        config = MCPJsonConfig(
+            mcpServers={"custom-server": server_config_with_module})
         result = config.get_githound_server()  # [attr-defined]
         assert result is not None
         assert result[0] == "custom-server"
@@ -113,7 +118,8 @@ class TestMCPJsonConfigLoading:
             config = load_mcp_json_config(config_path)
             assert config is not None
             assert "githound" in config.mcpServers  # [attr-defined]
-            assert config.mcpServers["githound"].command == "python"  # [attr-defined]
+            # [attr-defined]
+            assert config.mcpServers["githound"].command == "python"
         finally:
             config_path.unlink()  # [attr-defined]
 

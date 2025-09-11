@@ -5,63 +5,61 @@ All functionality has been moved to focused modules in the githound.mcp package.
 """
 
 # Import the main server components from the new modular structure
-from .mcp.server import get_mcp_server, mcp, run_mcp_server
-
-# Import models for backward compatibility
-from .mcp.models import (
-    ServerConfig,
-    User,
-    RepositoryInput,
-    CommitAnalysisInput,
-    CommitFilterInput,
-    FileHistoryInput,
-    BlameInput,
-    DiffInput,
-    BranchDiffInput,
-    ExportInput,
-    CommitHistoryInput,
-    FileBlameInput,
-    CommitComparisonInput,
-    AuthorStatsInput,
-    AdvancedSearchInput,
-    FuzzySearchInput,
-    ContentSearchInput,
-    RepositoryManagementInput,
-    WebServerInput,
-)
-
 # Import auth functions for backward compatibility
-from .mcp.auth import get_current_user, check_rate_limit
+from .mcp.auth import check_rate_limit, get_current_user
 
 # Import direct wrapper functions for backward compatibility
 from .mcp.direct_wrappers import (
-    analyze_repository_direct,
     analyze_commit_direct,
+    analyze_repository_direct,
+    compare_commits_direct,
     export_repository_data_direct,
+    get_author_stats_direct,
     get_commit_history_direct,
     get_file_blame_direct,
-    compare_commits_direct,
-    get_author_stats_direct,
     get_repository_config_direct,
     get_repository_contributors_direct,
     get_repository_summary_direct,
 )
 
+# Import models for backward compatibility
+from .mcp.models import (
+    AdvancedSearchInput,
+    AuthorStatsInput,
+    BlameInput,
+    BranchDiffInput,
+    CommitAnalysisInput,
+    CommitComparisonInput,
+    CommitFilterInput,
+    CommitHistoryInput,
+    ContentSearchInput,
+    DiffInput,
+    ExportInput,
+    FileBlameInput,
+    FileHistoryInput,
+    FuzzySearchInput,
+    RepositoryInput,
+    RepositoryManagementInput,
+    ServerConfig,
+    User,
+    WebServerInput,
+)
+from .mcp.server import get_mcp_server, mcp, run_mcp_server
+
 # Import search orchestrator function
-from .mcp.tools.search_tools import get_search_orchestrator
 
 # Re-export everything for backward compatibility
 __all__ = [
     # Main server components
     "get_mcp_server",
-    "mcp", 
+    "mcp",
     "run_mcp_server",
-    
+
     # Models
     "ServerConfig",
     "User",
     "RepositoryInput",
-    "CommitAnalysisInput", 
+    "CommitAnalysisInput",
     "CommitFilterInput",
     "FileHistoryInput",
     "BlameInput",
@@ -77,11 +75,11 @@ __all__ = [
     "ContentSearchInput",
     "RepositoryManagementInput",
     "WebServerInput",
-    
+
     # Auth functions
     "get_current_user",
     "check_rate_limit",
-    
+
     # Direct wrapper functions
     "analyze_repository_direct",
     "analyze_commit_direct",
