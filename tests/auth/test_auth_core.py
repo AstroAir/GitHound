@@ -3,7 +3,7 @@
 import os
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from typing import Optional
+from typing import Optionalnal
 
 from githound.mcp.auth import (
     set_auth_provider, 
@@ -22,7 +22,7 @@ from githound.mcp.models import User
 class MockAuthProvider(AuthProvider):
     """Mock authentication provider for testing."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.users = {
             "valid_token": User(username="testuser", role="user", permissions=["read"]),
@@ -49,7 +49,7 @@ class MockAuthProvider(AuthProvider):
     
     async def check_permission(self, user: User, permission: str, resource: Optional[str] = None, **context) -> bool:
         """Mock permission checking."""
-        if user.role == "admin":
+        if user.role = = "admin":
             return True
         return permission in (user.permissions or [])
     
@@ -63,17 +63,17 @@ class MockAuthProvider(AuthProvider):
 class TestAuthCore:
     """Test core authentication functionality."""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Clear any existing auth provider
         set_auth_provider(None)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Clear auth provider
         set_auth_provider(None)
     
-    def test_set_get_auth_provider(self):
+    def test_set_get_auth_provider(self) -> None:
         """Test setting and getting auth provider."""
         provider = MockAuthProvider()
         
@@ -89,18 +89,18 @@ class TestAuthCore:
         assert get_auth_provider() is None
     
     @pytest.mark.asyncio
-    async def test_authenticate_request_success(self):
+    async def test_authenticate_request_success(self) -> None:
         """Test successful request authentication."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
         
         user = await authenticate_request("valid_token")
         assert user is not None
-        assert user.username == "testuser"
-        assert user.role == "user"
+        assert user.username = = "testuser"
+        assert user.role = = "user"
     
     @pytest.mark.asyncio
-    async def test_authenticate_request_failure(self):
+    async def test_authenticate_request_failure(self) -> None:
         """Test failed request authentication."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
@@ -109,25 +109,25 @@ class TestAuthCore:
         assert user is None
     
     @pytest.mark.asyncio
-    async def test_authenticate_request_no_provider(self):
+    async def test_authenticate_request_no_provider(self) -> None:
         """Test authentication with no provider set."""
         user = await authenticate_request("any_token")
         assert user is None
     
     @pytest.mark.asyncio
-    async def test_validate_token_success(self):
+    async def test_validate_token_success(self) -> None:
         """Test successful token validation."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
         
         token_info = await validate_token("valid_token")
         assert token_info is not None
-        assert token_info.username == "testuser"
+        assert token_info.username = = "testuser"
         assert "user" in token_info.roles
         assert "read" in token_info.permissions
     
     @pytest.mark.asyncio
-    async def test_validate_token_failure(self):
+    async def test_validate_token_failure(self) -> None:
         """Test failed token validation."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
@@ -136,7 +136,7 @@ class TestAuthCore:
         assert token_info is None
     
     @pytest.mark.asyncio
-    async def test_check_permission_success(self):
+    async def test_check_permission_success(self) -> None:
         """Test successful permission check."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
@@ -152,7 +152,7 @@ class TestAuthCore:
         assert allowed is False
     
     @pytest.mark.asyncio
-    async def test_check_permission_admin(self):
+    async def test_check_permission_admin(self) -> None:
         """Test admin permission check."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
@@ -170,7 +170,7 @@ class TestAuthCore:
         assert allowed is True
     
     @pytest.mark.asyncio
-    async def test_check_permission_no_provider(self):
+    async def test_check_permission_no_provider(self) -> None:
         """Test permission check with no provider."""
         user = User(username="testuser", role="user", permissions=["read"])
         
@@ -184,7 +184,7 @@ class TestAuthCore:
         assert allowed is True
     
     @pytest.mark.asyncio
-    async def test_check_tool_permission(self):
+    async def test_check_tool_permission(self) -> None:
         """Test tool-level permission checking."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
@@ -202,7 +202,7 @@ class TestAuthCore:
         provider.check_tool_permission.assert_called_once_with(user, "search_files", tool_args)
     
     @pytest.mark.asyncio
-    async def test_check_tool_permission_fallback(self):
+    async def test_check_tool_permission_fallback(self) -> None:
         """Test tool permission fallback to regular permission check."""
         provider = MockAuthProvider()
         set_auth_provider(provider)
@@ -215,7 +215,7 @@ class TestAuthCore:
         assert allowed is True  # Should fall back to regular permission check
     
     @pytest.mark.asyncio
-    async def test_check_tool_permission_no_provider(self):
+    async def test_check_tool_permission_no_provider(self) -> None:
         """Test tool permission check with no provider."""
         admin_user = User(username="admin", role="admin", permissions=[])
         tool_args = {"repo_path": "/test/repo"}
@@ -229,13 +229,13 @@ class TestAuthCore:
         allowed = await check_tool_permission(user, "any_tool", tool_args)
         assert allowed is False
     
-    def test_get_current_user(self):
+    def test_get_current_user(self) -> None:
         """Test getting current user."""
         # This is a placeholder implementation
         user = get_current_user()
         assert user is None
     
-    def test_check_rate_limit(self):
+    def test_check_rate_limit(self) -> None:
         """Test rate limiting check."""
         # This is a placeholder implementation
         user = User(username="testuser", role="user", permissions=[])
@@ -252,18 +252,18 @@ class TestAuthCore:
 class TestAuthEnvironment:
     """Test environment-based authentication configuration."""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         # Clear any existing auth provider
         set_auth_provider(None)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         # Clear auth provider
         set_auth_provider(None)
     
     @patch.dict(os.environ, {}, clear=True)
-    def test_no_auth_environment(self):
+    def test_no_auth_environment(self) -> None:
         """Test behavior with no authentication environment variables."""
         from githound.mcp.auth import _create_auth_provider_from_environment
         
@@ -276,7 +276,7 @@ class TestAuthEnvironment:
         "FASTMCP_SERVER_AUTH_ISSUER": "test-issuer",
         "FASTMCP_SERVER_AUTH_AUDIENCE": "test-audience"
     })
-    def test_jwt_environment_config(self):
+    def test_jwt_environment_config(self) -> None:
         """Test JWT provider creation from environment."""
         from githound.mcp.auth import _create_auth_provider_from_environment
         
@@ -298,7 +298,7 @@ class TestAuthEnvironment:
         "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET": "test-client-secret",
         "FASTMCP_SERVER_BASE_URL": "http://localhost:8000"
     })
-    def test_github_environment_config(self):
+    def test_github_environment_config(self) -> None:
         """Test GitHub provider creation from environment."""
         from githound.mcp.auth import _create_auth_provider_from_environment
         

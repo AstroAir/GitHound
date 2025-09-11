@@ -1,6 +1,6 @@
 """Mock implementation of rapidfuzz for testing purposes."""
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union, List, Any
 
 
 class MockFuzz:
@@ -44,7 +44,7 @@ class MockProcess:
         score_cutoff: Optional[float] = None
     ) -> List[Tuple[str, float, int]]:
         """Mock extract function that returns simple matches."""
-        results = []
+        results: list[Any] = []
         for i, choice in enumerate(choices):
             score = MockFuzz.ratio(query, choice)
             if score_cutoff is None or score >= score_cutoff:

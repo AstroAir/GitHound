@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, cast
+from typing import Any, cast, Optional
 
 from git import Diff, GitCommandError, Repo
 from pydantic import BaseModel, Field
@@ -104,7 +104,7 @@ def analyze_diff(diff: Diff) -> FileDiffInfo:
     except Exception:
         is_binary = True
 
-    diff_lines = []
+    diff_lines: list[Any] = []
     lines_added = 0
     lines_deleted = 0
 
@@ -114,9 +114,11 @@ def analyze_diff(diff: Diff) -> FileDiffInfo:
             if diff.diff is None:
                 return FileDiffInfo(
                     file_path=file_path,
+                    old_file_path=old_file_path,
                     change_type=change_type,
                     lines_added=0,
                     lines_deleted=0,
+                    is_binary=is_binary,
                     diff_lines=[],
                 )
             elif isinstance(diff.diff, bytes):
@@ -222,7 +224,7 @@ def compare_commits(
         else:
             diffs = from_commit_obj.diff(to_commit_obj)
 
-        file_diffs = []
+        file_diffs: list[Any] = []
         total_additions = 0
         total_deletions = 0
 
@@ -290,7 +292,7 @@ def get_file_diff_history(
     Returns:
         List of dictionaries containing file diff history.
     """
-    history = []
+    history: list[Any] = []
 
     try:
         kwargs: dict[str, Any] = {"paths": [file_path]}

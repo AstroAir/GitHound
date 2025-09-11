@@ -19,29 +19,29 @@ from githound.git_blame import (
 
 
 @pytest.fixture
-def temp_repo():
+def temp_repo() -> None:
     """Create a temporary Git repository for testing."""
     temp_dir = tempfile.mkdtemp()
     repo = Repo.init(temp_dir)
 
     # Configure user for commits
-    with repo.config_writer() as config:
-        config.set_value("user", "name", "Test User")
-        config.set_value("user", "email", "test@example.com")
+    with repo.config_writer() as config:  # [attr-defined]
+        config.set_value("user", "name", "Test User")  # [attr-defined]
+        config.set_value("user", "email", "test@example.com")  # [attr-defined]
 
     # Create initial commit
     test_file = Path(temp_dir) / "test.py"
-    test_file.write_text("def hello():\n    print('Hello, World!')\n")
+    test_file.write_text("def hello() -> None:\n    print('Hello, World!')\n")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
 
     # Create second commit with different author
-    with repo.config_writer() as config:
-        config.set_value("user", "name", "Another User")
-        config.set_value("user", "email", "another@example.com")
+    with repo.config_writer() as config:  # [attr-defined]
+        config.set_value("user", "name", "Another User")  # [attr-defined]
+        config.set_value("user", "email", "another@example.com")  # [attr-defined]
 
     test_file.write_text(
-        "def hello():\n    print('Hello, GitHound!')\n\ndef goodbye():\n    print('Goodbye!')\n"
+        "def hello() -> None:\n    print('Hello, GitHound!')\n\ndef goodbye() -> None:\n    print('Goodbye!')\n"
     )
     repo.index.add([str(test_file)])
     second_commit = repo.index.commit("Add goodbye function")
@@ -55,14 +55,14 @@ def temp_repo():
 class TestFileBlame:
     """Tests for file blame functionality."""
 
-    def test_get_file_blame_success(self, temp_repo):
+    def test_get_file_blame_success(self, temp_repo) -> None:
         """Test successful file blame analysis."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
         blame_info = get_file_blame(repo, "test.py")
 
         assert isinstance(blame_info, FileBlameResult)
-        assert blame_info.file_path == "test.py"
+        assert blame_info.file_path = = "test.py"
         assert blame_info.total_lines >= 4  # Should have at least 4 lines
         assert len(blame_info.blame_info) == blame_info.total_lines
         assert len(blame_info.contributors) >= 1
@@ -76,14 +76,14 @@ class TestFileBlame:
             assert line.author_email is not None
             assert line.commit_hash is not None
 
-    def test_get_file_blame_nonexistent_file(self, temp_repo):
+    def test_get_file_blame_nonexistent_file(self, temp_repo) -> None:
         """Test file blame for nonexistent file."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
         with pytest.raises(GitCommandError):
             get_file_blame(repo, "nonexistent.py")
 
-    def test_get_file_blame_specific_commit(self, temp_repo):
+    def test_get_file_blame_specific_commit(self, temp_repo) -> None:
         """Test file blame for specific commit."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -91,13 +91,13 @@ class TestFileBlame:
         blame_info = get_file_blame(repo, "test.py", commit=initial_commit.hexsha)
 
         assert isinstance(blame_info, FileBlameResult)
-        assert blame_info.total_lines == 2  # Initial commit had only 2 lines
+        assert blame_info.total_lines = = 2  # Initial commit had only 2 lines
 
         # All lines should be from the initial commit
         for line in blame_info.blame_info:
-            assert line.commit_hash == initial_commit.hexsha
+            assert line.commit_hash = = initial_commit.hexsha
 
-    def test_get_file_blame_with_line_range(self, temp_repo):
+    def test_get_file_blame_with_line_range(self, temp_repo) -> None:
         """Test file blame with line range."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -108,9 +108,9 @@ class TestFileBlame:
         # Verify we can access specific lines
         assert len(blame_info.blame_info) > 0
         first_line = blame_info.blame_info[0]
-        assert first_line.line_number == 1
+        assert first_line.line_number = = 1
 
-    def test_blame_line_info_properties(self, temp_repo):
+    def test_blame_line_info_properties(self, temp_repo) -> None:
         """Test BlameInfo properties."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -125,7 +125,7 @@ class TestFileBlame:
         assert hasattr(line, "commit_date")
         assert hasattr(line, "commit_message")
 
-    def test_file_blame_info_contributors(self, temp_repo):
+    def test_file_blame_info_contributors(self, temp_repo) -> None:
         """Test FileBlameResult contributors list."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -143,7 +143,7 @@ class TestFileBlame:
 class TestLineHistory:
     """Tests for line history functionality."""
 
-    def test_get_line_history_success(self, temp_repo):
+    def test_get_line_history_success(self, temp_repo) -> None:
         """Test successful line history retrieval."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -161,7 +161,7 @@ class TestLineHistory:
             assert "message" in entry
             assert "line_content" in entry
 
-    def test_get_line_history_nonexistent_file(self, temp_repo):
+    def test_get_line_history_nonexistent_file(self, temp_repo) -> None:
         """Test line history for nonexistent file."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -175,7 +175,7 @@ class TestLineHistory:
             # It's also acceptable to raise an error
             pass
 
-    def test_get_line_history_invalid_line_number(self, temp_repo):
+    def test_get_line_history_invalid_line_number(self, temp_repo) -> None:
         """Test line history for invalid line number."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -185,7 +185,7 @@ class TestLineHistory:
         # Should return empty list or handle gracefully
         assert isinstance(history, list)
 
-    def test_get_line_history_with_max_commits(self, temp_repo):
+    def test_get_line_history_with_max_commits(self, temp_repo) -> None:
         """Test line history with max commits limit."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -198,7 +198,7 @@ class TestLineHistory:
 class TestAuthorStatistics:
     """Tests for author statistics functionality."""
 
-    def test_get_author_statistics_success(self, temp_repo):
+    def test_get_author_statistics_success(self, temp_repo) -> None:
         """Test successful author statistics retrieval."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -222,7 +222,7 @@ class TestAuthorStatistics:
             assert author_stats["total_commits"] > 0
             assert author_stats["total_files"] >= 0
 
-    def test_get_author_statistics_multiple_authors(self, temp_repo):
+    def test_get_author_statistics_multiple_authors(self, temp_repo) -> None:
         """Test author statistics with multiple authors."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -241,7 +241,7 @@ class TestAuthorStatistics:
         assert test_user_found
         assert another_user_found
 
-    def test_get_author_statistics_empty_repo(self):
+    def test_get_author_statistics_empty_repo(self) -> None:
         """Test author statistics for empty repository."""
         temp_dir = tempfile.mkdtemp()
         try:
@@ -260,7 +260,7 @@ class TestAuthorStatistics:
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
-    def test_author_statistics_data_types(self, temp_repo):
+    def test_author_statistics_data_types(self, temp_repo) -> None:
         """Test author statistics data types."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -278,7 +278,7 @@ class TestAuthorStatistics:
             assert isinstance(first_date, (datetime, str)) or first_date is None
             assert isinstance(last_date, (datetime, str)) or last_date is None
 
-    def test_author_statistics_with_branch_filter(self, temp_repo):
+    def test_author_statistics_with_branch_filter(self, temp_repo) -> None:
         """Test author statistics with branch filtering."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -288,7 +288,7 @@ class TestAuthorStatistics:
 
         # Add commit to new branch
         test_file = Path(temp_dir) / "test.py"
-        test_file.write_text("def hello():\n    print('Hello, Feature!')\n")
+        test_file.write_text("def hello() -> None:\n    print('Hello, Feature!')\n")
         repo.index.add([str(test_file)])
         feature_commit = repo.index.commit("Feature commit")
 
@@ -305,7 +305,7 @@ class TestAuthorStatistics:
 class TestBlameErrorHandling:
     """Tests for blame error handling."""
 
-    def test_blame_with_invalid_repo(self):
+    def test_blame_with_invalid_repo(self) -> None:
         """Test blame operations with invalid repository."""
         # Create a mock repo that will cause errors
         mock_repo = Mock()
@@ -314,7 +314,7 @@ class TestBlameErrorHandling:
         with pytest.raises(GitCommandError):
             get_file_blame(mock_repo, "test.py")
 
-    def test_blame_with_binary_file(self, temp_repo):
+    def test_blame_with_binary_file(self, temp_repo) -> None:
         """Test blame operations with binary file."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -333,7 +333,7 @@ class TestBlameErrorHandling:
             # It's acceptable for blame to fail on binary files
             pass
 
-    def test_blame_with_large_file(self, temp_repo):
+    def test_blame_with_large_file(self, temp_repo) -> None:
         """Test blame operations with large file."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -348,7 +348,7 @@ class TestBlameErrorHandling:
         blame_info = get_file_blame(repo, "large.py")
 
         assert isinstance(blame_info, FileBlameResult)
-        assert blame_info.total_lines == 1000
+        assert blame_info.total_lines = = 1000
         assert len(blame_info.blame_info) == 1000
 
 
@@ -356,7 +356,7 @@ class TestBlamePerformance:
     """Tests for blame performance characteristics."""
 
     @pytest.mark.slow
-    def test_blame_performance_multiple_files(self, temp_repo):
+    def test_blame_performance_multiple_files(self, temp_repo) -> None:
         """Test blame performance with multiple files."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -384,7 +384,7 @@ class TestBlamePerformance:
         assert duration < 10.0  # 10 seconds threshold
 
     @pytest.mark.slow
-    def test_author_statistics_performance(self, temp_repo):
+    def test_author_statistics_performance(self, temp_repo) -> None:
         """Test author statistics performance."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 

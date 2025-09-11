@@ -1,7 +1,7 @@
 """Pydantic models for the GitHound web API."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 

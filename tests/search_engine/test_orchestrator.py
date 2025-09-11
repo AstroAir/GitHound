@@ -19,7 +19,7 @@ from githound.search_engine import (
 
 
 @pytest.fixture
-def sample_search_query():
+def sample_search_query() -> None:
     """Create a sample search query for testing."""
     return SearchQuery(
         content_pattern="test",
@@ -37,7 +37,7 @@ def sample_search_query():
 
 
 @pytest.fixture
-def mock_repo():
+def mock_repo() -> None:
     """Create a mock Git repository."""
     mock_repo = Mock(spec=Repo)
     mock_repo.git_dir = "/test/repo/.git"
@@ -45,7 +45,7 @@ def mock_repo():
     mock_repo.active_branch.name = "main"
 
     # Create mock commits
-    mock_commits = []
+    mock_commits: list[Any] = []
     for i in range(5):
         commit = Mock()
         commit.hexsha = f"commit{i:03d}" + "0" * 37
@@ -67,7 +67,7 @@ def mock_repo():
 
 
 @pytest.fixture
-def search_context(mock_repo, sample_search_query):
+def search_context(mock_repo, sample_search_query) -> None:
     """Create a search context for testing."""
     return SearchContext(
         repo=mock_repo, query=sample_search_query, branch="main", progress_callback=None, cache={}
@@ -77,13 +77,13 @@ def search_context(mock_repo, sample_search_query):
 class TestSearchOrchestrator:
     """Tests for SearchOrchestrator class."""
 
-    def test_orchestrator_initialization(self):
+    def test_orchestrator_initialization(self) -> None:
         """Test SearchOrchestrator initialization."""
         orchestrator = SearchOrchestrator()
         assert orchestrator is not None
         assert len(orchestrator.list_searchers()) == 0
 
-    def test_register_searcher(self):
+    def test_register_searcher(self) -> None:
         """Test registering searchers."""
         orchestrator = SearchOrchestrator()
         searcher = CommitHashSearcher()
@@ -92,7 +92,7 @@ class TestSearchOrchestrator:
         assert len(orchestrator.list_searchers()) == 1
         assert "commit_hash" in orchestrator.list_searchers()
 
-    def test_unregister_searcher(self):
+    def test_unregister_searcher(self) -> None:
         """Test unregistering searchers."""
         orchestrator = SearchOrchestrator()
         searcher = CommitHashSearcher()
@@ -101,7 +101,7 @@ class TestSearchOrchestrator:
         orchestrator.unregister_searcher(searcher)
         assert len(orchestrator.list_searchers()) == 0
 
-    def test_get_searcher_by_name(self):
+    def test_get_searcher_by_name(self) -> None:
         """Test getting searcher by name."""
         orchestrator = SearchOrchestrator()
         searcher = CommitHashSearcher()
@@ -114,7 +114,7 @@ class TestSearchOrchestrator:
         assert not_found is None
 
     @pytest.mark.asyncio
-    async def test_get_available_searchers(self, sample_search_query):
+    async def test_get_available_searchers(self, sample_search_query) -> None:
         """Test getting available searchers for a query."""
         orchestrator = SearchOrchestrator()
 
@@ -131,11 +131,11 @@ class TestSearchOrchestrator:
         assert "content" in available
 
     @pytest.mark.asyncio
-    async def test_search_with_no_searchers(self, search_context):
+    async def test_search_with_no_searchers(self, search_context) -> None:
         """Test search with no registered searchers."""
         orchestrator = SearchOrchestrator()
 
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(
             repo=search_context.repo, query=search_context.query
         ):
@@ -144,12 +144,12 @@ class TestSearchOrchestrator:
         assert len(results) == 0
 
     @pytest.mark.asyncio
-    async def test_search_with_multiple_searchers(self, search_context):
+    async def test_search_with_multiple_searchers(self, search_context) -> None:
         """Test search with multiple searchers."""
         orchestrator = SearchOrchestrator()
 
         # Create mock searchers that return results
-        async def mock_search1(context):
+        async def mock_search1(context) -> None:
             yield SearchResult(
                 commit_hash="abc123",
                 file_path=Path("test1.py"),
@@ -157,7 +157,7 @@ class TestSearchOrchestrator:
                 relevance_score=0.9,
             )
 
-        async def mock_search2(context):
+        async def mock_search2(context) -> None:
             yield SearchResult(
                 commit_hash="def456",
                 file_path=Path("test2.py"),
@@ -180,7 +180,7 @@ class TestSearchOrchestrator:
         orchestrator.register_searcher(mock_searcher1)
         orchestrator.register_searcher(mock_searcher2)
 
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(
             repo=search_context.repo, query=search_context.query
         ):
@@ -191,33 +191,33 @@ class TestSearchOrchestrator:
         assert results[0].relevance_score >= results[1].relevance_score
 
     @pytest.mark.asyncio
-    async def test_search_with_max_results(self, mock_repo):
+    async def test_search_with_max_results(self, mock_repo) -> None:
         """Test search with max results limit."""
         orchestrator = SearchOrchestrator()
         orchestrator.register_searcher(AuthorSearcher())
 
         query = SearchQuery(author_pattern="Author")
 
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(repo=mock_repo, query=query, max_results=2):
             results.append(result)
 
         assert len(results) <= 2
 
     @pytest.mark.asyncio
-    async def test_search_with_progress_callback(self, mock_repo):
+    async def test_search_with_progress_callback(self, mock_repo) -> None:
         """Test search with progress callback."""
         orchestrator = SearchOrchestrator()
         orchestrator.register_searcher(AuthorSearcher())
 
-        progress_calls = []
+        progress_calls: list[Any] = []
 
         def progress_callback(message: str, progress: float) -> None:
             progress_calls.append((message, progress))
 
         query = SearchQuery(author_pattern="Author")
 
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(
             repo=mock_repo, query=query, progress_callback=progress_callback
         ):
@@ -227,7 +227,7 @@ class TestSearchOrchestrator:
         assert len(progress_calls) > 0
 
     @pytest.mark.asyncio
-    async def test_full_search_workflow(self, mock_repo):
+    async def test_full_search_workflow(self, mock_repo) -> None:
         """Test complete search workflow."""
         orchestrator = SearchOrchestrator()
 
@@ -246,7 +246,7 @@ class TestSearchOrchestrator:
         )
 
         # Perform search
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(repo=mock_repo, query=query):
             results.append(result)
 
@@ -257,7 +257,7 @@ class TestSearchOrchestrator:
 class TestSearchContext:
     """Tests for SearchContext class."""
 
-    def test_search_context_creation(self, mock_repo, sample_search_query):
+    def test_search_context_creation(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext creation."""
         context = SearchContext(
             repo=mock_repo,
@@ -268,11 +268,11 @@ class TestSearchContext:
         )
 
         assert context.repo is mock_repo
-        assert context.query == sample_search_query  # Use == for Pydantic model comparison
-        assert context.branch == "main"
-        assert context.cache == {}
+        assert context.query = = sample_search_query  # Use == for Pydantic model comparison
+        assert context.branch = = "main"
+        assert context.cache = = {}
 
-    def test_search_context_with_progress_callback(self, mock_repo, sample_search_query):
+    def test_search_context_with_progress_callback(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with progress callback."""
         callback = Mock()
 

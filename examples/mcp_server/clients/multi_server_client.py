@@ -20,7 +20,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional, Any
 from dataclasses import dataclass
 
 from fastmcp import Client
@@ -29,7 +29,7 @@ from fastmcp.exceptions import ToolError, McpError
 from fastmcp import FastMCP
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -54,7 +54,7 @@ async def create_mock_servers() -> Dict[str, FastMCP]:
     Returns:
         Dict mapping server names to FastMCP instances
     """
-    servers = {}
+    servers: dict[str, Any] = {}
     
     # Math server
     math_server = FastMCP("Math Server")
@@ -135,28 +135,28 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
     ]
     
     # Connect to servers
-    connected_servers = {}
+    connected_servers: dict[str, Any] = {}
     
     for config in server_configs:
-        if not config.enabled:
+        if not config.enabled:  # [attr-defined]
             continue
             
         try:
-            logger.info(f"Connecting to {config.name} server...")
+            logger.info(f"Connecting to {config.name} server...")  # [attr-defined]
             
             if config.transport_type == "stdio":
-                transport = PythonStdioTransport(config.connection_string)
+                transport = PythonStdioTransport(config.connection_string)  # [attr-defined]
                 client = Client(transport)
             elif config.transport_type == "inmemory":
-                server_instance = mock_servers.get(config.name)
+                server_instance = mock_servers.get(config.name)  # [attr-defined]
                 if server_instance:
                     transport = FastMCPTransport(server_instance)
                     client = Client(transport)
                 else:
-                    logger.warning(f"Mock server {config.name} not found")
+                    logger.warning(f"Mock server {config.name} not found")  # [attr-defined]
                     continue
             else:
-                logger.warning(f"Unsupported transport type: {config.transport_type}")
+                logger.warning(f"Unsupported transport type: {config.transport_type}")  # [attr-defined]
                 continue
             
             # Test connection
@@ -164,7 +164,7 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
                 tools = await client.list_tools()
                 resources = await client.list_resources()
                 
-                connected_servers[config.name] = {
+                connected_servers[config.name] = {  # [attr-defined]
                     "config": config,
                     "client": client,
                     "tools": len(tools),
@@ -172,11 +172,11 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
                     "status": "connected"
                 }
                 
-                logger.info(f"✓ Connected to {config.name}: {len(tools)} tools, {len(resources)} resources")
+                logger.info(f"✓ Connected to {config.name}: {len(tools)} tools, {len(resources)} resources")  # [attr-defined]
                 
         except Exception as e:
-            logger.error(f"Failed to connect to {config.name}: {e}")
-            connected_servers[config.name] = {
+            logger.error(f"Failed to connect to {config.name}: {e}")  # [attr-defined]
+            connected_servers[config.name] = {  # [attr-defined]
                 "config": config,
                 "client": None,
                 "status": "failed",
@@ -277,7 +277,7 @@ async def demonstrate_server_failover() -> Dict[str, Any]:
         {"name": "tertiary", "available": True}
     ]
     
-    failover_results = []
+    failover_results: list[Any] = []
     
     for server in server_priorities:
         try:
@@ -326,7 +326,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Multi-Server Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Multi-server setup

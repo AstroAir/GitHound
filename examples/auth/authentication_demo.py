@@ -4,7 +4,7 @@
 import os
 import asyncio
 import json
-from typing import Dict, Any
+from typing import Any
 
 # Add the project root to the path so we can import GitHound modules
 import sys
@@ -12,10 +12,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from githound.mcp.auth import set_auth_provider, get_auth_provider, authenticate_request
-from githound.mcp.config import get_oauth_discovery_metadata
+from githound.mcp.config import get_oauth_discovery_metadata  # [attr-defined]
 
 
-async def demo_jwt_authentication():
+async def demo_jwt_authentication() -> None:
     """Demonstrate JWT authentication."""
     print("\n" + "="*60)
     print("JWT Authentication Demo")
@@ -92,7 +92,7 @@ async def demo_jwt_authentication():
         print(f"✗ JWT demo failed: {e}")
 
 
-async def demo_github_authentication():
+async def demo_github_authentication() -> None:
     """Demonstrate GitHub OAuth authentication."""
     print("\n" + "="*60)
     print("GitHub OAuth Authentication Demo")
@@ -139,7 +139,7 @@ async def demo_github_authentication():
         print(f"✗ GitHub demo failed: {e}")
 
 
-async def demo_google_authentication():
+async def demo_google_authentication() -> None:
     """Demonstrate Google OAuth authentication."""
     print("\n" + "="*60)
     print("Google OAuth Authentication Demo")
@@ -188,7 +188,7 @@ async def demo_google_authentication():
         print(f"✗ Google demo failed: {e}")
 
 
-async def demo_oauth_proxy():
+async def demo_oauth_proxy() -> None:
     """Demonstrate OAuth proxy functionality."""
     print("\n" + "="*60)
     print("OAuth Proxy Demo")
@@ -245,7 +245,7 @@ async def demo_oauth_proxy():
         print(f"✗ OAuth proxy demo failed: {e}")
 
 
-def demo_environment_configuration():
+def demo_environment_configuration() -> None:
     """Demonstrate environment-based configuration."""
     print("\n" + "="*60)
     print("Environment Configuration Demo")
@@ -293,7 +293,7 @@ def demo_environment_configuration():
     print("   export FASTMCP_SERVER_AUTH_USERINFO_ENDPOINT=https://auth.example.com/oauth/userinfo")
 
 
-def demo_oauth_discovery():
+def demo_oauth_discovery() -> None:
     """Demonstrate OAuth discovery metadata."""
     print("\n" + "="*60)
     print("OAuth Discovery Metadata Demo")
@@ -318,7 +318,7 @@ def demo_oauth_discovery():
         print(f"✗ OAuth discovery demo failed: {e}")
 
 
-async def main():
+async def main() -> None:
     """Run all authentication demos."""
     print("GitHound MCP Server Authentication Demos")
     print("=" * 50)
@@ -346,7 +346,7 @@ async def main():
     print("2. Set up the required credentials and configuration")
     print("3. Set environment variables for your chosen provider")
     print("4. Test authentication with your MCP client")
-    print("5. Configure authorization policies if using Eunomia or Permit.io")
+    print("5. Configure authorization policies if using Eunomia or Permit.io")  # [attr-defined]
     
     print("\nFor more information, see:")
     print("- examples/authorization/ for authorization examples")

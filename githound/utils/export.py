@@ -5,7 +5,7 @@ import json
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, Optional, Dict, List, TextIO
 
 # Optional dependencies with graceful fallbacks
 try:
@@ -13,7 +13,7 @@ try:
 
     HAS_PANDAS = True
 except ImportError:
-    pd = None  # type: ignore[assignment]
+    pd = None  # 
     HAS_PANDAS = False
 
 try:
@@ -21,7 +21,7 @@ try:
 
     HAS_YAML = True
 except ImportError:
-    yaml = None  # type: ignore[assignment]
+    yaml = None  # 
     HAS_YAML = False
 
 from rich.console import Console
@@ -38,7 +38,7 @@ from ..schemas import (
 class ExportManager:
     """Manager for exporting search results in various formats."""
 
-    def __init__(self, console: Console | None = None):
+    def __init__(self, console: Console | None = None) -> None:
         self.console = console or Console()
 
     def export_to_json(
@@ -144,7 +144,7 @@ class ExportManager:
 
         try:
             # Prepare data for DataFrame
-            data = []
+            data: list[Any] = []
             for result in results:
                 row_dict = self._result_to_dict(result, include_metadata)
                 data.append(row_dict)
@@ -227,7 +227,7 @@ class ExportManager:
         try:
             if format.lower() == "json":
                 with open(output_file, "w", encoding="utf-8") as f:
-                    json.dump(metrics.dict(), f, indent=2,
+                    json.dump(metrics.dict if metrics is not None else None(), f, indent=2,
                               default=self._json_serializer)
             elif format.lower() == "txt":
                 with open(output_file, "w", encoding="utf-8") as f:
@@ -246,7 +246,7 @@ class ExportManager:
         self, results: list[SearchResult], include_metadata: bool
     ) -> dict[str, Any]:
         """Prepare data for JSON export."""
-        json_results = []
+        json_results: list[Any] = []
 
         for result in results:
             result_dict: dict[str, Any] = {
@@ -503,7 +503,7 @@ class ExportManager:
         if not filters:
             return results
 
-        filtered_results = []
+        filtered_results: list[Any] = []
         for result in results:
             include_result = True
 

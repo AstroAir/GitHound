@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from fastmcp import Context
 
@@ -22,7 +23,7 @@ async def get_repository_config(repo_path: str, ctx: Context) -> str:
     in a structured format for easy consumption by AI models.
     """
     try:
-        await ctx.info(f"Retrieving configuration for repository {repo_path}")
+        await ctx.info(f"Retrieving configuration for repository {repo_path}")  # [attr-defined]
 
         repo = get_repository(Path(repo_path))
         metadata = get_repository_metadata(repo)
@@ -63,7 +64,7 @@ This repository contains {config_info['total_commits']} commits from {config_inf
 """
 
     except Exception as e:
-        await ctx.error(f"Error retrieving repository config: {str(e)}")
+        await ctx.error(f"Error retrieving repository config: {str(e)}")  # [attr-defined]
         return f"Error: Could not retrieve repository configuration - {str(e)}"
 
 
@@ -82,7 +83,7 @@ async def get_repository_branches(repo_path: str, ctx: Context) -> str:
 
         branches_info = metadata.get("branches", [])
 
-        branch_details = []
+        branch_details: list[Any] = []
         for branch in branches_info:
             branch_details.append(
                 f"- **{branch['name']}**: {branch['commit'][:8]} {'(remote)' if branch.get('is_remote') else '(local)'}"
@@ -117,7 +118,7 @@ async def get_repository_contributors(repo_path: str, ctx: Context) -> str:
         repo = get_repository(Path(repo_path))
         author_stats = get_author_statistics(repo)
 
-        contributor_details = []
+        contributor_details: list[Any] = []
         for author, stats in author_stats.items():
             contributor_details.append(
                 f"- **{author}**: {stats.get('total_commits', 0)} commits, "

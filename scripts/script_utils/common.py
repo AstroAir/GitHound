@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optionalnal, Tuple, Union
 
 
 def get_project_root() -> Path:
@@ -114,7 +114,7 @@ def run_command_with_output(
 def get_git_info() -> Dict[str, str]:
     """Get Git repository information."""
     project_root = get_project_root()
-    info = {}
+    info: dict[str, Any] = {}
 
     try:
         # Get current branch

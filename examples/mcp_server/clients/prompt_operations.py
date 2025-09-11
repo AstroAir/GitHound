@@ -20,14 +20,14 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional, Any
 
 from fastmcp import Client, FastMCP
 from fastmcp.client.transports import PythonStdioTransport, FastMCPTransport
 from fastmcp.exceptions import PromptError, McpError
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -135,7 +135,7 @@ async def demonstrate_prompt_discovery() -> Dict[str, Any]:
             # List all available prompts
             prompts = await client.list_prompts()
             
-            prompt_details = []
+            prompt_details: list[Any] = []
             for prompt in prompts:
                 prompt_info = {
                     "name": prompt.name,
@@ -180,7 +180,7 @@ async def demonstrate_prompt_execution() -> Dict[str, Any]:
     server = await create_prompt_server()
     transport = FastMCPTransport(server)
     
-    execution_results = []
+    execution_results: list[Any] = []
     
     try:
         async with Client(transport) as client:
@@ -262,7 +262,7 @@ async def demonstrate_prompt_error_handling() -> Dict[str, Any]:
     server = await create_prompt_server()
     transport = FastMCPTransport(server)
     
-    error_scenarios = []
+    error_scenarios: list[Any] = []
     
     try:
         async with Client(transport) as client:
@@ -345,7 +345,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Prompt Operations Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Prompt discovery

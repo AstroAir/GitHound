@@ -79,7 +79,7 @@ async def analyze_commit(input_data: CommitAnalysisInput, ctx: Context) -> dict[
 
         return {
             "status": "success",
-            "commit_metadata": commit_info.model_dump(),
+            "commit_metadata": commit_info.dict(),
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
@@ -124,17 +124,17 @@ async def get_filtered_commits(input_data: CommitFilterInput, ctx: Context) -> d
             max_count=input_data.max_count,
         )
 
-        commit_list = []
+        commit_list: list[Any] = []
         for commit in commits:
             commit_info = extract_commit_metadata(commit)
-            commit_list.append(commit_info.model_dump())
+            commit_list.append(commit_info.dict() if commit_info is not None else {})
 
         await ctx.info(f"Retrieved {len(commit_list)} commits matching filter criteria")
 
         return {
             "status": "success",
             "commits": commit_list,
-            "filter_criteria": input_data.model_dump(),
+            "filter_criteria": input_data.dict(),
             "total_results": len(commit_list),
             "analysis_timestamp": datetime.now().isoformat(),
         }
@@ -202,7 +202,7 @@ async def get_commit_history(input_data: CommitHistoryInput, ctx: Context) -> di
         ))
 
         # Convert commit objects to dictionaries
-        commits = []
+        commits: list[Any] = []
         for commit in commit_objects:
             commit_dict = {
                 "hash": commit.hexsha,

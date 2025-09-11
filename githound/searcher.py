@@ -4,7 +4,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from githound.models import SearchConfig, SearchResult, SearchType
+from githound.models import SearchConfig, SearchResult, SearchType  # [attr-defined]
 
 
 def search_blob_content(
@@ -24,7 +24,7 @@ def search_blob_content(
         A list of search results.
     """
     rg_args = ["rg", "--json", query, "-"]
-    if not config.case_sensitive:
+    if not config.case_sensitive:  # [attr-defined]
         rg_args.append("-i")
 
     try:

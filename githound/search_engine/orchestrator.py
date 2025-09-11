@@ -1,3 +1,4 @@
+from typing import Optional, Any
 """Search orchestrator that coordinates multiple searchers."""
 
 import asyncio
@@ -15,7 +16,15 @@ class SearchOrchestrator:
 
     def __init__(self) -> None:
         self._searchers: list[BaseSearcher] = []
-        self._metrics = SearchMetrics()
+        self._metrics = SearchMetrics(
+            total_commits_searched=0,
+            total_files_searched=0,
+            total_results_found=0,
+            search_duration_ms=0.0,
+            cache_hits=0,
+            cache_misses=0,
+            memory_usage_mb=None,
+        )
 
     def register_searcher(self, searcher: BaseSearcher) -> None:
         """Register a searcher with the orchestrator."""
@@ -29,7 +38,15 @@ class SearchOrchestrator:
     @property
     def metrics(self) -> SearchMetrics:
         """Get combined metrics from all searchers."""
-        combined = SearchMetrics()
+        combined = SearchMetrics(
+            total_commits_searched=0,
+            total_files_searched=0,
+            total_results_found=0,
+            search_duration_ms=0.0,
+            cache_hits=0,
+            cache_misses=0,
+            memory_usage_mb=None,
+        )
 
         # Combine metrics from all searchers
         for searcher in self._searchers:
@@ -83,7 +100,7 @@ class SearchOrchestrator:
             )
 
             # Find applicable searchers
-            applicable_searchers = []
+            applicable_searchers: list[BaseSearcher] = []
             for searcher in self._searchers:
                 if await searcher.can_handle(query):
                     applicable_searchers.append(searcher)
@@ -95,7 +112,7 @@ class SearchOrchestrator:
 
             # Estimate total work for progress reporting
             total_work = 0
-            searcher_work = {}
+            searcher_work: dict[BaseSearcher, int] = {}
             for searcher in applicable_searchers:
                 work = await searcher.estimate_work(context)
                 searcher_work[searcher] = work
@@ -107,7 +124,7 @@ class SearchOrchestrator:
             async def run_searcher(searcher: BaseSearcher) -> list[SearchResult]:
                 nonlocal completed_work, results_count
 
-                searcher_results = []
+                searcher_results: list[SearchResult] = []
                 async for result in searcher.search(context):
                     searcher_results.append(result)
                     results_count += 1
@@ -130,7 +147,7 @@ class SearchOrchestrator:
             all_results = await asyncio.gather(*searcher_tasks)
 
             # Flatten and rank results
-            flattened_results = []
+            flattened_results: list[SearchResult] = []
             for searcher_results in all_results:
                 flattened_results.extend(searcher_results)
 
@@ -155,7 +172,7 @@ class SearchOrchestrator:
 
     async def get_available_searchers(self, query: SearchQuery) -> list[str]:
         """Get list of searcher names that can handle the given query."""
-        available = []
+        available: list[str] = []
         for searcher in self._searchers:
             if await searcher.can_handle(query):
                 available.append(searcher.name)

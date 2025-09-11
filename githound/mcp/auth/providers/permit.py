@@ -3,7 +3,7 @@
 import os
 import json
 import logging
-from typing import Optional, Dict, Any, List, Union
+from typing import Any, Optional, Dict, List
 from dataclasses import dataclass
 
 from .base import AuthProvider, AuthResult, TokenInfo
@@ -23,7 +23,7 @@ except ImportError:
 
 @dataclass
 class PermitConfig:
-    """Configuration for Permit.io authorization provider."""
+    """Configuration for Permit.io authorization provider."""  # [attr-defined]
 
     permit_pdp_url: str = "http://localhost:7766"
     permit_api_key: Optional[str] = None
@@ -49,7 +49,7 @@ class PermitAuthorizationProvider(AuthProvider):
 
         Args:
             base_provider: The underlying authentication provider to wrap
-            **kwargs: Configuration options for Permit.io
+            **kwargs: Configuration options for Permit.io  # [attr-defined]
         """
         if not PERMIT_AVAILABLE:
             raise ImportError(
@@ -57,30 +57,30 @@ class PermitAuthorizationProvider(AuthProvider):
 
         super().__init__(**kwargs)
         self.base_provider = base_provider
-        self.config = PermitConfig(**kwargs)
+        self.permit_config = PermitConfig(**kwargs)  # [attr-defined]
         self._middleware = None
         self._initialize_permit()
 
     def _load_from_environment(self) -> None:
-        """Load Permit.io configuration from environment variables."""
-        self.config.permit_pdp_url = os.getenv(
-            "PERMIT_MCP_PERMIT_PDP_URL", self.config.permit_pdp_url)
-        self.config.permit_api_key = os.getenv(
-            "PERMIT_MCP_PERMIT_API_KEY", self.config.permit_api_key)
-        self.config.server_name = os.getenv(
-            "PERMIT_MCP_SERVER_NAME", self.config.server_name)
-        self.config.enable_audit_logging = os.getenv(
+        """Load Permit.io configuration from environment variables."""  # [attr-defined]
+        self.config.permit_pdp_url = os.getenv(  # [attr-defined]
+            "PERMIT_MCP_PERMIT_PDP_URL", self.config.permit_pdp_url)  # [attr-defined]
+        self.config.permit_api_key = os.getenv(  # [attr-defined]
+            "PERMIT_MCP_PERMIT_API_KEY", self.config.permit_api_key)  # [attr-defined]
+        self.config.server_name = os.getenv(  # [attr-defined]
+            "PERMIT_MCP_SERVER_NAME", self.config.server_name)  # [attr-defined]
+        self.config.enable_audit_logging = os.getenv(  # [attr-defined]
             "PERMIT_MCP_ENABLE_AUDIT_LOGGING", "true").lower() == "true"
-        self.config.identity_mode = os.getenv(
-            "PERMIT_MCP_IDENTITY_MODE", self.config.identity_mode)
-        self.config.identity_jwt_secret = os.getenv(
-            "PERMIT_MCP_IDENTITY_JWT_SECRET", self.config.identity_jwt_secret)
+        self.config.identity_mode = os.getenv(  # [attr-defined]
+            "PERMIT_MCP_IDENTITY_MODE", self.config.identity_mode)  # [attr-defined]
+        self.config.identity_jwt_secret = os.getenv(  # [attr-defined]
+            "PERMIT_MCP_IDENTITY_JWT_SECRET", self.config.identity_jwt_secret)  # [attr-defined]
 
         # Parse JSON arrays from environment
         bypass_methods_env = os.getenv("PERMIT_MCP_BYPASSED_METHODS")
         if bypass_methods_env:
             try:
-                self.config.bypass_methods = json.loads(bypass_methods_env)
+                self.config.bypass_methods = json.loads(bypass_methods_env)  # [attr-defined]
             except json.JSONDecodeError:
                 logger.warning(
                     f"Invalid JSON in PERMIT_MCP_BYPASSED_METHODS: {bypass_methods_env}")
@@ -88,7 +88,7 @@ class PermitAuthorizationProvider(AuthProvider):
         known_methods_env = os.getenv("PERMIT_MCP_KNOWN_METHODS")
         if known_methods_env:
             try:
-                self.config.known_methods = json.loads(known_methods_env)
+                self.config.known_methods = json.loads(known_methods_env)  # [attr-defined]
             except json.JSONDecodeError:
                 logger.warning(
                     f"Invalid JSON in PERMIT_MCP_KNOWN_METHODS: {known_methods_env}")
@@ -96,33 +96,33 @@ class PermitAuthorizationProvider(AuthProvider):
     def _initialize_permit(self) -> None:
         """Initialize the Permit.io middleware."""
         try:
-            if not self.config.permit_api_key:
+            if not self.config.permit_api_key:  # [attr-defined]
                 raise ValueError(
                     "Permit.io API key is required. Set PERMIT_MCP_PERMIT_API_KEY environment variable.")
 
             # Initialize Permit.io middleware
             middleware_config = {
-                "permit_pdp_url": self.config.permit_pdp_url,
-                "permit_api_key": self.config.permit_api_key,
-                "enable_audit_logging": self.config.enable_audit_logging,
+                "permit_pdp_url": self.config.permit_pdp_url,  # [attr-defined]
+                "permit_api_key": self.config.permit_api_key,  # [attr-defined]
+                "enable_audit_logging": self.config.enable_audit_logging,  # [attr-defined]
             }
 
-            if self.config.bypass_methods:
-                middleware_config["bypass_methods"] = self.config.bypass_methods
+            if self.config.bypass_methods:  # [attr-defined]
+                middleware_config["bypass_methods"] = self.config.bypass_methods  # [attr-defined]
 
-            if self.config.known_methods:
-                middleware_config["known_methods"] = self.config.known_methods
+            if self.config.known_methods:  # [attr-defined]
+                middleware_config["known_methods"] = self.config.known_methods  # [attr-defined]
 
             # Set up identity extraction based on mode
-            if self.config.identity_mode == "jwt" and self.config.identity_jwt_secret:
+            if self.config.identity_mode == "jwt" and self.config.identity_jwt_secret:  # [attr-defined]
                 os.environ["PERMIT_MCP_IDENTITY_MODE"] = "jwt"
-                os.environ["PERMIT_MCP_IDENTITY_JWT_SECRET"] = self.config.identity_jwt_secret
-            elif self.config.identity_mode in ["header", "source", "fixed"]:
-                os.environ["PERMIT_MCP_IDENTITY_MODE"] = self.config.identity_mode
+                os.environ["PERMIT_MCP_IDENTITY_JWT_SECRET"] = self.config.identity_jwt_secret  # [attr-defined]
+            elif self.config.identity_mode in ["header", "source", "fixed"]:  # [attr-defined]
+                os.environ["PERMIT_MCP_IDENTITY_MODE"] = self.config.identity_mode  # [attr-defined]
 
-            self._middleware = PermitMcpMiddleware(**middleware_config)
+            self._middleware = PermitMcpMiddleware(**middleware_config)  # [attr-defined]
             logger.info(
-                f"Permit.io authorization provider initialized with PDP URL: {self.config.permit_pdp_url}")
+                f"Permit.io authorization provider initialized with PDP URL: {self.config.permit_pdp_url}")  # [attr-defined]
 
         except Exception as e:
             logger.error(f"Failed to initialize Permit.io middleware: {e}")
@@ -169,7 +169,7 @@ class PermitAuthorizationProvider(AuthProvider):
             # Build the authorization request for Permit.io
             subject = user.username
             action = permission
-            resource_name = resource or f"{self.config.server_name}"
+            resource_name = resource or f"{self.config.server_name}"  # [attr-defined]
 
             # Add user context and tool arguments for ABAC policies
             auth_context = {
@@ -248,18 +248,18 @@ class PermitAuthorizationProvider(AuthProvider):
         return self.base_provider.supports_dynamic_client_registration()
 
     def get_permit_config(self) -> PermitConfig:
-        """Get the current Permit.io configuration."""
-        return self.config
+        """Get the current Permit.io configuration."""  # [attr-defined]
+        return self.config  # [attr-defined]
 
     def update_permit_config(self, **kwargs: Any) -> None:
-        """Update Permit.io configuration and reinitialize."""
+        """Update Permit.io configuration and reinitialize."""  # [attr-defined]
         for key, value in kwargs.items():
-            if hasattr(self.config, key):
-                setattr(self.config, key, value)
+            if hasattr(self.config, key):  # [attr-defined]
+                setattr(self.config, key, value)  # [attr-defined]
 
         # Reinitialize with new configuration
         self._initialize_permit()
-        logger.info("Permit.io configuration updated and reinitialized")
+        logger.info("Permit.io configuration updated and reinitialized")  # [attr-defined]
 
     async def check_tool_permission(self, user: User, tool_name: str, tool_args: Dict[str, Any]) -> bool:
         """
@@ -277,13 +277,13 @@ class PermitAuthorizationProvider(AuthProvider):
             True if access is granted, False otherwise
         """
         # Flatten tool arguments as individual attributes for policy evaluation
-        flattened_args = {}
+        flattened_args: dict[str, Any] = {}
         for key, value in tool_args.items():
             flattened_args[f"arg_{key}"] = value
 
         return await self.check_permission(
             user=user,
             permission=tool_name,
-            resource=f"{self.config.server_name}",
+            resource=f"{self.config.server_name}",  # [attr-defined]
             **flattened_args
         )

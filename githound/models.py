@@ -261,7 +261,7 @@ class LegacyGitHoundConfig:
     search_query: str
     branch: str | None = None
     output_format: Literal["text", "json"] = "text"
-    search_config: LegacySearchConfig = dataclasses.field(
+    search_config: LegacySearchConfig = dataclasses.field(  # [attr-defined]
         default_factory=LegacySearchConfig)
 
 

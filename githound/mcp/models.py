@@ -3,7 +3,27 @@
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field
+# Pydantic v1/v2 compatibility shims for validators
+try:  # Prefer v2-style if available
+    from pydantic import field_validator as field_validator
+    from pydantic import model_validator as model_validator
+except Exception:
+    # Fallback to v1 validators
+    from pydantic import validator as _validator  # type: ignore
+    from pydantic import root_validator as _root_validator  # type: ignore
+
+    def field_validator(*fields):
+        def _decorator(fn):
+            return _validator(*fields, allow_reuse=True)(fn)
+        return _decorator
+
+    def model_validator(*, mode: str = "after"):
+        def _decorator(fn):
+            if mode == "before" or mode == "pre":
+                return _root_validator(pre=True, allow_reuse=True)(fn)
+            return _root_validator(allow_reuse=True)(fn)
+        return _decorator
 
 
 # Authentication and Configuration Models
@@ -22,6 +42,74 @@ class ServerConfig(BaseModel):
         default=False, description="Enable authentication")
     rate_limit_enabled: bool = Field(
         default=False, description="Enable rate limiting")
+
+
+class MCPServerConfig(BaseModel):
+    """Configuration for a single MCP server in MCP.json format."""  # [attr-defined]
+
+    command: str = Field(..., description="Executable command to run the MCP server")
+    args: list[str] = Field(default_factory=list, description="Command-line arguments")
+    env: dict[str, str] = Field(default_factory=dict, description="Environment variables")
+    description: str | None = Field(None, description="Server description")
+
+    @field_validator("command")
+    @classmethod
+    def validate_command(cls, v: str) -> str:
+        """Validate that command is not empty."""
+        if not v.strip():
+            raise ValueError("Command cannot be empty")
+        return v.strip()
+
+
+class MCPJsonConfig(BaseModel):
+    """Configuration structure for MCP.json files."""  # [attr-defined]
+
+    mcpServers: dict[str, MCPServerConfig] = Field(
+        ...,
+        description="Dictionary of MCP server configurations keyed by server name"
+    )
+
+    @field_validator("mcpServers")
+    @classmethod
+    def validate_servers(cls, v: dict[str, MCPServerConfig]) -> dict[str, MCPServerConfig]:
+        """Validate that at least one server is configured."""
+        if not v:
+            raise ValueError("At least one MCP server must be configured")
+        return v
+
+    def get_githound_server(self) -> tuple[str, MCPServerConfig] | None:
+        """
+        Find and return the GitHound server configuration.
+
+        Returns:
+            Tuple of (server_name, server_config) if found, None otherwise
+        """
+        # Look for servers that might be GitHound
+        githound_indicators = [
+            "githound",
+            "GitHound",
+            "git-hound",
+            "git_hound"
+        ]
+
+        # First, try exact matches
+        for name, config in self.mcpServers.items():  # [attr-defined]
+            if name.lower() in [indicator.lower() for indicator in githound_indicators]:
+                return name, config
+
+        # Then, try partial matches
+        for name, config in self.mcpServers.items():  # [attr-defined]
+            name_lower = name.lower()
+            if any(indicator.lower() in name_lower for indicator in githound_indicators):
+                return name, config
+
+        # Finally, check if any server uses GitHound module
+        for name, config in self.mcpServers.items():  # [attr-defined]
+            args_str = " ".join(config.args).lower()  # [attr-defined]
+            if "githound" in args_str or "mcp_server" in args_str:
+                return name, config
+
+        return None
 
 
 class User(BaseModel):

@@ -40,7 +40,7 @@ from utils import (
 )
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import typer
 from rich.table import Table
@@ -59,7 +59,7 @@ app = typer.Typer(
 class DevEnvironmentManager:
     """Manages GitHound development environment setup and validation."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
         self.required_commands = [
             "git", "python", "pip"
@@ -71,7 +71,7 @@ class DevEnvironmentManager:
 
     def check_system_requirements(self) -> Dict[str, bool]:
         """Check system requirements."""
-        results = {}
+        results: dict[str, Any] = {}
 
         print_section("System Requirements")
 
@@ -113,7 +113,7 @@ class DevEnvironmentManager:
 
     def check_dependencies(self) -> Dict[str, bool]:
         """Check Python dependencies."""
-        results = {}
+        results: dict[str, Any] = {}
 
         print_section("Python Dependencies")
 
@@ -152,7 +152,7 @@ class DevEnvironmentManager:
 
     def check_git_configuration(self) -> Dict[str, bool]:
         """Check Git configuration."""
-        results = {}
+        results: dict[str, Any] = {}
 
         print_section("Git Configuration")
 
@@ -177,33 +177,33 @@ class DevEnvironmentManager:
 
         # Check git user configuration
         exit_code, stdout, _ = run_command_with_output(
-            ["git", "config", "user.name"])
+            ["git", "config", "user.name"])  # [attr-defined]
         if exit_code == 0 and stdout.strip():
-            print_step("Git user.name configured", "success")
+            print_step("Git user.name configured", "success")  # [attr-defined]
             results["git_user_name"] = True
         else:
-            print_step("Git user.name configured", "error")
+            print_step("Git user.name configured", "error")  # [attr-defined]
             results["git_user_name"] = False
 
         exit_code, stdout, _ = run_command_with_output(
-            ["git", "config", "user.email"])
+            ["git", "config", "user.email"])  # [attr-defined]
         if exit_code == 0 and stdout.strip():
-            print_step("Git user.email configured", "success")
+            print_step("Git user.email configured", "success")  # [attr-defined]
             results["git_user_email"] = True
         else:
-            print_step("Git user.email configured", "error")
+            print_step("Git user.email configured", "error")  # [attr-defined]
             results["git_user_email"] = False
 
         return results
 
     def check_pre_commit_hooks(self) -> Dict[str, bool]:
         """Check pre-commit hooks."""
-        results = {}
+        results: dict[str, Any] = {}
 
         print_section("Pre-commit Hooks")
 
-        pre_commit_config = self.project_root / ".pre-commit-config.yaml"
-        if pre_commit_config.exists():
+        pre_commit_config = self.project_root / ".pre-commit-config.yaml"  # [attr-defined]
+        if pre_commit_config.exists():  # [attr-defined]
             print_step("Pre-commit config exists", "success")
             results["precommit_config"] = True
 
@@ -337,7 +337,7 @@ def check() -> None:
     # Run all checks
     system_results = manager.check_system_requirements()
     dep_results = manager.check_dependencies()
-    git_results = manager.check_git_configuration()
+    git_results = manager.check_git_configuration()  # [attr-defined]
     precommit_results = manager.check_pre_commit_hooks()
 
     # Summary
@@ -366,7 +366,7 @@ def info() -> None:
     print_section("Python Environment")
     for key, value in python_info.items():
         console.print(
-            f"  [cyan]{key.replace('_', ' ').title()}:[/cyan] {value}")
+            f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}")
 
     # Git info
     git_info = get_git_info()
@@ -374,14 +374,14 @@ def info() -> None:
         print_section("Git Repository")
         for key, value in git_info.items():
             console.print(
-                f"  [cyan]{key.replace('_', ' ').title()}:[/cyan] {value}")
+                f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}")
 
     # Platform info
     platform_info = get_platform_info()
     print_section("Platform Information")
     for key, value in platform_info.items():
         console.print(
-            f"  [cyan]{key.replace('_', ' ').title()}:[/cyan] {value}")
+            f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}")
 
 
 @app.command()

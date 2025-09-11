@@ -8,14 +8,13 @@ for various repository sizes and operation types.
 import asyncio
 import time
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 import pytest
 
 try:
     import psutil
-except ImportError:
-    psutil = None  # type: ignore
+except ImportError: Optional[psutil] = None  # 
 
 from githound.git_blame import get_author_statistics, get_file_blame
 from githound.git_diff import compare_commits
@@ -30,13 +29,13 @@ from githound.git_handler import (
 class PerformanceMonitor:
     """Monitor performance metrics during test execution."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.process = psutil.Process()
         self.start_time: float = 0
         self.start_memory: float = 0
         self.peak_memory: float = 0
 
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         """Start performance monitoring."""
         self.start_time = time.perf_counter()
         self.start_memory = self.get_memory_usage()
@@ -64,13 +63,13 @@ class PerformanceMonitor:
 
 
 @pytest.fixture
-def performance_monitor():
+def performance_monitor() -> None:
     """Provide a performance monitor for tests."""
     return PerformanceMonitor()
 
 
 @pytest.fixture
-def performance_thresholds():
+def performance_thresholds() -> None:
     """Define performance thresholds for different operations."""
     return {
         "repository_loading": {"max_duration_seconds": 2.5, "max_memory_increase_mb": 50},  # Increased threshold for system load tolerance
@@ -88,7 +87,7 @@ class TestGitOperationPerformance:
     @pytest.mark.performance
     def test_repository_loading_performance(
         self, temp_repo_with_commits, performance_monitor, performance_thresholds
-    ):
+    ) -> None:
         """Test repository loading performance."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         thresholds = performance_thresholds["repository_loading"]
@@ -114,7 +113,7 @@ class TestGitOperationPerformance:
     @pytest.mark.performance
     def test_commit_history_performance_small(
         self, temp_repo_with_commits, performance_monitor, performance_thresholds
-    ):
+    ) -> None:
         """Test commit history retrieval performance for small datasets."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         thresholds = performance_thresholds["commit_history_small"]
@@ -142,7 +141,7 @@ class TestGitOperationPerformance:
     @pytest.mark.slow
     def test_commit_history_performance_large(
         self, temp_repo_with_commits, performance_monitor, performance_thresholds
-    ):
+    ) -> None:
         """Test commit history retrieval performance for larger datasets."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         thresholds = performance_thresholds["commit_history_large"]
@@ -171,7 +170,7 @@ class TestGitOperationPerformance:
     @pytest.mark.performance
     def test_file_blame_performance(
         self, temp_repo_with_commits, performance_monitor, performance_thresholds
-    ):
+    ) -> None:
         """Test file blame operation performance."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         thresholds = performance_thresholds["file_blame"]
@@ -205,7 +204,7 @@ class TestGitOperationPerformance:
     @pytest.mark.performance
     def test_author_statistics_performance(
         self, temp_repo_with_commits, performance_monitor, performance_thresholds
-    ):
+    ) -> None:
         """Test author statistics calculation performance."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         thresholds = performance_thresholds["author_statistics"]
@@ -233,7 +232,7 @@ class TestGitOperationPerformance:
     @pytest.mark.performance
     def test_commit_comparison_performance(
         self, temp_repo_with_commits, performance_monitor, performance_thresholds
-    ):
+    ) -> None:
         """Test commit comparison performance."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         thresholds = performance_thresholds["commit_comparison"]
@@ -264,7 +263,7 @@ class TestGitOperationPerformance:
 
     def _create_additional_commits(self, repo: Any, temp_dir: str, count: int) -> list[Any]:
         """Create additional commits for testing."""
-        commits = []
+        commits: list[Any] = []
 
         for i in range(count):
             file_path = Path(temp_dir) / f"perf_test_{i}.txt"
@@ -288,9 +287,9 @@ class TestGitOperationPerformance:
             author_name, author_email = authors[i % len(authors)]
 
             # Configure author for this commit
-            with repo.config_writer() as config:
-                config.set_value("user", "name", author_name)
-                config.set_value("user", "email", author_email)
+            with repo.config_writer() as config:  # [attr-defined]
+                config.set_value("user", "name", author_name)  # [attr-defined]
+                config.set_value("user", "email", author_email)  # [attr-defined]
 
             file_path = Path(temp_dir) / f"author_test_{i}.txt"
             file_path.write_text(f"File by {author_name}\nCommit number {i}")
@@ -306,14 +305,14 @@ class TestConcurrentOperations:
     @pytest.mark.asyncio
     async def test_concurrent_repository_analysis(
         self, temp_repo_with_commits, performance_monitor
-    ):
+    ) -> None:
         """Test concurrent repository analysis operations."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
 
         performance_monitor.start_monitoring()
 
         # Create multiple concurrent analysis tasks
-        async def analyze_repository_async():
+        async def analyze_repository_async() -> None:
             """Async wrapper for repository analysis."""
             return await asyncio.get_event_loop().run_in_executor(
                 None, get_repository_metadata, repo
@@ -337,14 +336,14 @@ class TestConcurrentOperations:
         ), f"Concurrent analysis took {metrics['duration_seconds']:.2f}s, expected < 10.0s"
 
     @pytest.mark.asyncio
-    async def test_concurrent_commit_operations(self, temp_repo_with_commits, performance_monitor):
+    async def test_concurrent_commit_operations(self, temp_repo_with_commits, performance_monitor) -> None:
         """Test concurrent commit-related operations."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
 
         performance_monitor.start_monitoring()
 
         # Create concurrent commit operations
-        async def extract_commit_async(commit):
+        async def extract_commit_async(commit) -> None:
             """Async wrapper for commit metadata extraction."""
             return await asyncio.get_event_loop().run_in_executor(
                 None, extract_commit_metadata, commit
@@ -374,32 +373,32 @@ class TestConcurrentOperations:
 class TestBenchmarkOperations:
     """Benchmark tests for git operations using pytest-benchmark."""
 
-    def test_benchmark_repository_loading(self, temp_repo_with_commits, benchmark):
+    def test_benchmark_repository_loading(self, temp_repo_with_commits, benchmark) -> None:
         """Benchmark repository loading operation."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
 
-        def load_repository():
+        def load_repository() -> None:
             return get_repository(Path(temp_dir))
 
         result = benchmark(load_repository)
         assert result is not None
 
-    def test_benchmark_commit_metadata_extraction(self, temp_repo_with_commits, benchmark):
+    def test_benchmark_commit_metadata_extraction(self, temp_repo_with_commits, benchmark) -> None:
         """Benchmark commit metadata extraction."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
 
-        def extract_metadata():
+        def extract_metadata() -> None:
             return extract_commit_metadata(initial_commit)
 
         result = benchmark(extract_metadata)
         assert result is not None
-        assert result.hash == initial_commit.hexsha
+        assert result.hash = = initial_commit.hexsha
 
-    def test_benchmark_repository_metadata(self, temp_repo_with_commits, benchmark):
+    def test_benchmark_repository_metadata(self, temp_repo_with_commits, benchmark) -> None:
         """Benchmark repository metadata extraction."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
 
-        def get_metadata():
+        def get_metadata() -> None:
             return get_repository_metadata(repo)
 
         result = benchmark(get_metadata)

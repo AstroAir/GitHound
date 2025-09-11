@@ -25,7 +25,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable
+from typing import Optional, Callable, Any, List, Dict
 from dataclasses import dataclass
 import json
 
@@ -34,7 +34,7 @@ from fastmcp.client.transports import PythonStdioTransport
 from fastmcp.exceptions import ToolError
 
 # Configure advanced logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
@@ -80,7 +80,7 @@ class ProgressInfo:
 class ProgressMonitor:
     """Monitor progress of long-running operations."""
     
-    def __init__(self, operation: str, total: int):
+    def __init__(self, operation: str, total: int) -> None:
         """
         Initialize progress monitor.
         
@@ -145,7 +145,7 @@ def default_progress_callback(progress: ProgressInfo) -> None:
 class AuthenticationManager:
     """Manage authentication for MCP clients."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize authentication manager."""
         self.tokens: Dict[str, str] = {}
         self.refresh_tokens: Dict[str, str] = {}
@@ -247,7 +247,7 @@ async def demonstrate_authentication() -> Dict[str, Any]:
     headers = auth_manager.get_auth_headers("test-server")
     assert "Authorization" in headers
     assert headers["Authorization"] == "Bearer test_bearer_token_123"
-    logger.info("✓ Bearer token authentication configured")
+    logger.info("✓ Bearer token authentication configured")  # [attr-defined]
     
     # 2. OAuth 2.1 Authentication
     logger.info("2. OAuth 2.1 Authentication")
@@ -262,7 +262,7 @@ async def demonstrate_authentication() -> Dict[str, Any]:
     oauth_headers = auth_manager.get_auth_headers("oauth-server")
     assert "Authorization" in oauth_headers
     assert oauth_headers["Authorization"] == "Bearer oauth_access_token_456"
-    logger.info("✓ OAuth 2.1 authentication configured")
+    logger.info("✓ OAuth 2.1 authentication configured")  # [attr-defined]
     
     # 3. Token Validation
     logger.info("3. Token Validation")
@@ -279,7 +279,7 @@ async def demonstrate_authentication() -> Dict[str, Any]:
         
         # Example of creating HTTP transport with authentication
         # transport = HttpTransport("http://localhost:8000/mcp", headers=auth_headers)
-        logger.info("✓ HTTP transport with authentication configured")
+        logger.info("✓ HTTP transport with authentication configured")  # [attr-defined]
         
         auth_demo_result = {
             "bearer_token_configured": True,
@@ -301,7 +301,7 @@ async def demonstrate_authentication() -> Dict[str, Any]:
     return {
         "status": "success",
         "authentication_features": auth_demo_result,
-        "servers_configured": len(auth_manager.tokens)
+        "servers_configured": len(auth_manager.tokens)  # [attr-defined]
     }
 
 
@@ -342,7 +342,7 @@ async def demonstrate_progress_monitoring() -> Dict[str, Any]:
         ("Generating statistics", 20)
     ]
     
-    operation_results = []
+    operation_results: list[Any] = []
     
     for operation_name, total_items in operations:
         monitor = ProgressMonitor(operation_name, total_items)
@@ -361,7 +361,7 @@ async def demonstrate_progress_monitoring() -> Dict[str, Any]:
         operation_results.append({
             "operation": operation_name,
             "total_items": total_items,
-            "duration": time.time() - start_time
+            "duration": time.time if time is not None else None() - start_time
         })
     
     # 3. Progress with Error Handling
@@ -437,7 +437,7 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
     server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
     transport = PythonStdioTransport(str(server_script))
 
-    operation_logs = []
+    operation_logs: list[Any] = []
 
     try:
         async with Client(transport) as client:
@@ -525,12 +525,12 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
     """
     logger.info("Demonstrating retry strategies...")
     
-    retry_results = []
+    retry_results: list[Any] = []
     
     # 1. Exponential Backoff
     logger.info("1. Exponential Backoff Retry")
     
-    async def retry_with_backoff(operation, max_retries=3, base_delay=1.0):
+    async def retry_with_backoff(operation, max_retries=3, base_delay=1.0) -> None:
         """Retry operation with exponential backoff."""
         for attempt in range(max_retries + 1):
             try:
@@ -546,7 +546,7 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
     # Simulate failing operation
     attempt_count = 0
     
-    async def failing_operation():
+    async def failing_operation() -> None:
         nonlocal attempt_count
         attempt_count += 1
         if attempt_count < 3:
@@ -574,14 +574,14 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
     logger.info("2. Circuit Breaker Pattern")
     
     class CircuitBreaker:
-        def __init__(self, failure_threshold=3, recovery_timeout=5.0):
+        def __init__(self, failure_threshold=3, recovery_timeout=5.0) -> None:
             self.failure_threshold = failure_threshold
             self.recovery_timeout = recovery_timeout
             self.failure_count = 0
             self.last_failure_time = None
             self.state = "closed"  # closed, open, half-open
         
-        async def call(self, operation):
+        async def call(self, operation) -> None:
             if self.state == "open":
                 if time.time() - self.last_failure_time > self.recovery_timeout:
                     self.state = "half-open"
@@ -606,12 +606,12 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
     circuit_breaker = CircuitBreaker()
     
     # Test circuit breaker
-    async def unreliable_operation():
+    async def unreliable_operation() -> None:
         if circuit_breaker.failure_count < 2:
             raise RuntimeError("Simulated service failure")
         return "Service recovered"
     
-    circuit_results = []
+    circuit_results: list[Any] = []
     for i in range(5):
         try:
             result = await circuit_breaker.call(unreliable_operation)
@@ -647,7 +647,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Advanced Features Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Authentication

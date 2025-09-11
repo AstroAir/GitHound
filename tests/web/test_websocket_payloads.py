@@ -133,7 +133,7 @@ async def test_send_personal_message_json_serializes(monkeypatch: pytest.MonkeyP
         },
     }
 
-    await cm.send_personal_message(ws, payload)  # type: ignore[arg-type]
+    await cm.send_personal_message(ws, payload)  # [arg-type]
 
     assert "text" in sent
     # Should be valid JSON with correct top-level keys

@@ -16,7 +16,7 @@ from githound.search_engine import (
 
 
 @pytest.fixture
-def mock_repo():
+def mock_repo() -> None:
     """Create a mock Git repository."""
     mock_repo = Mock(spec=Repo)
     mock_repo.git_dir = "/test/repo/.git"
@@ -24,7 +24,7 @@ def mock_repo():
     mock_repo.active_branch.name = "main"
 
     # Create mock commits
-    mock_commits = []
+    mock_commits: list[Any] = []
     for i in range(5):
         commit = Mock()
         commit.hexsha = f"commit{i:03d}" + "0" * 37
@@ -46,7 +46,7 @@ def mock_repo():
 
 
 @pytest.fixture
-def sample_search_query():
+def sample_search_query() -> None:
     """Create a sample search query for testing."""
     return SearchQuery(
         content_pattern="test",
@@ -64,7 +64,7 @@ def sample_search_query():
 
 
 @pytest.fixture
-def search_context(mock_repo, sample_search_query):
+def search_context(mock_repo, sample_search_query) -> None:
     """Create a search context for testing."""
     return SearchContext(
         repo=mock_repo, query=sample_search_query, branch="main", progress_callback=None, cache={}
@@ -75,7 +75,7 @@ class TestFilePathSearcher:
     """Tests for FilePathSearcher."""
 
     @pytest.mark.asyncio
-    async def test_file_path_searcher_can_handle(self, sample_search_query):
+    async def test_file_path_searcher_can_handle(self, sample_search_query) -> None:
         """Test FilePathSearcher can_handle method."""
         searcher = FilePathSearcher()
 
@@ -89,23 +89,23 @@ class TestFilePathSearcher:
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio
-    async def test_file_path_searcher_search(self, search_context):
+    async def test_file_path_searcher_search(self, search_context) -> None:
         """Test FilePathSearcher search method."""
         searcher = FilePathSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_file_path_searcher_name(self):
+    def test_file_path_searcher_name(self) -> None:
         """Test FilePathSearcher name property."""
         searcher = FilePathSearcher()
-        assert searcher.name == "file_path"
+        assert searcher.name = = "file_path"
 
     @pytest.mark.asyncio
-    async def test_file_path_searcher_estimate_work(self, sample_search_query):
+    async def test_file_path_searcher_estimate_work(self, sample_search_query) -> None:
         """Test FilePathSearcher estimate_work method."""
         searcher = FilePathSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -113,7 +113,7 @@ class TestFilePathSearcher:
         assert work_estimate >= 0
 
     @pytest.mark.asyncio
-    async def test_file_path_searcher_with_glob_patterns(self):
+    async def test_file_path_searcher_with_glob_patterns(self) -> None:
         """Test FilePathSearcher with different glob patterns."""
         searcher = FilePathSearcher()
 
@@ -134,7 +134,7 @@ class TestFileTypeSearcher:
     """Tests for FileTypeSearcher."""
 
     @pytest.mark.asyncio
-    async def test_file_type_searcher_can_handle(self, sample_search_query):
+    async def test_file_type_searcher_can_handle(self, sample_search_query) -> None:
         """Test FileTypeSearcher can_handle method."""
         searcher = FileTypeSearcher()
 
@@ -148,23 +148,23 @@ class TestFileTypeSearcher:
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio
-    async def test_file_type_searcher_search(self, search_context):
+    async def test_file_type_searcher_search(self, search_context) -> None:
         """Test FileTypeSearcher search method."""
         searcher = FileTypeSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_file_type_searcher_name(self):
+    def test_file_type_searcher_name(self) -> None:
         """Test FileTypeSearcher name property."""
         searcher = FileTypeSearcher()
-        assert searcher.name == "file_type"
+        assert searcher.name = = "file_type"
 
     @pytest.mark.asyncio
-    async def test_file_type_searcher_estimate_work(self, sample_search_query):
+    async def test_file_type_searcher_estimate_work(self, sample_search_query) -> None:
         """Test FileTypeSearcher estimate_work method."""
         searcher = FileTypeSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -172,7 +172,7 @@ class TestFileTypeSearcher:
         assert work_estimate >= 0
 
     @pytest.mark.asyncio
-    async def test_file_type_searcher_with_different_extensions(self):
+    async def test_file_type_searcher_with_different_extensions(self) -> None:
         """Test FileTypeSearcher with different file extensions."""
         searcher = FileTypeSearcher()
 
@@ -194,7 +194,7 @@ class TestContentSearcher:
     """Tests for ContentSearcher."""
 
     @pytest.mark.asyncio
-    async def test_content_searcher_can_handle(self, sample_search_query):
+    async def test_content_searcher_can_handle(self, sample_search_query) -> None:
         """Test ContentSearcher can_handle method."""
         searcher = ContentSearcher()
 
@@ -206,23 +206,23 @@ class TestContentSearcher:
         assert await searcher.can_handle(query_no_content) is False
 
     @pytest.mark.asyncio
-    async def test_content_searcher_search(self, search_context):
+    async def test_content_searcher_search(self, search_context) -> None:
         """Test ContentSearcher search method."""
         searcher = ContentSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_content_searcher_name(self):
+    def test_content_searcher_name(self) -> None:
         """Test ContentSearcher name property."""
         searcher = ContentSearcher()
-        assert searcher.name == "content"
+        assert searcher.name = = "content"
 
     @pytest.mark.asyncio
-    async def test_content_searcher_estimate_work(self, sample_search_query):
+    async def test_content_searcher_estimate_work(self, sample_search_query) -> None:
         """Test ContentSearcher estimate_work method."""
         searcher = ContentSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -230,7 +230,7 @@ class TestContentSearcher:
         assert work_estimate >= 0
 
     @pytest.mark.asyncio
-    async def test_content_searcher_case_sensitivity(self):
+    async def test_content_searcher_case_sensitivity(self) -> None:
         """Test ContentSearcher with case sensitivity options."""
         searcher = ContentSearcher()
 
@@ -243,7 +243,7 @@ class TestContentSearcher:
         assert await searcher.can_handle(query_insensitive) is True
 
     @pytest.mark.asyncio
-    async def test_content_searcher_with_regex_patterns(self):
+    async def test_content_searcher_with_regex_patterns(self) -> None:
         """Test ContentSearcher with regex patterns."""
         searcher = ContentSearcher()
 
@@ -256,7 +256,7 @@ class TestContentSearcher:
         assert await searcher.can_handle(query_simple) is True
 
     @pytest.mark.asyncio
-    async def test_content_searcher_with_include_exclude_globs(self, mock_repo):
+    async def test_content_searcher_with_include_exclude_globs(self, mock_repo) -> None:
         """Test ContentSearcher with include/exclude glob patterns."""
         searcher = ContentSearcher()
 
@@ -269,7 +269,7 @@ class TestContentSearcher:
             repo=mock_repo, query=query_include, branch="main", cache={}
         )
         
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(context_include):
             results.append(result)
         assert isinstance(results, list)
@@ -283,13 +283,13 @@ class TestContentSearcher:
             repo=mock_repo, query=query_exclude, branch="main", cache={}
         )
         
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(context_exclude):
             results.append(result)
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
-    async def test_content_searcher_with_file_size_limits(self, mock_repo):
+    async def test_content_searcher_with_file_size_limits(self, mock_repo) -> None:
         """Test ContentSearcher with file size limits."""
         searcher = ContentSearcher()
 
@@ -301,7 +301,7 @@ class TestContentSearcher:
             repo=mock_repo, query=query_with_limit, branch="main", cache={}
         )
         
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(context_with_limit):
             results.append(result)
         assert isinstance(results, list)

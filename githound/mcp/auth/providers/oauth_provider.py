@@ -7,7 +7,7 @@ import uuid
 import hashlib
 import secrets
 import logging
-from typing import Dict, Any, Optional, List, cast
+from typing import Any, Optional, Dict, List
 from urllib.parse import urlencode, parse_qs
 from dataclasses import dataclass, asdict
 
@@ -104,7 +104,7 @@ class MemoryUserStore(UserStore):
         """Hash password with salt."""
         salt = secrets.token_hex(16)
         hash_bytes = hashlib.pbkdf2_hmac(
-            'sha256', password.encode(), salt.encode(), 100000)
+            'sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
         return hash_bytes.hex() + ":" + salt
 
     def _verify_password(self, password: str, hashed: str) -> bool:
@@ -112,7 +112,7 @@ class MemoryUserStore(UserStore):
         try:
             hash_part, salt = hashed.split(":", 1)
             hash_bytes = hashlib.pbkdf2_hmac(
-                'sha256', password.encode(), salt.encode(), 100000)
+                'sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
             return hash_bytes.hex() == hash_part
         except ValueError:
             return False

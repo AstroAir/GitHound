@@ -83,7 +83,7 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
         )
 
         # Perform search
-        results = []
+        results: list[Any] = []
         result_count = 0
 
         async for result in orchestrator.search(
@@ -118,7 +118,7 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
             "status": "success",
             "results": results,
             "total_count": len(results),
-            "search_criteria": input_data.model_dump(),
+            "search_criteria": input_data.dict(),
             "search_timestamp": datetime.now().isoformat(),
         }
 
@@ -164,7 +164,7 @@ async def fuzzy_search(input_data: FuzzySearchInput, ctx: Context) -> dict[str, 
         )
 
         # Perform search
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(
             repo=repo,
             query=query,
@@ -236,7 +236,7 @@ async def content_search(input_data: ContentSearchInput, ctx: Context) -> dict[s
         )
 
         # Perform search
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(
             repo=repo,
             query=query,

@@ -47,7 +47,7 @@ app = typer.Typer(
 class IntegrationWorkflows:
     """Demonstrates integration between new scripts and existing build tools."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
         self.build_script = "build.ps1" if is_windows() else "build.sh"
 

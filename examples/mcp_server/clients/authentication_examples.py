@@ -20,7 +20,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional, Any
 from dataclasses import dataclass
 
 from fastmcp import Client, FastMCP
@@ -29,7 +29,7 @@ from fastmcp.client.auth import BearerAuth, OAuth
 from fastmcp.exceptions import ClientError, McpError
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -140,7 +140,7 @@ async def demonstrate_bearer_auth() -> Dict[str, Any]:
         logger.info("Testing authenticated access with Bearer token...")
         
         # Create authenticated transport
-        auth = BearerAuth(config.bearer_token)
+        auth = BearerAuth(config.bearer_token)  # [attr-defined]
         # Note: In a real scenario, you'd use StreamableHttpTransport with auth
         # For demo purposes, we'll simulate the auth flow
         
@@ -199,17 +199,17 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
     
     config = AuthConfig()
     
-    oauth_steps = []
+    oauth_steps: list[Any] = []
     
     try:
         # Step 1: Initialize OAuth configuration
-        logger.info("Step 1: Initializing OAuth configuration...")
+        logger.info("Step 1: Initializing OAuth configuration...")  # [attr-defined]
         
         oauth_config = {
-            "client_id": config.oauth_client_id,
-            "client_secret": config.oauth_client_secret,
-            "redirect_uri": config.oauth_redirect_uri,
-            "scope": config.oauth_scope,
+            "client_id": config.oauth_client_id,  # [attr-defined]
+            "client_secret": config.oauth_client_secret,  # [attr-defined]
+            "redirect_uri": config.oauth_redirect_uri,  # [attr-defined]
+            "scope": config.oauth_scope,  # [attr-defined]
             "authorization_url": "https://auth.example.com/oauth/authorize",
             "token_url": "https://auth.example.com/oauth/token"
         }
@@ -253,7 +253,7 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
             "token_type": "Bearer",
             "expires_in": 3600,
             "refresh_token": "refresh_token_def789",
-            "scope": config.oauth_scope
+            "scope": config.oauth_scope  # [attr-defined]
         }
         
         oauth_steps.append({
@@ -274,7 +274,7 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
         # Create OAuth auth object
         oauth_auth = OAuth(
             mcp_url="https://api.example.com/mcp",
-            scopes=config.oauth_scope,
+            scopes=config.oauth_scope,  # [attr-defined]
             client_name="FastMCP Demo Client"
         )
         
@@ -292,7 +292,7 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
             "access_token": "new_access_token_ghi789",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "scope": config.oauth_scope
+            "scope": config.oauth_scope  # [attr-defined]
         }
         
         oauth_steps.append({
@@ -327,7 +327,7 @@ async def demonstrate_auth_error_handling() -> Dict[str, Any]:
     """
     logger.info("Demonstrating authentication error handling...")
     
-    error_scenarios = []
+    error_scenarios: list[Any] = []
     
     try:
         # Scenario 1: Missing authentication
@@ -416,7 +416,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Authentication Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Bearer token authentication

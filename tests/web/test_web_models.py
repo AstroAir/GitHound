@@ -25,7 +25,7 @@ from githound.models import (
 class TestSearchRequest:
     """Test SearchRequest model."""
 
-    def test_search_request_creation(self):
+    def test_search_request_creation(self) -> None:
         """Test creating a SearchRequest."""
         request = SearchRequest(
             repo_path="/test/repo",
@@ -37,19 +37,19 @@ class TestSearchRequest:
             max_results=50
         )
         
-        assert request.repo_path == "/test/repo"
-        assert request.branch == "main"
-        assert request.content_pattern == "test"
-        assert request.author_pattern == "john"
+        assert request.repo_path = = "/test/repo"
+        assert request.branch = = "main"
+        assert request.content_pattern = = "test"
+        assert request.author_pattern = = "john"
         assert request.case_sensitive is True
         assert request.fuzzy_search is False
-        assert request.max_results == 50
+        assert request.max_results = = 50
 
-    def test_search_request_defaults(self):
+    def test_search_request_defaults(self) -> None:
         """Test SearchRequest default values."""
         request = SearchRequest(repo_path="/test/repo")
         
-        assert request.repo_path == "/test/repo"
+        assert request.repo_path = = "/test/repo"
         assert request.branch is None
         assert request.content_pattern is None
         assert request.commit_hash is None
@@ -57,12 +57,12 @@ class TestSearchRequest:
         assert request.message_pattern is None
         assert request.case_sensitive is False
         assert request.fuzzy_search is False
-        assert request.fuzzy_threshold == 0.8
+        assert request.fuzzy_threshold = = 0.8
         assert request.max_results is None  # Fixed: default is None, not 1000
         assert request.include_globs is None  # Fixed: default is None, not []
         assert request.exclude_globs is None  # Fixed: default is None, not []
 
-    def test_search_request_date_range(self):
+    def test_search_request_date_range(self) -> None:
         """Test SearchRequest with date range."""
         date_from = datetime(2023, 1, 1)
         date_to = datetime(2023, 12, 31)
@@ -73,10 +73,10 @@ class TestSearchRequest:
             date_to=date_to
         )
         
-        assert request.date_from == date_from
-        assert request.date_to == date_to
+        assert request.date_from = = date_from
+        assert request.date_to = = date_to
 
-    def test_search_request_to_search_query(self):
+    def test_search_request_to_search_query(self) -> None:
         """Test converting SearchRequest to SearchQuery."""
         request = SearchRequest(
             repo_path="/test/repo",
@@ -93,47 +93,47 @@ class TestSearchRequest:
         query = request.to_search_query()
         
         assert isinstance(query, SearchQuery)
-        assert query.content_pattern == "test"
-        assert query.author_pattern == "john"
+        assert query.content_pattern = = "test"
+        assert query.author_pattern = = "john"
         assert query.case_sensitive is True
         assert query.fuzzy_search is True
-        assert query.fuzzy_threshold == 0.9
-        assert query.include_globs == ["*.py"]
-        assert query.exclude_globs == ["*.pyc"]
-        assert query.max_file_size == 1000000
+        assert query.fuzzy_threshold = = 0.9
+        assert query.include_globs = = ["*.py"]
+        assert query.exclude_globs = = ["*.pyc"]
+        assert query.max_file_size = = 1000000
 
-    def test_search_request_file_extensions(self):
+    def test_search_request_file_extensions(self) -> None:
         """Test SearchRequest with file extensions."""
         request = SearchRequest(
             repo_path="/test/repo",
             file_extensions=["py", "js", "ts"]
         )
         
-        assert request.file_extensions == ["py", "js", "ts"]
+        assert request.file_extensions = = ["py", "js", "ts"]
 
 
 class TestSearchResultResponse:
     """Test SearchResultResponse model."""
 
-    def test_search_result_response_creation(self):
+    def test_search_result_response_creation(self) -> None:
         """Test creating a SearchResultResponse."""
         response = SearchResultResponse(
             commit_hash="abc123",
             file_path="test.py",
             line_number=10,
-            matching_line="def test():",  # Fixed: line_content -> matching_line
+            matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type="content",  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
         
-        assert response.commit_hash == "abc123"
-        assert response.file_path == "test.py"
-        assert response.line_number == 10
-        assert response.matching_line == "def test():"  # Fixed: line_content -> matching_line
-        assert response.search_type == "content"  # Fixed: match_type -> search_type
-        assert response.relevance_score == 0.95
+        assert response.commit_hash = = "abc123"
+        assert response.file_path = = "test.py"
+        assert response.line_number = = 10
+        assert response.matching_line = = "def test() -> None:"  # Fixed: line_content -> matching_line
+        assert response.search_type = = "content"  # Fixed: match_type -> search_type
+        assert response.relevance_score = = 0.95
 
-    def test_search_result_response_from_search_result(self):
+    def test_search_result_response_from_search_result(self) -> None:
         """Test creating SearchResultResponse from SearchResult."""
         commit_info = CommitInfo(
             hash="abc123",
@@ -151,7 +151,7 @@ class TestSearchResultResponse:
             commit_hash="abc123",
             file_path="test.py",
             line_number=10,
-            matching_line="def test():",  # Fixed: line_content -> matching_line
+            matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
             relevance_score=0.95,
             commit_info=commit_info
@@ -159,31 +159,31 @@ class TestSearchResultResponse:
         
         response = SearchResultResponse.from_search_result(search_result, include_metadata=True)
         
-        assert response.commit_hash == "abc123"
-        assert response.file_path == "test.py"
-        assert response.line_number == 10
-        assert response.matching_line == "def test():"  # Fixed: line_content -> matching_line
-        assert response.search_type == "content"  # Fixed: match_type -> search_type
-        assert response.relevance_score == 0.95
-        assert response.author_name == "John Doe"  # Fixed: commit_author -> author_name
-        assert response.commit_message == "Add test function"
-        assert response.commit_date == datetime(2023, 1, 1, 12, 0, 0)
+        assert response.commit_hash = = "abc123"
+        assert response.file_path = = "test.py"
+        assert response.line_number = = 10
+        assert response.matching_line = = "def test() -> None:"  # Fixed: line_content -> matching_line
+        assert response.search_type = = "content"  # Fixed: match_type -> search_type
+        assert response.relevance_score = = 0.95
+        assert response.author_name = = "John Doe"  # Fixed: commit_author -> author_name
+        assert response.commit_message = = "Add test function"
+        assert response.commit_date = = datetime(2023, 1, 1, 12, 0, 0)
 
-    def test_search_result_response_without_metadata(self):
+    def test_search_result_response_without_metadata(self) -> None:
         """Test creating SearchResultResponse without metadata."""
         search_result = SearchResult(
             commit_hash="abc123",
             file_path="test.py",
             line_number=10,
-            matching_line="def test():",  # Fixed: line_content -> matching_line
+            matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
         
         response = SearchResultResponse.from_search_result(search_result, include_metadata=False)
         
-        assert response.commit_hash == "abc123"
-        assert response.file_path == "test.py"
+        assert response.commit_hash = = "abc123"
+        assert response.file_path = = "test.py"
         assert response.author_name is None  # Fixed: commit_author -> author_name
         assert response.commit_message is None
         assert response.commit_date is None
@@ -192,13 +192,13 @@ class TestSearchResultResponse:
 class TestSearchResponse:
     """Test SearchResponse model."""
 
-    def test_search_response_creation(self):
+    def test_search_response_creation(self) -> None:
         """Test creating a SearchResponse."""
         result_response = SearchResultResponse(
             commit_hash="abc123",
             file_path="test.py",
             line_number=10,
-            matching_line="def test():",  # Fixed: line_content -> matching_line
+            matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type="content",  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
@@ -214,21 +214,21 @@ class TestSearchResponse:
         )
         
         assert len(response.results) == 1
-        assert response.total_count == 1
-        assert response.search_id == "search_123"
-        assert response.status == "completed"
-        assert response.commits_searched == 10
-        assert response.files_searched == 50
-        assert response.search_duration_ms == 1500.0
+        assert response.total_count = = 1
+        assert response.search_id = = "search_123"
+        assert response.status = = "completed"
+        assert response.commits_searched = = 10
+        assert response.files_searched = = 50
+        assert response.search_duration_ms = = 1500.0
         assert response.error_message is None
 
-    def test_search_response_from_results(self):
+    def test_search_response_from_results(self) -> None:
         """Test creating SearchResponse from search results."""
         search_result = SearchResult(
             commit_hash="abc123",
             file_path="test.py",
             line_number=10,
-            matching_line="def test():",  # Fixed: line_content -> matching_line
+            matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
             relevance_score=0.95
         )
@@ -249,14 +249,14 @@ class TestSearchResponse:
         )
         
         assert len(response.results) == 1
-        assert response.total_count == 1
-        assert response.search_id == "search_123"
-        assert response.status == "completed"
-        assert response.commits_searched == 10
-        assert response.files_searched == 50
-        assert response.search_duration_ms == 1500.0
+        assert response.total_count = = 1
+        assert response.search_id = = "search_123"
+        assert response.status = = "completed"
+        assert response.commits_searched = = 10
+        assert response.files_searched = = 50
+        assert response.search_duration_ms = = 1500.0
 
-    def test_search_response_with_error(self):
+    def test_search_response_with_error(self) -> None:
         """Test SearchResponse with error."""
         response = SearchResponse(
             results=[],
@@ -267,15 +267,15 @@ class TestSearchResponse:
         )
         
         assert len(response.results) == 0
-        assert response.total_count == 0
-        assert response.status == "error"
-        assert response.error_message == "Repository not found"
+        assert response.total_count = = 0
+        assert response.status = = "error"
+        assert response.error_message = = "Repository not found"
 
 
 class TestSearchStatusResponse:
     """Test SearchStatusResponse model."""
 
-    def test_search_status_response_creation(self):
+    def test_search_status_response_creation(self) -> None:
         """Test creating a SearchStatusResponse."""
         response = SearchStatusResponse(
             search_id="search_123",
@@ -286,16 +286,16 @@ class TestSearchStatusResponse:
             started_at=datetime.now()  # Required field
         )
         
-        assert response.search_id == "search_123"
-        assert response.status == "running"
-        assert response.progress == 0.5
-        assert response.message == "Searching commits..."
-        assert response.results_count == 25
+        assert response.search_id = = "search_123"
+        assert response.status = = "running"
+        assert response.progress = = 0.5
+        assert response.message = = "Searching commits..."
+        assert response.results_count = = 25
         # Remove assertions for fields that don't exist in the model
-        # assert response.estimated_total == 100  # Field doesn't exist
+        # assert response.estimated_total = = 100  # Field doesn't exist
         # assert response.error_message is None   # Field doesn't exist
 
-    def test_search_status_response_with_error(self):
+    def test_search_status_response_with_error(self) -> None:
         """Test SearchStatusResponse with error."""
         response = SearchStatusResponse(
             search_id="search_123",
@@ -306,15 +306,15 @@ class TestSearchStatusResponse:
             started_at=datetime.now()  # Required field
         )
         
-        assert response.search_id == "search_123"
-        assert response.status == "error"
-        assert response.message == "Invalid repository path"  # Fixed: error_message -> message
+        assert response.search_id = = "search_123"
+        assert response.status = = "error"
+        assert response.message = = "Invalid repository path"  # Fixed: error_message -> message
 
 
 class TestExportRequest:
     """Test ExportRequest model."""
 
-    def test_export_request_creation(self):
+    def test_export_request_creation(self) -> None:
         """Test creating an ExportRequest."""
         request = ExportRequest(
             search_id="search_123",
@@ -323,20 +323,20 @@ class TestExportRequest:
             filename="results.json"
         )
         
-        assert request.search_id == "search_123"
-        assert request.format == OutputFormat.JSON
+        assert request.search_id = = "search_123"
+        assert request.format = = OutputFormat.JSON
         assert request.include_metadata is True
-        assert request.filename == "results.json"
+        assert request.filename = = "results.json"
 
-    def test_export_request_defaults(self):
+    def test_export_request_defaults(self) -> None:
         """Test ExportRequest default values."""
         request = ExportRequest(
             search_id="search_123",
             format=OutputFormat.CSV
         )
         
-        assert request.search_id == "search_123"
-        assert request.format == OutputFormat.CSV
+        assert request.search_id = = "search_123"
+        assert request.format = = OutputFormat.CSV
         assert request.include_metadata is False
         assert request.filename is None
 
@@ -344,7 +344,7 @@ class TestExportRequest:
 class TestHealthResponse:
     """Test HealthResponse model."""
 
-    def test_health_response_creation(self):
+    def test_health_response_creation(self) -> None:
         """Test creating a HealthResponse."""
         response = HealthResponse(
             status="healthy",
@@ -353,12 +353,12 @@ class TestHealthResponse:
             active_searches=5
         )
         
-        assert response.status == "healthy"
-        assert response.version == "1.0.0"
-        assert response.uptime_seconds == 3600.0
-        assert response.active_searches == 5
+        assert response.status = = "healthy"
+        assert response.version = = "1.0.0"
+        assert response.uptime_seconds = = 3600.0
+        assert response.active_searches = = 5
 
-    def test_health_response_unhealthy(self):
+    def test_health_response_unhealthy(self) -> None:
         """Test HealthResponse for unhealthy status."""
         response = HealthResponse(
             status="unhealthy",
@@ -367,7 +367,7 @@ class TestHealthResponse:
             active_searches=0
         )
         
-        assert response.status == "unhealthy"
-        assert response.version == "1.0.0"
-        assert response.uptime_seconds == 100.0
-        assert response.active_searches == 0
+        assert response.status = = "unhealthy"
+        assert response.version = = "1.0.0"
+        assert response.uptime_seconds = = 100.0
+        assert response.active_searches = = 0

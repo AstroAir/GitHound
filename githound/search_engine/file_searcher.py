@@ -165,11 +165,11 @@ class FileTypeSearcher(CacheableSearcher):
             return
 
         # Normalize extensions (ensure they start with .)
-        normalized_extensions = []
+        normalized_extensions: list[Any] = []
         for ext in extensions:
             if not ext.startswith("."):
                 ext = "." + ext
-            normalized_extensions.append(ext.lower())
+            normalized_extensions.append(ext.lower if ext is not None else None())
 
         self._report_progress(
             context, f"Searching for files with extensions: {', '.join(normalized_extensions)}", 0.0
@@ -442,7 +442,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                 rg_args, input=content, capture_output=True, check=True, text=True
             )
 
-            results = []
+            results: list[Any] = []
             for line in process.stdout.strip().split("\n"):
                 if not line:
                     continue

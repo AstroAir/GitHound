@@ -39,7 +39,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import typer
 from rich.table import Table
@@ -58,12 +58,12 @@ app = typer.Typer(
 class HealthChecker:
     """Comprehensive health checker for GitHound."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
         self.checks = {}
         self.start_time = None
 
-    def add_check_result(self, category: str, check_name: str, passed: bool, details: str = "", warning: bool = False):
+    def add_check_result(self, category: str, check_name: str, passed: bool, details: str = "", warning: bool = False) -> None:
         """Add a check result."""
         if category not in self.checks:
             self.checks[category] = {}
@@ -79,7 +79,7 @@ class HealthChecker:
         """Check system health."""
         print_section("System Health")
 
-        results = {}
+        results: dict[str, Any] = {}
 
         # Python version
         python_ok = check_python_version((3, 11))
@@ -118,7 +118,7 @@ class HealthChecker:
         """Check Python dependencies."""
         print_section("Dependencies")
 
-        results = {}
+        results: dict[str, Any] = {}
 
         # Core dependencies
         core_deps = [
@@ -177,11 +177,11 @@ class HealthChecker:
         """Check configuration files."""
         print_section("Configuration")
 
-        results = {}
+        results: dict[str, Any] = {}
 
         # Required configuration files
         config_files = [
-            ("pyproject.toml", "Project configuration"),
+            ("pyproject.toml", "Project configuration"),  # [attr-defined]
             ("README.md", "Documentation"),
             (".gitignore", "Git ignore rules"),
         ]
@@ -190,14 +190,14 @@ class HealthChecker:
             file_path = self.project_root / filename
             file_ok = file_path.exists()
             print_step(f"{description}", "success" if file_ok else "error")
-            self.add_check_result("configuration", filename, file_ok)
+            self.add_check_result("configuration", filename, file_ok)  # [attr-defined]
             results[filename] = file_ok
 
         # Optional configuration files
         optional_configs = [
-            (".pre-commit-config.yaml", "Pre-commit hooks"),
-            ("mkdocs.yml", "Documentation config"),
-            ("pytest.ini", "Test configuration"),
+            (".pre-commit-config.yaml", "Pre-commit hooks"),  # [attr-defined]
+            ("mkdocs.yml", "Documentation config"),  # [attr-defined]
+            ("pytest.ini", "Test configuration"),  # [attr-defined]
         ]
 
         for filename, description in optional_configs:
@@ -205,7 +205,7 @@ class HealthChecker:
             file_ok = file_path.exists()
             status = "success" if file_ok else "skip"
             print_step(f"{description}", status)
-            self.add_check_result("configuration", filename,
+            self.add_check_result("configuration", filename,  # [attr-defined]
                                   file_ok, warning=not file_ok)
             results[filename] = file_ok
 
@@ -215,14 +215,14 @@ class HealthChecker:
         """Check Git repository health."""
         print_section("Git Repository")
 
-        results = {}
+        results: dict[str, Any] = {}
 
         git_info = get_git_info()
 
         if git_info:
             print_step("Git repository", "success")
             self.add_check_result("git", "repository", True,
-                                  f"Branch: {git_info.get('branch', 'unknown')}")
+                                  f"Branch: {git_info.get if git_info is not None else None('branch', 'unknown')}")
             results["repository"] = True
 
             # Check for uncommitted changes
@@ -254,7 +254,7 @@ class HealthChecker:
         """Check service health."""
         print_section("Services")
 
-        results = {}
+        results: dict[str, Any] = {}
 
         # Import services manager
         try:
@@ -284,7 +284,7 @@ class HealthChecker:
         """Run basic performance benchmarks."""
         print_section("Performance Benchmark")
 
-        benchmarks = {}
+        benchmarks: dict[str, Any] = {}
 
         try:
             # Import time
@@ -326,7 +326,7 @@ class HealthChecker:
         # Run all checks
         system_results = self.check_system_health()
         dep_results = self.check_dependencies()
-        config_results = self.check_configuration()
+        config_results = self.check_configuration()  # [attr-defined]
         git_results = self.check_git_health()
         service_results = self.check_services()
         perf_results = self.run_performance_benchmark()

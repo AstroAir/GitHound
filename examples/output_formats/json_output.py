@@ -23,7 +23,7 @@ import sys
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Optional, Any
 
 from githound.git_handler import (
     get_repository, get_repository_metadata, extract_commit_metadata,
@@ -35,7 +35,7 @@ from githound.schemas import ExportOptions, OutputFormat
 
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 class JSONOutputDemo:
     """Demonstration of JSON output formats and capabilities."""
     
-    def __init__(self, repo_path: str):
+    def __init__(self, repo_path: str) -> None:
         """Initialize with repository path."""
         self.repo_path = Path(repo_path)
         self.repo = None
@@ -121,7 +121,7 @@ class JSONOutputDemo:
                 max_count=max_commits
             )
             
-            commit_list = []
+            commit_list: list[Any] = []
             for commit in commits:
                 try:
                     commit_info = extract_commit_metadata(commit)
@@ -208,7 +208,7 @@ class JSONOutputDemo:
             author_stats = get_author_statistics(self.repo)
             
             # Transform data for better JSON structure
-            authors_list = []
+            authors_list: list[Any] = []
             for author_name, stats in author_stats.items():
                 author_data = {
                     "name": author_name,
@@ -302,7 +302,7 @@ class JSONOutputDemo:
         class GitHoundJSONEncoder(json.JSONEncoder):
             """Custom JSON encoder for GitHound data types."""
             
-            def default(self, obj):
+            def default(self, obj) -> None:
                 if isinstance(obj, datetime):
                     return obj.isoformat()
                 elif isinstance(obj, Path):
@@ -436,7 +436,7 @@ class JSONOutputDemo:
         }
 
 
-async def main():
+async def main() -> None:
     """Main demonstration function."""
     
     if len(sys.argv) != 2:

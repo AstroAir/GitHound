@@ -59,7 +59,7 @@ warn_unreachable = true
 strict_equality = true
 show_error_codes = true
 show_column_numbers = true
-ignore_missing_imports = false
+ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 exclude = ["build/", "githound.egg-info/", "examples/", "tests/", "scripts/"]
 

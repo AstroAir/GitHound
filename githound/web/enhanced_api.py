@@ -249,7 +249,7 @@ async def analyze_commit(
             if commit.parents:
                 for parent in commit.parents:
                     diffs = commit.diff(parent)
-                    file_changes = []
+                    file_changes: list[Any] = []
                     for diff in diffs:
                         if diff.b_path:
                             file_changes.append(
@@ -307,10 +307,10 @@ async def get_filtered_commits(
             max_count=request.max_count,
         )
 
-        commit_list = []
+        commit_list: list[Any] = []
         for commit in commits:
             commit_info = extract_commit_metadata(commit)
-            commit_list.append(commit_info.dict())  # Use dict() for Pydantic v1 compatibility
+            commit_list.append(commit_info.dict() if commit_info is not None else {})  # Use dict() for Pydantic v1 compatibility
 
         return CommitListResponse(
             success=True,
@@ -438,10 +438,8 @@ async def get_repository_statistics(
             if isinstance(first_date, str):
                 from datetime import datetime
 
-                first_date = datetime.fromisoformat(
-                    first_date.replace("Z", "+00:00"))
-                last_date = datetime.fromisoformat(
-                    last_date.replace("Z", "+00:00"))
+                first_date = datetime.fromisoformat(first_date.replace("Z", "+00:00"))
+                last_date = datetime.fromisoformat(last_date.replace("Z", "+00:00"))
 
             age_delta = last_date - first_date
             statistics["summary"]["repository_age_days"] = age_delta.days

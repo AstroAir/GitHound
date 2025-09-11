@@ -22,7 +22,7 @@ import json
 import logging
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Optional, Any
 
 from githound.git_handler import (
     get_repository, extract_commit_metadata, get_commits_with_filters
@@ -32,7 +32,7 @@ from githound.models import CommitInfo
 
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 class CommitAnalyzer:
     """Comprehensive commit analysis tool."""
     
-    def __init__(self, repo_path: str):
+    def __init__(self, repo_path: str) -> None:
         """Initialize analyzer with repository path."""
         self.repo_path = Path(repo_path)
         self.repo = None
@@ -122,7 +122,7 @@ class CommitAnalyzer:
     
     def _analyze_commit_patterns(self, commit_info: CommitInfo) -> Dict[str, Any]:
         """Analyze patterns in commit data."""
-        analysis = {}
+        analysis: dict[str, Any] = {}
         
         # Message analysis
         message = commit_info.message.lower()
@@ -158,7 +158,7 @@ class CommitAnalyzer:
         analysis['total_changes'] = total_changes
         
         # File type analysis
-        file_types = {}
+        file_types: dict[str, Any] = {}
         for file_path in commit_info.files_changed:
             ext = Path(file_path).suffix.lower()
             if not ext:
@@ -186,7 +186,7 @@ class CommitAnalyzer:
                 since=since_date
             )
             
-            commit_list = []
+            commit_list: list[Any] = []
             history_stats = {
                 "total_commits": 0,
                 "authors": {},
@@ -369,7 +369,7 @@ class CommitAnalyzer:
     
     def _analyze_diff_patterns(self, diff_result) -> Dict[str, Any]:
         """Analyze patterns in diff data."""
-        analysis = {}
+        analysis: dict[str, Any] = {}
         
         # Change magnitude
         total_changes = diff_result.total_additions + diff_result.total_deletions
@@ -387,8 +387,8 @@ class CommitAnalyzer:
         analysis['net_change'] = diff_result.total_additions - diff_result.total_deletions
         
         # File type analysis
-        file_types = {}
-        change_types = {}
+        file_types: dict[str, Any] = {}
+        change_types: dict[str, Any] = {}
         
         for file_diff in diff_result.file_diffs:
             # File extension
@@ -413,7 +413,7 @@ class CommitAnalyzer:
         return analysis
 
 
-async def main():
+async def main() -> None:
     """Main analysis function."""
     
     if len(sys.argv) < 2:

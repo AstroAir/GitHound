@@ -20,7 +20,7 @@ import logging
 from pathlib import Path
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)  # [attr-defined]
 logger = logging.getLogger(__name__)
 
 # Set up environment for Eunomia
@@ -35,7 +35,7 @@ from githound.mcp.auth.providers import JWTVerifier, EunomiaAuthorizationProvide
 from githound.mcp.models import User
 
 
-def create_demo_policy_file():
+def create_demo_policy_file() -> None:
     """Create a demo policy file for GitHound with Eunomia."""
     policies = {
         "version": "1.0",
@@ -114,7 +114,7 @@ def create_demo_policy_file():
     return policy_file
 
 
-async def demo_eunomia_authorization():
+async def demo_eunomia_authorization() -> None:
     """Demonstrate Eunomia authorization with GitHound."""
     
     print("\n" + "="*60)

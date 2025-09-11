@@ -18,7 +18,7 @@ class TestJWTVerifier:
         not os.getenv("TEST_JWT", "false").lower() == "true",
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
-    def test_jwt_verifier_creation(self):
+    def test_jwt_verifier_creation(self) -> None:
         """Test JWT verifier creation."""
         try:
             from githound.mcp.auth.providers.jwt import JWTVerifier
@@ -29,9 +29,9 @@ class TestJWTVerifier:
                 audience="test-audience"
             )
             
-            assert verifier.jwks_uri == "https://example.com/.well-known/jwks.json"
-            assert verifier.issuer == "test-issuer"
-            assert verifier.audience == "test-audience"
+            assert verifier.jwks_uri = = "https://example.com/.well-known/jwks.json"
+            assert verifier.issuer = = "test-issuer"
+            assert verifier.audience = = "test-audience"
             
         except ImportError:
             pytest.skip("PyJWT not available")
@@ -41,7 +41,7 @@ class TestJWTVerifier:
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
     @pytest.mark.asyncio
-    async def test_jwt_verifier_invalid_token(self):
+    async def test_jwt_verifier_invalid_token(self) -> None:
         """Test JWT verifier with invalid token."""
         try:
             from githound.mcp.auth.providers.jwt import JWTVerifier
@@ -69,7 +69,7 @@ class TestJWTVerifier:
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
     @pytest.mark.asyncio
-    async def test_jwt_verifier_with_mocked_jwks(self):
+    async def test_jwt_verifier_with_mocked_jwks(self) -> None:
         """Test JWT verifier with mocked JWKS response."""
         try:
             from githound.mcp.auth.providers.jwt import JWTVerifier
@@ -116,7 +116,7 @@ class TestStaticJWTVerifier:
         not os.getenv("TEST_JWT", "false").lower() == "true",
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
-    def test_static_jwt_verifier_creation(self):
+    def test_static_jwt_verifier_creation(self) -> None:
         """Test static JWT verifier creation."""
         try:
             from githound.mcp.auth.providers.jwt import StaticJWTVerifier
@@ -127,9 +127,9 @@ class TestStaticJWTVerifier:
                 audience="test-audience"
             )
             
-            assert verifier.secret_key == "test-secret-key"
-            assert verifier.issuer == "test-issuer"
-            assert verifier.audience == "test-audience"
+            assert verifier.secret_key = = "test-secret-key"
+            assert verifier.issuer = = "test-issuer"
+            assert verifier.audience = = "test-audience"
             
         except ImportError:
             pytest.skip("PyJWT not available")
@@ -139,7 +139,7 @@ class TestStaticJWTVerifier:
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
     @pytest.mark.asyncio
-    async def test_static_jwt_verifier_valid_token(self):
+    async def test_static_jwt_verifier_valid_token(self) -> None:
         """Test static JWT verifier with valid token."""
         try:
             from githound.mcp.auth.providers.jwt import StaticJWTVerifier
@@ -172,8 +172,8 @@ class TestStaticJWTVerifier:
             # Test token validation
             token_info = await verifier.validate_token(token)
             assert token_info is not None
-            assert token_info.username == "testuser"
-            assert token_info.user_id == "testuser"
+            assert token_info.username = = "testuser"
+            assert token_info.user_id = = "testuser"
             assert "user" in token_info.roles
             assert "read" in token_info.permissions
             assert "search" in token_info.permissions
@@ -194,7 +194,7 @@ class TestStaticJWTVerifier:
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
     @pytest.mark.asyncio
-    async def test_static_jwt_verifier_expired_token(self):
+    async def test_static_jwt_verifier_expired_token(self) -> None:
         """Test static JWT verifier with expired token."""
         try:
             from githound.mcp.auth.providers.jwt import StaticJWTVerifier
@@ -238,7 +238,7 @@ class TestStaticJWTVerifier:
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
     @pytest.mark.asyncio
-    async def test_static_jwt_verifier_wrong_issuer(self):
+    async def test_static_jwt_verifier_wrong_issuer(self) -> None:
         """Test static JWT verifier with wrong issuer."""
         try:
             from githound.mcp.auth.providers.jwt import StaticJWTVerifier
@@ -282,7 +282,7 @@ class TestStaticJWTVerifier:
         reason="JWT tests require PyJWT package and TEST_JWT=true"
     )
     @pytest.mark.asyncio
-    async def test_static_jwt_verifier_invalid_signature(self):
+    async def test_static_jwt_verifier_invalid_signature(self) -> None:
         """Test static JWT verifier with invalid signature."""
         try:
             from githound.mcp.auth.providers.jwt import StaticJWTVerifier

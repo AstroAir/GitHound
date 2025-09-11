@@ -36,12 +36,12 @@ def test_search_lifecycle_and_list_searches(client: TestClient, temp_repo: str) 
             "max_results": 10,
         },
     )
-    assert start_resp.status_code == 200
+    assert start_resp.status_code = = 200
     sid = start_resp.json()["search_id"]
 
     # Status should be present
     status_resp = client.get(f"/api/search/{sid}/status")
-    assert status_resp.status_code == 200
+    assert status_resp.status_code = = 200
     status = status_resp.json()
     assert status["search_id"] == sid
     assert status["status"] in {"starting", "running", "completed", "error"}
@@ -52,7 +52,7 @@ def test_search_lifecycle_and_list_searches(client: TestClient, temp_repo: str) 
 
     # List searches includes this id
     list_resp = client.get("/api/searches")
-    assert list_resp.status_code == 200
+    assert list_resp.status_code = = 200
     list_payload = list_resp.json()
     assert "searches" in list_payload
     assert any(item["search_id"] == sid for item in list_payload["searches"])

@@ -3,7 +3,10 @@
 import os
 import json
 import logging
-from typing import Optional, List, Any, Dict, cast
+from typing import Any, Optional, Dict, List, cast
+import urllib.request
+import urllib.error
+import base64
 
 from .oauth_proxy import OAuthProxy, TokenInfo
 
@@ -60,7 +63,7 @@ class GoogleProvider(OAuthProxy):
 
         # Validate required configuration
         if not all([self.client_id, self.client_secret]):
-            missing = []
+            missing: list[Any] = []
             if not self.client_id:
                 missing.append(f"{prefix}CLIENT_ID")
             if not self.client_secret:
@@ -84,9 +87,6 @@ class GoogleProvider(OAuthProxy):
                 token = token[7:]
 
             # Get user information from Google API
-            import urllib.request
-            import urllib.error
-
             request = urllib.request.Request(
                 "https://www.googleapis.com/oauth2/v2/userinfo",
                 headers={
@@ -96,7 +96,7 @@ class GoogleProvider(OAuthProxy):
             )
 
             with urllib.request.urlopen(request) as response:
-                user_data = json.loads(response.read().decode())
+                user_data = json.loads(response.read().decode("utf-8"))
 
             # Extract user information
             user_id = user_data.get("id")
@@ -206,7 +206,7 @@ class GoogleWorkspaceProvider(GoogleProvider):
 
         # Validate required configuration
         if not all([self.client_id, self.client_secret]):
-            missing = []
+            missing: list[Any] = []
             if not self.client_id:
                 missing.append(f"{prefix}CLIENT_ID")
             if not self.client_secret:
@@ -312,7 +312,7 @@ class GoogleServiceAccountProvider(GoogleProvider):
 
         # Validate required configuration
         if not all([self.service_account_email, self.project_id]):
-            missing = []
+            missing: list[Any] = []
             if not self.service_account_email:
                 missing.append(f"{prefix}EMAIL")
             if not self.project_id:
@@ -345,10 +345,8 @@ class GoogleServiceAccountProvider(GoogleProvider):
                 return None
 
             # Decode header and payload (without verification for now)
-            header = json.loads(
-                base64.urlsafe_b64decode(parts[0] + "==").decode())
-            payload = json.loads(
-                base64.urlsafe_b64decode(parts[1] + "==").decode())
+            header = json.loads(base64.urlsafe_b64decode((parts[0] + "==")).decode())
+            payload = json.loads(base64.urlsafe_b64decode((parts[1] + "==")).decode())
 
             # Validate issuer is our service account
             if payload.get("iss") != self.service_account_email:

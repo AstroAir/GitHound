@@ -22,7 +22,7 @@ This example covers:
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional, Any
 
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
@@ -30,7 +30,7 @@ from fastmcp.exceptions import ToolError
 import mcp.types as mcp_types
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -117,7 +117,7 @@ async def demonstrate_tool_operations() -> Dict[str, Any]:
             tools = await client.list_tools()
             logger.info(f"Discovered {len(tools)} tools:")
             
-            tool_info = []
+            tool_info: list[Any] = []
             for tool in tools:
                 logger.info(f"  - {tool.name}: {tool.description}")
                 tool_info.append({
@@ -186,7 +186,7 @@ async def demonstrate_resource_access() -> Dict[str, Any]:
             resources = await client.list_resources()
             logger.info(f"Discovered {len(resources)} resources:")
             
-            resource_info = []
+            resource_info: list[Any] = []
             for resource in resources:
                 logger.info(f"  - {resource.uri}: {resource.description}")
                 resource_info.append({
@@ -300,7 +300,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Basic Usage Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Basic client setup

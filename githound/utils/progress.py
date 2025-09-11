@@ -66,7 +66,7 @@ class OperationCancelledException(Exception):
 class ProgressManager:
     """Advanced progress manager with multiple task tracking and cancellation support."""
 
-    def __init__(self, console: Console | None = None, enable_cancellation: bool = True):
+    def __init__(self, console: Console | None = None, enable_cancellation: bool = True) -> None:
         self.console = console or Console()
         self.enable_cancellation = enable_cancellation
         self.cancellation_token = CancellationToken()
@@ -261,7 +261,7 @@ class ProgressManager:
 class SimpleProgressReporter:
     """Simple progress reporter for basic use cases."""
 
-    def __init__(self, console: Console | None = None):
+    def __init__(self, console: Console | None = None) -> None:
         self.console = console or Console()
         self._last_update = 0.0
         self._update_interval = 0.5  # Update every 500ms

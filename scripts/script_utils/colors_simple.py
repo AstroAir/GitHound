@@ -2,7 +2,7 @@
 Simple console output utilities without external dependencies.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 
 def print_info(message: str, **kwargs) -> None:
@@ -55,14 +55,14 @@ def print_step(step: str, status: str = "running") -> None:
 class StatusContext:
     """Simple context manager for status updates."""
 
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
         self.message = message
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         print(f"⏳ {self.message}...")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type is None:
             print_success(f"{self.message} completed")
         else:

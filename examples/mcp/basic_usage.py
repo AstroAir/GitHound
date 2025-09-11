@@ -13,7 +13,7 @@ from pathlib import Path
 from fastmcp import FastMCPClient
 
 
-async def main():
+async def main() -> None:
     """Demonstrate basic GitHound MCP usage."""
     
     # Connect to GitHound MCP server

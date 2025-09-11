@@ -25,7 +25,7 @@ class TestHTTPTransportIntegration:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_http_server_connectivity(self):
+    async def test_http_server_connectivity(self) -> None:
         """Test basic HTTP server connectivity."""
         # Skip if no HTTP server is running
         if not await self._is_server_running("http://localhost:3000/mcp/"):
@@ -43,7 +43,7 @@ class TestHTTPTransportIntegration:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_http_tool_execution(self, temp_repo):
+    async def test_http_tool_execution(self, temp_repo) -> None:
         """Test tool execution over HTTP transport."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -58,7 +58,7 @@ class TestHTTPTransportIntegration:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_http_resource_access(self, temp_repo):
+    async def test_http_resource_access(self, temp_repo) -> None:
         """Test resource access over HTTP transport."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -76,7 +76,7 @@ class TestHTTPTransportIntegration:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_http_error_handling(self):
+    async def test_http_error_handling(self) -> None:
         """Test error handling over HTTP transport."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -101,7 +101,7 @@ class TestServerDeployment:
     
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_server_startup_stdio(self, temp_repo):
+    def test_server_startup_stdio(self, temp_repo) -> None:
         """Test server startup with stdio transport."""
         # Test server can start with stdio transport
         server_script = Path(__file__).parent.parent / "githound" / "mcp_server.py"
@@ -139,7 +139,7 @@ class TestServerDeployment:
                     # For stdio transport, the server might exit immediately if no input is provided
                     # This is actually expected behavior, so we'll consider this a pass
                     # as long as there are no obvious error messages
-                    if process.returncode == 0 or "Starting GitHound MCP Server" in stdout_output:
+                    if process.returncode = = 0 or "Starting GitHound MCP Server" in stdout_output:
                         pass  # Server started successfully
                     else:
                         pytest.fail(f"Server process exited unexpectedly with code {process.returncode}. stderr: {stderr_output}, stdout: {stdout_output}")
@@ -151,7 +151,7 @@ class TestServerDeployment:
     
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_server_startup_http(self):
+    def test_server_startup_http(self) -> None:
         """Test server startup with HTTP transport."""
         pytest.skip("HTTP server startup testing requires process management")
         
@@ -163,9 +163,9 @@ class TestServerDeployment:
         # ... test server startup and connectivity
     
     @pytest.mark.integration
-    def test_server_configuration_validation(self):
+    def test_server_configuration_validation(self) -> None:
         """Test server configuration validation."""
-        from githound.mcp_server import ServerConfig
+        from githound.mcp_server import ServerConfig  # [attr-defined]
 
         # Test valid configuration
         config = ServerConfig(
@@ -173,8 +173,8 @@ class TestServerDeployment:
             port=3000,
             transport="http"
         )
-        assert config.host == "localhost"
-        assert config.port == 3000
+        assert config.host = = "localhost"  # [attr-defined]
+        assert config.port = = 3000  # [attr-defined]
 
         # Test configuration with different valid values
         config2 = ServerConfig(
@@ -182,9 +182,9 @@ class TestServerDeployment:
             port=8080,
             transport="stdio"
         )
-        assert config2.host == "0.0.0.0"
-        assert config2.port == 8080
-        assert config2.transport == "stdio"
+        assert config2.host = = "0.0.0.0"  # [attr-defined]
+        assert config2.port = = 8080  # [attr-defined]
+        assert config2.transport = = "stdio"  # [attr-defined]
 
 
 class TestNetworkBehavior:
@@ -192,7 +192,7 @@ class TestNetworkBehavior:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_connection_timeout(self):
+    async def test_connection_timeout(self) -> None:
         """Test connection timeout handling."""
         # Test connection to non-existent server
         with pytest.raises((McpError, Exception)):
@@ -201,7 +201,7 @@ class TestNetworkBehavior:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_request_timeout(self):
+    async def test_request_timeout(self) -> None:
         """Test request timeout handling."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -218,7 +218,7 @@ class TestNetworkBehavior:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_large_payload_handling(self, temp_repo):
+    async def test_large_payload_handling(self, temp_repo) -> None:
         """Test handling of large payloads."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -258,12 +258,12 @@ class TestConcurrentConnections:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_multiple_concurrent_clients(self, temp_repo):
+    async def test_multiple_concurrent_clients(self, temp_repo) -> None:
         """Test multiple concurrent client connections."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
         
-        async def client_operation(client_id: int):
+        async def client_operation(client_id: int) -> None:
             async with Client("http://localhost:3000/mcp/") as client:
                 await client.ping()
                 tools = await client.list_tools()
@@ -279,7 +279,7 @@ class TestConcurrentConnections:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_connection_pooling(self):
+    async def test_connection_pooling(self) -> None:
         """Test connection pooling behavior."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -307,7 +307,7 @@ class TestServerPerformance:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_response_time_benchmarks(self, temp_repo):
+    async def test_response_time_benchmarks(self, temp_repo) -> None:
         """Test response time benchmarks."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -332,7 +332,7 @@ class TestServerPerformance:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_memory_usage_stability(self):
+    async def test_memory_usage_stability(self) -> None:
         """Test memory usage stability under load."""
         if not await self._is_server_running("http://localhost:3000/mcp/"):
             pytest.skip("HTTP MCP server not running")
@@ -373,7 +373,7 @@ def start_test_server(port: int = 3001, transport: str = "http") -> subprocess.P
     return subprocess.Popen(args)
 
 
-def stop_test_server(process: subprocess.Popen, timeout: int = 5):
+def stop_test_server(process: subprocess.Popen, timeout: int = 5) -> None:
     """Stop a test MCP server."""
     process.terminate()
     try:

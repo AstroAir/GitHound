@@ -16,7 +16,7 @@ from githound.search_engine import (
 
 
 @pytest.fixture
-def mock_repo():
+def mock_repo() -> None:
     """Create a mock Git repository."""
     mock_repo = Mock(spec=Repo)
     mock_repo.git_dir = "/test/repo/.git"
@@ -24,7 +24,7 @@ def mock_repo():
     mock_repo.active_branch.name = "main"
 
     # Create mock commits
-    mock_commits = []
+    mock_commits: list[Any] = []
     for i in range(5):
         commit = Mock()
         commit.hexsha = f"commit{i:03d}" + "0" * 37
@@ -46,7 +46,7 @@ def mock_repo():
 
 
 @pytest.fixture
-def sample_search_query():
+def sample_search_query() -> None:
     """Create a sample search query for testing."""
     return SearchQuery(
         content_pattern="test",
@@ -64,7 +64,7 @@ def sample_search_query():
 
 
 @pytest.fixture
-def search_context(mock_repo, sample_search_query):
+def search_context(mock_repo, sample_search_query) -> None:
     """Create a search context for testing."""
     return SearchContext(
         repo=mock_repo, query=sample_search_query, branch="main", progress_callback=None, cache={}
@@ -74,7 +74,7 @@ def search_context(mock_repo, sample_search_query):
 class MockSearcher(BaseSearcher):
     """Concrete implementation of BaseSearcher for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("test_searcher")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -83,7 +83,7 @@ class MockSearcher(BaseSearcher):
     async def estimate_work(self, context: SearchContext) -> int:
         return 10
 
-    async def search(self, context: SearchContext):
+    async def search(self, context: SearchContext) -> None:
         yield SearchResult(
             commit_hash="abc123",
             file_path="test.py",
@@ -97,7 +97,7 @@ class MockSearcher(BaseSearcher):
 class MockCacheableSearcher(CacheableSearcher):
     """Concrete implementation of CacheableSearcher for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("test_cacheable_searcher")
 
     async def can_handle(self, query: SearchQuery) -> bool:
@@ -106,7 +106,7 @@ class MockCacheableSearcher(CacheableSearcher):
     async def estimate_work(self, context: SearchContext) -> int:
         return 10
 
-    async def search(self, context: SearchContext):
+    async def search(self, context: SearchContext) -> None:
         # Check cache first
         cache_key = self._get_cache_key(context)
         cached_results = await self._get_from_cache(context, cache_key)
@@ -139,19 +139,19 @@ class MockCacheableSearcher(CacheableSearcher):
 class TestBaseSearcher:
     """Tests for BaseSearcher abstract base class."""
 
-    def test_base_searcher_is_abstract(self):
+    def test_base_searcher_is_abstract(self) -> None:
         """Test that BaseSearcher is abstract and cannot be instantiated directly."""
         with pytest.raises(TypeError):
             BaseSearcher()
 
-    def test_concrete_searcher_instantiation(self):
+    def test_concrete_searcher_instantiation(self) -> None:
         """Test that concrete searcher can be instantiated."""
         searcher = MockSearcher()
         assert searcher is not None
-        assert searcher.name == "test_searcher"
+        assert searcher.name = = "test_searcher"
 
     @pytest.mark.asyncio
-    async def test_concrete_searcher_can_handle(self, sample_search_query):
+    async def test_concrete_searcher_can_handle(self, sample_search_query) -> None:
         """Test concrete searcher can_handle method."""
         searcher = MockSearcher()
 
@@ -163,18 +163,18 @@ class TestBaseSearcher:
         assert await searcher.can_handle(query_no_content) is False
 
     @pytest.mark.asyncio
-    async def test_concrete_searcher_estimate_work(self, sample_search_query):
+    async def test_concrete_searcher_estimate_work(self, sample_search_query) -> None:
         """Test concrete searcher estimate_work method."""
         searcher = MockSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
         assert work_estimate == 10
 
     @pytest.mark.asyncio
-    async def test_concrete_searcher_search(self, search_context):
+    async def test_concrete_searcher_search(self, search_context) -> None:
         """Test concrete searcher search method."""
         searcher = MockSearcher()
         
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
@@ -190,14 +190,14 @@ class TestBaseSearcher:
 class TestCacheableSearcherClass:
     """Tests for CacheableSearcher class."""
 
-    def test_cacheable_searcher_instantiation(self):
+    def test_cacheable_searcher_instantiation(self) -> None:
         """Test that CacheableSearcher can be instantiated."""
         searcher = MockCacheableSearcher()
         assert searcher is not None
-        assert searcher.name == "test_cacheable_searcher"
+        assert searcher.name = = "test_cacheable_searcher"
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_cache_key_generation(self, search_context):
+    async def test_cacheable_searcher_cache_key_generation(self, search_context) -> None:
         """Test cache key generation."""
         searcher = MockCacheableSearcher()
 
@@ -206,7 +206,7 @@ class TestCacheableSearcherClass:
         assert len(cache_key) > 0
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_cache_key_consistency(self, search_context):
+    async def test_cacheable_searcher_cache_key_consistency(self, search_context) -> None:
         """Test that cache keys are consistent for the same context."""
         searcher = MockCacheableSearcher()
 
@@ -215,7 +215,7 @@ class TestCacheableSearcherClass:
         assert key1 == key2
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_cache_key_uniqueness(self, mock_repo):
+    async def test_cacheable_searcher_cache_key_uniqueness(self, mock_repo) -> None:
         """Test that different contexts generate different cache keys."""
         searcher = MockCacheableSearcher()
         
@@ -230,12 +230,12 @@ class TestCacheableSearcherClass:
         assert key1 != key2
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_caching_behavior(self, search_context):
+    async def test_cacheable_searcher_caching_behavior(self, search_context) -> None:
         """Test that results are cached and retrieved correctly."""
         searcher = MockCacheableSearcher()
         
         # First search - should cache results
-        results1 = []
+        results1: list[Any] = []
         async for result in searcher.search(search_context):
             results1.append(result)
         
@@ -244,7 +244,7 @@ class TestCacheableSearcherClass:
         assert cache_key in search_context.cache
         
         # Second search - should use cached results
-        results2 = []
+        results2: list[Any] = []
         async for result in searcher.search(search_context):
             results2.append(result)
         
@@ -254,14 +254,14 @@ class TestCacheableSearcherClass:
         assert results1[0].file_path == results2[0].file_path
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_cache_miss(self, search_context):
+    async def test_cacheable_searcher_cache_miss(self, search_context) -> None:
         """Test behavior when cache is empty."""
         searcher = MockCacheableSearcher()
         
         # Ensure cache is empty
         search_context.cache.clear()
         
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
@@ -269,7 +269,7 @@ class TestCacheableSearcherClass:
         assert results[0].commit_hash == "def456"
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_cache_hit(self, search_context):
+    async def test_cacheable_searcher_cache_hit(self, search_context) -> None:
         """Test behavior when cache contains results."""
         searcher = MockCacheableSearcher()
         
@@ -285,7 +285,7 @@ class TestCacheableSearcherClass:
         )
         search_context.cache[cache_key] = [cached_result]
         
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
@@ -296,7 +296,7 @@ class TestCacheableSearcherClass:
         assert results[0].line_number == 5
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_different_branches(self, mock_repo, sample_search_query):
+    async def test_cacheable_searcher_different_branches(self, mock_repo, sample_search_query) -> None:
         """Test that different branches generate different cache keys."""
         searcher = MockCacheableSearcher()
         
@@ -315,7 +315,7 @@ class TestCacheableSearcherClass:
 class TestSearchContextClass:
     """Tests for SearchContext class."""
 
-    def test_search_context_creation(self, mock_repo, sample_search_query):
+    def test_search_context_creation(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext creation."""
         context = SearchContext(
             repo=mock_repo,
@@ -326,12 +326,12 @@ class TestSearchContextClass:
         )
 
         assert context.repo is mock_repo
-        assert context.query == sample_search_query  # Use == for Pydantic model comparison
-        assert context.branch == "main"
+        assert context.query = = sample_search_query  # Use == for Pydantic model comparison
+        assert context.branch = = "main"
         assert context.progress_callback is None
-        assert context.cache == {}
+        assert context.cache = = {}
 
-    def test_search_context_with_progress_callback(self, mock_repo, sample_search_query):
+    def test_search_context_with_progress_callback(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with progress callback."""
         callback = Mock()
 
@@ -341,7 +341,7 @@ class TestSearchContextClass:
 
         assert context.progress_callback is callback
 
-    def test_search_context_with_cache(self, mock_repo, sample_search_query):
+    def test_search_context_with_cache(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with pre-populated cache."""
         cache = {"test_key": "test_value"}
         
@@ -349,15 +349,15 @@ class TestSearchContextClass:
             repo=mock_repo, query=sample_search_query, cache=cache
         )
 
-        assert context.cache == cache
+        assert context.cache = = cache
         assert context.cache["test_key"] == "test_value"
 
-    def test_search_context_default_values(self, mock_repo, sample_search_query):
+    def test_search_context_default_values(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with default values."""
         context = SearchContext(repo=mock_repo, query=sample_search_query)
 
         assert context.repo is mock_repo
-        assert context.query == sample_search_query  # Use == for Pydantic model comparison
+        assert context.query = = sample_search_query  # Use == for Pydantic model comparison
         assert context.branch is None
         assert context.progress_callback is None
         assert context.cache is None

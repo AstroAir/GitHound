@@ -1,0 +1,39 @@
+# Docker Compose Override for Development
+# This file is automatically loaded by docker-compose for local development
+
+version: '3.8'
+
+services:
+  githound-web:
+    build:
+      target: production
+    environment:
+      - GITHOUND_ENV=development
+      - GITHOUND_DEBUG=true
+      - GITHOUND_LOG_LEVEL=debug
+    volumes:
+      # Mount source code for development (hot reload)
+      - .:/app:ro
+      - githound_data:/app/data
+      - githound_logs:/app/logs
+      - githound_cache:/app/cache
+    command: ["uvicorn", "githound.web.api:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]
+
+  githound-mcp:
+    build:
+      target: production
+    environment:
+      - GITHOUND_ENV=development
+      - GITHOUND_DEBUG=true
+      - GITHOUND_LOG_LEVEL=debug
+    volumes:
+      # Mount source code for development
+      - .:/app:ro
+      - githound_data:/app/data
+      - githound_logs:/app/logs
+      - githound_cache:/app/cache
+    command: ["python", "-m", "githound.mcp_server", "--host", "0.0.0.0", "--port", "3000", "--log-level", "debug"]
+
+  redis:
+    ports:
+      - "6379:6379"  # Expose Redis port for development tools

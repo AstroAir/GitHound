@@ -25,9 +25,17 @@ class SearchContext(BaseModel):
 class BaseSearcher(ABC):
     """Abstract base class for all searchers."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
-        self._metrics = SearchMetrics()
+        self._metrics = SearchMetrics(
+            total_commits_searched=0,
+            total_files_searched=0,
+            total_results_found=0,
+            search_duration_ms=0.0,
+            cache_hits=0,
+            cache_misses=0,
+            memory_usage_mb=None,
+        )
 
     @property
     def metrics(self) -> SearchMetrics:
@@ -69,7 +77,7 @@ class BaseSearcher(ABC):
 class CacheableSearcher(BaseSearcher):
     """Base class for searchers that support caching."""
 
-    def __init__(self, name: str, cache_prefix: str = ""):
+    def __init__(self, name: str, cache_prefix: str = "") -> None:
         super().__init__(name)
         self.cache_prefix = cache_prefix or name
 
@@ -112,7 +120,7 @@ class CacheableSearcher(BaseSearcher):
 class ParallelSearcher(BaseSearcher):
     """Base class for searchers that can run operations in parallel."""
 
-    def __init__(self, name: str, max_workers: int = 4):
+    def __init__(self, name: str, max_workers: int = 4) -> None:
         super().__init__(name)
         self.max_workers = max_workers
         self._semaphore = asyncio.Semaphore(max_workers)

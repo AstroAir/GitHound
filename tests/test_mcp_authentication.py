@@ -9,7 +9,7 @@ Based on: https://gofastmcp.com/deployment/testing
 
 import pytest
 from unittest.mock import patch, MagicMock
-from typing import Dict, Any
+from typing import Optional, Any
 
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
@@ -20,7 +20,7 @@ class TestBearerTokenAuthentication:
     """Test Bearer token authentication patterns."""
     
     @pytest.mark.asyncio
-    async def test_valid_bearer_token(self, auth_headers):
+    async def test_valid_bearer_token(self, auth_headers) -> None:
         """Test authentication with valid Bearer token."""
         # Skip if no HTTP server available
         pytest.skip("HTTP server authentication testing requires running server")
@@ -37,7 +37,7 @@ class TestBearerTokenAuthentication:
         #     assert len(tools) > 0
     
     @pytest.mark.asyncio
-    async def test_invalid_bearer_token(self):
+    async def test_invalid_bearer_token(self) -> None:
         """Test authentication with invalid Bearer token."""
         pytest.skip("HTTP server authentication testing requires running server")
         
@@ -52,7 +52,7 @@ class TestBearerTokenAuthentication:
         #         await client.ping()
     
     @pytest.mark.asyncio
-    async def test_missing_bearer_token(self):
+    async def test_missing_bearer_token(self) -> None:
         """Test authentication without Bearer token when required."""
         pytest.skip("HTTP server authentication testing requires running server")
         
@@ -66,7 +66,7 @@ class TestOAuthAuthentication:
     """Test OAuth authentication patterns."""
     
     @pytest.mark.asyncio
-    async def test_oauth_flow_simulation(self):
+    async def test_oauth_flow_simulation(self) -> None:
         """Test OAuth authentication flow simulation."""
         pytest.skip("OAuth testing requires browser interaction simulation")
         
@@ -79,7 +79,7 @@ class TestOAuthAuthentication:
         #     assert result.data is not None
     
     @pytest.mark.asyncio
-    async def test_oauth_token_refresh(self):
+    async def test_oauth_token_refresh(self) -> None:
         """Test OAuth token refresh mechanism."""
         pytest.skip("OAuth token refresh testing requires OAuth server setup")
 
@@ -88,7 +88,7 @@ class TestAuthenticationMiddleware:
     """Test authentication middleware behavior."""
     
     @pytest.mark.asyncio
-    async def test_auth_middleware_with_valid_credentials(self, mcp_server):
+    async def test_auth_middleware_with_valid_credentials(self, mcp_server) -> None:
         """Test authentication middleware with valid credentials."""
         # Mock authentication middleware
         with patch('githound.mcp_server.mcp') as mock_server:
@@ -101,11 +101,10 @@ class TestAuthenticationMiddleware:
                 assert len(tools) > 0
     
     @pytest.mark.asyncio
-    async def test_auth_middleware_with_invalid_credentials(self, mcp_server):
+    async def test_auth_middleware_with_invalid_credentials(self, mcp_server) -> None:
         """Test authentication middleware with invalid credentials."""
         # Mock authentication failure by patching the authentication function
-        with patch('githound.mcp_server.get_current_user') as mock_auth:
-            mock_auth.return_value = None  # Simulate no authenticated user
+        with patch('githound.mcp_server.get_current_user') as mock_auth: Optional[mock_auth.return_value] = None  # Simulate no authenticated user
 
             # Test should still work but with limited access
             async with Client(mcp_server) as client:
@@ -118,7 +117,7 @@ class TestAuthorizationScenarios:
     """Test authorization scenarios for different user roles."""
     
     @pytest.mark.asyncio
-    async def test_admin_user_permissions(self, mcp_client):
+    async def test_admin_user_permissions(self, mcp_client) -> None:
         """Test admin user can access all tools."""
         # Mock admin user context
         with patch('githound.mcp_server.get_current_user') as mock_user:
@@ -143,7 +142,7 @@ class TestAuthorizationScenarios:
                 raise
     
     @pytest.mark.asyncio
-    async def test_read_only_user_permissions(self, mcp_client):
+    async def test_read_only_user_permissions(self, mcp_client) -> None:
         """Test read-only user has limited access."""
         # Mock read-only user context
         with patch('githound.mcp_server.get_current_user') as mock_user:
@@ -167,11 +166,10 @@ class TestAuthorizationScenarios:
                 assert "permission" not in str(e).lower()
     
     @pytest.mark.asyncio
-    async def test_unauthorized_user_access(self, mcp_client):
+    async def test_unauthorized_user_access(self, mcp_client) -> None:
         """Test unauthorized user access is denied."""
         # Mock unauthorized user context
-        with patch('githound.mcp_server.get_current_user') as mock_user:
-            mock_user.return_value = None  # No user context
+        with patch('githound.mcp_server.get_current_user') as mock_user: Optional[mock_user.return_value] = None  # No user context
             
             # Should still work in in-memory testing (no HTTP auth)
             tools = await mcp_client.list_tools()
@@ -183,7 +181,7 @@ class TestSecurityHeaders:
     """Test security headers and CORS policies."""
     
     @pytest.mark.asyncio
-    async def test_security_headers_present(self):
+    async def test_security_headers_present(self) -> None:
         """Test that security headers are present in HTTP responses."""
         pytest.skip("Security header testing requires HTTP server")
         
@@ -194,16 +192,16 @@ class TestSecurityHeaders:
         #     pass
     
     @pytest.mark.asyncio
-    async def test_cors_policy(self):
+    async def test_cors_policy(self) -> None:
         """Test CORS policy configuration."""
-        pytest.skip("CORS testing requires HTTP server with CORS configuration")
+        pytest.skip("CORS testing requires HTTP server with CORS configuration")  # [attr-defined]
 
 
 class TestRateLimiting:
     """Test rate limiting for authenticated users."""
     
     @pytest.mark.asyncio
-    async def test_rate_limiting_enforcement(self, mcp_client):
+    async def test_rate_limiting_enforcement(self, mcp_client) -> None:
         """Test that rate limiting is enforced."""
         # Mock rate limiting
         with patch('githound.mcp_server.check_rate_limit') as mock_rate_limit:
@@ -229,7 +227,7 @@ class TestRateLimiting:
                     pytest.skip("Rate limiting not implemented")
     
     @pytest.mark.asyncio
-    async def test_rate_limiting_per_user(self):
+    async def test_rate_limiting_per_user(self) -> None:
         """Test rate limiting is applied per user."""
         pytest.skip("Per-user rate limiting requires user context and HTTP server")
 
@@ -238,17 +236,17 @@ class TestSessionManagement:
     """Test session management for authenticated users."""
     
     @pytest.mark.asyncio
-    async def test_session_creation(self):
+    async def test_session_creation(self) -> None:
         """Test session creation on authentication."""
         pytest.skip("Session management testing requires HTTP server")
     
     @pytest.mark.asyncio
-    async def test_session_expiration(self):
+    async def test_session_expiration(self) -> None:
         """Test session expiration handling."""
         pytest.skip("Session expiration testing requires time manipulation")
     
     @pytest.mark.asyncio
-    async def test_session_invalidation(self):
+    async def test_session_invalidation(self) -> None:
         """Test session invalidation on logout."""
         pytest.skip("Session invalidation testing requires HTTP server")
 
@@ -257,17 +255,17 @@ class TestAuthenticationIntegration:
     """Test authentication integration with external providers."""
     
     @pytest.mark.asyncio
-    async def test_github_oauth_integration(self):
+    async def test_github_oauth_integration(self) -> None:
         """Test GitHub OAuth integration."""
         pytest.skip("GitHub OAuth testing requires external service integration")
     
     @pytest.mark.asyncio
-    async def test_google_oauth_integration(self):
+    async def test_google_oauth_integration(self) -> None:
         """Test Google OAuth integration."""
         pytest.skip("Google OAuth testing requires external service integration")
     
     @pytest.mark.asyncio
-    async def test_azure_oauth_integration(self):
+    async def test_azure_oauth_integration(self) -> None:
         """Test Azure OAuth integration."""
         pytest.skip("Azure OAuth testing requires external service integration")
 
@@ -282,14 +280,14 @@ def create_mock_jwt_token(payload: Dict[str, Any]) -> str:
     # This is a simplified mock - real JWT would be signed
     header = {"alg": "HS256", "typ": "JWT"}
     
-    header_b64 = base64.urlsafe_b64encode(json.dumps(header).encode()).decode()
-    payload_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode()
+    header_b64 = base64.urlsafe_b64encode(json.dumps if json is not None else None(header).encode()).decode()
+    payload_b64 = base64.urlsafe_b64encode(json.dumps if json is not None else None(payload).encode()).decode()
     signature = "mock_signature"
     
     return f"{header_b64}.{payload_b64}.{signature}"
 
 
-def create_mock_oauth_response(access_token: str, refresh_token: str = None) -> Dict[str, Any]:
+def create_mock_oauth_response(access_token: str, refresh_token: Optional[str] = None) -> Dict[str, Any]:
     """Create a mock OAuth response for testing."""
     response = {
         "access_token": access_token,

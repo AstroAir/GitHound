@@ -3,7 +3,7 @@
 import os
 import json
 import logging
-from typing import Optional, Dict, Any, List, Union
+from typing import Any, Optional, Dict, List
 from dataclasses import dataclass
 
 from .base import AuthProvider, AuthResult, TokenInfo
@@ -107,7 +107,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
         """Create a default policy file for GitHound MCP server."""
         default_policies = {
             "version": "1.0",
-            "server_name": self.config.server_name,
+            "server_name": self.config.server_name,  # [attr-defined]
             "policies": [
                 {
                     "id": "admin_full_access",
@@ -201,7 +201,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
             # Build the authorization request
             subject = f"role:{user.role}"
             action = permission
-            resource_name = resource or f"{self.config.server_name}:default"
+            resource_name = resource or f"{self.config.server_name}:default"  # [attr-defined]
 
             # Add user context
             auth_context = {
@@ -256,7 +256,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
 
     def get_policy_file_path(self) -> str:
         """Get the path to the policy file."""
-        return self.config.policy_file
+        return self.config.policy_file  # [attr-defined]
 
     def reload_policies(self) -> None:
         """Reload policies from the policy file."""

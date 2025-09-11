@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import patch, AsyncMock, Mock
-from typing import Dict, Any
+from typing import Any
 
 from githound.mcp.auth.providers.base import AuthResult
 
@@ -10,7 +10,7 @@ from githound.mcp.auth.providers.base import AuthResult
 class TestGitHubProvider:
     """Test GitHub OAuth provider."""
     
-    def test_github_provider_creation(self):
+    def test_github_provider_creation(self) -> None:
         """Test GitHub provider creation and configuration."""
         from githound.mcp.auth.providers.github import GitHubProvider
         
@@ -20,11 +20,11 @@ class TestGitHubProvider:
             base_url="http://localhost:8000"
         )
         
-        assert provider.client_id == "test-client-id"
-        assert provider.client_secret == "test-client-secret"
-        assert provider.base_url == "http://localhost:8000"
+        assert provider.client_id = = "test-client-id"
+        assert provider.client_secret = = "test-client-secret"
+        assert provider.base_url = = "http://localhost:8000"
     
-    def test_github_oauth_metadata(self):
+    def test_github_oauth_metadata(self) -> None:
         """Test GitHub OAuth metadata generation."""
         from githound.mcp.auth.providers.github import GitHubProvider
         
@@ -46,7 +46,7 @@ class TestGitHubProvider:
         assert metadata["authorization_endpoint"] == "http://localhost:8000/oauth/authorize"
         assert metadata["token_endpoint"] == "http://localhost:8000/oauth/token"
     
-    def test_github_dcr_support(self):
+    def test_github_dcr_support(self) -> None:
         """Test GitHub Dynamic Client Registration support."""
         from githound.mcp.auth.providers.github import GitHubProvider
         
@@ -58,7 +58,7 @@ class TestGitHubProvider:
         assert provider.supports_dynamic_client_registration() is True
     
     @pytest.mark.asyncio
-    async def test_github_authentication_success(self):
+    async def test_github_authentication_success(self) -> None:
         """Test successful GitHub authentication flow."""
         from githound.mcp.auth.providers.github import GitHubProvider
         
@@ -106,10 +106,10 @@ class TestGitHubProvider:
             assert result.user.username == "testuser"
             assert result.user.email == "test@example.com"
             assert result.user.role == "user"  # Default role
-            assert result.token == "gho_test_token"
+            assert result.token = = "gho_test_token"
     
     @pytest.mark.asyncio
-    async def test_github_authentication_token_failure(self):
+    async def test_github_authentication_token_failure(self) -> None:
         """Test GitHub authentication with token exchange failure."""
         from githound.mcp.auth.providers.github import GitHubProvider
         
@@ -135,7 +135,7 @@ class TestGitHubProvider:
             assert "token exchange failed" in result.error.lower()
     
     @pytest.mark.asyncio
-    async def test_github_client_registration(self):
+    async def test_github_client_registration(self) -> None:
         """Test GitHub client registration."""
         from githound.mcp.auth.providers.github import GitHubProvider
         
@@ -175,7 +175,7 @@ class TestGitHubProvider:
 class TestGoogleProvider:
     """Test Google OAuth provider."""
     
-    def test_google_provider_creation(self):
+    def test_google_provider_creation(self) -> None:
         """Test Google provider creation and configuration."""
         from githound.mcp.auth.providers.google import GoogleProvider
         
@@ -185,11 +185,11 @@ class TestGoogleProvider:
             base_url="http://localhost:8000"
         )
         
-        assert provider.client_id == "test-client-id.apps.googleusercontent.com"
-        assert provider.client_secret == "test-client-secret"
-        assert provider.base_url == "http://localhost:8000"
+        assert provider.client_id = = "test-client-id.apps.googleusercontent.com"
+        assert provider.client_secret = = "test-client-secret"
+        assert provider.base_url = = "http://localhost:8000"
     
-    def test_google_oauth_metadata(self):
+    def test_google_oauth_metadata(self) -> None:
         """Test Google OAuth metadata generation."""
         from githound.mcp.auth.providers.google import GoogleProvider
         
@@ -213,7 +213,7 @@ class TestGoogleProvider:
         assert "profile" in metadata["scopes"]
     
     @pytest.mark.asyncio
-    async def test_google_authentication_success(self):
+    async def test_google_authentication_success(self) -> None:
         """Test successful Google authentication flow."""
         from githound.mcp.auth.providers.google import GoogleProvider
         
@@ -262,13 +262,13 @@ class TestGoogleProvider:
             assert result.user.username == "test@gmail.com"  # Google uses email as username
             assert result.user.email == "test@gmail.com"
             assert result.user.role == "user"  # Default role
-            assert result.token == "ya29.test_token"
+            assert result.token = = "ya29.test_token"
 
 
 class TestOAuthProxy:
     """Test OAuth proxy functionality."""
     
-    def test_oauth_proxy_creation(self):
+    def test_oauth_proxy_creation(self) -> None:
         """Test OAuth proxy creation and configuration."""
         from githound.mcp.auth.providers.oauth_proxy import OAuthProxy
         
@@ -281,13 +281,13 @@ class TestOAuthProxy:
             userinfo_endpoint="https://auth.example.com/oauth/userinfo"
         )
         
-        assert proxy.client_id == "test-client-id"
-        assert proxy.client_secret == "test-client-secret"
-        assert proxy.authorization_endpoint == "https://auth.example.com/oauth/authorize"
-        assert proxy.token_endpoint == "https://auth.example.com/oauth/token"
-        assert proxy.userinfo_endpoint == "https://auth.example.com/oauth/userinfo"
+        assert proxy.client_id = = "test-client-id"
+        assert proxy.client_secret = = "test-client-secret"
+        assert proxy.authorization_endpoint = = "https://auth.example.com/oauth/authorize"
+        assert proxy.token_endpoint = = "https://auth.example.com/oauth/token"
+        assert proxy.userinfo_endpoint = = "https://auth.example.com/oauth/userinfo"
     
-    def test_oauth_proxy_metadata(self):
+    def test_oauth_proxy_metadata(self) -> None:
         """Test OAuth proxy metadata generation."""
         from githound.mcp.auth.providers.oauth_proxy import OAuthProxy
         
@@ -309,7 +309,7 @@ class TestOAuthProxy:
         assert metadata["token_endpoint"] == "http://localhost:8000/oauth/token"
     
     @pytest.mark.asyncio
-    async def test_oauth_proxy_client_registration(self):
+    async def test_oauth_proxy_client_registration(self) -> None:
         """Test OAuth proxy client registration."""
         from githound.mcp.auth.providers.oauth_proxy import OAuthProxy
         
@@ -350,7 +350,7 @@ class TestOAuthProxy:
             assert registration["client_secret"] == "generated-client-secret"
     
     @pytest.mark.asyncio
-    async def test_oauth_proxy_authentication(self):
+    async def test_oauth_proxy_authentication(self) -> None:
         """Test OAuth proxy authentication flow."""
         from githound.mcp.auth.providers.oauth_proxy import OAuthProxy
         
@@ -400,4 +400,4 @@ class TestOAuthProxy:
             assert result.success is True
             assert result.user.username == "testuser"
             assert result.user.email == "test@example.com"
-            assert result.token == "test-access-token"
+            assert result.token = = "test-access-token"

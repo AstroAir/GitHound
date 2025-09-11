@@ -21,25 +21,25 @@ from githound.mcp_server import mcp, get_mcp_server
 
 
 @pytest.fixture
-def temp_repo():
+def temp_repo() -> None:
     """Create a temporary Git repository for testing."""
     temp_dir = tempfile.mkdtemp()
     repo = Repo.init(temp_dir)
 
     # Configure user for commits
-    with repo.config_writer() as config:
-        config.set_value("user", "name", "Test User")
-        config.set_value("user", "email", "test@example.com")
+    with repo.config_writer() as config:  # [attr-defined]
+        config.set_value("user", "name", "Test User")  # [attr-defined]
+        config.set_value("user", "email", "test@example.com")  # [attr-defined]
 
     # Create initial commit
     test_file = Path(temp_dir) / "test.py"
-    test_file.write_text("def hello():\n    print('Hello, World!')\n")
+    test_file.write_text("def hello() -> None:\n    print('Hello, World!')\n")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
 
     # Create second commit
     test_file.write_text(
-        "def hello():\n    print('Hello, GitHound!')\n\ndef goodbye():\n    print('Goodbye!')\n"
+        "def hello() -> None:\n    print('Hello, GitHound!')\n\ndef goodbye() -> None:\n    print('Goodbye!')\n"
     )
     repo.index.add([str(test_file)])
     second_commit = repo.index.commit("Add goodbye function")
@@ -51,7 +51,7 @@ def temp_repo():
 
 
 @pytest.fixture
-def mcp_client():
+def mcp_client() -> None:
     """Create an MCP client for testing."""
     return Client(mcp)
 
@@ -60,7 +60,7 @@ class TestMCPRepositoryAnalysis:
     """Tests for MCP repository analysis tools."""
 
     @pytest.mark.asyncio
-    async def test_analyze_repository(self, temp_repo, mcp_client):
+    async def test_analyze_repository(self, temp_repo, mcp_client) -> None:
         """Test repository analysis MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -83,7 +83,7 @@ class TestMCPRepositoryAnalysis:
             assert len(response["repository_metadata"]["contributors"]) >= 1
 
     @pytest.mark.asyncio
-    async def test_analyze_commit(self, temp_repo, mcp_client):
+    async def test_analyze_commit(self, temp_repo, mcp_client) -> None:
         """Test commit analysis MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -106,7 +106,7 @@ class TestMCPRepositoryAnalysis:
             assert response["commit_metadata"]["author_name"] == "Test User"
 
     @pytest.mark.asyncio
-    async def test_get_filtered_commits(self, temp_repo, mcp_client):
+    async def test_get_filtered_commits(self, temp_repo, mcp_client) -> None:
         """Test filtered commit retrieval MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -133,7 +133,7 @@ class TestMCPRepositoryAnalysis:
             assert len(response["commits"]) >= 2
 
     @pytest.mark.asyncio
-    async def test_get_file_history(self, temp_repo, mcp_client):
+    async def test_get_file_history(self, temp_repo, mcp_client) -> None:
         """Test file history MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -160,7 +160,7 @@ class TestMCPBlameAndDiff:
     """Tests for MCP blame and diff analysis tools."""
 
     @pytest.mark.asyncio
-    async def test_analyze_file_blame(self, temp_repo, mcp_client):
+    async def test_analyze_file_blame(self, temp_repo, mcp_client) -> None:
         """Test file blame analysis MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -183,7 +183,7 @@ class TestMCPBlameAndDiff:
             assert len(response["file_blame"]["contributors"]) >= 1
 
     @pytest.mark.asyncio
-    async def test_compare_commits_diff(self, temp_repo, mcp_client):
+    async def test_compare_commits_diff(self, temp_repo, mcp_client) -> None:
         """Test commit comparison MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -211,7 +211,7 @@ class TestMCPBlameAndDiff:
             assert response["commit_diff"]["to_commit"] == second_commit.hexsha
 
     @pytest.mark.asyncio
-    async def test_get_author_stats(self, temp_repo, mcp_client):
+    async def test_get_author_stats(self, temp_repo, mcp_client) -> None:
         """Test author statistics MCP tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -240,12 +240,12 @@ class TestMCPResources:
     """Tests for MCP resources."""
 
     @pytest.mark.asyncio
-    async def test_repository_config_resource(self, temp_repo, mcp_client):
+    async def test_repository_config_resource(self, temp_repo, mcp_client) -> None:
         """Test repository configuration resource."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
         async with mcp_client:
-            result = await mcp_client.read_resource(f"githound://repository/{temp_dir}/config")
+            result = await mcp_client.read_resource(f"githound://repository/{temp_dir}/config")  # [attr-defined]
 
             assert result is not None
             assert len(result) > 0
@@ -256,7 +256,7 @@ class TestMCPResources:
             assert "Contributors" in content
 
     @pytest.mark.asyncio
-    async def test_repository_branches_resource(self, temp_repo, mcp_client):
+    async def test_repository_branches_resource(self, temp_repo, mcp_client) -> None:
         """Test repository branches resource."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -271,7 +271,7 @@ class TestMCPResources:
             assert "master" in content or "main" in content
 
     @pytest.mark.asyncio
-    async def test_repository_contributors_resource(self, temp_repo, mcp_client):
+    async def test_repository_contributors_resource(self, temp_repo, mcp_client) -> None:
         """Test repository contributors resource."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -292,7 +292,7 @@ class TestMCPExport:
     """Tests for MCP export functionality."""
 
     @pytest.mark.asyncio
-    async def test_export_repository_data_json(self, temp_repo, mcp_client):
+    async def test_export_repository_data_json(self, temp_repo, mcp_client) -> None:
         """Test repository data export in JSON format."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -337,7 +337,7 @@ class TestMCPErrorHandling:
     """Tests for MCP error handling."""
 
     @pytest.mark.asyncio
-    async def test_invalid_repository_path(self, mcp_client):
+    async def test_invalid_repository_path(self, mcp_client) -> None:
         """Test error handling for invalid repository path."""
         async with mcp_client:
             result = await mcp_client.call_tool(
@@ -355,7 +355,7 @@ class TestMCPErrorHandling:
             assert "error" in response
 
     @pytest.mark.asyncio
-    async def test_invalid_commit_hash(self, temp_repo, mcp_client):
+    async def test_invalid_commit_hash(self, temp_repo, mcp_client) -> None:
         """Test error handling for invalid commit hash."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -376,7 +376,7 @@ class TestMCPErrorHandling:
             assert "error" in response
 
     @pytest.mark.asyncio
-    async def test_invalid_file_path_blame(self, temp_repo, mcp_client):
+    async def test_invalid_file_path_blame(self, temp_repo, mcp_client) -> None:
         """Test error handling for invalid file path in blame analysis."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -401,7 +401,7 @@ class TestMCPAdvancedSearch:
     """Tests for advanced MCP search functionality."""
 
     @pytest.mark.asyncio
-    async def test_advanced_search_content(self, temp_repo, mcp_client):
+    async def test_advanced_search_content(self, temp_repo, mcp_client) -> None:
         """Test advanced search with content pattern."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -427,7 +427,7 @@ class TestMCPAdvancedSearch:
             assert response["total_count"] >= 0
 
     @pytest.mark.asyncio
-    async def test_fuzzy_search(self, temp_repo, mcp_client):
+    async def test_fuzzy_search(self, temp_repo, mcp_client) -> None:
         """Test fuzzy search functionality."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -455,7 +455,7 @@ class TestMCPAdvancedSearch:
             assert response["search_term"] == "hello"
 
     @pytest.mark.asyncio
-    async def test_content_search(self, temp_repo, mcp_client):
+    async def test_content_search(self, temp_repo, mcp_client) -> None:
         """Test content-specific search."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -487,7 +487,7 @@ class TestMCPRepositoryManagement:
     """Tests for repository management MCP tools."""
 
     @pytest.mark.asyncio
-    async def test_list_branches(self, temp_repo, mcp_client):
+    async def test_list_branches(self, temp_repo, mcp_client) -> None:
         """Test list branches functionality."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -509,7 +509,7 @@ class TestMCPRepositoryManagement:
             assert response["total_count"] >= 1
 
     @pytest.mark.asyncio
-    async def test_list_tags(self, temp_repo, mcp_client):
+    async def test_list_tags(self, temp_repo, mcp_client) -> None:
         """Test list tags functionality."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -530,7 +530,7 @@ class TestMCPRepositoryManagement:
             assert "total_count" in response
 
     @pytest.mark.asyncio
-    async def test_validate_repository(self, temp_repo, mcp_client):
+    async def test_validate_repository(self, temp_repo, mcp_client) -> None:
         """Test repository validation."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -553,7 +553,7 @@ class TestMCPRepositoryManagement:
             assert validation["has_commits"] is True
 
     @pytest.mark.asyncio
-    async def test_generate_repository_report(self, temp_repo, mcp_client):
+    async def test_generate_repository_report(self, temp_repo, mcp_client) -> None:
         """Test repository report generation."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -580,7 +580,7 @@ class TestMCPRepositoryManagement:
 class TestMCPInputValidation:
     """Tests for MCP input validation."""
 
-    def test_advanced_search_input_validation(self, temp_repo):
+    def test_advanced_search_input_validation(self, temp_repo) -> None:
         """Test AdvancedSearchInput validation."""
         from githound.mcp_server import AdvancedSearchInput
 
@@ -593,7 +593,7 @@ class TestMCPInputValidation:
             fuzzy_threshold=0.8,
             max_results=100
         )
-        assert valid_input.content_pattern == "test"
+        assert valid_input.content_pattern = = "test"
 
         # Test invalid fuzzy threshold
         with pytest.raises(ValueError, match="Fuzzy threshold must be between 0.0 and 1.0"):
@@ -611,7 +611,7 @@ class TestMCPInputValidation:
                 max_results=-1
             )
 
-    def test_fuzzy_search_input_validation(self, temp_repo):
+    def test_fuzzy_search_input_validation(self, temp_repo) -> None:
         """Test FuzzySearchInput validation."""
         from githound.mcp_server import FuzzySearchInput
 
@@ -623,7 +623,7 @@ class TestMCPInputValidation:
             search_term="test",
             threshold=0.7
         )
-        assert valid_input.search_term == "test"
+        assert valid_input.search_term = = "test"
 
         # Test empty search term
         with pytest.raises(ValueError, match="Search term cannot be empty"):
@@ -641,7 +641,7 @@ class TestMCPInputValidation:
                 search_types=["invalid_type"]
             )
 
-    def test_web_server_input_validation(self, temp_repo):
+    def test_web_server_input_validation(self, temp_repo) -> None:
         """Test WebServerInput validation."""
         from githound.mcp_server import WebServerInput
 
@@ -653,7 +653,7 @@ class TestMCPInputValidation:
             host="localhost",
             port=8000
         )
-        assert valid_input.port == 8000
+        assert valid_input.port = = 8000
 
         # Test invalid port
         with pytest.raises(ValueError, match="Port must be between 1024 and 65535"):
@@ -666,11 +666,11 @@ class TestMCPInputValidation:
 class TestMCPServerConfiguration:
     """Tests for MCP server configuration."""
 
-    def test_mcp_server_creation(self):
+    def test_mcp_server_creation(self) -> None:
         """Test MCP server creation and configuration."""
         server = get_mcp_server()
 
-        assert server.name == "GitHound MCP Server"
+        assert server.name = = "GitHound MCP Server"
         assert hasattr(server, 'version')  # FastMCP has version attribute
         # Note: FastMCP doesn't have a description attribute
 
@@ -679,14 +679,14 @@ class TestFastMCPInMemoryPatterns:
     """Test FastMCP in-memory testing patterns following latest documentation."""
 
     @pytest.mark.asyncio
-    async def test_in_memory_server_instance(self, mcp_server: FastMCP):
+    async def test_in_memory_server_instance(self, mcp_server: FastMCP) -> None:
         """Test in-memory server instance creation."""
         assert mcp_server is not None
-        assert mcp_server.name == "GitHound MCP Server"
+        assert mcp_server.name = = "GitHound MCP Server"
         assert hasattr(mcp_server, 'version')
 
     @pytest.mark.asyncio
-    async def test_in_memory_client_connection(self, mcp_client: Client):
+    async def test_in_memory_client_connection(self, mcp_client: Client) -> None:
         """Test in-memory client connection following FastMCP best practices."""
         # Test basic connectivity - this is the key FastMCP in-memory pattern
         async with mcp_client:
@@ -704,7 +704,7 @@ class TestFastMCPInMemoryPatterns:
             assert isinstance(prompts, list)
 
     @pytest.mark.asyncio
-    async def test_deterministic_tool_execution(self, mcp_client: Client, temp_repo):
+    async def test_deterministic_tool_execution(self, mcp_client: Client, temp_repo) -> None:
         """Test deterministic tool execution with in-memory testing."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
         repo_path = str(temp_dir)
@@ -724,7 +724,7 @@ class TestFastMCPInMemoryPatterns:
                 raise
 
     @pytest.mark.asyncio
-    async def test_mocked_dependencies_pattern(self, mcp_server: FastMCP, mock_external_dependencies):
+    async def test_mocked_dependencies_pattern(self, mcp_server: FastMCP, mock_external_dependencies) -> None:
         """Test mocking external dependencies following FastMCP patterns."""
         # Configure mocks for deterministic testing
         mock_repo = MagicMock()
@@ -746,7 +746,7 @@ class TestFastMCPInMemoryPatterns:
                 raise
 
     @pytest.mark.asyncio
-    async def test_error_handling_patterns(self, mcp_client: Client, error_scenarios):
+    async def test_error_handling_patterns(self, mcp_client: Client, error_scenarios) -> None:
         """Test error handling following FastMCP patterns."""
         # Test invalid repository path
         with pytest.raises((ToolError, Exception)):
@@ -763,7 +763,7 @@ class TestFastMCPInMemoryPatterns:
             )
 
     @pytest.mark.asyncio
-    async def test_resource_access_patterns(self, mcp_client: Client, temp_repo):
+    async def test_resource_access_patterns(self, mcp_client: Client, temp_repo) -> None:
         """Test resource access following FastMCP patterns."""
         repo, temp_dir, initial_commit, second_commit = temp_repo
         repo_path = str(temp_dir)
@@ -779,11 +779,11 @@ class TestFastMCPInMemoryPatterns:
             pytest.skip(f"Resource not available: {e}")
 
     @pytest.mark.asyncio
-    async def test_concurrent_operations_pattern(self, mcp_server: FastMCP, temp_repo):
+    async def test_concurrent_operations_pattern(self, mcp_server: FastMCP, temp_repo) -> None:
         """Test concurrent operations following FastMCP patterns."""
         import asyncio
 
-        async def perform_operation(client_id: int):
+        async def perform_operation(client_id: int) -> None:
             async with Client(mcp_server) as client:
                 await client.ping()
                 return client_id
@@ -796,7 +796,7 @@ class TestFastMCPInMemoryPatterns:
         successful_results = [r for r in results if not isinstance(r, Exception)]
         assert len(successful_results) > 0
 
-    def test_search_orchestrator_initialization(self):
+    def test_search_orchestrator_initialization(self) -> None:
         """Test search orchestrator initialization."""
         from githound.mcp_server import get_search_orchestrator
 
@@ -814,7 +814,7 @@ class TestMCPAdvancedErrorHandling:
     """Tests for advanced MCP error handling scenarios."""
 
     @pytest.mark.asyncio
-    async def test_invalid_repository_path_advanced_search(self, mcp_client):
+    async def test_invalid_repository_path_advanced_search(self, mcp_client) -> None:
         """Test error handling for invalid repository path in advanced search."""
         from fastmcp.exceptions import ToolError
 
@@ -830,7 +830,7 @@ class TestMCPAdvancedErrorHandling:
                 )
 
     @pytest.mark.asyncio
-    async def test_invalid_repository_path_fuzzy_search(self, mcp_client):
+    async def test_invalid_repository_path_fuzzy_search(self, mcp_client) -> None:
         """Test error handling for invalid repository path in fuzzy search."""
         from fastmcp.exceptions import ToolError
 
@@ -846,7 +846,7 @@ class TestMCPAdvancedErrorHandling:
                 )
 
     @pytest.mark.asyncio
-    async def test_invalid_repository_validation(self, mcp_client):
+    async def test_invalid_repository_validation(self, mcp_client) -> None:
         """Test repository validation with invalid path."""
         async with mcp_client:
             result = await mcp_client.call_tool(

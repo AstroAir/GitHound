@@ -23,13 +23,13 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Optionalny
 
 
 class MCPTestRunner:
     """Test runner for GitHound MCP server tests."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = Path(__file__).parent.parent
         self.test_suites = {
             "unit": {
@@ -78,7 +78,7 @@ class MCPTestRunner:
             }
         }
 
-    def run_test_suite(self, suite_name: str, extra_args: List[str] = None) -> int:
+    def run_test_suite(self, suite_name: str, extra_args: Optional[List[str]] = None) -> int:
         """Run a specific test suite."""
         if suite_name not in self.test_suites:
             print(f"Error: Unknown test suite '{suite_name}'")
@@ -115,7 +115,7 @@ class MCPTestRunner:
             print(f"Error running tests: {e}")
             return 1
 
-    def list_test_suites(self):
+    def list_test_suites(self) -> None:
         """List available test suites."""
         print("Available test suites:")
         print("=" * 50)
@@ -132,7 +132,7 @@ class MCPTestRunner:
         print("-" * 60)
 
         essential_tests = [
-            "tests/test_mcp_server.py::TestMCPServerConfiguration::test_mcp_server_creation",
+            "tests/test_mcp_server.py::TestMCPServerConfiguration::test_mcp_server_creation",  # [attr-defined]
             "tests/test_mcp_server.py::TestFastMCPInMemoryPatterns::test_in_memory_server_instance",
             "tests/test_mcp_server.py::TestFastMCPInMemoryPatterns::test_in_memory_client_connection",
             "tests/test_mcp_fastmcp_patterns.py::TestFastMCPInMemoryTesting::test_in_memory_server_creation",
@@ -163,7 +163,7 @@ class MCPTestRunner:
 
         try:
             result = subprocess.run(cmd, cwd=self.project_root)
-            if result.returncode == 0:
+            if result.returncode = = 0:
                 print("\nCoverage report generated:")
                 print("  - Terminal: displayed above")
                 print("  - HTML: htmlcov/index.html")
@@ -174,7 +174,7 @@ class MCPTestRunner:
             return 1
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="GitHound MCP Server Test Runner",
@@ -243,7 +243,7 @@ Examples:
         return runner.run_coverage_report()
 
     # Build extra arguments
-    pytest_args = []
+    pytest_args: list[Any] = []
 
     if args.verbose:
         pytest_args.append("-v")

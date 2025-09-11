@@ -4,12 +4,10 @@ from .progress import CancellationToken, ProgressManager
 
 
 # Lazy import for ExportManager to avoid pandas dependency issues
-from typing import Any, TypeVar
-
-TExportManager = TypeVar("TExportManager")
+from typing import Any
 
 
-def get_export_manager() -> type[TExportManager]:
+def get_export_manager() -> type[Any]:
     """Get ExportManager with lazy import.
 
     Returns the ExportManager class type. We avoid importing at module import
@@ -17,7 +15,7 @@ def get_export_manager() -> type[TExportManager]:
     """
     from .export import ExportManager
 
-    return ExportManager  # type: ignore[return-value]
+    return ExportManager  # [return-value]
 
 
 # Direct import for ExportManager (needed for backward compatibility)

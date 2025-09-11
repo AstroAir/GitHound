@@ -12,8 +12,8 @@ except ImportError:
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
-    process = mock_rapidfuzz.process  # type: ignore[assignment]
+    fuzz = mock_rapidfuzz.fuzz  # [assignment]
+    process = mock_rapidfuzz.process  # [assignment]
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -57,7 +57,7 @@ class FuzzySearcher(CacheableSearcher):
         search_targets = await self._build_search_targets(context)
 
         # Perform fuzzy matching for each search type
-        results = []
+        results: list[Any] = []
 
         if query.author_pattern:
             author_results = await self._fuzzy_search_authors(
@@ -91,7 +91,7 @@ class FuzzySearcher(CacheableSearcher):
 
     async def _build_search_targets(self, context: SearchContext) -> list[dict]:
         """Build a list of search targets from the repository."""
-        targets = []
+        targets: list[Any] = []
         branch = context.branch or context.repo.active_branch.name
 
         self._report_progress(context, "Building search index...", 0.1)
@@ -117,7 +117,7 @@ class FuzzySearcher(CacheableSearcher):
             )
 
             # Get file content for content search
-            file_contents = []
+            file_contents: list[Any] = []
             for parent in commit.parents:
                 diffs = commit.diff(parent)
                 for diff in diffs:
@@ -152,7 +152,7 @@ class FuzzySearcher(CacheableSearcher):
         self, pattern: str, targets: list[dict], threshold: float
     ) -> list[SearchResult]:
         """Perform fuzzy search on author names and emails."""
-        results = []
+        results: list[Any] = []
 
         # Extract all unique authors
         authors = set()
@@ -200,11 +200,11 @@ class FuzzySearcher(CacheableSearcher):
         self, pattern: str, targets: list[dict], threshold: float
     ) -> list[SearchResult]:
         """Perform fuzzy search on commit messages."""
-        results = []
+        results: list[Any] = []
 
         # Extract all commit messages
-        messages = []
-        message_to_target = {}
+        messages: list[Any] = []
+        message_to_target: dict[str, Any] = {}
 
         for target in targets:
             message = target["commit_info"].message
@@ -243,11 +243,11 @@ class FuzzySearcher(CacheableSearcher):
         self, pattern: str, targets: list[dict], threshold: float
     ) -> list[SearchResult]:
         """Perform fuzzy search on file content."""
-        results = []
+        results: list[Any] = []
 
         # Extract all content lines
-        content_lines = []
-        line_to_context = {}
+        content_lines: list[Any] = []
+        line_to_context: dict[str, Any] = {}
 
         for target in targets:
             for file_content in target["file_contents"]:

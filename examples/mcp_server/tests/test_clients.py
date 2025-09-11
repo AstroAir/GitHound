@@ -28,7 +28,7 @@ class TestBasicClient:
     """Test basic FastMCP client functionality."""
     
     @pytest.mark.asyncio
-    async def test_basic_client_setup(self, simple_mcp_client):
+    async def test_basic_client_setup(self, simple_mcp_client) -> None:
         """Test basic client setup and connection."""
         # Test that client is connected
         assert simple_mcp_client is not None
@@ -42,7 +42,7 @@ class TestBasicClient:
         assert isinstance(resources, list)
     
     @pytest.mark.asyncio
-    async def test_basic_client_setup_function(self):
+    async def test_basic_client_setup_function(self) -> None:
         """Test the basic_client_setup function."""
         result = await basic_client.basic_client_setup()
         
@@ -57,7 +57,7 @@ class TestBasicClient:
             assert result["transport_type"] == "stdio"
     
     @pytest.mark.asyncio
-    async def test_tool_operations_demo(self):
+    async def test_tool_operations_demo(self) -> None:
         """Test the tool operations demonstration."""
         result = await basic_client.demonstrate_tool_operations()
         
@@ -70,7 +70,7 @@ class TestBasicClient:
             assert isinstance(result["tool_info"], list)
     
     @pytest.mark.asyncio
-    async def test_resource_access_demo(self):
+    async def test_resource_access_demo(self) -> None:
         """Test the resource access demonstration."""
         result = await basic_client.demonstrate_resource_access()
         
@@ -83,7 +83,7 @@ class TestBasicClient:
             assert isinstance(result["resource_info"], list)
     
     @pytest.mark.asyncio
-    async def test_error_handling_demo(self):
+    async def test_error_handling_demo(self) -> None:
         """Test the error handling demonstration."""
         result = await basic_client.demonstrate_error_handling()
         
@@ -94,7 +94,7 @@ class TestBasicClient:
         assert "cleanup_successful" in result
     
     @pytest.mark.asyncio
-    async def test_main_function(self):
+    async def test_main_function(self) -> None:
         """Test the main function execution."""
         result = await basic_client.main()
         
@@ -109,7 +109,7 @@ class TestTransportExamples:
     """Test transport examples functionality."""
     
     @pytest.mark.asyncio
-    async def test_stdio_transport_demo(self):
+    async def test_stdio_transport_demo(self) -> None:
         """Test STDIO transport demonstration."""
         result = await transport_examples.demonstrate_stdio_transport()
         
@@ -124,7 +124,7 @@ class TestTransportExamples:
             assert "connection_method" in result
     
     @pytest.mark.asyncio
-    async def test_http_transport_demo(self):
+    async def test_http_transport_demo(self) -> None:
         """Test HTTP transport demonstration."""
         result = await transport_examples.demonstrate_http_transport()
         
@@ -139,7 +139,7 @@ class TestTransportExamples:
             assert "note" in result
     
     @pytest.mark.asyncio
-    async def test_sse_transport_demo(self):
+    async def test_sse_transport_demo(self) -> None:
         """Test SSE transport demonstration."""
         result = await transport_examples.demonstrate_sse_transport()
         
@@ -154,7 +154,7 @@ class TestTransportExamples:
             assert "note" in result
     
     @pytest.mark.asyncio
-    async def test_inmemory_transport_demo(self):
+    async def test_inmemory_transport_demo(self) -> None:
         """Test In-Memory transport demonstration."""
         result = await transport_examples.demonstrate_inmemory_transport()
         
@@ -164,7 +164,7 @@ class TestTransportExamples:
         assert "status" in result
     
     @pytest.mark.asyncio
-    async def test_transport_selection_demo(self):
+    async def test_transport_selection_demo(self) -> None:
         """Test transport selection demonstration."""
         result = await transport_examples.demonstrate_transport_selection()
         
@@ -174,9 +174,9 @@ class TestTransportExamples:
         assert "total_examples" in result
     
     @pytest.mark.asyncio
-    async def test_transport_configuration_demo(self):
+    async def test_transport_configuration_demo(self) -> None:
         """Test transport configuration demonstration."""
-        result = await transport_examples.demonstrate_transport_configuration()
+        result = await transport_examples.demonstrate_transport_configuration()  # [attr-defined]
         
         assert isinstance(result, dict)
         assert "configuration_examples" in result
@@ -187,7 +187,7 @@ class TestToolOperations:
     """Test tool operations functionality."""
     
     @pytest.mark.asyncio
-    async def test_discover_tools(self):
+    async def test_discover_tools(self) -> None:
         """Test tool discovery functionality."""
         result = await tool_operations.discover_tools()
         
@@ -202,7 +202,7 @@ class TestToolOperations:
             assert isinstance(result["tool_details"], list)
     
     @pytest.mark.asyncio
-    async def test_execute_simple_tools(self):
+    async def test_execute_simple_tools(self) -> None:
         """Test simple tool execution."""
         result = await tool_operations.execute_simple_tools()
         
@@ -217,7 +217,7 @@ class TestToolOperations:
             assert isinstance(result["results"], list)
     
     @pytest.mark.asyncio
-    async def test_complex_arguments_demo(self):
+    async def test_complex_arguments_demo(self) -> None:
         """Test complex argument handling."""
         result = await tool_operations.demonstrate_complex_arguments()
         
@@ -230,7 +230,7 @@ class TestToolOperations:
             assert isinstance(result["serialization_results"], list)
     
     @pytest.mark.asyncio
-    async def test_error_handling_demo(self):
+    async def test_error_handling_demo(self) -> None:
         """Test tool error handling."""
         result = await tool_operations.demonstrate_error_handling()
         
@@ -243,7 +243,7 @@ class TestToolOperations:
             assert isinstance(result["scenarios"], list)
     
     @pytest.mark.asyncio
-    async def test_tool_execution_result_model(self):
+    async def test_tool_execution_result_model(self) -> None:
         """Test ToolExecutionResult dataclass."""
         from tool_operations import ToolExecutionResult
         
@@ -265,7 +265,7 @@ class TestResourceOperations:
     """Test resource operations functionality."""
     
     @pytest.mark.asyncio
-    async def test_discover_resources(self):
+    async def test_discover_resources(self) -> None:
         """Test resource discovery functionality."""
         result = await resource_operations.discover_resources()
         
@@ -280,7 +280,7 @@ class TestResourceOperations:
             assert "resource_details" in result
     
     @pytest.mark.asyncio
-    async def test_access_static_resources(self):
+    async def test_access_static_resources(self) -> None:
         """Test static resource access."""
         result = await resource_operations.access_static_resources()
         
@@ -294,7 +294,7 @@ class TestResourceOperations:
             assert "access_results" in result
     
     @pytest.mark.asyncio
-    async def test_templated_resources_demo(self):
+    async def test_templated_resources_demo(self) -> None:
         """Test templated resource demonstration."""
         result = await resource_operations.demonstrate_templated_resources()
         
@@ -307,7 +307,7 @@ class TestResourceOperations:
             assert "template_results" in result
     
     @pytest.mark.asyncio
-    async def test_content_types_demo(self):
+    async def test_content_types_demo(self) -> None:
         """Test content type handling."""
         result = await resource_operations.demonstrate_content_types()
         
@@ -319,7 +319,7 @@ class TestResourceOperations:
             assert "content_details" in result
     
     @pytest.mark.asyncio
-    async def test_resource_patterns_demo(self):
+    async def test_resource_patterns_demo(self) -> None:
         """Test resource pattern analysis."""
         result = await resource_operations.demonstrate_resource_patterns()
         
@@ -337,7 +337,7 @@ class TestClientIntegration:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_client_server_communication(self, simple_mcp_client):
+    async def test_client_server_communication(self, simple_mcp_client) -> None:
         """Test end-to-end client-server communication."""
         # Test tool execution
         tools = await simple_mcp_client.list_tools()
@@ -359,7 +359,7 @@ class TestClientIntegration:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_error_scenarios(self, simple_mcp_client):
+    async def test_error_scenarios(self, simple_mcp_client) -> None:
         """Test various error scenarios."""
         # Test non-existent tool
         with pytest.raises(ToolError):
@@ -371,7 +371,7 @@ class TestClientIntegration:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_performance_thresholds(self, simple_mcp_client, performance_thresholds):
+    async def test_performance_thresholds(self, simple_mcp_client, performance_thresholds) -> None:
         """Test that operations meet performance thresholds."""
         # Test tool execution performance
         start_time = time.time()
@@ -389,7 +389,7 @@ class TestClientIntegration:
     
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_comprehensive_client_workflow(self):
+    async def test_comprehensive_client_workflow(self) -> None:
         """Test comprehensive client workflow."""
         # Run all main functions
         basic_result = await basic_client.main()
@@ -409,7 +409,7 @@ class TestClientErrorHandling:
     """Test client error handling capabilities."""
     
     @pytest.mark.asyncio
-    async def test_connection_failure_handling(self):
+    async def test_connection_failure_handling(self) -> None:
         """Test handling of connection failures."""
         # Try to connect to non-existent server
         transport = PythonStdioTransport("non_existent_server.py")
@@ -419,7 +419,7 @@ class TestClientErrorHandling:
                 await client.list_tools()
     
     @pytest.mark.asyncio
-    async def test_timeout_handling(self, simple_mcp_client):
+    async def test_timeout_handling(self, simple_mcp_client) -> None:
         """Test timeout handling."""
         # Test with very short timeout
         try:
@@ -433,7 +433,7 @@ class TestClientErrorHandling:
             pass
     
     @pytest.mark.asyncio
-    async def test_malformed_response_handling(self, mock_mcp_server):
+    async def test_malformed_response_handling(self, mock_mcp_server) -> None:
         """Test handling of malformed responses."""
         # This would require mocking the transport layer
         # For now, we'll test that the client can handle various response types
@@ -444,7 +444,7 @@ class TestClientConfiguration:
     """Test client configuration options."""
     
     @pytest.mark.asyncio
-    async def test_client_with_custom_config(self, client_test_config):
+    async def test_client_with_custom_config(self, client_test_config) -> None:
         """Test client with custom configuration."""
         # Test configuration values
         assert client_test_config["timeout"] > 0
@@ -452,7 +452,7 @@ class TestClientConfiguration:
         assert client_test_config["max_content_size"] > 0
         assert len(client_test_config["supported_transports"]) > 0
     
-    def test_transport_configuration(self):
+    def test_transport_configuration(self) -> None:
         """Test transport configuration options."""
         # Test STDIO transport configuration
         server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"

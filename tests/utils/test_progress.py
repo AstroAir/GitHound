@@ -15,14 +15,14 @@ from githound.utils.progress import (
 class TestCancellationToken:
     """Test CancellationToken class."""
 
-    def test_cancellation_token_creation(self):
+    def test_cancellation_token_creation(self) -> None:
         """Test creating a CancellationToken."""
         token = CancellationToken()
         
         assert not token.is_cancelled
         assert token.cancellation_reason is None
 
-    def test_cancellation_token_cancel(self):
+    def test_cancellation_token_cancel(self) -> None:
         """Test cancelling a token."""
         token = CancellationToken()
         reason = "User requested cancellation"
@@ -30,9 +30,9 @@ class TestCancellationToken:
         token.cancel(reason)
         
         assert token.is_cancelled
-        assert token.cancellation_reason == reason
+        assert token.cancellation_reason = = reason
 
-    def test_cancellation_token_check_cancelled(self):
+    def test_cancellation_token_check_cancelled(self) -> None:
         """Test check_cancelled method."""
         token = CancellationToken()
         
@@ -44,17 +44,17 @@ class TestCancellationToken:
         with pytest.raises(Exception, match="Test cancellation"):
             token.check_cancelled()
 
-    def test_cancellation_token_thread_safety(self):
+    def test_cancellation_token_thread_safety(self) -> None:
         """Test that CancellationToken is thread-safe."""
         token = CancellationToken()
-        results = []
+        results: list[Any] = []
         
-        def cancel_token():
+        def cancel_token() -> None:
             time.sleep(0.1)
             token.cancel("Thread cancellation")
             results.append("cancelled")
         
-        def check_token():
+        def check_token() -> None:
             time.sleep(0.2)
             results.append(token.is_cancelled)
         
@@ -74,22 +74,22 @@ class TestCancellationToken:
 class TestProgressManager:
     """Test ProgressManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.console = Mock()
         # Make console support context manager protocol
         self.console.__enter__ = Mock(return_value=self.console)
         self.console.__exit__ = Mock(return_value=None)
 
-    def test_progress_manager_creation(self):
+    def test_progress_manager_creation(self) -> None:
         """Test creating a ProgressManager."""
         manager = ProgressManager(console=self.console, enable_cancellation=True)
         
-        assert manager.console == self.console
+        assert manager.console = = self.console
         assert manager.enable_cancellation is True
         assert isinstance(manager.cancellation_token, CancellationToken)
 
-    def test_progress_manager_context_manager(self):
+    def test_progress_manager_context_manager(self) -> None:
         """Test ProgressManager as context manager."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -98,12 +98,12 @@ class TestProgressManager:
             mock_progress_class.return_value = mock_progress
 
             with ProgressManager(console=self.console) as manager:
-                assert manager._progress == mock_progress
+                assert manager._progress = = mock_progress
                 mock_progress.__enter__.assert_called_once()
 
             mock_progress.__exit__.assert_called_once()
 
-    def test_progress_manager_add_task(self):
+    def test_progress_manager_add_task(self) -> None:
         """Test adding a task to ProgressManager."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -120,7 +120,7 @@ class TestProgressManager:
                 assert "test_task" in manager._stats
                 mock_progress.add_task.assert_called_once_with("Testing...", total=100)
 
-    def test_progress_manager_update_task(self):
+    def test_progress_manager_update_task(self) -> None:
         """Test updating a task in ProgressManager."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -135,7 +135,7 @@ class TestProgressManager:
                 
                 mock_progress.update.assert_called()
 
-    def test_progress_manager_advance_task(self):
+    def test_progress_manager_advance_task(self) -> None:
         """Test advancing a task in ProgressManager."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -150,7 +150,7 @@ class TestProgressManager:
                 
                 mock_progress.advance.assert_called()
 
-    def test_progress_manager_complete_task(self):
+    def test_progress_manager_complete_task(self) -> None:
         """Test completing a task in ProgressManager."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -165,7 +165,7 @@ class TestProgressManager:
                 
                 mock_progress.update.assert_called()
 
-    def test_progress_manager_get_stats(self):
+    def test_progress_manager_get_stats(self) -> None:
         """Test getting task statistics."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -183,7 +183,7 @@ class TestProgressManager:
                 assert "total" in stats
                 assert "description" in stats
 
-    def test_progress_manager_get_all_stats(self):
+    def test_progress_manager_get_all_stats(self) -> None:
         """Test getting all task statistics."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -201,14 +201,14 @@ class TestProgressManager:
                 assert "task2" in all_stats
                 assert "total_duration" in all_stats
 
-    def test_progress_manager_without_context(self):
+    def test_progress_manager_without_context(self) -> None:
         """Test that operations fail when not used as context manager."""
         manager = ProgressManager(console=self.console)
         
         with pytest.raises(RuntimeError, match="ProgressManager not initialized"):
             manager.add_task("test_task", "Testing...", 100)
 
-    def test_progress_manager_cancellation(self):
+    def test_progress_manager_cancellation(self) -> None:
         """Test cancellation functionality."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             mock_progress = Mock()
@@ -222,7 +222,7 @@ class TestProgressManager:
                 with pytest.raises(Exception, match="Test cancellation"):
                     manager.check_cancellation()
 
-    def test_progress_manager_signal_handling(self):
+    def test_progress_manager_signal_handling(self) -> None:
         """Test signal handling for cancellation."""
         with patch('githound.utils.progress.Progress') as mock_progress_class:
             with patch('signal.signal') as mock_signal:
@@ -239,19 +239,19 @@ class TestProgressManager:
 class TestSimpleProgressReporter:
     """Test SimpleProgressReporter class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.console = Mock()
 
-    def test_simple_progress_reporter_creation(self):
+    def test_simple_progress_reporter_creation(self) -> None:
         """Test creating a SimpleProgressReporter."""
         reporter = SimpleProgressReporter(console=self.console)
         
-        assert reporter.console == self.console
-        assert reporter._last_update == 0.0
-        assert reporter._update_interval == 0.5
+        assert reporter.console = = self.console
+        assert reporter._last_update = = 0.0
+        assert reporter._update_interval = = 0.5
 
-    def test_simple_progress_reporter_report_message_only(self):
+    def test_simple_progress_reporter_report_message_only(self) -> None:
         """Test reporting progress with message only."""
         reporter = SimpleProgressReporter(console=self.console)
         
@@ -259,7 +259,7 @@ class TestSimpleProgressReporter:
         
         self.console.print.assert_called_once_with("[cyan]Processing files...[/cyan]")
 
-    def test_simple_progress_reporter_report_with_progress(self):
+    def test_simple_progress_reporter_report_with_progress(self) -> None:
         """Test reporting progress with percentage."""
         reporter = SimpleProgressReporter(console=self.console)
         
@@ -269,36 +269,36 @@ class TestSimpleProgressReporter:
             "[cyan]Processing files...[/cyan] [yellow](75.0%)[/yellow]"
         )
 
-    def test_simple_progress_reporter_throttling(self):
+    def test_simple_progress_reporter_throttling(self) -> None:
         """Test that progress updates are throttled."""
         reporter = SimpleProgressReporter(console=self.console)
         
         # First call should go through
         reporter.report("First message")
-        assert self.console.print.call_count == 1
+        assert self.console.print.call_count = = 1
         
         # Immediate second call should be throttled
         reporter.report("Second message")
-        assert self.console.print.call_count == 1
+        assert self.console.print.call_count = = 1
         
         # After waiting, call should go through
         with patch('time.time', return_value=time.time() + 1.0):
             reporter.report("Third message")
-            assert self.console.print.call_count == 2
+            assert self.console.print.call_count = = 2
 
-    def test_simple_progress_reporter_custom_interval(self):
+    def test_simple_progress_reporter_custom_interval(self) -> None:
         """Test SimpleProgressReporter with custom update interval."""
         reporter = SimpleProgressReporter(console=self.console)
         reporter._update_interval = 0.1  # Very short interval
         
         reporter.report("First message")
-        assert self.console.print.call_count == 1
+        assert self.console.print.call_count = = 1
         
         # Should still be throttled immediately
         reporter.report("Second message")
-        assert self.console.print.call_count == 1
+        assert self.console.print.call_count = = 1
 
-    def test_simple_progress_reporter_zero_progress(self):
+    def test_simple_progress_reporter_zero_progress(self) -> None:
         """Test reporting with zero progress."""
         reporter = SimpleProgressReporter(console=self.console)
         
@@ -308,7 +308,7 @@ class TestSimpleProgressReporter:
             "[cyan]Starting...[/cyan] [yellow](0.0%)[/yellow]"
         )
 
-    def test_simple_progress_reporter_complete_progress(self):
+    def test_simple_progress_reporter_complete_progress(self) -> None:
         """Test reporting with complete progress."""
         reporter = SimpleProgressReporter(console=self.console)
         
@@ -318,7 +318,7 @@ class TestSimpleProgressReporter:
             "[cyan]Complete![/cyan] [yellow](100.0%)[/yellow]"
         )
 
-    def test_simple_progress_reporter_default_console(self):
+    def test_simple_progress_reporter_default_console(self) -> None:
         """Test SimpleProgressReporter with default console."""
         with patch('githound.utils.progress.Console') as mock_console_class:
             mock_console = Mock()
@@ -326,5 +326,5 @@ class TestSimpleProgressReporter:
 
             reporter = SimpleProgressReporter()
 
-            assert reporter.console == mock_console
+            assert reporter.console = = mock_console
             mock_console_class.assert_called_once()

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound",
+        "FASTMCP_SERVER_NAME": "GitHound MCP Server for Cursor",
+        "FASTMCP_SERVER_LOG_LEVEL": "INFO"
+      },
+      "description": "GitHound MCP Server optimized for Cursor IDE"
+    }
+  }
+}

@@ -23,7 +23,7 @@ This example covers:
 import asyncio
 import json
 import sys
-from typing import Dict, Any, Optional, cast
+from typing import Optional, cast, Any
 import logging
 
 try:
@@ -35,7 +35,7 @@ except ImportError:
 
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 class GitHoundAPIClient:
     """Simple client for GitHound REST API."""
     
-    def __init__(self, base_url: str = "http://localhost:8000", api_key: Optional[str] = None):
+    def __init__(self, base_url: str = "http://localhost:8000", api_key: Optional[str] = None) -> None:
         """Initialize API client."""
         self.base_url = base_url.rstrip('/')
         self.api_key = api_key
@@ -60,11 +60,11 @@ class GitHoundAPIClient:
         if api_key:
             self.headers["X-API-Key"] = api_key
     
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         """Async context manager entry."""
         return self
     
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Async context manager exit."""
         await self.client.aclose()
     
@@ -141,11 +141,11 @@ class GitHoundAPIClient:
 class APIUsageDemo:
     """Demonstration of basic API usage patterns."""
     
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self, base_url: str = "http://localhost:8000") -> None:
         self.base_url = base_url
         self.results: Dict[str, Any] = {}
     
-    async def demonstrate_health_check(self):
+    async def demonstrate_health_check(self) -> None:
         """Demonstrate API health check."""
         logger.info("=== API Health Check ===")
         
@@ -156,11 +156,11 @@ class APIUsageDemo:
             
             if health_result.get('status') == 'healthy':
                 logger.info("✓ API is healthy and ready")
-                logger.info(f"  Uptime: {health_result.get('uptime', 'N/A')}")
-                logger.info(f"  Version: {health_result.get('version', 'N/A')}")
+                logger.info(f"  Uptime: {health_result.get if health_result is not None else None('uptime', 'N/A')}")
+                logger.info(f"  Version: {health_result.get if health_result is not None else None('version', 'N/A')}")
             else:
                 logger.error("✗ API health check failed")
-                logger.error(f"  Error: {health_result.get('error', 'Unknown error')}")
+                logger.error(f"  Error: {health_result.get if health_result is not None else None('error', 'Unknown error')}")
             
             return health_result
     
@@ -247,7 +247,7 @@ class APIUsageDemo:
             self.results['basic_search'] = {"status": "timeout", "search_id": search_id}
             return self.results['basic_search']
     
-    async def demonstrate_search_management(self):
+    async def demonstrate_search_management(self) -> None:
         """Demonstrate search management operations."""
         logger.info("\n=== Search Management ===")
         
@@ -276,7 +276,7 @@ class APIUsageDemo:
             self.results['search_management'] = searches_result
             return searches_result
     
-    async def demonstrate_error_handling(self):
+    async def demonstrate_error_handling(self) -> None:
         """Demonstrate error handling patterns."""
         logger.info("\n=== Error Handling Patterns ===")
         
@@ -323,7 +323,7 @@ class APIUsageDemo:
             }
 
 
-async def main():
+async def main() -> None:
     """Main demonstration function."""
     
     if len(sys.argv) < 2:

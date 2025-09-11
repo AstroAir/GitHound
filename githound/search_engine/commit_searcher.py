@@ -12,7 +12,7 @@ except ImportError:
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
+    fuzz = mock_rapidfuzz.fuzz  # [assignment]
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -141,9 +141,9 @@ class AuthorSearcher(CacheableSearcher):
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
                     name_score = fuzz.ratio(
-                        author_pattern.lower(), author_name.lower()) / 100.0
+                        author_pattern.lower if author_pattern is not None else None(), author_name.lower()) / 100.0
                     email_score = fuzz.ratio(
-                        author_pattern.lower(), author_email.lower()) / 100.0
+                        author_pattern.lower if author_pattern is not None else None(), author_email.lower()) / 100.0
 
                     if name_score >= context.query.fuzzy_threshold:
                         match_score = name_score
@@ -293,7 +293,7 @@ class MessageSearcher(CacheableSearcher):
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
                     score = fuzz.partial_ratio(
-                        message_pattern.lower(), message.lower()) / 100.0
+                        message_pattern.lower if message_pattern is not None else None(), message.lower()) / 100.0
                     if score >= context.query.fuzzy_threshold:
                         match_score = score
                 else:

@@ -6,7 +6,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, TextIO
+from typing import Any, Literal, TextIO, Optional
 
 import typer
 from git import GitCommandError, Repo
@@ -110,7 +110,7 @@ def print_results_text(results: list[SearchResult], show_details: bool = False) 
 
 def print_results_json(results: list[SearchResult], include_metadata: bool = False) -> None:
     """Prints search results in JSON format."""
-    json_results = []
+    json_results: list[Any] = []
 
     for r in results:
         result_dict: dict[str, Any] = {
@@ -196,7 +196,7 @@ def print_results_csv(results: list[SearchResult], output_file: TextIO | None = 
 class ProgressReporter:
     """Simple progress reporter for CLI operations."""
 
-    def __init__(self, enable_progress: bool = True):
+    def __init__(self, enable_progress: bool = True) -> None:
         self.enable_progress = enable_progress
         self.progress: Progress | None = None
         self.task: TaskID | None = None
@@ -247,7 +247,7 @@ async def enhanced_search(
     orchestrator.register_searcher(ContentSearcher())
     orchestrator.register_searcher(FuzzySearcher())
 
-    results = []
+    results: list[Any] = []
 
     # Set up enhanced progress reporting
     if enable_progress:
@@ -292,23 +292,23 @@ def legacy_search_and_print(config: LegacyGitHoundConfig) -> None:
     try:
         # Convert legacy config to new config format
         new_config = GitHoundConfig(
-            repo_path=config.repo_path,
-            search_query=config.search_query,
-            branch=config.branch,
+            repo_path=config.repo_path,  # [attr-defined]
+            search_query=config.search_query,  # [attr-defined]
+            branch=config.branch,  # [attr-defined]
             output_format=(
-                OutputFormat.TEXT if config.output_format == "text" else OutputFormat.JSON
+                OutputFormat.TEXT if config.output_format == "text" else OutputFormat.JSON  # [attr-defined]
             ),
-            search_config=config.search_config,
+            search_config=config.search_config,  # [attr-defined]
         )
 
-        repo = get_repository(config.repo_path)
+        repo = get_repository(config.repo_path)  # [attr-defined]
         all_results: list[SearchResult] = []
 
         for commit in walk_history(repo, new_config):
             commit_results = process_commit(commit, new_config)
             all_results.extend(commit_results)
 
-        if config.output_format == "json":
+        if config.output_format == "json":  # [attr-defined]
             print_results_json(all_results)
         else:
             print_results_text(all_results)
@@ -770,7 +770,7 @@ def analyze(
                 try:
                     import yaml
 
-                    console.print(yaml.dump(analysis_result,
+                    console.print(yaml.dump if yaml is not None else None(analysis_result,
                                   default_flow_style=False))
                 except ImportError:
                     console.print(
@@ -806,7 +806,7 @@ def analyze(
         # Add debug information
         import traceback
 
-        console.print(f"[dim]Debug: {traceback.format_exc()}[/dim]")
+        console.print(f"[dim]Debug: {traceback.format_exc if traceback is not None else None()}[/dim]")
         raise typer.Exit(1)
 
 
@@ -901,19 +901,19 @@ def blame(
                         f"Object of type {type(obj)} is not JSON serializable")
 
                 json_str = json.dumps(
-                    blame_result.dict(), default=json_serializer, indent=2)
+                    blame_result.dict if blame_result is not None else None(), default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump(blame_result.dict(),
+                    console.print(yaml.dump if yaml is not None else None(blame_result.dict if blame_result is not None else None(),
                                   default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(data=blame_result.dict())
+                    console.print_json(data=blame_result.dict if blame_result is not None else None())
             else:
                 # Text format
                 _print_blame_text(blame_result, show_line_numbers)
@@ -1003,20 +1003,20 @@ def diff(
                     raise TypeError(
                         f"Object of type {type(obj)} is not JSON serializable")
 
-                json_str = json.dumps(diff_result.dict(),
+                json_str = json.dumps(diff_result.dict if diff_result is not None else None(),
                                       default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump(diff_result.dict(),
+                    console.print(yaml.dump if yaml is not None else None(diff_result.dict if diff_result is not None else None(),
                                   default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(data=diff_result.dict())
+                    console.print_json(data=diff_result.dict if diff_result is not None else None())
             else:
                 # Text format
                 _print_diff_text(diff_result)
@@ -1206,10 +1206,10 @@ def version() -> None:
         console.print(f"[green]GitPython:[/green] {git_version}")
         console.print(f"[green]Python:[/green] {sys.version.split()[0]}")
         console.print(
-            f"[green]Platform:[/green] {platform.system()} {platform.release()}")
+            f"[green]Platform:[/green] {platform.system if platform is not None else None()} {platform.release()}")
 
         # Optional dependencies
-        optional_deps = []
+        optional_deps: list[Any] = []
         try:
             import pandas
 
@@ -1261,7 +1261,7 @@ def cleanup(
         console.print()
 
         # Find cleanup targets
-        cleanup_targets = []
+        cleanup_targets: list[Any] = []
 
         # Cache directories
         cache_dirs = [
@@ -1321,7 +1321,7 @@ def cleanup(
 
         # Perform cleanup
         cleaned_count = 0
-        errors = []
+        errors: list[Any] = []
 
         with Progress(
             SpinnerColumn(),
@@ -1517,24 +1517,24 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
     if "repository_info" in analysis:
         info = analysis["repository_info"]
         console.print(
-            f"\n[bold]Repository Path:[/bold] {info.get('path', 'N/A')}")
+            f"\n[bold]Repository Path:[/bold] {info.get if info is not None else None('path', 'N/A')}")
         console.print(
-            f"[bold]Current Branch:[/bold] {info.get('current_branch', 'N/A')}")
+            f"[bold]Current Branch:[/bold] {info.get if info is not None else None('current_branch', 'N/A')}")
         console.print(
-            f"[bold]Total Branches:[/bold] {len(info.get('branches', []))}")
-        console.print(f"[bold]Total Tags:[/bold] {len(info.get('tags', []))}")
-        console.print(f"[bold]Remotes:[/bold] {len(info.get('remotes', []))}")
+            f"[bold]Total Branches:[/bold] {len(info.get if info is not None else None('branches', []))}")
+        console.print(f"[bold]Total Tags:[/bold] {len(info.get if info is not None else None('tags', []))}")
+        console.print(f"[bold]Remotes:[/bold] {len(info.get if info is not None else None('remotes', []))}")
 
     # Commit statistics
     if "commit_statistics" in analysis:
         stats = analysis["commit_statistics"]
         console.print("\n[bold]Commit Statistics:[/bold]")
-        console.print(f"  Total Commits: {stats.get('total_commits', 'N/A')}")
+        console.print(f"  Total Commits: {stats.get if stats is not None else None('total_commits', 'N/A')}")
         console.print(
-            f"  Contributors: {stats.get('total_contributors', 'N/A')}")
+            f"  Contributors: {stats.get if stats is not None else None('total_contributors', 'N/A')}")
         console.print(
-            f"  First Commit: {stats.get('first_commit_date', 'N/A')}")
-        console.print(f"  Last Commit: {stats.get('last_commit_date', 'N/A')}")
+            f"  First Commit: {stats.get if stats is not None else None('first_commit_date', 'N/A')}")
+        console.print(f"  Last Commit: {stats.get if stats is not None else None('last_commit_date', 'N/A')}")
 
     # Author statistics
     if "author_statistics" in analysis:
@@ -1550,7 +1550,7 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         # Show top 10 contributors
         for author_info in list(author_stats.get("by_author", {}).values())[:10]:
             table.add_row(
-                author_info.get("name", "Unknown"),
+                author_info.get if author_info is not None else None("name", "Unknown"),
                 str(author_info.get("commit_count", 0)),
                 str(author_info.get("lines_added", 0)),
                 str(author_info.get("lines_deleted", 0)),
@@ -1577,12 +1577,12 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
         table.add_column("Content", style="white")
 
         for line_info in blame_result.lines[:50]:  # Show first 50 lines
-            row = []
+            row: list[Any] = []
             if show_line_numbers:
-                row.append(str(line_info.get("line_number", "")))
+                row.append(str(line_info.get if line_info is not None else None("line_number", "")))
             row.extend(
                 [
-                    line_info.get("author", "Unknown")[:18],
+                    line_info.get if line_info is not None else None("author", "Unknown")[:18],
                     line_info.get("commit_hash", "")[:10],
                     line_info.get("date", "")[:10],
                     line_info.get("content", "")[:80],
@@ -1614,7 +1614,7 @@ def _print_diff_text(diff_result: Any) -> None:
 
         for file_change in diff_result.file_changes:
             table.add_row(
-                file_change.get("file_path", ""),
+                file_change.get if file_change is not None else None("file_path", ""),
                 file_change.get("change_type", ""),
                 str(file_change.get("lines_added", 0)),
                 str(file_change.get("lines_deleted", 0)),
@@ -1626,11 +1626,11 @@ def _print_diff_text(diff_result: Any) -> None:
     if hasattr(diff_result, "statistics"):
         stats = diff_result.statistics
         console.print("\n[bold]Summary:[/bold]")
-        console.print(f"  Files Changed: {stats.get('files_changed', 0)}")
+        console.print(f"  Files Changed: {stats.get if stats is not None else None('files_changed', 0)}")
         console.print(
-            f"  Total Lines Added: {stats.get('total_lines_added', 0)}")
+            f"  Total Lines Added: {stats.get if stats is not None else None('total_lines_added', 0)}")
         console.print(
-            f"  Total Lines Deleted: {stats.get('total_lines_deleted', 0)}")
+            f"  Total Lines Deleted: {stats.get if stats is not None else None('total_lines_deleted', 0)}")
 
 
 if __name__ == "__main__":

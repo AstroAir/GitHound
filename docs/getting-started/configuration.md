@@ -58,6 +58,11 @@ mcp:
   max_connections: 100
   auth_required: false
 
+# MCP.json configuration support
+# GitHound also supports MCP.json configuration files
+# following the standard MCP JSON format used by
+# Claude Desktop, Cursor, VS Code, and other MCP clients
+
 # Logging configuration
 logging:
   level: "INFO"
@@ -145,6 +150,51 @@ export GITHOUND_LOG_FILE="/var/log/githound.log"
 export GITHOUND_MAX_WORKERS=8
 export GITHOUND_TIMEOUT=600
 ```
+
+## MCP Server Configuration
+
+GitHound provides a comprehensive MCP (Model Context Protocol) server that exposes all repository analysis capabilities through a standardized interface. The MCP server supports multiple configuration methods and is compatible with various AI tools and applications.
+
+### Quick Setup
+
+For detailed MCP server setup and configuration, see the **[MCP Server Documentation](../mcp-server/README.md)**.
+
+### Basic MCP.json Configuration
+
+GitHound supports the standard MCP.json configuration format:
+
+```json
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound",
+        "FASTMCP_SERVER_LOG_LEVEL": "INFO"
+      },
+      "description": "GitHound MCP Server"
+    }
+  }
+}
+```
+
+### Client Integration
+
+- **Claude Desktop**: Add to `~/.claude/claude_desktop_config.json`
+- **Cursor**: Save as `~/.cursor/mcp.json`
+- **VS Code**: Save as `.vscode/mcp.json` in your workspace
+
+### Complete Documentation
+
+For comprehensive MCP server documentation, including:
+
+- **Setup and Installation** - [Setup Guide](../mcp-server/setup.md)
+- **Configuration Reference** - [Configuration Guide](../mcp-server/configuration.md)
+- **Available Tools** - [Tools Reference](../mcp-server/tools-reference.md)
+- **Integration Examples** - [Integration Examples](../mcp-server/integration-examples.md)
+
+Visit the **[MCP Server Documentation](../mcp-server/README.md)**.
 
 ## Command-line Configuration
 
@@ -293,7 +343,7 @@ web:
     cache_max_age: 3600
 ```
 
-### MCP Server Configuration
+### MCP Server Settings
 
 ```yaml
 mcp:

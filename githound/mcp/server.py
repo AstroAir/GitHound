@@ -14,26 +14,26 @@ from .direct_wrappers import MockContext
 from .tools import search_tools, analysis_tools, blame_tools, export_tools, management_tools, web_tools
 import logging
 import importlib
-from typing import Optional, Any, Dict, List
+from typing import Any, Optional, Dict, List
 
 from fastmcp import FastMCP, Context
 
-from .config import configure_logging, get_server_config_from_environment, is_authentication_enabled
+from .config import configure_logging, get_server_config_from_environment, get_server_config, is_authentication_enabled
 
 # Import auth functions explicitly to avoid conflict with auth directory
 auth_module = importlib.import_module('.auth', package='githound.mcp')
 
 
 def get_mcp_server() -> FastMCP:
-    """Create and configure the GitHound MCP server with FastMCP 2.0."""
-    config = get_server_config_from_environment()
+    """Create and configure the GitHound MCP server with FastMCP 2.0."""  # [attr-defined]
+    config = get_server_config()
 
     # Create server with authentication if enabled
     auth_provider = auth_module.get_auth_provider(
     ) if is_authentication_enabled() else None
 
     server = FastMCP(
-        name=config.name,
+        name=config.name,  # [attr-defined]
         auth=auth_provider
     )
 
@@ -42,7 +42,7 @@ def get_mcp_server() -> FastMCP:
 
 def ensure_context(ctx: Optional[Context]) -> Context:
     """Ensure we have a valid context object."""
-    return ctx if ctx is not None else MockContext()  # type: ignore
+    return ctx if ctx is not None else MockContext()  # 
 
 
 # Global MCP server instance
@@ -440,7 +440,7 @@ async def generate_repository_report(
 
 
 # Register MCP resources
-@mcp.resource("githound://repository/{repo_path}/config")
+@mcp.resource("githound://repository/{repo_path}/config")  # [attr-defined]
 async def get_repository_config_resource(repo_path: str, ctx: Context) -> str:
     """Get repository configuration information."""
     return await get_repository_config(repo_path, ctx)
@@ -528,11 +528,25 @@ def run_mcp_server(
         port: Port to bind for HTTP/SSE transports
         log_level: Logging level
     """
+    # Get configuration (includes MCP.json support)  # [attr-defined]
+    config = get_server_config()
+
+    # Use configuration values if not explicitly provided
+    if transport == "stdio" and config.transport != "stdio":  # [attr-defined]
+        transport = config.transport  # [attr-defined]
+    if host == "localhost" and config.host != "localhost":  # [attr-defined]
+        host = config.host  # [attr-defined]
+    if port == 3000 and config.port != 3000:  # [attr-defined]
+        port = config.port  # [attr-defined]
+    if log_level == "INFO" and config.log_level != "INFO":  # [attr-defined]
+        log_level = config.log_level  # [attr-defined]
+
     # Configure logging
     configure_logging(log_level)
 
     logger = logging.getLogger("githound.mcp_server")
     logger.info(f"Starting GitHound MCP Server 2.0 with {transport} transport")
+    logger.info(f"Server configuration: {config.name} v{config.version}")  # [attr-defined]
 
     # Log server capabilities
     logger.info("Server capabilities:")

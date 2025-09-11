@@ -1,3 +1,4 @@
+from typing import Optional
 """Authentication providers for GitHound MCP server."""
 
 from .base import AuthProvider
@@ -12,14 +13,14 @@ try:
     from .eunomia import EunomiaAuthorizationProvider
     EUNOMIA_AVAILABLE = True
 except ImportError:
-    EunomiaAuthorizationProvider = None
+    EunomiaAuthorizationProvider = None  # 
     EUNOMIA_AVAILABLE = False
 
 try:
     from .permit import PermitAuthorizationProvider
     PERMIT_AVAILABLE = True
 except ImportError:
-    PermitAuthorizationProvider = None
+    PermitAuthorizationProvider = None  # 
     PERMIT_AVAILABLE = False
 
 __all__ = [

@@ -40,7 +40,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optionalnal, Tuple
 
 import typer
 import requests
@@ -61,9 +61,9 @@ app = typer.Typer(
 class ServiceManager:
     """Manages GitHound services."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
-        self.services_config = {
+        self.services_config = {  # [attr-defined]
             "web": {
                 "name": "Web Server",
                 "default_port": 8000,
@@ -92,7 +92,7 @@ class ServiceManager:
 
     def get_service_log_file(self, service: str) -> Path:
         """Get log file path for service."""
-        log_file = self.services_config[service]["log_file"]
+        log_file = self.services_config[service]["log_file"]  # [attr-defined]
         return self.project_root / log_file
 
     def is_service_running(self, service: str) -> Tuple[bool, Optional[int]]:
@@ -139,11 +139,11 @@ class ServiceManager:
         background: bool = True
     ) -> bool:
         """Start a service."""
-        if service not in self.services_config:
+        if service not in self.services_config:  # [attr-defined]
             print_error(f"Unknown service: {service}")
             return False
 
-        config = self.services_config[service]
+        config = self.services_config[service]  # [attr-defined]
 
         # Check if already running
         running, pid = self.is_service_running(service)
@@ -199,7 +199,7 @@ class ServiceManager:
                 else:
                     # Start in foreground
                     process = subprocess.run(command, cwd=self.project_root)
-                    return process.returncode == 0
+                    return process.returncode = = 0
 
             print_success(f"{config['name']} started on {host}:{port}")
             print_info(f"PID: {process.pid}")
@@ -213,11 +213,11 @@ class ServiceManager:
 
     def stop_service(self, service: str, force: bool = False) -> bool:
         """Stop a service."""
-        if service not in self.services_config:
+        if service not in self.services_config:  # [attr-defined]
             print_error(f"Unknown service: {service}")
             return False
 
-        config = self.services_config[service]
+        config = self.services_config[service]  # [attr-defined]
         running, pid = self.is_service_running(service)
 
         if not running:
@@ -266,10 +266,10 @@ class ServiceManager:
 
     def get_service_status(self, service: str) -> Dict:
         """Get detailed service status."""
-        if service not in self.services_config:
+        if service not in self.services_config:  # [attr-defined]
             return {"error": f"Unknown service: {service}"}
 
-        config = self.services_config[service]
+        config = self.services_config[service]  # [attr-defined]
         running, pid = self.is_service_running(service)
 
         status = {
@@ -286,7 +286,7 @@ class ServiceManager:
             try:
                 url = f"http://localhost:{config['default_port']}{config['health_endpoint']}"
                 response = requests.get(url, timeout=5)
-                status["health"] = "healthy" if response.status_code == 200 else "unhealthy"
+                status["health"] = "healthy" if response.status_code = = 200 else "unhealthy"
                 status["health_details"] = response.json() if response.headers.get(
                     "content-type", "").startswith("application/json") else response.text
             except Exception as e:
@@ -298,11 +298,11 @@ class ServiceManager:
     def health_check(self, service: Optional[str] = None) -> Dict:
         """Perform health check on services."""
         if service:
-            services = [service] if service in self.services_config else []
+            services = [service] if service in self.services_config else []  # [attr-defined]
         else:
-            services = list(self.services_config.keys())
+            services = list(self.services_config.keys())  # [attr-defined]
 
-        results = {}
+        results: dict[str, Any] = {}
         for svc in services:
             results[svc] = self.get_service_status(svc)
 
@@ -324,13 +324,13 @@ def start(
     manager = ServiceManager()
 
     if service == "all":
-        services = list(manager.services_config.keys())
+        services = list(manager.services_config.keys())  # [attr-defined]
     else:
         services = [service]
 
     success = True
     for svc in services:
-        if svc not in manager.services_config:
+        if svc not in manager.services_config:  # [attr-defined]
             print_error(f"Unknown service: {svc}")
             success = False
             continue
@@ -356,13 +356,13 @@ def stop(
     manager = ServiceManager()
 
     if service == "all":
-        services = list(manager.services_config.keys())
+        services = list(manager.services_config.keys())  # [attr-defined]
     else:
         services = [service]
 
     success = True
     for svc in services:
-        if svc not in manager.services_config:
+        if svc not in manager.services_config:  # [attr-defined]
             print_error(f"Unknown service: {svc}")
             success = False
             continue
@@ -386,13 +386,13 @@ def restart(
     manager = ServiceManager()
 
     if service == "all":
-        services = list(manager.services_config.keys())
+        services = list(manager.services_config.keys())  # [attr-defined]
     else:
         services = [service]
 
     success = True
     for svc in services:
-        if svc not in manager.services_config:
+        if svc not in manager.services_config:  # [attr-defined]
             print_error(f"Unknown service: {svc}")
             success = False
             continue
@@ -418,7 +418,7 @@ def status(
     """Check service status."""
     manager = ServiceManager()
 
-    def create_status_table():
+    def create_status_table() -> None:
         table = Table(title="GitHound Services Status")
         table.add_column("Service", style="cyan")
         table.add_column("Status", style="green")
@@ -468,7 +468,7 @@ def logs(
     """View service logs."""
     manager = ServiceManager()
 
-    if service not in manager.services_config:
+    if service not in manager.services_config:  # [attr-defined]
         print_error(f"Unknown service: {service}")
         sys.exit(1)
 

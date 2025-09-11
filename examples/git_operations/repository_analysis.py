@@ -22,7 +22,7 @@ import json
 import logging
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Optional, Any
 
 from githound.git_handler import (
     get_repository, get_repository_metadata, extract_commit_metadata,
@@ -33,7 +33,7 @@ from githound.models import CommitInfo
 
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 class RepositoryAnalyzer:
     """Comprehensive repository analysis tool."""
     
-    def __init__(self, repo_path: str):
+    def __init__(self, repo_path: str) -> None:
         """Initialize analyzer with repository path."""
         self.repo_path = Path(repo_path)
         self.repo = None
@@ -75,24 +75,24 @@ class RepositoryAnalyzer:
         try:
             metadata = get_repository_metadata(self.repo)
             
-            logger.info(f"Repository Name: {metadata.get('name', 'N/A')}")
-            logger.info(f"Total Commits: {metadata.get('total_commits', 0)}")
-            logger.info(f"Total Branches: {metadata.get('total_branches', 0)}")
-            logger.info(f"Total Tags: {metadata.get('total_tags', 0)}")
-            logger.info(f"Contributors: {len(metadata.get('contributors', []))}")
+            logger.info(f"Repository Name: {metadata.get if metadata is not None else None('name', 'N/A')}")
+            logger.info(f"Total Commits: {metadata.get if metadata is not None else None('total_commits', 0)}")
+            logger.info(f"Total Branches: {metadata.get if metadata is not None else None('total_branches', 0)}")
+            logger.info(f"Total Tags: {metadata.get if metadata is not None else None('total_tags', 0)}")
+            logger.info(f"Contributors: {len(metadata.get if metadata is not None else None('contributors', []))}")
             
             # Latest commit info
             latest_commit = metadata.get('latest_commit')
             if latest_commit:
-                logger.info(f"Latest Commit: {latest_commit.get('hash', 'N/A')[:8]}")
-                logger.info(f"Latest Author: {latest_commit.get('author_name', 'N/A')}")
-                logger.info(f"Latest Date: {latest_commit.get('date', 'N/A')}")
+                logger.info(f"Latest Commit: {latest_commit.get if latest_commit is not None else None('hash', 'N/A')[:8]}")
+                logger.info(f"Latest Author: {latest_commit.get if latest_commit is not None else None('author_name', 'N/A')}")
+                logger.info(f"Latest Date: {latest_commit.get if latest_commit is not None else None('date', 'N/A')}")
             
             # Repository age
             creation_date = metadata.get('creation_date')
             if creation_date:
                 try:
-                    created = datetime.fromisoformat(creation_date.replace('Z', '+00:00'))
+                    created = datetime.fromisoformat(creation_date.replace if creation_date is not None else None('Z', '+00:00'))
                     age_days = (datetime.now().replace(tzinfo=created.tzinfo) - created).days
                     logger.info(f"Repository Age: {age_days} days")
                     metadata['age_days'] = age_days
@@ -120,7 +120,7 @@ class RepositoryAnalyzer:
                 max_count=max_commits
             )
             
-            commit_list = []
+            commit_list: list[Any] = []
             commit_stats = {
                 "total_analyzed": 0,
                 "authors": set(),
@@ -197,12 +197,12 @@ class RepositoryAnalyzer:
         
         try:
             # Parse dates
-            parsed_dates = []
+            parsed_dates: list[Any] = []
             for date_str in commit_dates:
                 try:
                     # Handle different date formats
                     if 'T' in date_str:
-                        date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                        date = datetime.fromisoformat(date_str.replace if date_str is not None else None('Z', '+00:00'))
                     else:
                         date = datetime.fromisoformat(date_str)
                     parsed_dates.append(date)
@@ -417,7 +417,7 @@ class RepositoryAnalyzer:
         if metadata and 'error' not in metadata:
             report_lines.extend([
                 "## Repository Overview",
-                f"- **Total Commits:** {metadata.get('total_commits', 'N/A')}",
+                f"- **Total Commits:** {metadata.get if metadata is not None else None('total_commits', 'N/A')}",
                 f"- **Branches:** {metadata.get('total_branches', 'N/A')}",
                 f"- **Tags:** {metadata.get('total_tags', 'N/A')}",
                 f"- **Contributors:** {len(metadata.get('contributors', []))}",
@@ -430,7 +430,7 @@ class RepositoryAnalyzer:
         if health and 'error' not in health:
             report_lines.extend([
                 "## Repository Health",
-                f"- **Overall Score:** {health.get('overall_score', 'N/A')}/100",
+                f"- **Overall Score:** {health.get if health is not None else None('overall_score', 'N/A')}/100",
                 f"- **Status:** {health.get('status', 'N/A')}",
                 ""
             ])
@@ -460,7 +460,7 @@ class RepositoryAnalyzer:
         return report
 
 
-async def main():
+async def main() -> None:
     """Main analysis function."""
     
     if len(sys.argv) != 2:

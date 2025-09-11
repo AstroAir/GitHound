@@ -5,7 +5,7 @@ import json
 import pytest
 import tempfile
 from unittest.mock import Mock, patch, AsyncMock
-from typing import Optional
+from typing import Optionalnal
 
 from githound.mcp.auth.providers.base import AuthProvider, AuthResult, TokenInfo
 from githound.mcp.models import User
@@ -14,7 +14,7 @@ from githound.mcp.models import User
 class MockBaseProvider(AuthProvider):
     """Mock base authentication provider for testing."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.users = {
             "admin": User(username="admin", role="admin", permissions=[]),
@@ -53,12 +53,12 @@ class TestEunomiaAuthorizationProvider:
     """Test Eunomia authorization provider."""
     
     @pytest.fixture
-    def mock_base_provider(self):
+    def mock_base_provider(self) -> None:
         """Create a mock base provider."""
         return MockBaseProvider()
     
     @pytest.fixture
-    def policy_file(self):
+    def policy_file(self) -> None:
         """Create a temporary policy file."""
         policy_data = {
             "version": "1.0",
@@ -96,7 +96,7 @@ class TestEunomiaAuthorizationProvider:
         not os.getenv("TEST_EUNOMIA", "false").lower() == "true",
         reason="Eunomia tests require eunomia-mcp package and TEST_EUNOMIA=true"
     )
-    def test_eunomia_provider_creation(self, mock_base_provider, policy_file):
+    def test_eunomia_provider_creation(self, mock_base_provider, policy_file) -> None:
         """Test creating Eunomia authorization provider."""
         try:
             from githound.mcp.auth.providers.eunomia import EunomiaAuthorizationProvider
@@ -107,9 +107,9 @@ class TestEunomiaAuthorizationProvider:
                 server_name="test-server"
             )
             
-            assert provider.base_provider == mock_base_provider
-            assert provider.config.policy_file == policy_file
-            assert provider.config.server_name == "test-server"
+            assert provider.base_provider = = mock_base_provider
+            assert provider.config.policy_file == policy_file  # [attr-defined]
+            assert provider.config.server_name == "test-server"  # [attr-defined]
             
         except ImportError:
             pytest.skip("eunomia-mcp not available")
@@ -119,7 +119,7 @@ class TestEunomiaAuthorizationProvider:
         reason="Eunomia tests require eunomia-mcp package and TEST_EUNOMIA=true"
     )
     @pytest.mark.asyncio
-    async def test_eunomia_authentication_passthrough(self, mock_base_provider, policy_file):
+    async def test_eunomia_authentication_passthrough(self, mock_base_provider, policy_file) -> None:
         """Test that authentication passes through to base provider."""
         try:
             from githound.mcp.auth.providers.eunomia import EunomiaAuthorizationProvider
@@ -146,7 +146,7 @@ class TestEunomiaAuthorizationProvider:
         reason="Eunomia tests require eunomia-mcp package and TEST_EUNOMIA=true"
     )
     @pytest.mark.asyncio
-    async def test_eunomia_permission_checking(self, mock_base_provider, policy_file):
+    async def test_eunomia_permission_checking(self, mock_base_provider, policy_file) -> None:
         """Test Eunomia permission checking."""
         try:
             from githound.mcp.auth.providers.eunomia import EunomiaAuthorizationProvider
@@ -176,7 +176,7 @@ class TestEunomiaAuthorizationProvider:
         except ImportError:
             pytest.skip("eunomia-mcp not available")
     
-    def test_eunomia_environment_loading(self, mock_base_provider):
+    def test_eunomia_environment_loading(self, mock_base_provider) -> None:
         """Test loading Eunomia configuration from environment."""
         with patch.dict(os.environ, {
             "EUNOMIA_POLICY_FILE": "custom_policies.json",
@@ -192,10 +192,10 @@ class TestEunomiaAuthorizationProvider:
                     
                     provider = EunomiaAuthorizationProvider(mock_base_provider)
                     
-                    assert provider.config.policy_file == "custom_policies.json"
-                    assert provider.config.server_name == "custom-server"
-                    assert provider.config.enable_audit_logging is False
-                    assert provider.config.bypass_methods == ["init", "ping"]
+                    assert provider.config.policy_file == "custom_policies.json"  # [attr-defined]
+                    assert provider.config.server_name == "custom-server"  # [attr-defined]
+                    assert provider.config.enable_audit_logging is False  # [attr-defined]
+                    assert provider.config.bypass_methods == ["init", "ping"]  # [attr-defined]
                     
             except ImportError:
                 pytest.skip("eunomia-mcp not available")
@@ -205,7 +205,7 @@ class TestPermitAuthorizationProvider:
     """Test Permit.io authorization provider."""
     
     @pytest.fixture
-    def mock_base_provider(self):
+    def mock_base_provider(self) -> None:
         """Create a mock base provider."""
         return MockBaseProvider()
     
@@ -213,7 +213,7 @@ class TestPermitAuthorizationProvider:
         not os.getenv("TEST_PERMIT", "false").lower() == "true",
         reason="Permit tests require permit-fastmcp package and TEST_PERMIT=true"
     )
-    def test_permit_provider_creation(self, mock_base_provider):
+    def test_permit_provider_creation(self, mock_base_provider) -> None:
         """Test creating Permit.io authorization provider."""
         try:
             from githound.mcp.auth.providers.permit import PermitAuthorizationProvider
@@ -225,10 +225,10 @@ class TestPermitAuthorizationProvider:
                 server_name="test-server"
             )
             
-            assert provider.base_provider == mock_base_provider
-            assert provider.config.permit_api_key == "test-api-key"
-            assert provider.config.permit_pdp_url == "http://localhost:7766"
-            assert provider.config.server_name == "test-server"
+            assert provider.base_provider = = mock_base_provider
+            assert provider.config.permit_api_key == "test-api-key"  # [attr-defined]
+            assert provider.config.permit_pdp_url == "http://localhost:7766"  # [attr-defined]
+            assert provider.config.server_name == "test-server"  # [attr-defined]
             
         except ImportError:
             pytest.skip("permit-fastmcp not available")
@@ -238,7 +238,7 @@ class TestPermitAuthorizationProvider:
         reason="Permit tests require permit-fastmcp package and TEST_PERMIT=true"
     )
     @pytest.mark.asyncio
-    async def test_permit_authentication_passthrough(self, mock_base_provider):
+    async def test_permit_authentication_passthrough(self, mock_base_provider) -> None:
         """Test that authentication passes through to base provider."""
         try:
             from githound.mcp.auth.providers.permit import PermitAuthorizationProvider
@@ -266,7 +266,7 @@ class TestPermitAuthorizationProvider:
         reason="Permit tests require permit-fastmcp package and TEST_PERMIT=true"
     )
     @pytest.mark.asyncio
-    async def test_permit_permission_checking(self, mock_base_provider):
+    async def test_permit_permission_checking(self, mock_base_provider) -> None:
         """Test Permit.io permission checking."""
         try:
             from githound.mcp.auth.providers.permit import PermitAuthorizationProvider
@@ -302,7 +302,7 @@ class TestPermitAuthorizationProvider:
         reason="Permit tests require permit-fastmcp package and TEST_PERMIT=true"
     )
     @pytest.mark.asyncio
-    async def test_permit_tool_permission_checking(self, mock_base_provider):
+    async def test_permit_tool_permission_checking(self, mock_base_provider) -> None:
         """Test Permit.io tool-level permission checking with ABAC."""
         try:
             from githound.mcp.auth.providers.permit import PermitAuthorizationProvider
@@ -329,8 +329,8 @@ class TestPermitAuthorizationProvider:
         except ImportError:
             pytest.skip("permit-fastmcp not available")
     
-    def test_permit_environment_loading(self, mock_base_provider):
-        """Test loading Permit.io configuration from environment."""
+    def test_permit_environment_loading(self, mock_base_provider) -> None:
+        """Test loading Permit.io configuration from environment."""  # [attr-defined]
         with patch.dict(os.environ, {
             "PERMIT_MCP_PERMIT_PDP_URL": "http://custom:7766",
             "PERMIT_MCP_PERMIT_API_KEY": "custom-api-key",
@@ -344,11 +344,11 @@ class TestPermitAuthorizationProvider:
                 with patch('githound.mcp.auth.providers.permit.PermitMcpMiddleware'):
                     provider = PermitAuthorizationProvider(mock_base_provider)
                     
-                    assert provider.config.permit_pdp_url == "http://custom:7766"
-                    assert provider.config.permit_api_key == "custom-api-key"
-                    assert provider.config.identity_mode == "header"
-                    assert provider.config.enable_audit_logging is False
-                    assert provider.config.bypass_methods == ["init", "ping"]
+                    assert provider.config.permit_pdp_url == "http://custom:7766"  # [attr-defined]
+                    assert provider.config.permit_api_key == "custom-api-key"  # [attr-defined]
+                    assert provider.config.identity_mode == "header"  # [attr-defined]
+                    assert provider.config.enable_audit_logging is False  # [attr-defined]
+                    assert provider.config.bypass_methods == ["init", "ping"]  # [attr-defined]
                     
             except ImportError:
                 pytest.skip("permit-fastmcp not available")
@@ -358,7 +358,7 @@ class TestAuthorizationIntegration:
     """Test integration of authorization providers with GitHound auth system."""
     
     @pytest.mark.asyncio
-    async def test_auth_wrapper_environment_detection(self):
+    async def test_auth_wrapper_environment_detection(self) -> None:
         """Test that authorization wrappers are applied based on environment."""
         from githound.mcp.auth import _wrap_with_authorization_provider
         
@@ -384,7 +384,7 @@ class TestAuthorizationIntegration:
                 mock_logger.warning.assert_called()
     
     @pytest.mark.asyncio
-    async def test_enhanced_permission_checking(self):
+    async def test_enhanced_permission_checking(self) -> None:
         """Test enhanced permission checking with context."""
         from githound.mcp.auth import check_permission, check_tool_permission
         from githound.mcp.auth import set_auth_provider

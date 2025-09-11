@@ -25,7 +25,7 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional, Union, Any
 from dataclasses import dataclass
 
 from fastmcp import Client
@@ -34,7 +34,7 @@ from fastmcp.exceptions import ToolError
 import mcp.types as mcp_types
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -75,7 +75,7 @@ async def discover_tools() -> Dict[str, Any]:
             tools = await client.list_tools()
             logger.info(f"Discovered {len(tools)} tools")
             
-            tool_analysis = []
+            tool_analysis: list[Any] = []
             
             for tool in tools:
                 # Analyze each tool's metadata
@@ -153,7 +153,7 @@ async def execute_simple_tools() -> Dict[str, Any]:
     server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
     transport = PythonStdioTransport(str(server_script))
 
-    execution_results = []
+    execution_results: list[Any] = []
 
     try:
         async with Client(transport) as client:
@@ -348,7 +348,7 @@ async def demonstrate_complex_arguments() -> Dict[str, Any]:
                 }
             ]
             
-            results = []
+            results: list[Any] = []
             
             # Note: The simple server doesn't have tools that accept complex arguments
             # This demonstrates the client-side argument handling
@@ -409,7 +409,7 @@ async def demonstrate_error_handling() -> Dict[str, Any]:
     server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
     transport = PythonStdioTransport(str(server_script))
 
-    error_scenarios = []
+    error_scenarios: list[Any] = []
 
     try:
         async with Client(transport) as client:
@@ -493,7 +493,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Tool Operations Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Tool Discovery

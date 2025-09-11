@@ -2,7 +2,7 @@
 Console output utilities with colors and formatting.
 """
 
-from typing import Any, Optional
+from typing import Optional, Any
 
 # Try to import rich, fall back to basic console if not available
 try:
@@ -134,7 +134,7 @@ def print_list(items: list, title: Optional[str] = None, bullet: str = "•") ->
         console.print(f"  [green]{bullet}[/green] {item}")
 
 
-def create_progress():
+def create_progress() -> None:
     """Create a progress bar."""
     if RICH_AVAILABLE and console:
         return Progress(
@@ -211,11 +211,11 @@ def print_file_tree(directory_structure: dict, prefix: str = "") -> None:
 class StatusContext:
     """Context manager for status updates."""
 
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
         self.message = message
         self.status = None
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         if RICH_AVAILABLE and console:
             self.status = console.status(f"[yellow]{self.message}...[/yellow]")
             self.status.start()
@@ -223,7 +223,7 @@ class StatusContext:
             print(f"⏳ {self.message}...")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if self.status:
             self.status.stop()
 
@@ -233,10 +233,10 @@ class StatusContext:
             print_error(f"{self.message} failed")
 
 
-def with_status(message: str):
+def with_status(message: str) -> None:
     """Decorator for functions that should show status."""
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func) -> None:
+        def wrapper(*args: Any, **kwargs: Any) -> None:
             with StatusContext(message):
                 return func(*args, **kwargs)
         return wrapper

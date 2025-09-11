@@ -4,12 +4,12 @@ import fnmatch
 from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Dict, List
 
 import git
 from git import Commit, GitCommandError, Repo
 
-from githound.models import CommitInfo, GitHoundConfig, SearchConfig, SearchResult
+from githound.models import CommitInfo, GitHoundConfig, SearchConfig, SearchResult  # [attr-defined]
 from githound.searcher import search_blob_content
 
 
@@ -43,7 +43,7 @@ def walk_history(repo: Repo, config: GitHoundConfig) -> Generator[Commit, None, 
     Yields:
         Commit objects from the history.
     """
-    branch = config.branch or repo.active_branch.name
+    branch = config.branch or repo.active_branch.name  # [attr-defined]
     try:
         for commit in repo.iter_commits(branch):
             yield commit
@@ -74,21 +74,21 @@ def process_commit(commit: Commit, config: GitHoundConfig) -> list[SearchResult]
 
             file_path = diff.b_path
             if (
-                config.search_config
-                and config.search_config.include_globs
+                config.search_config  # [attr-defined]
+                and config.search_config.include_globs  # [attr-defined]
                 and not any(
                     fnmatch.fnmatch(file_path, pattern)
-                    for pattern in config.search_config.include_globs
+                    for pattern in config.search_config.include_globs  # [attr-defined]
                 )
             ):
                 continue
 
             if (
-                config.search_config
-                and config.search_config.exclude_globs
+                config.search_config  # [attr-defined]
+                and config.search_config.exclude_globs  # [attr-defined]
                 and any(
                     fnmatch.fnmatch(file_path, pattern)
-                    for pattern in config.search_config.exclude_globs
+                    for pattern in config.search_config.exclude_globs  # [attr-defined]
                 )
             ):
                 continue
@@ -97,11 +97,11 @@ def process_commit(commit: Commit, config: GitHoundConfig) -> list[SearchResult]
                 content = diff.b_blob.data_stream.read()
                 # Convert search_query to string if it's a SearchQuery object
                 query_str = (
-                    config.search_query
-                    if isinstance(config.search_query, str)
-                    else config.search_query.content_pattern or ""
+                    config.search_query  # [attr-defined]
+                    if isinstance(config.search_query, str)  # [attr-defined]
+                    else config.search_query.content_pattern or ""  # [attr-defined]
                 )
-                search_config = config.search_config or SearchConfig(
+                search_config = config.search_config or SearchConfig(  # [attr-defined]
                     include_globs=[],
                     exclude_globs=[],
                     case_sensitive=False,
@@ -354,7 +354,7 @@ def get_file_history(
     Returns:
         List of dictionaries containing file history information.
     """
-    history = []
+    history: list[Any] = []
 
     try:
         kwargs: dict[str, Any] = {"paths": [file_path]}
@@ -366,7 +366,7 @@ def get_file_history(
         for commit in repo.iter_commits(**kwargs):
             # Get the file content at this commit
             try:
-                file_content = None
+                file_content: Optional[str] = None
                 file_size = 0
 
                 # Try to get the file from this commit
@@ -383,7 +383,7 @@ def get_file_history(
                 history.append(
                     {
                         "commit_hash": commit.hexsha,
-                        "commit_date": datetime.fromtimestamp(commit.committed_date),
+                        "commit_date": datetime.fromtimestamp if datetime is not None else None(commit.committed_date),
                         "author": f"{commit.author.name} <{commit.author.email}>",
                         "message": commit.message.strip(),
                         "file_size": file_size,

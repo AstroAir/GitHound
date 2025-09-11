@@ -1,110 +1,146 @@
-# GitHound MCP Server Testing
+# GitHound API Test Suite
 
-Comprehensive testing suite for GitHound MCP Server following [FastMCP testing best practices](https://gofastmcp.com/deployment/testing).
-
-## Overview
-
-This testing suite implements the latest FastMCP testing patterns including:
-
-- **In-Memory Testing**: Direct server instance passing for zero-overhead testing
-- **Comprehensive Fixtures**: Reusable server configurations and test data
-- **Mock External Dependencies**: Deterministic testing with mocked Git operations
-- **Authentication Testing**: Bearer tokens and OAuth flow testing
-- **Performance Testing**: Scalability and resource utilization testing
-- **Integration Testing**: HTTP transport and deployed server testing
+This directory contains a comprehensive test suite for the GitHound API, covering unit tests, integration tests, end-to-end tests, performance tests, and security tests.
 
 ## Test Structure
 
 ```
 tests/
-├── conftest.py                    # Test fixtures and configuration
-├── test_mcp_server.py            # Enhanced main server tests
-├── test_mcp_fastmcp_patterns.py  # FastMCP pattern tests
-├── test_mcp_authentication.py    # Authentication testing
-├── test_mcp_integration.py       # HTTP transport integration tests
-├── test_mcp_performance.py       # Performance and scalability tests
-└── README.md                     # This file
-```
-
-## Quick Start
-
-### Install Test Dependencies
-
-```bash
-pip install pytest pytest-asyncio pytest-cov psutil
-```
-
-### Run Basic Tests
-
-```bash
-# Run unit tests (fast, in-memory)
-python scripts/run_mcp_tests.py unit
-
-# Run FastMCP pattern tests
-python scripts/run_mcp_tests.py fastmcp
-
-# Run quick check
-python scripts/run_mcp_tests.py --quick
-
-# Run all tests
-python scripts/run_mcp_tests.py all
+├── conftest.py                 # Shared fixtures and test configuration
+├── unit/                       # Unit tests for individual components
+│   ├── test_git_operations.py  # Git operations manager tests
+│   ├── test_auth.py            # Authentication system tests
+│   └── test_webhooks.py        # Webhook system tests
+├── integration/                # Integration tests for API endpoints
+│   ├── test_repository_api.py  # Repository management API tests
+│   ├── test_analysis_api.py    # Analysis API tests
+│   └── test_search_api.py      # Search API tests
+├── e2e/                        # End-to-end workflow tests
+│   └── test_complete_workflows.py
+├── performance/                # Performance and load tests
+│   └── test_load_testing.py
+├── security/                   # Security tests
+│   └── test_security.py
+└── README.md                   # This file
 ```
 
 ## Test Categories
 
-### Unit Tests (`unit`)
-Fast, isolated tests using in-memory testing patterns:
-- Server creation and configuration
-- Tool execution with mocked dependencies
-- Resource access patterns
-- Error handling scenarios
+### Unit Tests (`tests/unit/`)
+- **Purpose**: Test individual components in isolation
+- **Speed**: Fast (< 1 second per test)
+- **Dependencies**: Minimal, mostly mocked
+- **Coverage**: Core business logic, utilities, data models
 
+**Key Test Files:**
+- `test_git_operations.py`: Tests for GitOperationsManager class
+- `test_auth.py`: Authentication and authorization logic
+- `test_webhooks.py`: Webhook event system
+
+### Integration Tests (`tests/integration/`)
+- **Purpose**: Test API endpoints with real HTTP requests
+- **Speed**: Medium (1-5 seconds per test)
+- **Dependencies**: FastAPI test client, mocked external services
+- **Coverage**: API endpoints, request/response handling, validation
+
+**Key Test Files:**
+- `test_repository_api.py`: Repository management endpoints
+- `test_analysis_api.py`: Code analysis and blame endpoints
+- `test_search_api.py`: Search functionality endpoints
+
+### End-to-End Tests (`tests/e2e/`)
+- **Purpose**: Test complete user workflows
+- **Speed**: Slow (5-30 seconds per test)
+- **Dependencies**: Full application stack
+- **Coverage**: User journeys, cross-component interactions
+
+### Performance Tests (`tests/performance/`)
+- **Purpose**: Test system performance under load
+- **Speed**: Very slow (30+ seconds per test)
+- **Dependencies**: Load testing tools, potentially external services
+- **Coverage**: Rate limiting, concurrent operations, large datasets
+
+### Security Tests (`tests/security/`)
+- **Purpose**: Test security measures and vulnerability protection
+- **Speed**: Medium (1-10 seconds per test)
+- **Dependencies**: Security testing tools
+- **Coverage**: Authentication bypass, authorization, input validation, XSS, injection attacks
+
+## Test Markers
+
+Tests are categorized using pytest markers:
+
+- `@pytest.mark.unit`: Unit tests
+- `@pytest.mark.integration`: Integration tests
+- `@pytest.mark.e2e`: End-to-end tests
+- `@pytest.mark.performance`: Performance tests
+- `@pytest.mark.security`: Security tests
+- `@pytest.mark.slow`: Tests that take longer to run
+- `@pytest.mark.redis`: Tests requiring Redis connection
+- `@pytest.mark.websocket`: WebSocket functionality tests
+
+## Running Tests
+
+### Prerequisites
+
+Install test dependencies:
 ```bash
-python scripts/run_mcp_tests.py unit
+pip install pytest pytest-asyncio pytest-cov pytest-timeout pytest-xdist httpx fastapi[all] redis aiohttp
 ```
 
-### FastMCP Pattern Tests (`fastmcp`)
-Tests specifically following FastMCP documentation patterns:
-- In-memory server-client connections
-- Deterministic testing with mocks
-- Concurrent operation patterns
-- Best practice implementations
+### Quick Start
 
 ```bash
-python scripts/run_mcp_tests.py fastmcp
+# Run all fast tests (excludes slow and performance tests)
+python run_tests.py fast
+
+# Run unit tests only
+python run_tests.py unit
+
+# Run integration tests
+python run_tests.py integration
+
+# Run all tests with coverage
+python run_tests.py all
 ```
 
-### Integration Tests (`integration`)
-Tests requiring external services or HTTP transport:
-- HTTP server connectivity
-- Real network behavior
-- Deployed server scenarios
-- End-to-end workflows
+### Using the Test Runner
+
+The `run_tests.py` script provides various execution modes:
 
 ```bash
-python scripts/run_mcp_tests.py integration
-```
+# Unit tests with coverage
+python run_tests.py unit
 
-### Performance Tests (`performance`)
-Scalability and resource utilization tests:
-- Large repository handling
-- Concurrent client connections
-- Memory usage patterns
-- Response time benchmarks
+# Integration tests
+python run_tests.py integration
 
-```bash
-python scripts/run_mcp_tests.py performance
-```
+# End-to-end tests
+python run_tests.py e2e
 
-### Authentication Tests (`auth`)
-Security and authentication scenarios:
-- Bearer token authentication
-- OAuth flow simulation
-- Authorization patterns
-- Security headers validation
+# Performance tests
+python run_tests.py performance
 
-```bash
-python scripts/run_mcp_tests.py auth
+# Security tests
+python run_tests.py security
+
+# Fast tests (unit + quick integration)
+python run_tests.py fast
+
+# All tests
+python run_tests.py all
+
+# Generate coverage report
+python run_tests.py coverage
+
+# Run specific test file
+python run_tests.py specific --test-path tests/unit/test_auth.py
+
+# Run tests by marker
+python run_tests.py marker --marker security
+
+# Run with options
+python run_tests.py all --parallel --no-coverage --quiet
 ```
 
 ## Key Testing Patterns

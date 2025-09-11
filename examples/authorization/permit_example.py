@@ -27,7 +27,7 @@ import jwt
 import datetime
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)  # [attr-defined]
 logger = logging.getLogger(__name__)
 
 # Set up environment for Permit.io
@@ -59,7 +59,7 @@ def create_demo_jwt_token(username: str, role: str) -> str:
     return jwt.encode(payload, "demo-secret-key", algorithm="HS256")
 
 
-async def demo_permit_authorization():
+async def demo_permit_authorization() -> None:
     """Demonstrate Permit.io authorization with GitHound."""
     
     print("\n" + "="*60)
@@ -98,8 +98,8 @@ async def demo_permit_authorization():
     set_auth_provider(auth_provider)
     
     print(f"✓ Created Permit.io authorization provider")
-    print(f"✓ PDP URL: {auth_provider.get_permit_config().permit_pdp_url}")
-    print(f"✓ Identity Mode: {auth_provider.get_permit_config().identity_mode}")
+    print(f"✓ PDP URL: {auth_provider.get_permit_config().permit_pdp_url}")  # [attr-defined]
+    print(f"✓ Identity Mode: {auth_provider.get_permit_config().identity_mode}")  # [attr-defined]
     
     # Create test users with different roles
     test_users = [
@@ -207,15 +207,15 @@ async def demo_permit_authorization():
     
     # Show configuration
     print("\n" + "-"*60)
-    print("Permit.io Configuration:")
+    print("Permit.io Configuration:")  # [attr-defined]
     print("-"*60)
     
-    config = auth_provider.get_permit_config()
-    print(f"PDP URL: {config.permit_pdp_url}")
-    print(f"Server Name: {config.server_name}")
-    print(f"Identity Mode: {config.identity_mode}")
-    print(f"Audit Logging: {config.enable_audit_logging}")
-    print(f"Bypass Methods: {config.bypass_methods}")
+    config = auth_provider.get_permit_config()  # [attr-defined]
+    print(f"PDP URL: {config.permit_pdp_url}")  # [attr-defined]
+    print(f"Server Name: {config.server_name}")  # [attr-defined]
+    print(f"Identity Mode: {config.identity_mode}")  # [attr-defined]
+    print(f"Audit Logging: {config.enable_audit_logging}")  # [attr-defined]
+    print(f"Bypass Methods: {config.bypass_methods}")  # [attr-defined]
     
     # Demonstrate configuration updates
     print("\n" + "-"*60)
@@ -226,16 +226,16 @@ async def demo_permit_authorization():
     
     # You can update configuration at runtime
     try:
-        auth_provider.update_permit_config(
+        auth_provider.update_permit_config(  # [attr-defined]
             enable_audit_logging=False,
             bypass_methods=["initialize", "ping", "health"]
         )
         print("✓ Configuration updated successfully")
         
         # Show updated config
-        updated_config = auth_provider.get_permit_config()
-        print(f"✓ Audit logging now: {updated_config.enable_audit_logging}")
-        print(f"✓ Bypass methods now: {updated_config.bypass_methods}")
+        updated_config = auth_provider.get_permit_config()  # [attr-defined]
+        print(f"✓ Audit logging now: {updated_config.enable_audit_logging}")  # [attr-defined]
+        print(f"✓ Bypass methods now: {updated_config.bypass_methods}")  # [attr-defined]
         
     except Exception as e:
         print(f"✗ Configuration update failed: {e}")
@@ -245,9 +245,9 @@ async def demo_permit_authorization():
     print("="*60)
     print("\nNext Steps:")
     print("1. Set up your Permit.io account and get an API key")
-    print("2. Configure resources and policies in Permit.io dashboard")
+    print("2. Configure resources and policies in Permit.io dashboard")  # [attr-defined]
     print("3. Set up proper JWT authentication")
-    print("4. Configure user roles in Permit.io Directory")
+    print("4. Configure user roles in Permit.io Directory")  # [attr-defined]
     print("5. Set up production PDP (local Docker or cloud)")
     
     print("\nPermit.io Setup Commands:")

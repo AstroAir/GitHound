@@ -7,6 +7,7 @@ This document summarizes the type-related fixes applied to the GitHound MCP serv
 ### 1. **Dataclass Default Values** (`base.py`)
 
 **Issue**: Mutable default values in dataclass fields
+
 ```python
 # Before (problematic)
 roles: List[str] = None
@@ -22,11 +23,12 @@ permissions: Optional[List[str]] = None
 ### 2. **Function Return Type Annotations**
 
 **Issue**: Missing or incorrect return type annotations
+
 ```python
 # Before
 def __init__(self, ...):
 
-# After  
+# After
 def __init__(self, ...) -> None:
 ```
 
@@ -35,6 +37,7 @@ def __init__(self, ...) -> None:
 ### 3. **Method Parameter Type Annotations**
 
 **Issue**: Missing type annotations for `**kwargs` parameters
+
 ```python
 # Before
 def __init__(self, **kwargs):
@@ -48,6 +51,7 @@ def __init__(self, **kwargs: Any) -> None:
 ### 4. **Environment Variable Type Handling**
 
 **Issue**: `os.getenv()` returns `Optional[str]` but variables expected `str`
+
 ```python
 # Before (type error)
 self.client_id = os.getenv(f"{prefix}CLIENT_ID")  # str | None -> str
@@ -61,6 +65,7 @@ self.client_id = os.getenv(f"{prefix}CLIENT_ID") or ""  # str
 ### 5. **Return Type Consistency**
 
 **Issue**: Inconsistent return types in method signatures
+
 ```python
 # Before
 def get_oauth_metadata(self) -> dict:
@@ -74,6 +79,7 @@ def get_oauth_metadata(self) -> Dict[str, Any]:
 ### 6. **Protocol-Based Fallback Types**
 
 **Issue**: Import failures causing type annotation problems
+
 ```python
 # Before (problematic fallback)
 try:
@@ -95,6 +101,7 @@ except ImportError:
 ### 7. **Optional JWT Dependencies**
 
 **Issue**: Missing PyJWT causing import and type errors
+
 ```python
 # Before
 try:
@@ -120,6 +127,7 @@ except ImportError:
 ### 8. **Null Safety in JWT Verification**
 
 **Issue**: Potential None access without checking
+
 ```python
 # Before
 signing_key = self.jwks_client.get_signing_key_from_jwt(token)
@@ -136,20 +144,24 @@ signing_key = self.jwks_client.get_signing_key_from_jwt(token)
 ## Type Safety Improvements
 
 ### 1. **Explicit Type Imports**
+
 - Added comprehensive `typing` imports: `Optional`, `Dict`, `Any`, `List`, `Protocol`
 - Used specific types instead of generic ones (e.g., `Dict[str, Any]` vs `dict`)
 
 ### 2. **Dataclass Field Types**
+
 - Fixed mutable default arguments in dataclasses
 - Used proper Optional types for nullable fields
 - Added type annotations to all dataclass fields
 
 ### 3. **Method Signatures**
+
 - Added return type annotations to all methods
 - Properly typed `**kwargs` parameters
 - Used consistent parameter and return types
 
 ### 4. **Error Handling**
+
 - Added proper fallback types for optional dependencies
 - Used Protocol classes for better interface definitions
 - Handled import failures gracefully with type safety
@@ -157,7 +169,9 @@ signing_key = self.jwks_client.get_signing_key_from_jwt(token)
 ## Testing
 
 ### Syntax Validation
+
 All files pass Python syntax validation:
+
 - `githound/mcp/auth/providers/base.py` ✓
 - `githound/mcp/auth/providers/jwt.py` ✓
 - `githound/mcp/auth/providers/oauth_proxy.py` ✓
@@ -167,6 +181,7 @@ All files pass Python syntax validation:
 - `githound/mcp/auth.py` ✓
 
 ### Type Annotation Coverage
+
 - All public methods have proper type annotations
 - All `__init__` methods have return type annotations
 - All parameters have appropriate type hints

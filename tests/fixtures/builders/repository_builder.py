@@ -17,7 +17,7 @@ from git import Repo
 class RepositoryBuilder:
     """Builder for creating test repositories with specific characteristics."""
 
-    def __init__(self, base_path: str | None = None):
+    def __init__(self, base_path: str | None = None) -> None:
         """Initialize repository builder."""
         if base_path:
             self.base_path = Path(base_path)
@@ -36,9 +36,9 @@ class RepositoryBuilder:
         self.repo = Repo.init(str(self.base_path))
 
         # Configure initial user
-        with self.repo.config_writer() as config:
-            config.set_value("user", "name", self.authors[0][0])
-            config.set_value("user", "email", self.authors[0][1])
+        with self.repo.config_writer() as config:  # [attr-defined]
+            config.set_value("user", "name", self.authors[0][0])  # [attr-defined]
+            config.set_value("user", "email", self.authors[0][1])  # [attr-defined]
 
         return self
 
@@ -85,9 +85,9 @@ class RepositoryBuilder:
 
         author_name, author_email = self.authors[self.current_author_index]
 
-        with self.repo.config_writer() as config:
-            config.set_value("user", "name", author_name)
-            config.set_value("user", "email", author_email)
+        with self.repo.config_writer() as config:  # [attr-defined]
+            config.set_value("user", "name", author_name)  # [attr-defined]
+            config.set_value("user", "email", author_email)  # [attr-defined]
 
         # Stage all changes
         self.repo.index.add_all()
@@ -167,7 +167,7 @@ class RepositoryBuilder:
             "src": {
                 "__init__.py": "",
                 "main.py": """
-def main():
+def main() -> None:
     print("Hello, World!")
     return 0
 
@@ -175,37 +175,37 @@ if __name__ == "__main__":
     main()
 """,
                 "utils.py": """
-def helper_function(x):
+def helper_function(x) -> None:
     return x * 2
 
 class UtilityClass:
-    def __init__(self, value):
+    def __init__(self, value) -> None:
         self.value = value
     
-    def process(self):
+    def process(self) -> None:
         return helper_function(self.value)
 """,
                 "models": {
                     "__init__.py": "",
                     "user.py": """
 class User:
-    def __init__(self, name, email):
+    def __init__(self, name, email) -> None:
         self.name = name
         self.email = email
     
-    def __str__(self):
+    def __str__(self) -> None:
         return f"User({self.name}, {self.email})"
 """,
                     "project.py": """
 from datetime import datetime
 
 class Project:
-    def __init__(self, name, description):
+    def __init__(self, name, description) -> None:
         self.name = name
         self.description = description
         self.created_at = datetime.now()
     
-    def get_info(self):
+    def get_info(self) -> None:
         return {
             'name': self.name,
             'description': self.description,
@@ -221,7 +221,7 @@ import unittest
 from src.main import main
 
 class TestMain(unittest.TestCase):
-    def test_main_returns_zero(self):
+    def test_main_returns_zero(self) -> None:
         result = main()
         self.assertEqual(result, 0)
 """,
@@ -230,12 +230,12 @@ import unittest
 from src.utils import helper_function, UtilityClass
 
 class TestUtils(unittest.TestCase):
-    def test_helper_function(self):
+    def test_helper_function(self) -> None:
         self.assertEqual(helper_function(5), 10)
     
-    def test_utility_class(self):
+    def test_utility_class(self) -> None:
         util = UtilityClass(3)
-        self.assertEqual(util.process(), 6)
+        self.assertEqual(util.process if util is not None else None(), 6)
 """,
             },
             "docs": {
@@ -357,7 +357,7 @@ def feature_{day}():
     return "Feature {day} result"
 
 class Feature{day}Handler:
-    def handle(self):
+    def handle(self) -> None:
         return feature_{day}()
 """
         self.create_file(feature_file, content)
@@ -420,7 +420,7 @@ class TestDay{day}(unittest.TestCase):
 
         return self.repo, str(self.base_path)
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up the repository."""
         if self.base_path.exists():
             shutil.rmtree(self.base_path, ignore_errors=True)

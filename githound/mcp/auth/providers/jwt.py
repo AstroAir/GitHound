@@ -4,7 +4,7 @@ import os
 import json
 import time
 import logging
-from typing import Optional, Dict, Any, Union
+from typing import Any, Optional, Dict, List
 from urllib.request import urlopen
 from urllib.error import URLError
 
@@ -16,7 +16,7 @@ except ImportError:
     JWT_AVAILABLE = False
     # Create dummy classes for type checking
 
-    class PyJWKClient:  # type: ignore
+    class PyJWKClient:  # 
         def __init__(self, uri: str) -> None: ...
         def get_signing_key_from_jwt(self, token: str) -> Any: ...
 
@@ -43,11 +43,9 @@ class JWTVerifier(TokenVerifier):
 
         super().__init__(issuer=issuer, audience=audience, **kwargs)
         self.jwks_uri = jwks_uri
-        self.jwks_client: Optional[PyJWKClient]
+        self.jwks_client: Optional[PyJWKClient] = None
         if jwks_uri:
             self.jwks_client = PyJWKClient(jwks_uri)
-        else:
-            self.jwks_client = None
         self._cached_keys: Dict[str, Any] = {}
         self._cache_expiry = 0
 
@@ -64,7 +62,7 @@ class JWTVerifier(TokenVerifier):
 
         # Validate required configuration
         if not all([self.jwks_uri, self.issuer, self.audience]):
-            missing = []
+            missing: list[Any] = []
             if not self.jwks_uri:
                 missing.append(f"{prefix}JWKS_URI")
             if not self.issuer:
@@ -186,7 +184,7 @@ class StaticJWTVerifier(TokenVerifier):
             self.algorithm = os.getenv(f"{prefix}ALGORITHM", "HS256")
 
         if not all([self.secret_key, self.issuer, self.audience]):
-            missing = []
+            missing: list[Any] = []
             if not self.secret_key:
                 missing.append(f"{prefix}SECRET_KEY")
             if not self.issuer:

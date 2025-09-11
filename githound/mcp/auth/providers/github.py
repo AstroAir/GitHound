@@ -3,7 +3,9 @@
 import os
 import json
 import logging
-from typing import Optional, List, Any, Dict
+from typing import Any, Optional, Dict, List
+import urllib.request
+import urllib.error
 
 from .oauth_proxy import OAuthProxy, TokenInfo
 
@@ -60,7 +62,7 @@ class GitHubProvider(OAuthProxy):
 
         # Validate required configuration
         if not all([self.client_id, self.client_secret]):
-            missing = []
+            missing: list[Any] = []
             if not self.client_id:
                 missing.append(f"{prefix}CLIENT_ID")
             if not self.client_secret:
@@ -84,9 +86,6 @@ class GitHubProvider(OAuthProxy):
                 token = token[7:]
 
             # Get user information from GitHub API
-            import urllib.request
-            import urllib.error
-
             request = urllib.request.Request(
                 "https://api.github.com/user",
                 headers={
@@ -97,7 +96,7 @@ class GitHubProvider(OAuthProxy):
             )
 
             with urllib.request.urlopen(request) as response:
-                user_data = json.loads(response.read().decode())
+                user_data = json.loads(response.read().decode("utf-8"))
 
             # Get user email (might be private)
             email = user_data.get("email")
@@ -113,7 +112,7 @@ class GitHubProvider(OAuthProxy):
                     )
 
                     with urllib.request.urlopen(email_request) as email_response:
-                        emails = json.loads(email_response.read().decode())
+                        emails = json.loads(email_response.read().decode("utf-8"))
                         # Find primary email
                         for email_data in emails:
                             if email_data.get("primary"):
@@ -227,7 +226,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
 
         # Validate required configuration
         if not all([self.client_id, self.client_secret, self.github_base_url]):
-            missing = []
+            missing: list[Any] = []
             if not self.client_id:
                 missing.append(f"{prefix}CLIENT_ID")
             if not self.client_secret:
@@ -253,9 +252,6 @@ class GitHubEnterpriseProvider(GitHubProvider):
                 token = token[7:]
 
             # Get user information from GitHub Enterprise API
-            import urllib.request
-            import urllib.error
-
             request = urllib.request.Request(
                 f"{self.github_base_url}/api/v3/user",
                 headers={
@@ -266,7 +262,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
             )
 
             with urllib.request.urlopen(request) as response:
-                user_data = json.loads(response.read().decode())
+                user_data = json.loads(response.read().decode("utf-8"))
 
             # Extract user information (same as GitHub.com)
             user_id = str(user_data.get("id"))

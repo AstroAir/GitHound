@@ -29,7 +29,7 @@ class TestEndToEndWorkflows:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_basic_client_workflow(self):
+    async def test_basic_client_workflow(self) -> None:
         """Test complete basic client workflow."""
         from clients import basic_client
         
@@ -52,7 +52,7 @@ class TestEndToEndWorkflows:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_transport_examples_workflow(self):
+    async def test_transport_examples_workflow(self) -> None:
         """Test complete transport examples workflow."""
         from clients import transport_examples
         
@@ -74,7 +74,7 @@ class TestEndToEndWorkflows:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_tool_operations_workflow(self):
+    async def test_tool_operations_workflow(self) -> None:
         """Test complete tool operations workflow."""
         from clients import tool_operations
         
@@ -94,7 +94,7 @@ class TestEndToEndWorkflows:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_resource_operations_workflow(self):
+    async def test_resource_operations_workflow(self) -> None:
         """Test complete resource operations workflow."""
         from clients import resource_operations
         
@@ -116,7 +116,7 @@ class TestEndToEndWorkflows:
     @pytest.mark.integration
     @pytest.mark.requires_git
     @pytest.mark.asyncio
-    async def test_githound_client_workflow(self, temp_git_repo):
+    async def test_githound_client_workflow(self, temp_git_repo) -> None:
         """Test complete GitHound client workflow."""
         # Run the GitHound client analysis
         result = await githound_client.main(str(temp_git_repo))
@@ -143,7 +143,7 @@ class TestRealWorldScenarios:
     @pytest.mark.integration
     @pytest.mark.requires_git
     @pytest.mark.asyncio
-    async def test_analyze_current_repository(self):
+    async def test_analyze_current_repository(self) -> None:
         """Test analyzing the current GitHound repository."""
         # Use the current directory (GitHound repository)
         current_repo = Path(__file__).parent.parent.parent.parent
@@ -167,11 +167,11 @@ class TestRealWorldScenarios:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_concurrent_client_connections(self):
+    async def test_concurrent_client_connections(self) -> None:
         """Test multiple concurrent client connections."""
         server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
         
-        async def create_client_and_test():
+        async def create_client_and_test() -> None:
             transport = StdioTransport("python", str(server_script))
             async with FastMCPClient(transport) as client:
                 # Perform basic operations
@@ -200,7 +200,7 @@ class TestRealWorldScenarios:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_large_data_handling(self, simple_mcp_client):
+    async def test_large_data_handling(self, simple_mcp_client) -> None:
         """Test handling of large data sets."""
         # Test with large message
         large_message = "x" * 10000  # 10KB message
@@ -220,7 +220,7 @@ class TestRealWorldScenarios:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_long_running_operations(self, temp_git_repo):
+    async def test_long_running_operations(self, temp_git_repo) -> None:
         """Test long-running operations."""
         # Create a larger repository for testing
         repo_path = temp_git_repo
@@ -260,7 +260,7 @@ class TestErrorRecovery:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_server_restart_recovery(self):
+    async def test_server_restart_recovery(self) -> None:
         """Test recovery from server restart."""
         server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
         
@@ -278,7 +278,7 @@ class TestErrorRecovery:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_malformed_request_handling(self, simple_mcp_client):
+    async def test_malformed_request_handling(self, simple_mcp_client) -> None:
         """Test handling of malformed requests."""
         # Test with invalid tool arguments
         try:
@@ -293,7 +293,7 @@ class TestErrorRecovery:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_resource_not_found_recovery(self, simple_mcp_client):
+    async def test_resource_not_found_recovery(self, simple_mcp_client) -> None:
         """Test recovery from resource not found errors."""
         # Try to access non-existent resource
         try:
@@ -313,12 +313,12 @@ class TestPerformanceIntegration:
     @pytest.mark.performance
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_throughput_performance(self, simple_mcp_client):
+    async def test_throughput_performance(self, simple_mcp_client) -> None:
         """Test throughput performance."""
         start_time = time.time()
         
         # Execute many operations
-        tasks = []
+        tasks: list[Any] = []
         for i in range(50):
             if i % 2 == 0:
                 task = simple_mcp_client.call_tool("echo", {"message": f"test {i}"})
@@ -338,12 +338,12 @@ class TestPerformanceIntegration:
     @pytest.mark.performance
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_memory_usage_stability(self, simple_mcp_client):
+    async def test_memory_usage_stability(self, simple_mcp_client) -> None:
         """Test memory usage stability over time."""
         import psutil
         import os
         
-        process = psutil.Process(os.getpid())
+        process = psutil.Process(os.getpid if os is not None else None())
         initial_memory = process.memory_info().rss
         
         # Perform many operations
@@ -361,7 +361,7 @@ class TestPerformanceIntegration:
     @pytest.mark.integration
     @pytest.mark.requires_git
     @pytest.mark.asyncio
-    async def test_git_operations_performance(self, temp_git_repo):
+    async def test_git_operations_performance(self, temp_git_repo) -> None:
         """Test performance of Git operations."""
         server_script = Path(__file__).parent.parent / "servers" / "githound_server.py"
         transport = StdioTransport("python", str(server_script))
@@ -395,7 +395,7 @@ class TestDataConsistency:
     @pytest.mark.integration
     @pytest.mark.requires_git
     @pytest.mark.asyncio
-    async def test_repository_data_consistency(self, temp_git_repo, githound_mcp_client):
+    async def test_repository_data_consistency(self, temp_git_repo, githound_mcp_client) -> None:
         """Test consistency of repository data across different operations."""
         repo_path = str(temp_git_repo)
         
@@ -434,7 +434,7 @@ class TestDataConsistency:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_resource_tool_consistency(self, githound_mcp_client, temp_git_repo):
+    async def test_resource_tool_consistency(self, githound_mcp_client, temp_git_repo) -> None:
         """Test consistency between resource data and tool results."""
         repo_path = str(temp_git_repo)
         
@@ -466,7 +466,7 @@ class TestScalability:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_multiple_repository_analysis(self, temp_git_repo):
+    async def test_multiple_repository_analysis(self, temp_git_repo) -> None:
         """Test analyzing multiple repositories."""
         server_script = Path(__file__).parent.parent / "servers" / "githound_server.py"
         transport = StdioTransport("python", str(server_script))
@@ -488,10 +488,10 @@ class TestScalability:
     
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_high_frequency_requests(self, simple_mcp_client):
+    async def test_high_frequency_requests(self, simple_mcp_client) -> None:
         """Test handling of high-frequency requests."""
         # Send requests rapidly
-        tasks = []
+        tasks: list[Any] = []
         for i in range(20):
             task = simple_mcp_client.call_tool("get_server_info", {})
             tasks.append(task)

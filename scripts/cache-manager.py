@@ -54,7 +54,7 @@ app = typer.Typer(
 class CacheManager:
     """Manages GitHound caches and temporary data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
 
         # Define cache locations
@@ -167,7 +167,7 @@ class CacheManager:
         if cache_type not in self.cache_locations:
             return []
 
-        config = self.cache_locations[cache_type]
+        config = self.cache_locations[cache_type]  # [attr-defined]
         pattern = config["pattern"]
 
         if pattern.startswith("**/"):
@@ -179,7 +179,7 @@ class CacheManager:
 
     def get_cache_info(self, cache_type: str) -> Dict:
         """Get information about a cache type."""
-        config = self.cache_locations[cache_type]
+        config = self.cache_locations[cache_type]  # [attr-defined]
         items = self.find_cache_items(cache_type)
 
         total_size = 0
@@ -220,7 +220,7 @@ class CacheManager:
         if cache_type not in self.cache_locations:
             return False, 0, 0
 
-        config = self.cache_locations[cache_type]
+        config = self.cache_locations[cache_type]  # [attr-defined]
 
         # Safety check
         if not config["safe_to_delete"] and not force:
@@ -258,7 +258,7 @@ class CacheManager:
         total_files = 0
         total_bytes = 0
 
-        for cache_type, config in self.cache_locations.items():
+        for cache_type, config in self.cache_locations.items():  # [attr-defined]
             if config["safe_to_delete"]:
                 success, files, bytes_freed = self.clean_cache(cache_type)
                 if success:
@@ -376,7 +376,7 @@ def clean(
                 print_info(f"  - {ct}")
             sys.exit(1)
 
-        config = manager.cache_locations[cache_type]
+        config = manager.cache_locations[cache_type]  # [attr-defined]
 
         with StatusContext(f"Cleaning {config['description']}"):
             success, files_removed, bytes_freed = manager.clean_cache(

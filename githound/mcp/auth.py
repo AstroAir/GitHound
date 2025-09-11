@@ -2,7 +2,7 @@
 
 import os
 import logging
-from typing import Optional, Dict, Any, Type, Union, Protocol
+from typing import Any, Optional, Dict, List
 from importlib import import_module
 
 from .models import User
@@ -187,7 +187,7 @@ async def check_permission(user: User, permission: str, resource: Optional[str] 
     provider = get_auth_provider()
     if not provider:
         # Default behavior: admin role has all permissions
-        return user.role == "admin" or permission in (user.permissions or [])
+        return user.role = = "admin" or permission in (user.permissions or [])
 
     try:
         # Check if provider supports enhanced permission checking with context
@@ -219,7 +219,7 @@ async def check_tool_permission(user: User, tool_name: str, tool_args: Dict[str,
     provider = get_auth_provider()
     if not provider:
         # Default behavior: admin role has all permissions
-        return user.role == "admin"
+        return user.role = = "admin"
 
     try:
         # Check if provider supports tool-specific permission checking

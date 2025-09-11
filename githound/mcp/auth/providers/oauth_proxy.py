@@ -5,7 +5,7 @@ import json
 import uuid
 import time
 import logging
-from typing import Dict, Any, Optional, List, cast
+from typing import Any, Optional, Dict, List, cast
 from urllib.parse import urlencode, parse_qs, urlparse
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -89,7 +89,7 @@ class OAuthProxy(RemoteAuthProvider):
             )
 
             with urlopen(request) as response:
-                user_data = json.loads(response.read().decode())
+                user_data = json.loads(response.read().decode("utf-8"))
 
             # Extract user information
             user_id = user_data.get("id") or user_data.get("sub")
@@ -232,7 +232,7 @@ class OAuthProxy(RemoteAuthProvider):
 
             with urlopen(request) as response:
                 token_response = cast(
-                    Dict[str, Any], json.loads(response.read().decode()))
+                    Dict[str, Any], json.loads(response.read().decode("utf-8")))
 
             return token_response
 

@@ -63,18 +63,18 @@ def timeout_context(seconds: int) -> Generator[None, None, None]:
         try:
             import signal
 
-            def timeout_handler(signum, frame):
+            def timeout_handler(signum, frame) -> None:
                 raise TimeoutError("Operation timed out")
 
             old_handler = signal.signal(
-                signal.SIGALRM, timeout_handler)  # type: ignore
-            signal.alarm(seconds)  # type: ignore
+                signal.SIGALRM, timeout_handler)  # 
+            signal.alarm(seconds)  # 
 
             try:
                 yield
             finally:
-                signal.alarm(0)  # type: ignore
-                signal.signal(signal.SIGALRM, old_handler)  # type: ignore
+                signal.alarm(0)  # 
+                signal.signal(signal.SIGALRM, old_handler)  # 
         except (AttributeError, ImportError):
             # Fallback: no timeout
             yield
@@ -175,7 +175,7 @@ class GitHound:
         ```
     """
 
-    def __init__(self, repo_path: Path, timeout: int = 300):
+    def __init__(self, repo_path: Path, timeout: int = 300) -> None:
         """Initialize GitHound with a repository path.
 
         Args:
@@ -267,15 +267,15 @@ class GitHound:
         except Exception as e:
             raise GitCommandError(f"Failed to analyze repository: {str(e)}")
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Context manager exit with cleanup."""
         self.cleanup()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources and caches."""
         # Run cleanup callbacks
         for callback in self._cleanup_callbacks:

@@ -21,7 +21,7 @@ This example covers:
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Optional, Any
 import json
 
 from fastmcp import Client
@@ -35,7 +35,7 @@ from fastmcp.exceptions import McpError
 import httpx
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -298,7 +298,7 @@ async def demonstrate_transport_selection() -> Dict[str, Any]:
         }
     }
     
-    results = {}
+    results: dict[str, Any] = {}
     
     for example_name, example_info in transport_examples.items():
         try:
@@ -341,9 +341,9 @@ async def demonstrate_transport_configuration() -> Dict[str, Any]:
     Returns:
         Dict containing transport configuration examples
     """
-    logger.info("Demonstrating transport configuration...")
+    logger.info("Demonstrating transport configuration...")  # [attr-defined]
     
-    configurations = {}
+    configurations: dict[str, Any] = {}
     
     # 1. STDIO with custom configuration
     try:
@@ -403,7 +403,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Transport Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. STDIO Transport
@@ -432,7 +432,7 @@ async def main() -> Dict[str, Any]:
         results["selection"] = selection_result
         
         # 6. Transport Configuration
-        logger.info("\n6. Transport Configuration")
+        logger.info("\n6. Transport Configuration")  # [attr-defined]
         config_result = await demonstrate_transport_configuration()
         results["configuration"] = config_result
         

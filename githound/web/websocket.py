@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Any, Literal, TypedDict, Union, Optional
+from typing import Any, Optional, Dict, List, TypedDict, Literal, Union
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -193,7 +193,7 @@ class ConnectionManager:
         payload_str = json.dumps(message)
 
         # Send to all connections for this search
-        disconnected = []
+        disconnected: list[Any] = []
         for websocket in self.active_connections[search_id].copy():
             try:
                 await websocket.send_text(payload_str)
@@ -278,7 +278,7 @@ class ConnectionManager:
         for connections in self.active_connections.values():
             all_connections.extend(connections)
 
-        disconnected = []
+        disconnected: list[Any] = []
         for websocket in all_connections:
             try:
                 # Send a ping message to check if connection is alive

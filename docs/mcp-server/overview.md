@@ -1,10 +1,21 @@
-# MCP Server Overview
+# GitHound MCP Server Overview
 
-GitHound provides a comprehensive Model Context Protocol (MCP) server implementation that enables AI tools and applications to interact with Git repositories programmatically. This integration allows AI assistants to understand code evolution, analyze repository patterns, and provide context-aware insights.
+GitHound provides a comprehensive Model Context Protocol (MCP) server implementation using FastMCP 2.0 that enables AI tools and applications to interact with Git repositories programmatically. This integration allows AI assistants to understand code evolution, analyze repository patterns, and provide context-aware insights.
 
 ## What is MCP?
 
 The Model Context Protocol (MCP) is a standardized protocol that enables AI applications to access external data sources and tools in a secure, structured way. GitHound's MCP server exposes all of its Git analysis capabilities through this protocol.
+
+## Architecture
+
+The GitHound MCP server provides:
+
+- **25+ MCP Tools** for search, analysis, and management
+- **7 MCP Resources** for dynamic data access
+- **3 MCP Prompts** for common workflows
+- **Robust validation** with Pydantic models
+- **FastMCP 2.0** patterns and best practices
+- **MCP.json configuration** support for universal client compatibility
 
 ## Key Benefits
 

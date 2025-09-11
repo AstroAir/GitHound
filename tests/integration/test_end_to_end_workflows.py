@@ -22,7 +22,7 @@ class MockMCPContext:
     capturing info and error messages in a list for later inspection by tests.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.messages: list[str] = []
 
     async def info(self, message: str) -> None:
@@ -35,7 +35,7 @@ class MockMCPContext:
 
 
 @pytest.fixture
-def integration_test_repo():
+def integration_test_repo() -> None:
     """Create a comprehensive test repository for integration testing."""
     temp_dir = tempfile.mkdtemp(prefix="githound_integration_")
 
@@ -44,9 +44,9 @@ def integration_test_repo():
     repo = Repo.init(temp_dir)
 
     # Configure test user
-    with repo.config_writer() as config:
-        config.set_value("user", "name", "Integration Test User")
-        config.set_value("user", "email", "integration@test.com")
+    with repo.config_writer() as config:  # [attr-defined]
+        config.set_value("user", "name", "Integration Test User")  # [attr-defined]
+        config.set_value("user", "email", "integration@test.com")  # [attr-defined]
 
     # Create comprehensive project structure
     base_path = Path(temp_dir)
@@ -58,7 +58,7 @@ def integration_test_repo():
     (src_dir / "__init__.py").write_text("")
     (src_dir / "main.py").write_text(
         """
-def main():
+def main() -> None:
     print("Hello from integration test!")
     return 0
 
@@ -73,7 +73,7 @@ def helper_function(x: int) -> int:
     return x * 2
 
 class UtilityClass:
-    def __init__(self, value: int):
+    def __init__(self, value: int) -> None:
         self.value = value
     
     def process(self) -> int:
@@ -92,7 +92,7 @@ import unittest
 from src.main import main
 
 class TestMain(unittest.TestCase):
-    def test_main_returns_zero(self):
+    def test_main_returns_zero(self) -> None:
         result = main()
         self.assertEqual(result, 0)
 """
@@ -131,7 +131,7 @@ def new_feature(data: str) -> str:
     return f"Processed: {data}"
 
 class FeatureProcessor:
-    def __init__(self):
+    def __init__(self) -> None:
         self.processed_count = 0
     
     def process_item(self, item: str) -> str:
@@ -151,9 +151,9 @@ class FeatureProcessor:
     authors = [("Alice Developer", "alice@example.com"), ("Bob Contributor", "bob@example.com")]
 
     for i, (author_name, author_email) in enumerate(authors):
-        with repo.config_writer() as config:
-            config.set_value("user", "name", author_name)
-            config.set_value("user", "email", author_email)
+        with repo.config_writer() as config:  # [attr-defined]
+            config.set_value("user", "name", author_name)  # [attr-defined]
+            config.set_value("user", "email", author_email)  # [attr-defined]
 
         file_path = base_path / f"contribution_{i}.md"
         file_path.write_text(
@@ -161,7 +161,7 @@ class FeatureProcessor:
 # Contribution by {author_name}
 
 This file represents a contribution by {author_name}.
-Created on {datetime.now().isoformat()}.
+Created on {datetime.now if datetime is not None else None().isoformat()}.
 """
         )
 
@@ -184,7 +184,7 @@ class TestCompleteWorkflows:
     """Test complete end-to-end workflows."""
 
     @pytest.mark.asyncio
-    async def test_complete_repository_analysis_workflow(self, integration_test_repo):
+    async def test_complete_repository_analysis_workflow(self, integration_test_repo) -> None:
         """Test complete repository analysis workflow from start to finish."""
         repo, temp_dir = integration_test_repo
 
@@ -282,7 +282,7 @@ class TestCompleteWorkflows:
         ])
 
     @pytest.mark.asyncio
-    async def test_error_handling_workflow(self, integration_test_repo):
+    async def test_error_handling_workflow(self, integration_test_repo) -> None:
         """Test error handling across the complete workflow."""
         repo, temp_dir = integration_test_repo
         context = MockMCPContext()
@@ -319,12 +319,12 @@ class TestCompleteWorkflows:
         assert len(error_messages) >= 0  # Some operations might not log errors to context
 
     @pytest.mark.asyncio
-    async def test_concurrent_operations_workflow(self, integration_test_repo):
+    async def test_concurrent_operations_workflow(self, integration_test_repo) -> None:
         """Test concurrent operations in a complete workflow."""
         repo, temp_dir = integration_test_repo
 
         # Create multiple concurrent operations
-        tasks = []
+        tasks: list[Any] = []
 
         # Task 1: Repository analysis
         from githound.mcp_server import RepositoryInput, analyze_repository_direct
@@ -364,14 +364,14 @@ class TestCompleteWorkflows:
         assert "author_statistics" in author_stats
 
     @pytest.mark.asyncio
-    async def test_export_workflow_multiple_formats(self, integration_test_repo):
+    async def test_export_workflow_multiple_formats(self, integration_test_repo) -> None:
         """Test data export workflow with multiple formats."""
         repo, temp_dir = integration_test_repo
         context = MockMCPContext()
 
         # Test exports in different formats
         formats = ["json", "yaml"]
-        export_results = {}
+        export_results: dict[str, Any] = {}
 
         for format_type in formats:
             from githound.mcp_server import ExportInput, export_repository_data_direct
@@ -403,7 +403,7 @@ class TestResourceIntegration:
     """Test MCP resource integration."""
 
     @pytest.mark.asyncio
-    async def test_resource_access_workflow(self, integration_test_repo):
+    async def test_resource_access_workflow(self, integration_test_repo) -> None:
         """Test accessing MCP resources in a complete workflow."""
         repo, temp_dir = integration_test_repo
 
@@ -443,7 +443,7 @@ class TestDataConsistency:
     """Test data consistency across different operations."""
 
     @pytest.mark.asyncio
-    async def test_data_consistency_across_operations(self, integration_test_repo):
+    async def test_data_consistency_across_operations(self, integration_test_repo) -> None:
         """Test that data remains consistent across different operations."""
         repo, temp_dir = integration_test_repo
         context = MockMCPContext()

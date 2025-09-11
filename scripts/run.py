@@ -28,7 +28,7 @@ from utils import (
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import typer
 from rich.table import Table
@@ -47,7 +47,7 @@ app = typer.Typer(
 class ScriptRunner:
     """Manages and runs GitHound utility scripts."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
         self.scripts_dir = self.project_root / "scripts"
 
@@ -102,7 +102,7 @@ class ScriptRunner:
         print_header("GitHound Utility Scripts")
 
         # Group by category
-        categories = {}
+        categories: dict[str, Any] = {}
         for script_name, script_info in self.scripts.items():
             category = script_info["category"]
             if category not in categories:

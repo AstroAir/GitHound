@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 
-def test_utils_import():
+def test_utils_import() -> None:
     """Test that utils can be imported."""
     try:
         from utils.common import get_project_root, check_python_version
@@ -23,7 +23,7 @@ def test_utils_import():
         return False
 
 
-def test_project_root():
+def test_project_root() -> None:
     """Test project root detection."""
     try:
         from utils.common import get_project_root
@@ -42,7 +42,7 @@ def test_project_root():
         return False
 
 
-def test_platform_detection():
+def test_platform_detection() -> None:
     """Test platform detection."""
     try:
         from utils.platform import is_windows, get_platform_info
@@ -60,7 +60,7 @@ def test_platform_detection():
         return False
 
 
-def test_python_version():
+def test_python_version() -> None:
     """Test Python version check."""
     try:
         from utils.common import check_python_version
@@ -79,7 +79,7 @@ def test_python_version():
         return False
 
 
-def main():
+def main() -> None:
     """Run basic tests."""
     print("🧪 GitHound Utility Scripts - Basic Test")
     print("=" * 50)

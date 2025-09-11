@@ -17,7 +17,7 @@ from githound.search_engine import (
 
 
 @pytest.fixture
-def mock_repo():
+def mock_repo() -> None:
     """Create a mock Git repository."""
     mock_repo = Mock(spec=Repo)
     mock_repo.git_dir = "/test/repo/.git"
@@ -25,7 +25,7 @@ def mock_repo():
     mock_repo.active_branch.name = "main"
 
     # Create mock commits
-    mock_commits = []
+    mock_commits: list[Any] = []
     for i in range(5):
         commit = Mock()
         commit.hexsha = f"commit{i:03d}" + "0" * 37
@@ -47,7 +47,7 @@ def mock_repo():
 
 
 @pytest.fixture
-def sample_search_query():
+def sample_search_query() -> None:
     """Create a sample search query for testing."""
     return SearchQuery(
         content_pattern="test",
@@ -65,7 +65,7 @@ def sample_search_query():
 
 
 @pytest.fixture
-def search_context(mock_repo, sample_search_query):
+def search_context(mock_repo, sample_search_query) -> None:
     """Create a search context for testing."""
     return SearchContext(
         repo=mock_repo, query=sample_search_query, branch="main", progress_callback=None, cache={}
@@ -76,7 +76,7 @@ class TestCommitHashSearcher:
     """Tests for CommitHashSearcher."""
 
     @pytest.mark.asyncio
-    async def test_commit_hash_searcher_can_handle(self, sample_search_query):
+    async def test_commit_hash_searcher_can_handle(self, sample_search_query) -> None:
         """Test CommitHashSearcher can_handle method."""
         searcher = CommitHashSearcher()
 
@@ -88,23 +88,23 @@ class TestCommitHashSearcher:
         assert await searcher.can_handle(query_no_hash) is False
 
     @pytest.mark.asyncio
-    async def test_commit_hash_searcher_search(self, search_context):
+    async def test_commit_hash_searcher_search(self, search_context) -> None:
         """Test CommitHashSearcher search method."""
         searcher = CommitHashSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_commit_hash_searcher_name(self):
+    def test_commit_hash_searcher_name(self) -> None:
         """Test CommitHashSearcher name property."""
         searcher = CommitHashSearcher()
-        assert searcher.name == "commit_hash"
+        assert searcher.name = = "commit_hash"
 
     @pytest.mark.asyncio
-    async def test_commit_hash_searcher_estimate_work(self, sample_search_query):
+    async def test_commit_hash_searcher_estimate_work(self, sample_search_query) -> None:
         """Test CommitHashSearcher estimate_work method."""
         searcher = CommitHashSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -116,7 +116,7 @@ class TestAuthorSearcher:
     """Tests for AuthorSearcher."""
 
     @pytest.mark.asyncio
-    async def test_author_searcher_can_handle(self, sample_search_query):
+    async def test_author_searcher_can_handle(self, sample_search_query) -> None:
         """Test AuthorSearcher can_handle method."""
         searcher = AuthorSearcher()
 
@@ -128,23 +128,23 @@ class TestAuthorSearcher:
         assert await searcher.can_handle(query_no_author) is False
 
     @pytest.mark.asyncio
-    async def test_author_searcher_search(self, search_context):
+    async def test_author_searcher_search(self, search_context) -> None:
         """Test AuthorSearcher search method."""
         searcher = AuthorSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_author_searcher_name(self):
+    def test_author_searcher_name(self) -> None:
         """Test AuthorSearcher name property."""
         searcher = AuthorSearcher()
-        assert searcher.name == "author"
+        assert searcher.name = = "author"
 
     @pytest.mark.asyncio
-    async def test_author_searcher_estimate_work(self, sample_search_query):
+    async def test_author_searcher_estimate_work(self, sample_search_query) -> None:
         """Test AuthorSearcher estimate_work method."""
         searcher = AuthorSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -156,7 +156,7 @@ class TestMessageSearcher:
     """Tests for MessageSearcher."""
 
     @pytest.mark.asyncio
-    async def test_message_searcher_can_handle(self, sample_search_query):
+    async def test_message_searcher_can_handle(self, sample_search_query) -> None:
         """Test MessageSearcher can_handle method."""
         searcher = MessageSearcher()
 
@@ -170,23 +170,23 @@ class TestMessageSearcher:
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio
-    async def test_message_searcher_search(self, search_context):
+    async def test_message_searcher_search(self, search_context) -> None:
         """Test MessageSearcher search method."""
         searcher = MessageSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_message_searcher_name(self):
+    def test_message_searcher_name(self) -> None:
         """Test MessageSearcher name property."""
         searcher = MessageSearcher()
-        assert searcher.name == "message"
+        assert searcher.name = = "message"
 
     @pytest.mark.asyncio
-    async def test_message_searcher_estimate_work(self, sample_search_query):
+    async def test_message_searcher_estimate_work(self, sample_search_query) -> None:
         """Test MessageSearcher estimate_work method."""
         searcher = MessageSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -198,7 +198,7 @@ class TestDateRangeSearcher:
     """Tests for DateRangeSearcher."""
 
     @pytest.mark.asyncio
-    async def test_date_range_searcher_can_handle(self, sample_search_query):
+    async def test_date_range_searcher_can_handle(self, sample_search_query) -> None:
         """Test DateRangeSearcher can_handle method."""
         searcher = DateRangeSearcher()
 
@@ -210,23 +210,23 @@ class TestDateRangeSearcher:
         assert await searcher.can_handle(query_no_date) is False
 
     @pytest.mark.asyncio
-    async def test_date_range_searcher_search(self, search_context):
+    async def test_date_range_searcher_search(self, search_context) -> None:
         """Test DateRangeSearcher search method."""
         searcher = DateRangeSearcher()
 
-        results = []
+        results: list[Any] = []
         async for result in searcher.search(search_context):
             results.append(result)
         
         assert isinstance(results, list)
 
-    def test_date_range_searcher_name(self):
+    def test_date_range_searcher_name(self) -> None:
         """Test DateRangeSearcher name property."""
         searcher = DateRangeSearcher()
-        assert searcher.name == "date_range"
+        assert searcher.name = = "date_range"
 
     @pytest.mark.asyncio
-    async def test_date_range_searcher_estimate_work(self, sample_search_query):
+    async def test_date_range_searcher_estimate_work(self, sample_search_query) -> None:
         """Test DateRangeSearcher estimate_work method."""
         searcher = DateRangeSearcher()
         work_estimate = await searcher.estimate_work(sample_search_query)
@@ -234,7 +234,7 @@ class TestDateRangeSearcher:
         assert work_estimate >= 0
 
     @pytest.mark.asyncio
-    async def test_date_range_searcher_with_partial_date_range(self):
+    async def test_date_range_searcher_with_partial_date_range(self) -> None:
         """Test DateRangeSearcher with partial date range."""
         searcher = DateRangeSearcher()
 
@@ -257,7 +257,7 @@ class TestCacheableSearcher:
     """Tests for CacheableSearcher functionality."""
 
     @pytest.mark.asyncio
-    async def test_cache_key_generation(self, search_context):
+    async def test_cache_key_generation(self, search_context) -> None:
         """Test cache key generation."""
         searcher = CommitHashSearcher()  # Inherits from CacheableSearcher
 
@@ -266,17 +266,17 @@ class TestCacheableSearcher:
         assert len(cache_key) > 0
 
     @pytest.mark.asyncio
-    async def test_cache_usage(self, search_context):
+    async def test_cache_usage(self, search_context) -> None:
         """Test cache usage in searcher."""
         searcher = CommitHashSearcher()
 
         # First search - should cache results
-        results1 = []
+        results1: list[Any] = []
         async for result in searcher.search(search_context):
             results1.append(result)
 
         # Second search - should use cached results
-        results2 = []
+        results2: list[Any] = []
         async for result in searcher.search(search_context):
             results2.append(result)
 
@@ -284,7 +284,7 @@ class TestCacheableSearcher:
         assert len(results1) == len(results2)
 
     @pytest.mark.asyncio
-    async def test_cache_key_uniqueness(self, mock_repo):
+    async def test_cache_key_uniqueness(self, mock_repo) -> None:
         """Test that different queries generate different cache keys."""
         searcher = CommitHashSearcher()
 

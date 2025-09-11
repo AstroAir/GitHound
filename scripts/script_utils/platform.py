@@ -6,7 +6,7 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 
 def is_windows() -> bool:
@@ -107,7 +107,7 @@ def get_config_directory(app_name: str) -> Path:
     elif is_macos():
         base = Path.home() / "Library" / "Application Support"
     else:  # Linux and other Unix-like
-        base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+        base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))  # [attr-defined]
 
     return base / app_name
 
@@ -193,7 +193,7 @@ def create_cross_platform_script(
     Returns:
         List of created script paths
     """
-    created_scripts = []
+    created_scripts: list[Any] = []
 
     # Create shell script for Unix-like systems
     shell_script = output_dir / f"{script_name}.sh"
@@ -254,7 +254,7 @@ def supports_color() -> bool:
 def get_available_ports(start: int = 8000, count: int = 10) -> List[int]:
     """Get a list of available ports."""
     import socket
-    available = []
+    available: list[Any] = []
 
     for port in range(start, start + count * 10):  # Check more ports than needed
         try:

@@ -33,7 +33,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional, Union, Any
 
 import typer
 
@@ -61,7 +61,7 @@ class BenchmarkRunner:
         """Benchmark import times."""
         print_section("Import Benchmarks")
 
-        benchmarks = {}
+        benchmarks: dict[str, Any] = {}
 
         # Core import
         start = time.time()
@@ -111,7 +111,7 @@ class BenchmarkRunner:
         """Benchmark core functionality."""
         print_section("Functionality Benchmarks")
 
-        benchmarks = {}
+        benchmarks: dict[str, Any] = {}
 
         # Repository analysis
         start = time.time()
@@ -196,7 +196,7 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
         """Benchmark CLI performance."""
         print_section("CLI Benchmarks")
 
-        benchmarks = {}
+        benchmarks: dict[str, Any] = {}
 
         # CLI help command
         start = time.time()
@@ -262,7 +262,7 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
         print_info(f"Total benchmark time: {duration:.2f}s")
 
         # Calculate overall score
-        all_times = []
+        all_times: list[Any] = []
         for category in ["import", "functionality", "cli"]:
             for benchmark, time_val in results[category].items():
                 if time_val != float('inf'):

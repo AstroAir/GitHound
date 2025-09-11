@@ -43,7 +43,7 @@ async def analyze_file_blame(input_data: BlameInput, ctx: Context) -> dict[str, 
 
         return {
             "status": "success",
-            "file_blame": blame_result.model_dump(),
+            "file_blame": blame_result.dict(),
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
@@ -80,7 +80,7 @@ async def compare_commits_diff(input_data: DiffInput, ctx: Context) -> dict[str,
 
         return {
             "status": "success",
-            "commit_diff": diff_result.model_dump(),
+            "commit_diff": diff_result.dict(),
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
@@ -115,7 +115,7 @@ async def compare_branches_diff(input_data: BranchDiffInput, ctx: Context) -> di
 
         return {
             "status": "success",
-            "branch_diff": diff_result.model_dump(),
+            "branch_diff": diff_result.dict(),
             "analysis_timestamp": datetime.now().isoformat(),
         }
 

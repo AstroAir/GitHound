@@ -1,6 +1,6 @@
 """FastAPI application for GitHound web interface."""
 
-from typing import TypedDict
+from typing import TypedDict, Any
 import asyncio
 import time
 import uuid
@@ -156,7 +156,7 @@ async def perform_search(search_id: str, request: SearchRequest) -> None:
                 )
 
         # Perform search
-        results = []
+        results: list[Any] = []
         async for result in orchestrator.search(
             repo=repo,
             query=query,
@@ -446,7 +446,7 @@ async def cleanup_searches(max_age_hours: int = 24) -> dict[str, str]:
     """Clean up old search results."""
     cutoff_time = datetime.now().timestamp() - (max_age_hours * 3600)
 
-    to_remove = []
+    to_remove: list[Any] = []
     for search_id, state in active_searches.items():
         if state.started_at.timestamp() < cutoff_time:
             to_remove.append(search_id)

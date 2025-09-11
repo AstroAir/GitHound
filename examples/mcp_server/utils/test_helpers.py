@@ -12,7 +12,7 @@ import tempfile
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast, Tuple
+from typing import Optional, cast, Tuple, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class MockGitRepository:
     """Mock Git repository for testing."""
     
-    def __init__(self, name: str = "test-repo", commit_count: int = 10):
+    def __init__(self, name: str = "test-repo", commit_count: int = 10) -> None:
         """
         Initialize mock Git repository.
         
@@ -42,7 +42,7 @@ class MockGitRepository:
     
     def generate_commits(self) -> List[Dict[str, Any]]:
         """Generate mock commit data."""
-        commits = []
+        commits: list[Any] = []
         base_date = datetime.now() - timedelta(days=self.commit_count)
         
         for i in range(self.commit_count):
@@ -53,7 +53,7 @@ class MockGitRepository:
                 "hash": f"commit_hash_{i:03d}",
                 "author": author["name"],
                 "author_email": author["email"],
-                "date": commit_date.isoformat(),
+                "date": commit_date.isoformat if commit_date is not None else None(),
                 "message": f"Commit message {i}",
                 "files_changed": min(3, len(self.files)),
                 "insertions": 10 + (i * 2),
@@ -65,7 +65,7 @@ class MockGitRepository:
     def generate_author_stats(self) -> Dict[str, Any]:
         """Generate mock author statistics."""
         commits = self.generate_commits()
-        author_stats = {}
+        author_stats: dict[str, Any] = {}
         
         for commit in commits:
             author_key = (commit["author"], commit["author_email"])
@@ -86,7 +86,7 @@ class MockGitRepository:
             stats["files_modified"].update(self.files[:commit["files_changed"]])
         
         # Convert sets to counts
-        authors = []
+        authors: list[Any] = []
         for stats in author_stats.values():
             authors.append({
                 "name": stats["name"],
@@ -122,7 +122,7 @@ class MockGitRepository:
 class MockMCPClient:
     """Mock MCP client for testing."""
     
-    def __init__(self, mock_data: Optional[Dict[str, Any]] = None):
+    def __init__(self, mock_data: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize mock MCP client.
         
@@ -133,12 +133,12 @@ class MockMCPClient:
         self.call_history: List[Tuple[str, Dict[str, Any]]] = []
         self.connected = False
     
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         """Async context manager entry."""
         self.connected = True
         return self
     
-    async def __aexit__(self, _exc_type, _exc_val, _exc_tb):
+    async def __aexit__(self, _exc_type, _exc_val, _exc_tb) -> None:
         """Async context manager exit."""
         self.connected = False
     
@@ -196,7 +196,7 @@ class MockMCPClient:
 class MockToolResult:
     """Mock tool result object."""
     
-    def __init__(self, data: Any, content: Optional[List[Any]] = None):
+    def __init__(self, data: Any, content: Optional[List[Any]] = None) -> None:
         """
         Initialize mock tool result.
         
@@ -211,7 +211,7 @@ class MockToolResult:
 class MockResourceContent:
     """Mock resource content object."""
     
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         """
         Initialize mock resource content.
         
@@ -235,7 +235,7 @@ class TestDataGenerator:
         Returns:
             List of commit dictionaries
         """
-        commits = []
+        commits: list[Any] = []
         base_date = datetime.now() - timedelta(days=count)
         authors = [
             "Alice Developer <alice@example.com>",
@@ -251,7 +251,7 @@ class TestDataGenerator:
             
             commits.append({
                 "hash": f"large_commit_{i:06d}",
-                "author": author.split(" <")[0],
+                "author": author.split if author is not None else None(" <")[0],
                 "author_email": author.split(" <")[1].rstrip(">"),
                 "date": commit_date.isoformat(),
                 "message": f"Large test commit {i}: Implement feature {i % 10}",
@@ -303,7 +303,7 @@ class TestDataGenerator:
 class PerformanceTimer:
     """Utility for measuring performance in tests."""
     
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """
         Initialize performance timer.
         
@@ -349,7 +349,7 @@ class PerformanceTimer:
 class GitRepositoryBuilder:
     """Builder for creating test Git repositories."""
     
-    def __init__(self, temp_dir: Optional[Path] = None):
+    def __init__(self, temp_dir: Optional[Path] = None) -> None:
         """
         Initialize Git repository builder.
         
@@ -376,8 +376,8 @@ class GitRepositoryBuilder:
         
         # Initialize Git repository
         subprocess.run(["git", "init"], cwd=self.repo_path, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.repo_path, check=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.repo_path, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.repo_path, check=True)  # [attr-defined]
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.repo_path, check=True)  # [attr-defined]
         
         return self
     
@@ -531,12 +531,12 @@ def create_sample_repository() -> Path:
                  .add_file("README.md", "# Sample Repository\n\nThis is a sample repository for testing.")
                  .add_file("src/main.py", "#!/usr/bin/env python3\nprint('Hello, World!')\n")
                  .commit("Initial commit")
-                 .add_file("src/utils.py", "def helper_function():\n    return 'helper'\n")
+                 .add_file("src/utils.py", "def helper_function() -> None:\n    return 'helper'\n")
                  .commit("Add utility functions")
                  .add_file("tests/test_main.py", "import unittest\n\nclass TestMain(unittest.TestCase):\n    pass\n")
                  .commit("Add tests")
                  .create_branch("feature/new-feature")
-                 .add_file("src/feature.py", "def new_feature():\n    return 'new feature'\n")
+                 .add_file("src/feature.py", "def new_feature() -> None:\n    return 'new feature'\n")
                  .commit("Implement new feature")
                  .checkout_branch("main")
                  .create_tag("v1.0.0", "Version 1.0.0 release")

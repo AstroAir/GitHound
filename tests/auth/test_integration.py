@@ -4,7 +4,7 @@ import os
 import pytest
 import asyncio
 from unittest.mock import patch, Mock, AsyncMock
-from typing import Dict, Any, Optional
+from typing import Optional, Any
 
 from githound.mcp.auth import (
     set_auth_provider,
@@ -22,7 +22,7 @@ from githound.mcp.models import User
 class MockBaseProvider(AuthProvider):
     """Mock base authentication provider for integration testing."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.users = {
             "admin_token": User(username="admin", role="admin", permissions=["read", "write", "admin"]),
@@ -62,10 +62,10 @@ class MockBaseProvider(AuthProvider):
 class MockAuthorizationProvider(AuthProvider):
     """Mock authorization provider that wraps a base provider."""
     
-    def __init__(self, base_provider: AuthProvider, **kwargs):
+    def __init__(self, base_provider: AuthProvider, **kwargs) -> None:
         super().__init__(**kwargs)
         self.base_provider = base_provider
-        self.config = kwargs
+        self.config = kwargs  # [attr-defined]
     
     async def authenticate(self, token: str) -> AuthResult:
         """Pass through to base provider."""
@@ -78,7 +78,7 @@ class MockAuthorizationProvider(AuthProvider):
     async def check_permission(self, user: User, permission: str, resource: Optional[str] = None, **context) -> bool:
         """Mock authorization logic."""
         # Admin always has access
-        if user.role == "admin":
+        if user.role = = "admin":
             return True
         
         # Check for specific resource restrictions
@@ -91,7 +91,7 @@ class MockAuthorizationProvider(AuthProvider):
     async def check_tool_permission(self, user: User, tool_name: str, tool_args: Dict[str, Any]) -> bool:
         """Mock tool-level authorization."""
         # Admin always has access
-        if user.role == "admin":
+        if user.role = = "admin":
             return True
         
         # Check for secure repository access
@@ -114,16 +114,16 @@ class MockAuthorizationProvider(AuthProvider):
 class TestAuthenticationIntegration:
     """Test end-to-end authentication flows."""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         set_auth_provider(None)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         set_auth_provider(None)
     
     @pytest.mark.asyncio
-    async def test_complete_authentication_flow(self):
+    async def test_complete_authentication_flow(self) -> None:
         """Test complete authentication flow from token to user."""
         provider = MockBaseProvider()
         set_auth_provider(provider)
@@ -131,8 +131,8 @@ class TestAuthenticationIntegration:
         # Test successful authentication
         user = await authenticate_request("admin_token")
         assert user is not None
-        assert user.username == "admin"
-        assert user.role == "admin"
+        assert user.username = = "admin"
+        assert user.role = = "admin"
         assert "admin" in user.permissions
         
         # Test failed authentication
@@ -140,7 +140,7 @@ class TestAuthenticationIntegration:
         assert user is None
     
     @pytest.mark.asyncio
-    async def test_permission_checking_flow(self):
+    async def test_permission_checking_flow(self) -> None:
         """Test permission checking with different users."""
         provider = MockBaseProvider()
         set_auth_provider(provider)
@@ -167,7 +167,7 @@ class TestAuthenticationIntegration:
         assert await check_permission(readonly_user, "write") is False
     
     @pytest.mark.asyncio
-    async def test_authorization_wrapper_integration(self):
+    async def test_authorization_wrapper_integration(self) -> None:
         """Test authorization provider wrapping base provider."""
         base_provider = MockBaseProvider()
         auth_provider = MockAuthorizationProvider(base_provider)
@@ -176,7 +176,7 @@ class TestAuthenticationIntegration:
         # Test that authentication still works
         user = await authenticate_request("user_token")
         assert user is not None
-        assert user.username == "user"
+        assert user.username = = "user"
         
         # Test enhanced permission checking
         user_user = base_provider.users["user_token"]
@@ -192,7 +192,7 @@ class TestAuthenticationIntegration:
         assert await check_permission(admin_user, "read", "secure_resource") is True
     
     @pytest.mark.asyncio
-    async def test_tool_permission_integration(self):
+    async def test_tool_permission_integration(self) -> None:
         """Test tool-level permission checking integration."""
         base_provider = MockBaseProvider()
         auth_provider = MockAuthorizationProvider(base_provider)
@@ -220,11 +220,11 @@ class TestAuthenticationIntegration:
 class TestEnvironmentIntegration:
     """Test environment-based configuration integration."""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         set_auth_provider(None)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         set_auth_provider(None)
     
@@ -235,7 +235,7 @@ class TestEnvironmentIntegration:
         "FASTMCP_SERVER_AUTH_AUDIENCE": "test-audience"
     })
     @patch('githound.mcp.auth.providers.jwt.JWTVerifier')
-    def test_jwt_environment_integration(self, mock_jwt):
+    def test_jwt_environment_integration(self, mock_jwt) -> None:
         """Test JWT provider creation from environment."""
         mock_jwt.return_value = MockBaseProvider()
         
@@ -256,7 +256,7 @@ class TestEnvironmentIntegration:
         "FASTMCP_SERVER_BASE_URL": "http://localhost:8000"
     })
     @patch('githound.mcp.auth.providers.github.GitHubProvider')
-    def test_github_environment_integration(self, mock_github):
+    def test_github_environment_integration(self, mock_github) -> None:
         """Test GitHub provider creation from environment."""
         mock_github.return_value = MockBaseProvider()
         
@@ -274,15 +274,15 @@ class TestEnvironmentIntegration:
 class TestAuthorizationIntegration:
     """Test authorization provider integration."""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         set_auth_provider(None)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         set_auth_provider(None)
     
-    def test_no_authorization_wrapper(self):
+    def test_no_authorization_wrapper(self) -> None:
         """Test behavior when no authorization is enabled."""
         base_provider = MockBaseProvider()
         
@@ -292,7 +292,7 @@ class TestAuthorizationIntegration:
     
     @patch.dict(os.environ, {"EUNOMIA_ENABLE": "true"})
     @patch('githound.mcp.auth.EUNOMIA_AVAILABLE', False)
-    def test_eunomia_not_available(self):
+    def test_eunomia_not_available(self) -> None:
         """Test Eunomia authorization when package not available."""
         base_provider = MockBaseProvider()
         
@@ -303,7 +303,7 @@ class TestAuthorizationIntegration:
     
     @patch.dict(os.environ, {"PERMIT_ENABLE": "true"})
     @patch('githound.mcp.auth.PERMIT_AVAILABLE', False)
-    def test_permit_not_available(self):
+    def test_permit_not_available(self) -> None:
         """Test Permit.io authorization when package not available."""
         base_provider = MockBaseProvider()
         
@@ -315,7 +315,7 @@ class TestAuthorizationIntegration:
     @patch.dict(os.environ, {"EUNOMIA_ENABLE": "true"})
     @patch('githound.mcp.auth.EUNOMIA_AVAILABLE', True)
     @patch('githound.mcp.auth.EunomiaAuthorizationProvider')
-    def test_eunomia_wrapper_applied(self, mock_eunomia):
+    def test_eunomia_wrapper_applied(self, mock_eunomia) -> None:
         """Test Eunomia authorization wrapper is applied."""
         base_provider = MockBaseProvider()
         wrapped_provider = MockAuthorizationProvider(base_provider)
@@ -328,7 +328,7 @@ class TestAuthorizationIntegration:
     @patch.dict(os.environ, {"PERMIT_ENABLE": "true"})
     @patch('githound.mcp.auth.PERMIT_AVAILABLE', True)
     @patch('githound.mcp.auth.PermitAuthorizationProvider')
-    def test_permit_wrapper_applied(self, mock_permit):
+    def test_permit_wrapper_applied(self, mock_permit) -> None:
         """Test Permit.io authorization wrapper is applied."""
         base_provider = MockBaseProvider()
         wrapped_provider = MockAuthorizationProvider(base_provider)
@@ -343,7 +343,7 @@ class TestAuthorizationIntegration:
     @patch('githound.mcp.auth.PERMIT_AVAILABLE', True)
     @patch('githound.mcp.auth.EunomiaAuthorizationProvider')
     @patch('githound.mcp.auth.PermitAuthorizationProvider')
-    def test_both_authorization_wrappers(self, mock_permit, mock_eunomia):
+    def test_both_authorization_wrappers(self, mock_permit, mock_eunomia) -> None:
         """Test both authorization wrappers are applied."""
         base_provider = MockBaseProvider()
         eunomia_wrapped = MockAuthorizationProvider(base_provider)
@@ -363,16 +363,16 @@ class TestAuthorizationIntegration:
 class TestEndToEndFlow:
     """Test complete end-to-end authentication and authorization flows."""
     
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         set_auth_provider(None)
     
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Clean up after tests."""
         set_auth_provider(None)
     
     @pytest.mark.asyncio
-    async def test_complete_flow_with_authorization(self):
+    async def test_complete_flow_with_authorization(self) -> None:
         """Test complete flow from environment setup to permission checking."""
         base_provider = MockBaseProvider()
         auth_provider = MockAuthorizationProvider(base_provider)
@@ -383,7 +383,7 @@ class TestEndToEndFlow:
         # Test authentication
         user = await authenticate_request("user_token")
         assert user is not None
-        assert user.username == "user"
+        assert user.username = = "user"
         
         # Test basic permission
         assert await check_permission(user, "read") is True
@@ -408,7 +408,7 @@ class TestEndToEndFlow:
         assert await check_tool_permission(admin, "search", secure_args) is True
     
     @pytest.mark.asyncio
-    async def test_oauth_metadata_flow(self):
+    async def test_oauth_metadata_flow(self) -> None:
         """Test OAuth metadata generation through the system."""
         base_provider = MockBaseProvider()
         auth_provider = MockAuthorizationProvider(base_provider)

@@ -16,7 +16,7 @@ from githound.schemas import ExportOptions, OutputFormat, SortCriteria, DataFilt
 class TestExportManager:
     """Test ExportManager class."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test fixtures."""
         self.export_manager = ExportManager()
         self.sample_results = [
@@ -24,7 +24,7 @@ class TestExportManager:
                 commit_hash="abc123",
                 file_path="test1.py",
                 line_number=10,
-                matching_line="def test_function():",  # Fixed: line_content -> matching_line
+                matching_line="def test_function() -> None:",  # Fixed: line_content -> matching_line
                 search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
                 relevance_score=0.95,
                 commit_info=CommitInfo(
@@ -60,7 +60,7 @@ class TestExportManager:
             )
         ]
 
-    def test_export_to_json_basic(self):
+    def test_export_to_json_basic(self) -> None:
         """Test basic JSON export functionality."""
         output_file = Path("test_output.json")
         
@@ -77,7 +77,7 @@ class TestExportManager:
             handle = mock_file()
             assert handle.write.called
 
-    def test_export_to_json_with_metadata(self):
+    def test_export_to_json_with_metadata(self) -> None:
         """Test JSON export with metadata."""
         output_file = Path("test_output.json")
         
@@ -91,7 +91,7 @@ class TestExportManager:
             
             mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
-    def test_export_to_json_compact(self):
+    def test_export_to_json_compact(self) -> None:
         """Test JSON export without pretty printing."""
         output_file = Path("test_output.json")
         
@@ -105,7 +105,7 @@ class TestExportManager:
             
             mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
-    def test_export_to_csv_basic(self):
+    def test_export_to_csv_basic(self) -> None:
         """Test basic CSV export functionality."""
         output_file = Path("test_output.csv")
         
@@ -118,7 +118,7 @@ class TestExportManager:
             
             mock_file.assert_called_once_with(output_file, "w", newline="", encoding="utf-8")
 
-    def test_export_to_csv_with_metadata(self):
+    def test_export_to_csv_with_metadata(self) -> None:
         """Test CSV export with metadata."""
         output_file = Path("test_output.csv")
         
@@ -133,7 +133,7 @@ class TestExportManager:
 
     @patch('githound.utils.export.HAS_PANDAS', True)
     @patch('githound.utils.export.pd')
-    def test_export_to_excel_with_pandas(self, mock_pd):
+    def test_export_to_excel_with_pandas(self, mock_pd) -> None:
         """Test Excel export when pandas is available."""
         output_file = Path("test_output.xlsx")
         mock_df = Mock()
@@ -149,7 +149,7 @@ class TestExportManager:
         mock_df.to_excel.assert_called_once_with(output_file, index=False, engine="openpyxl")
 
     @patch('githound.utils.export.HAS_PANDAS', False)
-    def test_export_to_excel_without_pandas(self):
+    def test_export_to_excel_without_pandas(self) -> None:
         """Test Excel export fallback when pandas is not available."""
         output_file = Path("test_output.xlsx")
         
@@ -168,7 +168,7 @@ class TestExportManager:
                 True
             )
 
-    def test_export_to_text_simple(self):
+    def test_export_to_text_simple(self) -> None:
         """Test text export with simple format."""
         output_file = Path("test_output.txt")
         
@@ -181,7 +181,7 @@ class TestExportManager:
             
             mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
-    def test_export_to_text_detailed(self):
+    def test_export_to_text_detailed(self) -> None:
         """Test text export with detailed format."""
         output_file = Path("test_output.txt")
         
@@ -194,7 +194,7 @@ class TestExportManager:
             
             mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
-    def test_export_to_text_summary(self):
+    def test_export_to_text_summary(self) -> None:
         """Test text export with summary format."""
         output_file = Path("test_output.txt")
         
@@ -207,7 +207,7 @@ class TestExportManager:
             
             mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
-    def test_export_to_text_invalid_format(self):
+    def test_export_to_text_invalid_format(self) -> None:
         """Test text export with invalid format style."""
         output_file = Path("test_output.txt")
         
@@ -218,11 +218,11 @@ class TestExportManager:
                 format_style="invalid"
             )
 
-    def test_stream_export_csv(self):
+    def test_stream_export_csv(self) -> None:
         """Test streaming CSV export."""
         output_file = Path("test_output.csv")
         
-        def result_generator():
+        def result_generator() -> None:
             for result in self.sample_results:
                 yield result
         
@@ -237,7 +237,7 @@ class TestExportManager:
 
     @patch('githound.utils.export.HAS_YAML', True)
     @patch('githound.utils.export.yaml')
-    def test_export_to_yaml_with_yaml(self, mock_yaml):
+    def test_export_to_yaml_with_yaml(self, mock_yaml) -> None:
         """Test YAML export when yaml library is available."""
         output_file = Path("test_output.yaml")
         
@@ -253,7 +253,7 @@ class TestExportManager:
             mock_yaml.dump.assert_called_once()
 
     @patch('githound.utils.export.HAS_YAML', False)
-    def test_export_to_yaml_without_yaml(self):
+    def test_export_to_yaml_without_yaml(self) -> None:
         """Test YAML export fallback when yaml library is not available."""
         output_file = Path("test_output.yaml")
         
@@ -274,7 +274,7 @@ class TestExportManager:
                 True
             )
 
-    def test_export_with_options_json(self):
+    def test_export_with_options_json(self) -> None:
         """Test export with options for JSON format."""
         output_file = Path("test_output.json")
         options = ExportOptions(
@@ -297,7 +297,7 @@ class TestExportManager:
                 True
             )
 
-    def test_export_with_options_csv(self):
+    def test_export_with_options_csv(self) -> None:
         """Test export with options for CSV format."""
         output_file = Path("test_output.csv")
         options = ExportOptions(
@@ -318,34 +318,34 @@ class TestExportManager:
                 False
             )
 
-    def test_export_with_options_unsupported_format(self):
+    def test_export_with_options_unsupported_format(self) -> None:
         """Test export with unsupported format."""
         from pydantic import ValidationError
 
         # Test that creating ExportOptions with invalid format raises ValidationError
         with pytest.raises(ValidationError):
-            ExportOptions(format="unknown")  # type: ignore
+            ExportOptions(format="unknown")  # 
 
-    def test_json_serializer_datetime(self):
+    def test_json_serializer_datetime(self) -> None:
         """Test JSON serializer for datetime objects."""
         test_datetime = datetime(2023, 1, 1, 12, 0, 0)
         result = self.export_manager._json_serializer(test_datetime)
         assert result == "2023-01-01T12:00:00"
 
-    def test_json_serializer_path(self):
+    def test_json_serializer_path(self) -> None:
         """Test JSON serializer for Path objects."""
         test_path = Path("/test/path")
         result = self.export_manager._json_serializer(test_path)
         # Handle both Windows and Unix path separators
         assert result in ["/test/path", "\\test\\path"]
 
-    def test_json_serializer_other(self):
+    def test_json_serializer_other(self) -> None:
         """Test JSON serializer for other objects."""
         test_obj = {"key": "value"}
         result = self.export_manager._json_serializer(test_obj)
         assert result == "{'key': 'value'}"
 
-    def test_apply_filters(self):
+    def test_apply_filters(self) -> None:
         """Test applying filters to results."""
         filters = [
             DataFilter(field="commit_info.author_name", operator="contains", value="John")  # Fixed: use correct field path
@@ -355,9 +355,9 @@ class TestExportManager:
         
         # Should only return results from John Doe
         assert len(filtered_results) == 1
-        assert filtered_results[0].commit_info.author_name == "John Doe"
+        assert filtered_results[0].commit_info.author_name if commit_info is not None else None == "John Doe"
 
-    def test_apply_sorting(self):
+    def test_apply_sorting(self) -> None:
         """Test applying sorting to results."""
         sort_criteria = [
             SortCriteria(field="relevance_score", order=SortOrder.DESC)  # Fixed: ascending -> order
@@ -369,7 +369,7 @@ class TestExportManager:
         assert len(sorted_results) == 2
         assert sorted_results[0].relevance_score >= sorted_results[1].relevance_score
 
-    def test_export_error_handling(self):
+    def test_export_error_handling(self) -> None:
         """Test error handling during export."""
         output_file = Path("test_output.json")
         

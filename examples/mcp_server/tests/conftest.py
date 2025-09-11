@@ -9,7 +9,7 @@ import asyncio
 import logging
 import tempfile
 from pathlib import Path
-from typing import AsyncGenerator, Dict, Any, Optional
+from typing import Optional, Any
 import pytest
 import pytest_asyncio
 
@@ -17,12 +17,12 @@ from fastmcp.client import Client as FastMCPClient
 from fastmcp.client import StdioTransport
 
 # Configure test logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)  # [attr-defined]
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> None:
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -30,7 +30,7 @@ def event_loop():
 
 
 @pytest.fixture
-def temp_git_repo():
+def temp_git_repo() -> None:
     """
     Create a temporary Git repository for testing.
     
@@ -44,8 +44,8 @@ def temp_git_repo():
         
         # Initialize git repository
         subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_path, check=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_path, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_path, check=True)  # [attr-defined]
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_path, check=True)  # [attr-defined]
         
         # Create initial commit
         readme_file = repo_path / "README.md"
@@ -96,7 +96,7 @@ async def githound_mcp_client() -> AsyncGenerator[FastMCPClient, None]:
 
 
 @pytest.fixture
-def mock_server_data():
+def mock_server_data() -> None:
     """
     Provide mock data for server testing.
     
@@ -147,7 +147,7 @@ def mock_server_data():
 
 
 @pytest.fixture
-def sample_tool_args():
+def sample_tool_args() -> None:
     """
     Provide sample arguments for tool testing.
     
@@ -164,7 +164,7 @@ def sample_tool_args():
 
 
 @pytest.fixture
-def sample_resource_uris():
+def sample_resource_uris() -> None:
     """
     Provide sample resource URIs for testing.
     
@@ -183,17 +183,17 @@ def sample_resource_uris():
 class MockMCPServer:
     """Mock MCP server for testing client functionality."""
     
-    def __init__(self, tools: Optional[Dict[str, Any]] = None, resources: Optional[Dict[str, Any]] = None):
+    def __init__(self, tools: Optional[Dict[str, Any]] = None, resources: Optional[Dict[str, Any]] = None) -> None:
         self.tools = tools or {}
         self.resources = resources or {}
         self.call_count = 0
         self.last_call = None
     
-    async def list_tools(self):
+    async def list_tools(self) -> None:
         """Mock list_tools implementation."""
         return list(self.tools.keys())
     
-    async def call_tool(self, name: str, args: Dict[str, Any]):
+    async def call_tool(self, name: str, args: Dict[str, Any]) -> None:
         """Mock call_tool implementation."""
         self.call_count += 1
         self.last_call = {"tool": name, "args": args}
@@ -203,11 +203,11 @@ class MockMCPServer:
         else:
             raise ValueError(f"Tool {name} not found")
     
-    async def list_resources(self):
+    async def list_resources(self) -> None:
         """Mock list_resources implementation."""
         return list(self.resources.keys())
     
-    async def read_resource(self, uri: str):
+    async def read_resource(self, uri: str) -> None:
         """Mock read_resource implementation."""
         if uri in self.resources:
             return self.resources[uri]
@@ -216,7 +216,7 @@ class MockMCPServer:
 
 
 @pytest.fixture
-def mock_mcp_server():
+def mock_mcp_server() -> None:
     """
     Create a mock MCP server for testing.
     
@@ -238,7 +238,7 @@ def mock_mcp_server():
 
 
 @pytest.fixture
-def client_test_config():
+def client_test_config() -> None:
     """
     Provide configuration for client testing.
     
@@ -257,7 +257,7 @@ def client_test_config():
 
 
 @pytest.fixture
-def performance_thresholds():
+def performance_thresholds() -> None:
     """
     Provide performance thresholds for testing.
     
@@ -273,23 +273,23 @@ def performance_thresholds():
     }
 
 
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     """Configure pytest with custom markers."""
-    config.addinivalue_line(
+    config.addinivalue_line(  # [attr-defined]
         "markers", "integration: mark test as integration test"
     )
-    config.addinivalue_line(
+    config.addinivalue_line(  # [attr-defined]
         "markers", "performance: mark test as performance test"
     )
-    config.addinivalue_line(
+    config.addinivalue_line(  # [attr-defined]
         "markers", "slow: mark test as slow running"
     )
-    config.addinivalue_line(
+    config.addinivalue_line(  # [attr-defined]
         "markers", "requires_git: mark test as requiring git repository"
     )
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config, items) -> None:
     """Modify test collection to add markers based on test names."""
     for item in items:
         # Add integration marker to integration tests

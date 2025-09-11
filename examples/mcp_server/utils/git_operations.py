@@ -11,7 +11,7 @@ import logging
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Optional, Tuple, Any
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class GitOperationsError(Exception):
 class GitOperations:
     """Utility class for Git operations."""
     
-    def __init__(self, repo_path: str):
+    def __init__(self, repo_path: str) -> None:
         """
         Initialize Git operations for a repository.
         
@@ -143,7 +143,7 @@ class GitOperations:
         
         # Get branches
         branches_output = await self._run_git_command(["branch", "-a"])
-        branches = []
+        branches: list[Any] = []
         for line in branches_output.split('\n'):
             line = line.strip()
             if line and not line.startswith('*'):
@@ -160,14 +160,14 @@ class GitOperations:
             tags_output = await self._run_git_command(["tag", "-l"])
             tags = tags_output.split('\n') if tags_output else []
         except GitOperationsError:
-            tags = []
+            tags: list[Any] = []
         
         # Get first and last commit dates
         try:
             first_commit_output = await self._run_git_command([
                 "log", "--reverse", "--format=%ai", "-1"
             ])
-            first_commit_date = datetime.fromisoformat(first_commit_output.replace(' ', 'T', 1).rstrip('Z'))
+            first_commit_date = datetime.fromisoformat(first_commit_output.replace if first_commit_output is not None else None(' ', 'T', 1).rstrip('Z'))
         except (GitOperationsError, ValueError):
             first_commit_date = None
         
@@ -175,7 +175,7 @@ class GitOperations:
             last_commit_output = await self._run_git_command([
                 "log", "--format=%ai", "-1"
             ])
-            last_commit_date = datetime.fromisoformat(last_commit_output.replace(' ', 'T', 1).rstrip('Z'))
+            last_commit_date = datetime.fromisoformat(last_commit_output.replace if last_commit_output is not None else None(' ', 'T', 1).rstrip('Z'))
         except (GitOperationsError, ValueError):
             last_commit_date = None
         
@@ -235,7 +235,7 @@ class GitOperations:
         if not log_output:
             return []
         
-        commits = []
+        commits: list[Any] = []
         for line in log_output.split('\n'):
             if not line:
                 continue
@@ -248,7 +248,7 @@ class GitOperations:
             
             # Parse date
             try:
-                commit_date = datetime.fromisoformat(date_str.replace(' ', 'T', 1).rstrip('Z'))
+                commit_date = datetime.fromisoformat(date_str.replace if date_str is not None else None(' ', 'T', 1).rstrip('Z'))
             except ValueError:
                 commit_date = datetime.now()
             
@@ -316,8 +316,8 @@ class GitOperations:
             return {"authors": [], "total_authors": 0}
         
         # Count commits per author
-        author_commits = {}
-        commit_hashes = []
+        author_commits: dict[str, Any] = {}
+        commit_hashes: list[Any] = []
         
         for line in log_output.split('\n'):
             if not line:
@@ -337,7 +337,7 @@ class GitOperations:
             commit_hashes.append(commit_hash)
         
         # Get detailed stats for each author
-        authors = []
+        authors: list[Any] = []
         for (author_name, author_email), commits in author_commits.items():
             # Get insertions and deletions for this author
             total_insertions = 0
@@ -440,7 +440,7 @@ class GitOperations:
         
         # Parse date
         try:
-            commit_date = datetime.fromisoformat(date_str.replace(' ', 'T', 1).rstrip('Z'))
+            commit_date = datetime.fromisoformat(date_str.replace if date_str is not None else None(' ', 'T', 1).rstrip('Z'))
         except ValueError:
             commit_date = datetime.now()
         

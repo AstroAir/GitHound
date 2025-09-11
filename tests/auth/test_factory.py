@@ -3,7 +3,7 @@
 import os
 import pytest
 from unittest.mock import patch, Mock
-from typing import Dict, Any
+from typing import Any
 
 from githound.mcp.auth.factory import (
     create_auth_provider,
@@ -19,20 +19,20 @@ from githound.mcp.auth.providers.base import AuthProvider
 class MockAuthProvider(AuthProvider):
     """Mock authentication provider for testing."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.config = kwargs
+        self.config = kwargs  # [attr-defined]
     
-    async def authenticate(self, token: str):
+    async def authenticate(self, token: str) -> None:
         return Mock(success=True, user=Mock(username="test"))
     
-    async def validate_token(self, token: str):
+    async def validate_token(self, token: str) -> None:
         return Mock(username="test")
     
-    def get_oauth_metadata(self):
+    def get_oauth_metadata(self) -> None:
         return None
     
-    def supports_dynamic_client_registration(self):
+    def supports_dynamic_client_registration(self) -> None:
         return False
 
 
@@ -40,7 +40,7 @@ class TestCreateAuthProvider:
     """Test authentication provider creation."""
     
     @patch('githound.mcp.auth.providers.jwt.JWTVerifier')
-    def test_create_jwt_provider(self, mock_jwt):
+    def test_create_jwt_provider(self, mock_jwt) -> None:
         """Test creating JWT provider."""
         mock_jwt.return_value = MockAuthProvider()
         
@@ -59,7 +59,7 @@ class TestCreateAuthProvider:
         )
     
     @patch('githound.mcp.auth.providers.github.GitHubProvider')
-    def test_create_github_provider(self, mock_github):
+    def test_create_github_provider(self, mock_github) -> None:
         """Test creating GitHub provider."""
         mock_github.return_value = MockAuthProvider()
         
@@ -76,7 +76,7 @@ class TestCreateAuthProvider:
         )
     
     @patch('githound.mcp.auth.providers.google.GoogleProvider')
-    def test_create_google_provider(self, mock_google):
+    def test_create_google_provider(self, mock_google) -> None:
         """Test creating Google provider."""
         mock_google.return_value = MockAuthProvider()
         
@@ -92,13 +92,13 @@ class TestCreateAuthProvider:
             client_secret="test-client-secret"
         )
     
-    def test_create_unknown_provider(self):
+    def test_create_unknown_provider(self) -> None:
         """Test creating unknown provider type."""
         provider = create_auth_provider("unknown", param="value")
         assert provider is None
     
     @patch('githound.mcp.auth.providers.jwt.JWTVerifier')
-    def test_create_provider_with_exception(self, mock_jwt):
+    def test_create_provider_with_exception(self, mock_jwt) -> None:
         """Test provider creation with exception."""
         mock_jwt.side_effect = Exception("Test error")
         
@@ -109,7 +109,7 @@ class TestCreateAuthProvider:
 class TestCreateAuthorizationProvider:
     """Test authorization provider creation."""
     
-    def test_create_eunomia_provider_not_available(self):
+    def test_create_eunomia_provider_not_available(self) -> None:
         """Test creating Eunomia provider when not available."""
         base_provider = MockAuthProvider()
         
@@ -117,7 +117,7 @@ class TestCreateAuthorizationProvider:
             provider = create_authorization_provider(base_provider, "eunomia")
             assert provider is base_provider  # Should return original provider
     
-    def test_create_permit_provider_not_available(self):
+    def test_create_permit_provider_not_available(self) -> None:
         """Test creating Permit.io provider when not available."""
         base_provider = MockAuthProvider()
         
@@ -127,7 +127,7 @@ class TestCreateAuthorizationProvider:
     
     @patch('githound.mcp.auth.factory.EUNOMIA_AVAILABLE', True)
     @patch('githound.mcp.auth.factory.EunomiaAuthorizationProvider')
-    def test_create_eunomia_provider_available(self, mock_eunomia):
+    def test_create_eunomia_provider_available(self, mock_eunomia) -> None:
         """Test creating Eunomia provider when available."""
         base_provider = MockAuthProvider()
         mock_eunomia.return_value = MockAuthProvider()
@@ -146,7 +146,7 @@ class TestCreateAuthorizationProvider:
     
     @patch('githound.mcp.auth.factory.PERMIT_AVAILABLE', True)
     @patch('githound.mcp.auth.factory.PermitAuthorizationProvider')
-    def test_create_permit_provider_available(self, mock_permit):
+    def test_create_permit_provider_available(self, mock_permit) -> None:
         """Test creating Permit.io provider when available."""
         base_provider = MockAuthProvider()
         mock_permit.return_value = MockAuthProvider()
@@ -163,7 +163,7 @@ class TestCreateAuthorizationProvider:
             permit_api_key="test-api-key"
         )
     
-    def test_create_unknown_authorization_provider(self):
+    def test_create_unknown_authorization_provider(self) -> None:
         """Test creating unknown authorization provider."""
         base_provider = MockAuthProvider()
         
@@ -175,7 +175,7 @@ class TestCreateProviderFromConfig:
     """Test provider creation from configuration."""
     
     @patch('githound.mcp.auth.factory.create_auth_provider')
-    def test_create_provider_auth_only(self, mock_create_auth):
+    def test_create_provider_auth_only(self, mock_create_auth) -> None:
         """Test creating provider with authentication only."""
         mock_create_auth.return_value = MockAuthProvider()
         
@@ -199,7 +199,7 @@ class TestCreateProviderFromConfig:
     
     @patch('githound.mcp.auth.factory.create_auth_provider')
     @patch('githound.mcp.auth.factory.create_authorization_provider')
-    def test_create_provider_with_authorization(self, mock_create_authz, mock_create_auth):
+    def test_create_provider_with_authorization(self, mock_create_authz, mock_create_auth) -> None:
         """Test creating provider with authentication and authorization."""
         base_provider = MockAuthProvider()
         authz_provider = MockAuthProvider()
@@ -237,7 +237,7 @@ class TestCreateProviderFromConfig:
             policy_file="test_policies.json"
         )
     
-    def test_create_provider_no_auth_type(self):
+    def test_create_provider_no_auth_type(self) -> None:
         """Test creating provider without auth type."""
         config = {
             "auth": {
@@ -248,7 +248,7 @@ class TestCreateProviderFromConfig:
         provider = create_provider_from_config(config)
         assert provider is None
     
-    def test_create_provider_no_auth_section(self):
+    def test_create_provider_no_auth_section(self) -> None:
         """Test creating provider without auth section."""
         config = {
             "authorization": {
@@ -264,7 +264,7 @@ class TestCreateProviderFromEnvironment:
     """Test provider creation from environment variables."""
     
     @patch.dict(os.environ, {}, clear=True)
-    def test_no_auth_type_environment(self):
+    def test_no_auth_type_environment(self) -> None:
         """Test with no auth type in environment."""
         provider = create_provider_from_environment()
         assert provider is None
@@ -276,7 +276,7 @@ class TestCreateProviderFromEnvironment:
         "GITHOUND_AUTH_AUDIENCE": "test-audience"
     })
     @patch('githound.mcp.auth.factory.create_auth_provider')
-    def test_jwt_from_environment(self, mock_create_auth):
+    def test_jwt_from_environment(self, mock_create_auth) -> None:
         """Test creating JWT provider from environment."""
         mock_create_auth.return_value = MockAuthProvider()
         
@@ -299,7 +299,7 @@ class TestCreateProviderFromEnvironment:
     })
     @patch('githound.mcp.auth.factory.create_auth_provider')
     @patch('githound.mcp.auth.factory.create_authorization_provider')
-    def test_github_with_eunomia_from_environment(self, mock_create_authz, mock_create_auth):
+    def test_github_with_eunomia_from_environment(self, mock_create_authz, mock_create_auth) -> None:
         """Test creating GitHub + Eunomia from environment."""
         base_provider = MockAuthProvider()
         authz_provider = MockAuthProvider()
@@ -325,7 +325,7 @@ class TestCreateProviderFromEnvironment:
 class TestGetAvailableProviders:
     """Test getting available provider information."""
     
-    def test_get_available_providers(self):
+    def test_get_available_providers(self) -> None:
         """Test getting available providers."""
         providers = get_available_providers()
         
@@ -359,7 +359,7 @@ class TestGetAvailableProviders:
 class TestValidateProviderConfig:
     """Test provider configuration validation."""
     
-    def test_validate_valid_config(self):
+    def test_validate_valid_config(self) -> None:
         """Test validating valid configuration."""
         config = {
             "auth": {
@@ -372,7 +372,7 @@ class TestValidateProviderConfig:
         
         assert validate_provider_config(config) is True
     
-    def test_validate_config_with_authorization(self):
+    def test_validate_config_with_authorization(self) -> None:
         """Test validating configuration with authorization."""
         config = {
             "auth": {
@@ -391,7 +391,7 @@ class TestValidateProviderConfig:
         
         assert validate_provider_config(config) is True
     
-    def test_validate_config_missing_auth(self):
+    def test_validate_config_missing_auth(self) -> None:
         """Test validating configuration missing auth section."""
         config = {
             "authorization": {
@@ -401,7 +401,7 @@ class TestValidateProviderConfig:
         
         assert validate_provider_config(config) is False
     
-    def test_validate_config_missing_auth_type(self):
+    def test_validate_config_missing_auth_type(self) -> None:
         """Test validating configuration missing auth type."""
         config = {
             "auth": {
@@ -413,7 +413,7 @@ class TestValidateProviderConfig:
         
         assert validate_provider_config(config) is False
     
-    def test_validate_config_invalid_auth_type(self):
+    def test_validate_config_invalid_auth_type(self) -> None:
         """Test validating configuration with invalid auth type."""
         config = {
             "auth": {
@@ -424,7 +424,7 @@ class TestValidateProviderConfig:
         
         assert validate_provider_config(config) is False
     
-    def test_validate_config_invalid_authorization_type(self):
+    def test_validate_config_invalid_authorization_type(self) -> None:
         """Test validating configuration with invalid authorization type."""
         config = {
             "auth": {
@@ -450,7 +450,7 @@ class TestEnvironmentVariableHandling:
         "GITHOUND_AUTH_AUDIENCE": "test-audience",
         "GITHOUND_AUTH_ALGORITHM": "RS256"
     })
-    def test_environment_variable_parsing(self):
+    def test_environment_variable_parsing(self) -> None:
         """Test parsing of environment variables."""
         from githound.mcp.auth.factory import create_provider_from_environment
 

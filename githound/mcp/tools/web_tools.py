@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from fastmcp import Context
 from git import GitCommandError
@@ -41,7 +41,7 @@ async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str
         web_app = app
 
         # Start server in background thread
-        def run_server():
+        def run_server() -> None:
             uvicorn.run(
                 web_app,
                 host=input_data.host,

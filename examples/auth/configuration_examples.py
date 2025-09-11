@@ -2,7 +2,7 @@
 """Examples of how to configure OAuth authentication for GitHound MCP server."""
 
 import os
-from typing import Dict, Any
+from typing import Any
 
 
 def setup_github_oauth() -> Dict[str, str]:
@@ -147,7 +147,7 @@ def setup_eunomia_authorization() -> Dict[str, str]:
 
 def setup_permit_authorization() -> Dict[str, str]:
     """
-    Example configuration for Permit.io authorization integration.
+    Example configuration for Permit.io authorization integration.  # [attr-defined]
     
     To use Permit.io authorization:
     1. Install permit-fastmcp: pip install permit-fastmcp
@@ -180,7 +180,7 @@ def setup_permit_authorization() -> Dict[str, str]:
 
 def setup_combined_authorization() -> Dict[str, str]:
     """
-    Example configuration for both Eunomia and Permit.io authorization.
+    Example configuration for both Eunomia and Permit.io authorization.  # [attr-defined]
     
     This creates a layered authorization system where both providers
     must grant access for a request to succeed.
@@ -224,7 +224,7 @@ def apply_configuration(config: Dict[str, str], dry_run: bool = True) -> None:
     print(f"Configuration: {len(config)} environment variables")
     print("-" * 50)
     
-    for key, value in config.items():
+    for key, value in config.items():  # [attr-defined]
         if dry_run:
             # Mask sensitive values for display
             if any(sensitive in key.upper() for sensitive in ['SECRET', 'KEY', 'TOKEN']):
@@ -245,7 +245,7 @@ def apply_configuration(config: Dict[str, str], dry_run: bool = True) -> None:
         print(f"\n✓ Applied {len(config)} environment variables")
 
 
-def main():
+def main() -> None:
     """Demonstrate configuration examples."""
     print("GitHound MCP Server Authentication Configuration Examples")
     print("=" * 60)

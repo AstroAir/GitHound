@@ -157,7 +157,7 @@ async def get_commit_history_direct(input_data: CommitHistoryInput) -> dict[str,
         ))
 
         # Convert commit objects to dictionaries
-        commits = []
+        commits: list[Any] = []
         for commit in commit_objects:
             commit_dict = {
                 "hash": commit.hexsha,
@@ -290,7 +290,7 @@ async def get_repository_config_direct(repo_path: str) -> str:
     """Direct wrapper for get_repository_config MCP resource."""
     ctx = MockContext()
     try:
-        await ctx.info(f"Getting repository configuration for {repo_path}")
+        await ctx.info(f"Getting repository configuration for {repo_path}")  # [attr-defined]
 
         repo = get_repository(Path(repo_path))
         metadata = get_repository_metadata(repo)
@@ -329,7 +329,7 @@ Generated at: {datetime.now().isoformat()}
 """
 
     except Exception as e:
-        await ctx.error(f"Error retrieving repository config: {str(e)}")
+        await ctx.error(f"Error retrieving repository config: {str(e)}")  # [attr-defined]
         return f"Error: Could not retrieve repository configuration - {str(e)}"
 
 
@@ -363,7 +363,7 @@ async def get_repository_contributors_direct(repo_path: str) -> str:
 
         result_lines.extend([
             "",
-            f"Generated at: {datetime.now().isoformat()}"
+            f"Generated at: {datetime.now if datetime is not None else None().isoformat()}"
         ])
 
         return "\n".join(result_lines)

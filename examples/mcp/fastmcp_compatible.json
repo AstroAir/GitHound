@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "GitHound MCP Server": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "fastmcp",
+        "fastmcp",
+        "run",
+        "/absolute/path/to/githound/mcp_server.py"
+      ],
+      "env": {
+        "FASTMCP_SERVER_NAME": "GitHound MCP Server",
+        "FASTMCP_SERVER_VERSION": "2.0.0",
+        "FASTMCP_SERVER_LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}

@@ -12,25 +12,25 @@ from githound.web.enhanced_api import app
 
 
 @pytest.fixture
-def temp_repo():
+def temp_repo() -> None:
     """Create a temporary Git repository for testing."""
     temp_dir = tempfile.mkdtemp()
     repo = Repo.init(temp_dir)
 
     # Configure user for commits
-    with repo.config_writer() as config:
-        config.set_value("user", "name", "Test User")
-        config.set_value("user", "email", "test@example.com")
+    with repo.config_writer() as config:  # [attr-defined]
+        config.set_value("user", "name", "Test User")  # [attr-defined]
+        config.set_value("user", "email", "test@example.com")  # [attr-defined]
 
     # Create initial commit
     test_file = Path(temp_dir) / "test.py"
-    test_file.write_text("def hello():\n    print('Hello, World!')\n")
+    test_file.write_text("def hello() -> None:\n    print('Hello, World!')\n")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
 
     # Create second commit
     test_file.write_text(
-        "def hello():\n    print('Hello, GitHound!')\n\ndef goodbye():\n    print('Goodbye!')\n"
+        "def hello() -> None:\n    print('Hello, GitHound!')\n\ndef goodbye() -> None:\n    print('Goodbye!')\n"
     )
     repo.index.add([str(test_file)])
     second_commit = repo.index.commit("Add goodbye function")
@@ -41,7 +41,7 @@ def temp_repo():
 
     # Add commit to branch
     test_file.write_text(
-        "def hello():\n    print('Hello, GitHound!')\n\ndef goodbye():\n    print('Goodbye!')\n\ndef feature():\n    print('New feature!')\n"
+        "def hello() -> None:\n    print('Hello, GitHound!')\n\ndef goodbye() -> None:\n    print('Goodbye!')\n\ndef feature() -> None:\n    print('New feature!')\n"
     )
     repo.index.add([str(test_file)])
     feature_commit = repo.index.commit("Add feature function")
@@ -56,13 +56,13 @@ def temp_repo():
 
 
 @pytest.fixture
-def client():
+def client() -> None:
     """Create test client."""
     return TestClient(app)
 
 
 @pytest.fixture
-def auth_headers():
+def auth_headers() -> None:
     """Mock authentication headers."""
     return {"Authorization": "Bearer test-token"}
 
@@ -70,7 +70,7 @@ def auth_headers():
 class TestRepositoryAnalysis:
     """Tests for repository analysis endpoints."""
 
-    def test_analyze_repository(self, client, temp_repo, auth_headers):
+    def test_analyze_repository(self, client, temp_repo, auth_headers) -> None:
         """Test repository analysis endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -89,7 +89,7 @@ class TestRepositoryAnalysis:
         assert len(data["data"]["contributors"]) >= 1
         assert "detailed_author_stats" in data["data"]
 
-    def test_analyze_repository_invalid_path(self, client, auth_headers):
+    def test_analyze_repository_invalid_path(self, client, auth_headers) -> None:
         """Test repository analysis with invalid path."""
         response = client.post(
             "/api/v2/repository/analyze",
@@ -100,7 +100,7 @@ class TestRepositoryAnalysis:
         assert response.status_code == 400
         assert "does not exist" in response.json()["detail"]
 
-    def test_analyze_commit(self, client, temp_repo, auth_headers):
+    def test_analyze_commit(self, client, temp_repo, auth_headers) -> None:
         """Test commit analysis endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -122,7 +122,7 @@ class TestRepositoryAnalysis:
         assert data["data"]["author_name"] == "Test User"
         assert "file_changes" in data["data"]
 
-    def test_get_filtered_commits(self, client, temp_repo, auth_headers):
+    def test_get_filtered_commits(self, client, temp_repo, auth_headers) -> None:
         """Test filtered commit retrieval endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -147,7 +147,7 @@ class TestRepositoryAnalysis:
 class TestFileAnalysis:
     """Tests for file analysis endpoints."""
 
-    def test_get_file_history(self, client, temp_repo, auth_headers):
+    def test_get_file_history(self, client, temp_repo, auth_headers) -> None:
         """Test file history endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -165,7 +165,7 @@ class TestFileAnalysis:
         assert data["data"]["total_commits"] >= 2
         assert len(data["data"]["history"]) >= 2
 
-    def test_analyze_file_blame(self, client, temp_repo, auth_headers):
+    def test_analyze_file_blame(self, client, temp_repo, auth_headers) -> None:
         """Test file blame analysis endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -183,7 +183,7 @@ class TestFileAnalysis:
         assert data["data"]["total_lines"] >= 4
         assert len(data["data"]["contributors"]) >= 1
 
-    def test_analyze_file_blame_nonexistent(self, client, temp_repo, auth_headers):
+    def test_analyze_file_blame_nonexistent(self, client, temp_repo, auth_headers) -> None:
         """Test file blame analysis for nonexistent file."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -199,7 +199,7 @@ class TestFileAnalysis:
 class TestDiffAnalysis:
     """Tests for diff analysis endpoints."""
 
-    def test_compare_commits(self, client, temp_repo, auth_headers):
+    def test_compare_commits(self, client, temp_repo, auth_headers) -> None:
         """Test commit comparison endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -221,7 +221,7 @@ class TestDiffAnalysis:
         assert data["data"]["to_commit"] == second_commit.hexsha
         assert data["data"]["files_changed"] >= 1
 
-    def test_compare_branches(self, client, temp_repo, auth_headers):
+    def test_compare_branches(self, client, temp_repo, auth_headers) -> None:
         """Test branch comparison endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -241,7 +241,7 @@ class TestDiffAnalysis:
 class TestStatistics:
     """Tests for statistics endpoints."""
 
-    def test_get_repository_statistics(self, client, temp_repo, auth_headers):
+    def test_get_repository_statistics(self, client, temp_repo, auth_headers) -> None:
         """Test repository statistics endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -270,7 +270,7 @@ class TestStatistics:
 class TestExport:
     """Tests for export endpoints."""
 
-    def test_export_data(self, client, temp_repo, auth_headers):
+    def test_export_data(self, client, temp_repo, auth_headers) -> None:
         """Test data export endpoint."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -301,7 +301,7 @@ class TestExport:
         status_data = status_response.json()
         assert status_data["data"]["export_id"] == export_id
 
-    def test_export_status_not_found(self, client, auth_headers):
+    def test_export_status_not_found(self, client, auth_headers) -> None:
         """Test export status for nonexistent export."""
         response = client.get("/api/v2/export/nonexistent-id/status", headers=auth_headers)
 
@@ -311,7 +311,7 @@ class TestExport:
 class TestHealthAndInfo:
     """Tests for health and info endpoints."""
 
-    def test_health_check(self, client):
+    def test_health_check(self, client) -> None:
         """Test health check endpoint."""
         response = client.get("/api/v2/health")
 
@@ -323,7 +323,7 @@ class TestHealthAndInfo:
         assert "version" in data
         assert "active_operations" in data
 
-    def test_api_info(self, client):
+    def test_api_info(self, client) -> None:
         """Test API info endpoint."""
         response = client.get("/api/v2/info")
 
@@ -340,7 +340,7 @@ class TestHealthAndInfo:
 class TestAuthentication:
     """Tests for authentication and authorization."""
 
-    def test_missing_auth_header(self, client, temp_repo):
+    def test_missing_auth_header(self, client, temp_repo) -> None:
         """Test request without authentication header."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -353,7 +353,7 @@ class TestAuthentication:
         # In real implementation, this would return 401 for invalid tokens
         assert response.status_code in [200, 401, 403]
 
-    def test_invalid_auth_token(self, client, temp_repo):
+    def test_invalid_auth_token(self, client, temp_repo) -> None:
         """Test request with invalid authentication token."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
@@ -371,7 +371,7 @@ class TestAuthentication:
 class TestErrorHandling:
     """Tests for error handling."""
 
-    def test_invalid_json_payload(self, client, auth_headers):
+    def test_invalid_json_payload(self, client, auth_headers) -> None:
         """Test request with invalid JSON payload."""
         response = client.post(
             "/api/v2/repository/analyze",
@@ -381,7 +381,7 @@ class TestErrorHandling:
 
         assert response.status_code == 422  # Unprocessable Entity
 
-    def test_missing_required_fields(self, client, auth_headers):
+    def test_missing_required_fields(self, client, auth_headers) -> None:
         """Test request with missing required fields."""
         response = client.post(
             "/api/v2/repository/analyze",
@@ -394,7 +394,7 @@ class TestErrorHandling:
 
         assert response.status_code == 422  # Validation error
 
-    def test_invalid_commit_hash(self, client, temp_repo, auth_headers):
+    def test_invalid_commit_hash(self, client, temp_repo, auth_headers) -> None:
         """Test commit analysis with invalid commit hash."""
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 

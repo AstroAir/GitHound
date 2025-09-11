@@ -2,7 +2,7 @@
 
 import os
 import logging
-from typing import Optional, Dict, Any, Type, Union
+from typing import Any, Optional, Dict, List
 
 from .providers.base import AuthProvider
 from .providers import (
@@ -114,12 +114,12 @@ def create_provider_from_config(config: Dict[str, Any]) -> Optional[AuthProvider
     """
     try:
         # Create base authentication provider
-        auth_config = config.get("auth", {})
-        auth_type = auth_config.get("type")
-        auth_params = auth_config.get("config", {})
+        auth_config = config.get("auth", {})  # [attr-defined]
+        auth_type = auth_config.get("type")  # [attr-defined]
+        auth_params = auth_config.get("config", {})  # [attr-defined]
 
         if not auth_type:
-            logger.error("No authentication type specified in configuration")
+            logger.error("No authentication type specified in configuration")  # [attr-defined]
             return None
 
         base_provider = create_auth_provider(auth_type, **auth_params)
@@ -127,10 +127,10 @@ def create_provider_from_config(config: Dict[str, Any]) -> Optional[AuthProvider
             return None
 
         # Optionally wrap with authorization provider
-        authorization_config = config.get("authorization")
+        authorization_config = config.get("authorization")  # [attr-defined]
         if authorization_config:
-            auth_type = authorization_config.get("type")
-            auth_params = authorization_config.get("config", {})
+            auth_type = authorization_config.get("type")  # [attr-defined]
+            auth_params = authorization_config.get("config", {})  # [attr-defined]
 
             if auth_type:
                 base_provider = create_authorization_provider(
@@ -140,7 +140,7 @@ def create_provider_from_config(config: Dict[str, Any]) -> Optional[AuthProvider
         return base_provider
 
     except Exception as e:
-        logger.error(f"Failed to create provider from configuration: {e}")
+        logger.error(f"Failed to create provider from configuration: {e}")  # [attr-defined]
         return None
 
 
@@ -166,7 +166,7 @@ def create_provider_from_environment() -> Optional[AuthProvider]:
             return None
 
         # Collect authentication configuration from environment
-        auth_config = {}
+        auth_config: dict[str, Any] = {}
         auth_prefix = "GITHOUND_AUTH_"
         for key, value in os.environ.items():
             if key.startswith(auth_prefix) and key != "GITHOUND_AUTH_TYPE":
@@ -182,7 +182,7 @@ def create_provider_from_environment() -> Optional[AuthProvider]:
         authorization_type = os.getenv("GITHOUND_AUTHORIZATION_TYPE")
         if authorization_type:
             # Collect authorization configuration from environment
-            auth_config = {}
+            auth_config: dict[str, Any] = {}
             auth_prefix = "GITHOUND_AUTHORIZATION_"
             for key, value in os.environ.items():
                 if key.startswith(auth_prefix) and key != "GITHOUND_AUTHORIZATION_TYPE":
@@ -258,12 +258,12 @@ def validate_provider_config(config: Dict[str, Any]) -> bool:
     try:
         # Check required fields
         if "auth" not in config:
-            logger.error("Missing 'auth' section in configuration")
+            logger.error("Missing 'auth' section in configuration")  # [attr-defined]
             return False
 
         auth_config = config["auth"]
         if "type" not in auth_config:
-            logger.error("Missing 'type' in auth configuration")
+            logger.error("Missing 'type' in auth configuration")  # [attr-defined]
             return False
 
         # Validate authentication type
@@ -284,5 +284,5 @@ def validate_provider_config(config: Dict[str, Any]) -> bool:
         return True
 
     except Exception as e:
-        logger.error(f"Error validating provider configuration: {e}")
+        logger.error(f"Error validating provider configuration: {e}")  # [attr-defined]
         return False

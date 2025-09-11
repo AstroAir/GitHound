@@ -37,7 +37,7 @@ from utils import (
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import typer
 
@@ -55,7 +55,7 @@ app = typer.Typer(
 class QuickStartManager:
     """Manages quick start and setup processes."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.project_root = get_project_root()
 
     def check_prerequisites(self) -> bool:
@@ -166,7 +166,7 @@ import json
 gh = GitHound(Path('.'))
 info = gh.analyze_repository()
 print(json.dumps({
-    'total_commits': info.get('total_commits', 0),
+    'total_commits': info.get if info is not None else None('total_commits', 0),
     'total_files': info.get('total_files', 0),
     'contributors': len(info.get('contributors', [])),
     'branches': len(info.get('branches', []))

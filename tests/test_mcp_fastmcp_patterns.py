@@ -16,7 +16,7 @@ import pytest
 import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, patch, MagicMock
-from typing import Dict, Any
+from typing import Any
 
 from fastmcp import FastMCP, Client
 from fastmcp.exceptions import ToolError, McpError
@@ -29,14 +29,14 @@ class TestFastMCPInMemoryTesting:
     """Test FastMCP in-memory testing patterns."""
     
     @pytest.mark.asyncio
-    async def test_in_memory_server_creation(self, mcp_server: FastMCP):
+    async def test_in_memory_server_creation(self, mcp_server: FastMCP) -> None:
         """Test that we can create a server instance for in-memory testing."""
         assert mcp_server is not None
-        assert mcp_server.name == "GitHound MCP Server"
+        assert mcp_server.name = = "GitHound MCP Server"
         assert hasattr(mcp_server, 'version')
     
     @pytest.mark.asyncio
-    async def test_in_memory_client_connection(self, mcp_client: Client):
+    async def test_in_memory_client_connection(self, mcp_client: Client) -> None:
         """Test in-memory client connection following FastMCP patterns."""
         # Test basic connectivity
         await mcp_client.ping()
@@ -54,7 +54,7 @@ class TestFastMCPInMemoryTesting:
         assert isinstance(prompts, list)
     
     @pytest.mark.asyncio
-    async def test_tool_execution_in_memory(self, mcp_client: Client, temp_repo):
+    async def test_tool_execution_in_memory(self, mcp_client: Client, temp_repo) -> None:
         """Test tool execution using in-memory testing pattern."""
         # Test repository validation tool
         result = await mcp_client.call_tool(
@@ -65,7 +65,7 @@ class TestFastMCPInMemoryTesting:
         assert "valid" in str(result.data).lower()
     
     @pytest.mark.asyncio
-    async def test_resource_access_in_memory(self, mcp_client: Client, temp_repo):
+    async def test_resource_access_in_memory(self, mcp_client: Client, temp_repo) -> None:
         """Test resource access using in-memory testing pattern."""
         # Test repository config resource (which actually exists)
         repo_path = str(temp_repo.working_dir)
@@ -90,7 +90,7 @@ class TestMockingExternalDependencies:
     """Test mocking external dependencies following FastMCP patterns."""
     
     @pytest.mark.asyncio
-    async def test_mocked_git_operations(self, mcp_server: FastMCP, mock_external_dependencies):
+    async def test_mocked_git_operations(self, mcp_server: FastMCP, mock_external_dependencies) -> None:
         """Test with mocked Git operations for deterministic testing."""
         # Configure mocks
         mock_repo = MagicMock()
@@ -109,7 +109,7 @@ class TestMockingExternalDependencies:
             assert result.data is not None
     
     @pytest.mark.asyncio
-    async def test_mocked_search_operations(self, mcp_server: FastMCP, temp_repo, mock_search_data):
+    async def test_mocked_search_operations(self, mcp_server: FastMCP, temp_repo, mock_search_data) -> None:
         """Test search operations with mocked data."""
         with patch('githound.search_engine.SearchOrchestrator') as mock_orchestrator:
             # Configure mock search results
@@ -134,7 +134,7 @@ class TestErrorHandling:
     """Test error handling and edge cases."""
     
     @pytest.mark.asyncio
-    async def test_invalid_repository_path(self, mcp_client: Client, error_scenarios):
+    async def test_invalid_repository_path(self, mcp_client: Client, error_scenarios) -> None:
         """Test handling of invalid repository paths."""
         result = await mcp_client.call_tool(
             "validate_repository",
@@ -147,7 +147,7 @@ class TestErrorHandling:
         assert "error" in result_text or "invalid" in result_text or "not found" in result_text
     
     @pytest.mark.asyncio
-    async def test_malformed_tool_arguments(self, mcp_client: Client):
+    async def test_malformed_tool_arguments(self, mcp_client: Client) -> None:
         """Test handling of malformed tool arguments."""
         with pytest.raises((ToolError, Exception)):
             await mcp_client.call_tool(
@@ -156,7 +156,7 @@ class TestErrorHandling:
             )
     
     @pytest.mark.asyncio
-    async def test_git_command_errors(self, mcp_server: FastMCP):
+    async def test_git_command_errors(self, mcp_server: FastMCP) -> None:
         """Test handling of Git command errors."""
         with patch('githound.git_handler.get_repository') as mock_get_repo:
             mock_get_repo.side_effect = GitCommandError("git command failed", 1)
@@ -176,7 +176,7 @@ class TestToolFunctionality:
     """Test individual MCP tools comprehensively."""
     
     @pytest.mark.asyncio
-    async def test_repository_analysis_tool(self, mcp_client: Client, temp_repo):
+    async def test_repository_analysis_tool(self, mcp_client: Client, temp_repo) -> None:
         """Test repository analysis tool."""
         try:
             result = await mcp_client.call_tool(
@@ -185,10 +185,10 @@ class TestToolFunctionality:
             )
             assert result.data is not None
         except Exception as e:
-            pytest.skip(f"Tool not available or configured: {e}")
+            pytest.skip(f"Tool not available or configured: {e}")  # [attr-defined]
     
     @pytest.mark.asyncio
-    async def test_commit_analysis_tool(self, mcp_client: Client, temp_repo_with_commits):
+    async def test_commit_analysis_tool(self, mcp_client: Client, temp_repo_with_commits) -> None:
         """Test commit analysis tool."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
         
@@ -202,10 +202,10 @@ class TestToolFunctionality:
             )
             assert result.data is not None
         except Exception as e:
-            pytest.skip(f"Tool not available or configured: {e}")
+            pytest.skip(f"Tool not available or configured: {e}")  # [attr-defined]
     
     @pytest.mark.asyncio
-    async def test_search_tools(self, mcp_client: Client, temp_repo):
+    async def test_search_tools(self, mcp_client: Client, temp_repo) -> None:
         """Test various search tools."""
         search_tools = [
             ("advanced_search", {"repo_path": str(temp_repo.working_dir), "content_pattern": "test"}),
@@ -226,7 +226,7 @@ class TestResourceAccess:
     """Test MCP resource access patterns."""
     
     @pytest.mark.asyncio
-    async def test_list_all_resources(self, mcp_client: Client):
+    async def test_list_all_resources(self, mcp_client: Client) -> None:
         """Test listing all available resources."""
         resources = await mcp_client.list_resources()
         assert isinstance(resources, list)
@@ -237,7 +237,7 @@ class TestResourceAccess:
             assert hasattr(resource, 'name')
     
     @pytest.mark.asyncio
-    async def test_dynamic_resource_access(self, mcp_client: Client, temp_repo):
+    async def test_dynamic_resource_access(self, mcp_client: Client, temp_repo) -> None:
         """Test accessing dynamic resources."""
         repo_path = str(temp_repo.working_dir)
         
@@ -261,7 +261,7 @@ class TestPromptFunctionality:
     """Test MCP prompt functionality."""
     
     @pytest.mark.asyncio
-    async def test_list_prompts(self, mcp_client: Client):
+    async def test_list_prompts(self, mcp_client: Client) -> None:
         """Test listing available prompts."""
         prompts = await mcp_client.list_prompts()
         assert isinstance(prompts, list)
@@ -271,7 +271,7 @@ class TestPromptFunctionality:
             assert hasattr(prompt, 'name')
     
     @pytest.mark.asyncio
-    async def test_prompt_execution(self, mcp_client: Client, temp_repo):
+    async def test_prompt_execution(self, mcp_client: Client, temp_repo) -> None:
         """Test executing prompts with arguments."""
         try:
             # Test bug investigation prompt
@@ -288,7 +288,7 @@ class TestPerformancePatterns:
     """Test performance-related patterns."""
     
     @pytest.mark.asyncio
-    async def test_large_repository_handling(self, mcp_client: Client, large_repo_mock, performance_test_data):
+    async def test_large_repository_handling(self, mcp_client: Client, large_repo_mock, performance_test_data) -> None:
         """Test handling of large repositories."""
         with patch('githound.git_handler.get_repository') as mock_get_repo:
             mock_get_repo.return_value = large_repo_mock
@@ -305,9 +305,9 @@ class TestPerformancePatterns:
                 pytest.skip(f"Performance test not applicable: {e}")
     
     @pytest.mark.asyncio
-    async def test_concurrent_operations(self, mcp_server: FastMCP, temp_repo):
+    async def test_concurrent_operations(self, mcp_server: FastMCP, temp_repo) -> None:
         """Test concurrent client operations."""
-        async def perform_operation(client_id: int):
+        async def perform_operation(client_id: int) -> None:
             async with Client(mcp_server) as client:
                 return await client.call_tool(
                     "validate_repository",

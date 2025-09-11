@@ -24,7 +24,7 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional, Union, Any
 
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
@@ -32,7 +32,7 @@ from fastmcp.exceptions import ResourceError
 import mcp.types as mcp_types
 
 # Configure logging
-logging.basicConfig(
+logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -63,7 +63,7 @@ async def discover_resources() -> Dict[str, Any]:
             resources = await client.list_resources()
             logger.info(f"Discovered {len(resources)} resources")
             
-            resource_analysis = []
+            resource_analysis: list[Any] = []
             
             for resource in resources:
                 # Analyze each resource's metadata
@@ -128,7 +128,7 @@ async def access_static_resources() -> Dict[str, Any]:
     server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
     transport = PythonStdioTransport(str(server_script))
 
-    access_results = []
+    access_results: list[Any] = []
 
     try:
         async with Client(transport) as client:
@@ -162,7 +162,7 @@ async def access_static_resources() -> Dict[str, Any]:
                                 content_info["total_size"] += len(block.text)
                                 
                                 # Try to parse as JSON
-                                if str(resource.uri).endswith('/info') or 'config' in str(resource.uri):
+                                if str(resource.uri).endswith('/info') or 'config' in str(resource.uri):  # [attr-defined]
                                     try:
                                         parsed = json.loads(block.text)
                                         content_info["parsed_data"] = parsed
@@ -243,7 +243,7 @@ async def demonstrate_templated_resources() -> Dict[str, Any]:
             
             logger.info(f"Found {len(templated_resources)} templated resources")
             
-            template_results = []
+            template_results: list[Any] = []
             
             for resource in templated_resources:
                 logger.info(f"Templated resource: {resource.uri}")
@@ -475,7 +475,7 @@ async def demonstrate_resource_patterns() -> Dict[str, Any]:
                         "name": resource.name,
                         "uri": uri,
                         "has_extension": '.' in uri.split('/')[-1],
-                        "is_config": 'config' in uri.lower() or 'settings' in uri.lower(),
+                        "is_config": 'config' in uri.lower() or 'settings' in uri.lower(),  # [attr-defined]
                         "is_info": 'info' in uri.lower() or 'status' in uri.lower()
                     })
                 
@@ -524,7 +524,7 @@ async def main() -> Dict[str, Any]:
     print("FastMCP Client - Resource Operations Examples")
     print("=" * 60)
     
-    results = {}
+    results: dict[str, Any] = {}
     
     try:
         # 1. Resource Discovery

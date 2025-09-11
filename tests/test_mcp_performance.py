@@ -13,7 +13,7 @@ import time
 import psutil
 import gc
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Optionalny, Any
 from unittest.mock import patch, MagicMock
 
 from fastmcp import Client
@@ -25,7 +25,7 @@ class TestPerformanceBenchmarks:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_tool_execution_performance(self, mcp_client, temp_repo):
+    async def test_tool_execution_performance(self, mcp_client, temp_repo) -> None:
         """Test tool execution performance benchmarks."""
         repo_path = str(temp_repo.working_dir)
         
@@ -43,7 +43,7 @@ class TestPerformanceBenchmarks:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_resource_access_performance(self, mcp_client, temp_repo):
+    async def test_resource_access_performance(self, mcp_client, temp_repo) -> None:
         """Test resource access performance."""
         repo_path = str(temp_repo.working_dir)
         
@@ -69,11 +69,11 @@ class TestPerformanceBenchmarks:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_concurrent_operations_performance(self, mcp_server, temp_repo):
+    async def test_concurrent_operations_performance(self, mcp_server, temp_repo) -> None:
         """Test performance under concurrent load."""
         repo_path = str(temp_repo.working_dir)
         
-        async def perform_operation(operation_id: int):
+        async def perform_operation(operation_id: int) -> None:
             async with Client(mcp_server) as client:
                 start_time = time.time()
                 await client.call_tool(
@@ -112,7 +112,7 @@ class TestLargeRepositoryHandling:
     @pytest.mark.performance
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_large_repository_analysis(self, mcp_client, large_repo_mock, performance_test_data):
+    async def test_large_repository_analysis(self, mcp_client, large_repo_mock, performance_test_data) -> None:
         """Test analysis of large repositories."""
         with patch('githound.git_handler.get_repository') as mock_get_repo:
             mock_get_repo.return_value = large_repo_mock
@@ -138,7 +138,7 @@ class TestLargeRepositoryHandling:
     @pytest.mark.performance
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_large_search_operations(self, mcp_client, performance_test_data):
+    async def test_large_search_operations(self, mcp_client, performance_test_data) -> None:
         """Test search operations on large datasets."""
         with patch('githound.search_engine.SearchOrchestrator') as mock_orchestrator:
             # Mock large search results
@@ -186,7 +186,7 @@ class TestLargeRepositoryHandling:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_memory_usage_with_large_data(self, mcp_client, performance_test_data):
+    async def test_memory_usage_with_large_data(self, mcp_client, performance_test_data) -> None:
         """Test memory usage with large datasets."""
         # Get initial memory usage
         process = psutil.Process()
@@ -222,9 +222,9 @@ class TestScalabilityLimits:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_maximum_concurrent_clients(self, mcp_server):
+    async def test_maximum_concurrent_clients(self, mcp_server) -> None:
         """Test maximum number of concurrent clients."""
-        async def create_client(client_id: int):
+        async def create_client(client_id: int) -> None:
             try:
                 async with Client(mcp_server) as client:
                     await client.ping()
@@ -245,13 +245,13 @@ class TestScalabilityLimits:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_request_rate_limits(self, mcp_client):
+    async def test_request_rate_limits(self, mcp_client) -> None:
         """Test request rate handling."""
         # Send many requests rapidly
         num_requests = 100
         start_time = time.time()
         
-        tasks = []
+        tasks: list[Any] = []
         for i in range(num_requests):
             task = mcp_client.ping()
             tasks.append(task)
@@ -267,7 +267,7 @@ class TestScalabilityLimits:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_large_payload_limits(self, mcp_client, temp_repo):
+    async def test_large_payload_limits(self, mcp_client, temp_repo) -> None:
         """Test handling of large payloads."""
         repo_path = str(temp_repo.working_dir)
         
@@ -302,7 +302,7 @@ class TestResourceUtilization:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_cpu_utilization(self, mcp_client, temp_repo):
+    async def test_cpu_utilization(self, mcp_client, temp_repo) -> None:
         """Test CPU utilization during operations."""
         repo_path = str(temp_repo.working_dir)
         
@@ -332,7 +332,7 @@ class TestResourceUtilization:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_memory_leak_detection(self, mcp_client):
+    async def test_memory_leak_detection(self, mcp_client) -> None:
         """Test for memory leaks during repeated operations."""
         process = psutil.Process()
         
@@ -361,7 +361,7 @@ class TestResourceUtilization:
     
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_connection_resource_cleanup(self, mcp_server):
+    async def test_connection_resource_cleanup(self, mcp_server) -> None:
         """Test connection resource cleanup."""
         # Create and close many connections
         for i in range(20):
@@ -375,9 +375,9 @@ class TestResourceUtilization:
 
 # Performance testing utilities
 
-def measure_execution_time(func):
+def measure_execution_time(func) -> None:
     """Decorator to measure execution time of async functions."""
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Any, **kwargs: Any) -> None:
         start_time = time.time()
         result = await func(*args, **kwargs)
         execution_time = time.time() - start_time
@@ -399,18 +399,17 @@ def get_cpu_usage() -> float:
 class PerformanceMonitor:
     """Context manager for monitoring performance metrics."""
     
-    def __init__(self):
-        self.start_time = None
+    def __init__(self) -> None: Optional[self.start_time] = None
         self.start_memory = None
         self.start_cpu = None
     
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.start_time = time.time()
         self.start_memory = get_memory_usage()
         self.start_cpu = psutil.cpu_percent()
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.execution_time = time.time() - self.start_time
         self.memory_delta = get_memory_usage() - self.start_memory
         self.cpu_usage = psutil.cpu_percent()

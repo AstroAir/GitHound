@@ -19,6 +19,7 @@ Validates JWT tokens issued by external systems.
 **Use Case**: When you already have an authentication system that issues JWTs.
 
 **Configuration**:
+
 ```bash
 export FASTMCP_SERVER_AUTH="githound.mcp.auth.providers.jwt.JWTVerifier"
 export FASTMCP_SERVER_AUTH_JWT_JWKS_URI="https://your-auth-system.com/.well-known/jwks.json"
@@ -37,6 +38,7 @@ Bridges non-DCR OAuth providers with MCP's DCR expectations.
 OAuth proxy specifically configured for GitHub.
 
 **Configuration**:
+
 ```bash
 export FASTMCP_SERVER_AUTH="githound.mcp.auth.providers.github.GitHubProvider"
 export FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID="Ov23li..."
@@ -49,6 +51,7 @@ export FASTMCP_SERVER_BASE_URL="http://localhost:8000"
 OAuth proxy specifically configured for Google OAuth.
 
 **Configuration**:
+
 ```bash
 export FASTMCP_SERVER_AUTH="githound.mcp.auth.providers.google.GoogleProvider"
 export FASTMCP_SERVER_AUTH_GOOGLE_CLIENT_ID="123456.apps.googleusercontent.com"
@@ -146,7 +149,7 @@ class CustomProvider(AuthProvider):
     async def validate_token(self, token: str) -> Optional[TokenInfo]:
         # Implement your token validation logic
         pass
-    
+
     def get_oauth_metadata(self) -> Optional[Dict[str, Any]]:
         # Return OAuth metadata if applicable
         pass
