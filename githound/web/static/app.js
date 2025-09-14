@@ -1,5 +1,106 @@
 // GitHound Web Interface JavaScript - Enhanced Version
 
+class WebSocketManager {
+  constructor() {
+    this.websocket = null;
+    this.isConnectedFlag = false;
+    this.isAuthenticatedFlag = false;
+    this.messageHandlers = [];
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.reconnectDelay = 1000;
+  }
+
+  isConnected() {
+    return this.isConnectedFlag && this.websocket && this.websocket.readyState === WebSocket.OPEN;
+  }
+
+  isAuthenticated() {
+    return this.isAuthenticatedFlag;
+  }
+
+  onMessage(handler) {
+    this.messageHandlers.push(handler);
+  }
+
+  connect(url, authToken = null) {
+    if (this.websocket) {
+      this.websocket.close();
+    }
+
+    this.websocket = new WebSocket(url);
+
+    this.websocket.onopen = () => {
+      this.isConnectedFlag = true;
+      this.reconnectAttempts = 0;
+
+      // Send authentication if token provided
+      if (authToken) {
+        this.websocket.send(JSON.stringify({
+          type: 'auth',
+          token: authToken
+        }));
+      }
+    };
+
+    this.websocket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+
+        // Handle authentication response
+        if (message.type === 'auth_success') {
+          this.isAuthenticatedFlag = true;
+        } else if (message.type === 'auth_failed') {
+          this.isAuthenticatedFlag = false;
+        }
+
+        // Notify all handlers
+        this.messageHandlers.forEach(handler => {
+          try {
+            handler(message);
+          } catch (error) {
+            console.error('Error in WebSocket message handler:', error);
+          }
+        });
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    this.websocket.onclose = () => {
+      this.isConnectedFlag = false;
+      this.isAuthenticatedFlag = false;
+
+      // Attempt reconnection
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++;
+        setTimeout(() => {
+          this.connect(url, authToken);
+        }, this.reconnectDelay * this.reconnectAttempts);
+      }
+    };
+
+    this.websocket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  }
+
+  send(message) {
+    if (this.isConnected()) {
+      this.websocket.send(JSON.stringify(message));
+    }
+  }
+
+  close() {
+    if (this.websocket) {
+      this.websocket.close();
+      this.websocket = null;
+    }
+    this.isConnectedFlag = false;
+    this.isAuthenticatedFlag = false;
+  }
+}
+
 class GitHoundApp {
   constructor() {
     this.currentSearchId = null;
@@ -8,6 +109,8 @@ class GitHoundApp {
     this.isSearching = false;
     this.searchHistory = this.loadSearchHistory();
     this.searchTemplates = this.loadSearchTemplates();
+    this.currentUser = null;
+    this.authToken = null;
     this.stats = {
       totalSearches: 0,
       activeSearches: 0,
@@ -17,6 +120,7 @@ class GitHoundApp {
 
     this.initializeEventListeners();
     this.initializeTheme();
+    this.initializeAuth();
     this.loadStats();
     this.updateConnectionStatus("disconnected");
     this.updateDashboard();
@@ -42,6 +146,23 @@ class GitHoundApp {
 
     document.getElementById("exportCsv").addEventListener("click", () => {
       this.exportResults("csv");
+    });
+
+    // Authentication event listeners
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.handleLogin();
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.handleRegistration();
+    });
+
+    // Profile event listeners
+    document.getElementById("changePasswordForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.handlePasswordChange();
     });
 
     // Fuzzy threshold slider
@@ -564,27 +685,50 @@ class GitHoundApp {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws/${searchId}`;
 
-    this.websocket = new WebSocket(wsUrl);
+    // Use the global WebSocket manager
+    if (window.websocketManager) {
+      window.websocketManager.connect(wsUrl, this.authToken);
 
-    this.websocket.onopen = () => {
-      console.log("WebSocket connected");
-      this.updateConnectionStatus("connected");
-    };
+      // Set up message handler for search updates
+      window.websocketManager.onMessage((message) => {
+        this.handleWebSocketMessage(message);
+      });
 
-    this.websocket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      this.handleWebSocketMessage(message);
-    };
+      this.updateConnectionStatus("connecting");
 
-    this.websocket.onclose = () => {
-      console.log("WebSocket disconnected");
-      this.updateConnectionStatus("disconnected");
-    };
+      // Check connection status periodically
+      const checkConnection = () => {
+        if (window.websocketManager.isConnected()) {
+          this.updateConnectionStatus("connected");
+        } else {
+          setTimeout(checkConnection, 100);
+        }
+      };
+      checkConnection();
+    } else {
+      // Fallback to direct WebSocket connection
+      this.websocket = new WebSocket(wsUrl);
 
-    this.websocket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      this.updateConnectionStatus("disconnected");
-    };
+      this.websocket.onopen = () => {
+        console.log("WebSocket connected");
+        this.updateConnectionStatus("connected");
+      };
+
+      this.websocket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        this.handleWebSocketMessage(message);
+      };
+
+      this.websocket.onclose = () => {
+        console.log("WebSocket disconnected");
+        this.updateConnectionStatus("disconnected");
+      };
+
+      this.websocket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        this.updateConnectionStatus("disconnected");
+      };
+    }
   }
 
   handleWebSocketMessage(message) {
@@ -861,6 +1005,7 @@ class GitHoundApp {
     const div = document.createElement("div");
     div.className = "result-item fade-in-up";
     div.style.animationDelay = `${index * 0.1}s`;
+    div.setAttribute('data-testid', 'result-card');
 
     const searchTypeBadge = `<span class="badge search-type-${
       result.search_type
@@ -872,11 +1017,11 @@ class GitHoundApp {
     let contentHtml = "";
     if (result.matching_line) {
       contentHtml = `
-                <div class="result-content">
+                <div class="result-content" data-testid="code-content">
                     ${this.escapeHtml(result.matching_line)}
                     ${
                       result.line_number
-                        ? `<small class="text-muted ms-2">Line ${result.line_number}</small>`
+                        ? `<small class="text-muted ms-2" data-testid="line-number">Line ${result.line_number}</small>`
                         : ""
                     }
                 </div>
@@ -886,7 +1031,7 @@ class GitHoundApp {
     let metaHtml = "";
     if (result.author_name || result.commit_date || result.commit_message) {
       metaHtml = `
-                <div class="result-meta">
+                <div class="result-meta" data-testid="commit-info">
                     ${
                       result.author_name
                         ? `<span class="badge bg-secondary">${this.escapeHtml(
@@ -925,7 +1070,7 @@ class GitHoundApp {
                 </div>
                 ${scoreBadge}
             </div>
-            <div class="result-file">
+            <div class="result-file" data-testid="file-path">
                 <i class="fas fa-file"></i> ${this.escapeHtml(result.file_path)}
             </div>
             ${contentHtml}
@@ -1134,6 +1279,331 @@ class GitHoundApp {
     document.getElementById("resultsCount").textContent =
       this.searchResults.length;
   }
+
+  // Authentication methods
+  initializeAuth() {
+    // Check for existing auth token
+    this.authToken = localStorage.getItem('access_token');
+    this.currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+
+    this.updateAuthUI();
+  }
+
+  updateAuthUI() {
+    const loginButton = document.querySelector('[data-testid="login-button"]');
+    const registerButton = document.querySelector('[data-testid="register-button"]');
+    const userMenu = document.querySelector('[data-testid="user-menu"]');
+    const usernameDisplay = document.querySelector('[data-testid="username-display"]');
+    const adminPanelLink = document.querySelector('[data-testid="admin-panel-link"]');
+
+    if (this.currentUser && this.authToken) {
+      // User is logged in
+      if (loginButton) loginButton.style.display = 'none';
+      if (registerButton) registerButton.style.display = 'none';
+      if (userMenu) userMenu.style.display = 'block';
+      if (usernameDisplay) usernameDisplay.textContent = this.currentUser.username;
+
+      // Show admin panel link if user is admin
+      if (adminPanelLink && this.currentUser.roles && this.currentUser.roles.includes('admin')) {
+        adminPanelLink.style.display = 'block';
+      }
+    } else {
+      // User is not logged in
+      if (loginButton) loginButton.style.display = 'inline-block';
+      if (registerButton) registerButton.style.display = 'inline-block';
+      if (userMenu) userMenu.style.display = 'none';
+      if (adminPanelLink) adminPanelLink.style.display = 'none';
+    }
+  }
+
+  async handleLogin() {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorElement = document.querySelector('[data-testid="login-error"]');
+
+    // Clear previous errors
+    this.clearValidationErrors('login');
+
+    if (!username || !password) {
+      this.showValidationError('login', 'username', 'Username is required');
+      this.showValidationError('login', 'password', 'Password is required');
+      return;
+    }
+
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store auth data
+        this.authToken = data.access_token;
+        this.currentUser = {
+          user_id: data.user_id,
+          username: username,
+          roles: data.roles || ['user']
+        };
+
+        localStorage.setItem('access_token', this.authToken);
+        localStorage.setItem('current_user', JSON.stringify(this.currentUser));
+
+        // Update UI
+        this.updateAuthUI();
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        modal.hide();
+
+        this.showAlert('Login successful!', 'success');
+      } else {
+        errorElement.textContent = data.detail || 'Invalid username or password';
+        errorElement.classList.remove('d-none');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      errorElement.textContent = 'Login failed. Please try again.';
+      errorElement.classList.remove('d-none');
+    }
+  }
+
+  async handleRegistration() {
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+    const successElement = document.querySelector('[data-testid="registration-success"]');
+    const errorElement = document.querySelector('[data-testid="registration-error"]');
+
+    // Clear previous messages
+    this.clearValidationErrors('register');
+    successElement.classList.add('d-none');
+    errorElement.classList.add('d-none');
+
+    // Validate form
+    let hasErrors = false;
+
+    if (!username) {
+      this.showValidationError('register', 'username', 'Username is required');
+      hasErrors = true;
+    }
+
+    if (!email) {
+      this.showValidationError('register', 'email', 'Email is required');
+      hasErrors = true;
+    }
+
+    if (!password) {
+      this.showValidationError('register', 'password', 'Password is required');
+      hasErrors = true;
+    }
+
+    if (password !== confirmPassword) {
+      this.showValidationError('register', 'password-mismatch', 'Passwords do not match');
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
+
+    try {
+      const response = await fetch('/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        successElement.classList.remove('d-none');
+        // Clear form
+        document.getElementById('registerForm').reset();
+      } else {
+        errorElement.textContent = data.detail || 'Registration failed. Please try again.';
+        errorElement.classList.remove('d-none');
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      errorElement.textContent = 'Registration failed. Please try again.';
+      errorElement.classList.remove('d-none');
+    }
+  }
+
+  logout() {
+    // Clear auth data
+    this.authToken = null;
+    this.currentUser = null;
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('current_user');
+
+    // Update UI
+    this.updateAuthUI();
+
+    this.showAlert('Logged out successfully', 'info');
+  }
+
+  clearValidationErrors(formType) {
+    const prefix = formType === 'login' ? 'login' : 'register';
+    const errors = document.querySelectorAll(`#${prefix}Form .invalid-feedback`);
+    errors.forEach(error => {
+      error.textContent = '';
+      error.previousElementSibling.classList.remove('is-invalid');
+    });
+  }
+
+  showValidationError(formType, field, message) {
+    const prefix = formType === 'login' ? 'login' : 'register';
+    let fieldName = field;
+
+    if (formType === 'register') {
+      if (field === 'username') fieldName = 'registerUsername';
+      else if (field === 'email') fieldName = 'registerEmail';
+      else if (field === 'password') fieldName = 'registerPassword';
+      else if (field === 'password-mismatch') fieldName = 'registerConfirmPassword';
+    } else {
+      if (field === 'username') fieldName = 'loginUsername';
+      else if (field === 'password') fieldName = 'loginPassword';
+    }
+
+    const input = document.getElementById(fieldName);
+    const errorElement = input.nextElementSibling;
+
+    if (input && errorElement && errorElement.classList.contains('invalid-feedback')) {
+      input.classList.add('is-invalid');
+      errorElement.textContent = message;
+    }
+  }
+
+  showProfile() {
+    // Load user profile data
+    const profileUsername = document.getElementById('profileUsername');
+    const profileEmail = document.getElementById('profileEmail');
+    const profileRole = document.getElementById('profileRole');
+
+    if (this.currentUser) {
+      profileUsername.value = this.currentUser.username;
+      profileEmail.value = this.currentUser.email || '';
+      profileRole.value = this.currentUser.roles ? this.currentUser.roles.join(', ') : 'user';
+    }
+
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+    modal.show();
+
+    // Show password change button when on password tab
+    const passwordTab = document.getElementById('change-password-tab');
+    const passwordButton = document.querySelector('[data-testid="submit-password-change"]');
+
+    passwordTab.addEventListener('shown.bs.tab', () => {
+      passwordButton.style.display = 'inline-block';
+    });
+
+    document.getElementById('profile-info-tab').addEventListener('shown.bs.tab', () => {
+      passwordButton.style.display = 'none';
+    });
+  }
+
+  async handlePasswordChange() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+    const successElement = document.querySelector('[data-testid="password-change-success"]');
+    const errorElement = document.querySelector('[data-testid="password-change-error"]');
+
+    // Clear previous messages
+    this.clearPasswordChangeErrors();
+    successElement.classList.add('d-none');
+    errorElement.classList.add('d-none');
+
+    // Validate form
+    let hasErrors = false;
+
+    if (!currentPassword) {
+      this.showPasswordChangeError('current-password', 'Current password is required');
+      hasErrors = true;
+    }
+
+    if (!newPassword) {
+      this.showPasswordChangeError('new-password', 'New password is required');
+      hasErrors = true;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      this.showPasswordChangeError('confirm-new-password', 'Passwords do not match');
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
+
+    try {
+      const response = await fetch('/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.authToken}`
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        successElement.classList.remove('d-none');
+        // Clear form
+        document.getElementById('changePasswordForm').reset();
+      } else {
+        errorElement.textContent = data.detail || 'Failed to change password. Please try again.';
+        errorElement.classList.remove('d-none');
+      }
+    } catch (error) {
+      console.error('Password change failed:', error);
+      errorElement.textContent = 'Failed to change password. Please try again.';
+      errorElement.classList.remove('d-none');
+    }
+  }
+
+  clearPasswordChangeErrors() {
+    const errors = document.querySelectorAll('#changePasswordForm .invalid-feedback');
+    errors.forEach(error => {
+      error.textContent = '';
+      error.previousElementSibling.classList.remove('is-invalid');
+    });
+  }
+
+  showPasswordChangeError(field, message) {
+    const input = document.getElementById(field === 'current-password' ? 'currentPassword' :
+                                        field === 'new-password' ? 'newPassword' : 'confirmNewPassword');
+    const errorElement = input.nextElementSibling;
+
+    if (input && errorElement && errorElement.classList.contains('invalid-feedback')) {
+      input.classList.add('is-invalid');
+      errorElement.textContent = message;
+    }
+  }
+
+  showAdminPanel() {
+    // Check if user has admin role
+    if (!this.currentUser || !this.currentUser.roles || !this.currentUser.roles.includes('admin')) {
+      this.showAlert('Access denied. Admin privileges required.', 'danger');
+      return;
+    }
+
+    // Show the admin modal
+    const modal = new bootstrap.Modal(document.getElementById('adminModal'));
+    modal.show();
+  }
 }
 
 // Global functions for HTML onclick handlers
@@ -1233,9 +1703,39 @@ function showHelp() {
   });
 }
 
+// Authentication functions
+function showLoginModal() {
+  const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+  modal.show();
+}
+
+function showRegisterModal() {
+  const modal = new bootstrap.Modal(document.getElementById('registerModal'));
+  modal.show();
+}
+
+function logout() {
+  if (window.app) {
+    window.app.logout();
+  }
+}
+
+function showProfile() {
+  if (window.app) {
+    window.app.showProfile();
+  }
+}
+
+function showAdminPanel() {
+  if (window.app) {
+    window.app.showAdminPanel();
+  }
+}
+
 // Initialize the application when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
   window.app = new GitHoundApp();
+  window.websocketManager = new WebSocketManager();
 
   // Load highlight.js if available
   if (typeof hljs !== 'undefined') {

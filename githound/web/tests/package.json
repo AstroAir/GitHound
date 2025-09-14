@@ -1,7 +1,7 @@
 {
   "name": "githound-web-tests",
   "version": "1.0.0",
-  "description": "Playwright tests for GitHound web interface",
+  "description": "Comprehensive Playwright tests for GitHound web interface",
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
@@ -10,6 +10,7 @@
     "test:chromium": "playwright test --project=chromium",
     "test:firefox": "playwright test --project=firefox",
     "test:webkit": "playwright test --project=webkit",
+    "test:edge": "playwright test --project='Microsoft Edge'",
     "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
     "test:auth": "playwright test --grep='@auth'",
     "test:search": "playwright test --grep='@search'",
@@ -18,13 +19,39 @@
     "test:performance": "playwright test --grep='@performance'",
     "test:accessibility": "playwright test --grep='@accessibility'",
     "test:smoke": "playwright test --grep='@smoke'",
+    "test:integration": "playwright test --grep='@integration'",
+    "test:websocket": "playwright test --grep='@websocket'",
+    "test:export": "playwright test --grep='@export'",
+    "test:responsive": "playwright test --grep='@responsive'",
+    "test:error-handling": "playwright test --grep='@error'",
+    "test:cross-browser": "playwright test --project=chromium --project=firefox --project=webkit --project='Microsoft Edge'",
+    "test:parallel": "playwright test --workers=4",
+    "test:serial": "playwright test --workers=1",
+    "test:retry": "playwright test --retries=3",
+    "test:slow": "playwright test --timeout=120000",
+    "test:fast": "playwright test --grep='@smoke|@auth' --timeout=30000",
+    "test:ci": "playwright test --reporter=github",
+    "test:coverage": "playwright test --reporter=html --reporter=json",
     "report": "playwright show-report",
+    "report:json": "playwright show-report test-results/results.json",
     "install-browsers": "playwright install",
-    "install-deps": "playwright install-deps"
+    "install-deps": "playwright install-deps",
+    "clean": "rm -rf test-results/ playwright-report/",
+    "setup": "npm run install-deps && npm run install-browsers"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
-    "axe-playwright": "^1.2.3"
+    "axe-playwright": "^1.2.3",
+    "csv-parser": "^3.0.0",
+    "faker": "^6.6.6",
+    "lighthouse": "^11.4.0",
+    "playwright-lighthouse": "^4.0.0",
+    "ws": "^8.14.2",
+    "yaml": "^2.3.4"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "dotenv": "^16.3.1"
   },
   "keywords": [
     "playwright",
@@ -32,8 +59,15 @@
     "e2e",
     "githound",
     "web",
-    "frontend"
+    "frontend",
+    "accessibility",
+    "performance",
+    "websocket",
+    "api-testing"
   ],
   "author": "GitHound Team",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

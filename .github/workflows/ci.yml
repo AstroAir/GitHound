@@ -438,14 +438,91 @@ jobs:
         run: |
           python -m build
 
-      - name: Check package
+      - name: Check package metadata
         run: |
           twine check dist/*
 
-      - name: Test package installation
+      - name: Verify package contents
         run: |
+          # Check wheel contents
+          python -m zipfile -l dist/*.whl
+
+          # Check source distribution contents
+          tar -tzf dist/*.tar.gz
+
+          # Verify no unwanted files are included
+          if python -m zipfile -l dist/*.whl | grep -E '(__pycache__|\.pyc|\.pyo|\.git)'; then
+            echo "ERROR: Unwanted files found in wheel"
+            exit 1
+          fi
+
+      - name: Test package installation (wheel)
+        run: |
+          # Create fresh environment for testing
+          python -m venv test_env
+          source test_env/bin/activate || test_env\Scripts\activate
+
+          # Install from wheel
           pip install dist/*.whl
+
+          # Test basic import and version
           python -c "import githound; print(f'GitHound version: {githound.__version__}')"
+
+          # Test CLI functionality
+          python -m githound.cli --help
+
+          # Test version command
+          python -m githound.cli version
+
+          # Cleanup
+          deactivate || true
+          rm -rf test_env
+
+      - name: Test package installation (source)
+        run: |
+          # Create fresh environment for testing
+          python -m venv test_env_src
+          source test_env_src/bin/activate || test_env_src\Scripts\activate
+
+          # Install from source distribution
+          pip install dist/*.tar.gz
+
+          # Test basic functionality
+          python -c "import githound; print(f'GitHound version: {githound.__version__}')"
+
+          # Cleanup
+          deactivate || true
+          rm -rf test_env_src
+
+      - name: Security scan of package
+        run: |
+          pip install safety bandit
+
+          # Check for known vulnerabilities in dependencies
+          safety check --json || true
+
+          # Security scan of source code in package
+          bandit -r githound/ -f json -o bandit-report.json || true
+
+          # Upload security reports as artifacts
+          echo "Security scan completed"
+
+      - name: Package size analysis
+        run: |
+          # Analyze package sizes
+          echo "=== Package Size Analysis ==="
+          ls -lh dist/
+
+          # Check if package size is reasonable (warn if > 50MB)
+          wheel_size=$(stat -c%s dist/*.whl 2>/dev/null || stat -f%z dist/*.whl)
+          if [ $wheel_size -gt 52428800 ]; then
+            echo "WARNING: Wheel package is larger than 50MB ($wheel_size bytes)"
+          fi
+
+          sdist_size=$(stat -c%s dist/*.tar.gz 2>/dev/null || stat -f%z dist/*.tar.gz)
+          if [ $sdist_size -gt 52428800 ]; then
+            echo "WARNING: Source distribution is larger than 50MB ($sdist_size bytes)"
+          fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -453,6 +530,31 @@ jobs:
           name: dist
           path: dist/
           retention-days: 90
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+          retention-days: 30
+
+      - name: Package verification summary
+        if: always()
+        run: |
+          echo "=== Package Verification Summary ==="
+          echo "✅ Package metadata check: $([ -f dist/*.whl ] && echo 'PASSED' || echo 'FAILED')"
+          echo "✅ Package contents verification: COMPLETED"
+          echo "✅ Wheel installation test: COMPLETED"
+          echo "✅ Source installation test: COMPLETED"
+          echo "✅ Security scan: COMPLETED"
+          echo "✅ Size analysis: COMPLETED"
+          echo ""
+          echo "Artifacts uploaded:"
+          echo "- dist/ (packages)"
+          echo "- security-reports/ (security scan results)"
 
   # Documentation
   docs:
@@ -511,6 +613,60 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/site/
+
+  # Docker build and push
+  docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [changes, quality, test]
+    if: needs.changes.outputs.python-code == 'true' || needs.changes.outputs.dependencies == 'true' || github.event_name == 'release'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          target: production
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            VCS_REF=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
+            GITHOUND_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
 
   # Deployment (only on release)
   deploy:

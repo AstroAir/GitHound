@@ -3,10 +3,12 @@ Test data management for GitHound web tests.
 """
 
 import json
+import random
+import string
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class TestDataManager:
@@ -218,3 +220,130 @@ class TestDataManager:
         """Reset test data to initial state."""
         self.cleanup()
         self._ensure_data_file()
+
+    # Enhanced test data generation methods
+
+    def generate_random_string(self, length: int = 10) -> str:
+        """Generate a random string for testing."""
+        return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+    def generate_test_email(self) -> str:
+        """Generate a unique test email."""
+        return f"test_{self.generate_random_string(8)}@example.com"
+
+    def generate_test_password(self, include_special: bool = True) -> str:
+        """Generate a secure test password."""
+        chars = string.ascii_letters + string.digits
+        if include_special:
+            chars += "!@#$%^&*"
+        return ''.join(random.choices(chars, k=12))
+
+    def create_invalid_user_data(self) -> List[Dict[str, Any]]:
+        """Create various invalid user data for testing validation."""
+        return [
+            {"username": "", "email": "test@example.com", "password": "password123"},  # Empty username
+            {"username": "test", "email": "invalid-email", "password": "password123"},  # Invalid email
+            {"username": "test", "email": "test@example.com", "password": "123"},  # Weak password
+            {"username": "a", "email": "test@example.com", "password": "password123"},  # Short username
+            {"username": "test", "email": "", "password": "password123"},  # Empty email
+            {"username": "test", "email": "test@example.com", "password": ""},  # Empty password
+            {"username": "test" * 50, "email": "test@example.com", "password": "password123"},  # Long username
+        ]
+
+    def create_performance_test_data(self) -> Dict[str, Any]:
+        """Create data for performance testing."""
+        return {
+            "large_query": "function class method import export async await def return",
+            "expected_min_results": 100,
+            "max_response_time_ms": 5000,
+            "concurrent_users": 5,
+            "stress_test_duration_seconds": 30,
+            "large_file_patterns": ["*.py", "*.js", "*.ts", "*.java", "*.cpp", "*.c"],
+            "memory_limit_mb": 512
+        }
+
+    def create_websocket_test_data(self) -> Dict[str, Any]:
+        """Create data for WebSocket testing."""
+        return {
+            "connection_timeout_ms": 5000,
+            "message_timeout_ms": 1000,
+            "max_reconnect_attempts": 3,
+            "test_messages": [
+                {"type": "search_progress", "data": {"progress": 25, "status": "searching"}},
+                {"type": "search_progress", "data": {"progress": 50, "status": "processing"}},
+                {"type": "search_progress", "data": {"progress": 75, "status": "formatting"}},
+                {"type": "search_complete", "data": {"results_count": 42, "status": "completed"}},
+            ]
+        }
+
+    def create_accessibility_test_data(self) -> Dict[str, Any]:
+        """Create data for accessibility testing."""
+        return {
+            "keyboard_navigation_elements": [
+                "login-button", "username-input", "password-input", "submit-login",
+                "search-query-input", "submit-search", "user-menu", "logout-button"
+            ],
+            "aria_labels": [
+                "Search repository", "User menu", "Export results", "Filter options"
+            ],
+            "color_contrast_elements": [
+                "button", "input", "link", "text", "background"
+            ],
+            "screen_reader_text": [
+                "Search completed", "Results found", "Error occurred", "Loading"
+            ]
+        }
+
+    def create_export_test_data(self) -> List[Dict[str, Any]]:
+        """Create various export format test data."""
+        base_results = self.create_sample_search_results()
+        return [
+            {
+                "format": "json",
+                "filename": "test_export.json",
+                "data": base_results,
+                "expected_content_type": "application/json"
+            },
+            {
+                "format": "csv",
+                "filename": "test_export.csv",
+                "data": base_results,
+                "expected_content_type": "text/csv"
+            },
+            {
+                "format": "yaml",
+                "filename": "test_export.yaml",
+                "data": base_results,
+                "expected_content_type": "application/x-yaml"
+            }
+        ]
+
+    def create_error_scenarios(self) -> List[Dict[str, Any]]:
+        """Create various error scenarios for testing."""
+        return [
+            {
+                "name": "invalid_repository",
+                "data": {"repo_path": "/nonexistent/repo", "query": "test"},
+                "expected_error": "Repository not found"
+            },
+            {
+                "name": "empty_query",
+                "data": {"repo_path": "/test/repo", "query": ""},
+                "expected_error": "Query cannot be empty"
+            },
+            {
+                "name": "invalid_file_type",
+                "data": {"repo_path": "/test/repo", "query": "test", "file_types": ["invalid"]},
+                "expected_error": "Invalid file type"
+            },
+            {
+                "name": "network_timeout",
+                "data": {"simulate_timeout": True},
+                "expected_error": "Request timeout"
+            },
+            {
+                "name": "server_error",
+                "data": {"simulate_server_error": True},
+                "expected_error": "Internal server error"
+            }
+        ]

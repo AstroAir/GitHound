@@ -505,7 +505,16 @@ class GitHound:
 
 
 # Version information
-__version__ = "0.1.0"
+try:
+    from ._version import __version__
+except ImportError:
+    # Fallback for development installations
+    try:
+        from importlib.metadata import version
+        __version__ = version("githound")
+    except ImportError:
+        # Final fallback
+        __version__ = "0.1.0-dev"
 
 # Export the main class and key components
 __all__ = ["GitHound", "SearchQuery", "SearchResult",

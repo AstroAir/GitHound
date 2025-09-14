@@ -17,11 +17,25 @@ Commands:
     health      - Health check for services
 """
 
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+import requests
+import typer
+from rich.live import Live
+from rich.table import Table
 from utils import (
+    StatusContext,
     check_port_available,
+    confirm,
     console,
     get_free_port,
     get_project_root,
+    is_windows,
     print_error,
     print_header,
     print_info,
@@ -29,23 +43,7 @@ from utils import (
     print_step,
     print_success,
     print_warning,
-    run_command_with_output,
-    StatusContext,
-    confirm,
-    is_windows,
 )
-import json
-import signal
-import subprocess
-import sys
-import time
-from pathlib import Path
-from typing import Optionalnal, Tuple
-
-import typer
-import requests
-from rich.live import Live
-from rich.table import Table
 
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -95,7 +93,7 @@ class ServiceManager:
         log_file = self.services_config[service]["log_file"]  # [attr-defined]
         return self.project_root / log_file
 
-    def is_service_running(self, service: str) -> Tuple[bool, Optional[int]]:
+    def is_service_running(self, service: str) -> tuple[bool, int | None]:
         """Check if service is running and return PID if found."""
         pid_file = self.get_service_pid_file(service)
 
@@ -134,7 +132,7 @@ class ServiceManager:
     def start_service(
         self,
         service: str,
-        port: Optional[int] = None,
+        port: int | None = None,
         host: str = "localhost",
         background: bool = True
     ) -> bool:
@@ -158,7 +156,7 @@ class ServiceManager:
         if not check_port_available(port, host):
             print_error(f"Port {port} is not available")
             # Try to find alternative port
-            alt_port = get_free_port(port + 1)
+            alt_port = get_free_port(port + 1) if port is not None else None
             if alt_port and confirm(f"Use port {alt_port} instead?"):
                 port = alt_port
             else:
@@ -199,7 +197,7 @@ class ServiceManager:
                 else:
                     # Start in foreground
                     process = subprocess.run(command, cwd=self.project_root)
-                    return process.returncode = = 0
+                    return process.returncode == 0
 
             print_success(f"{config['name']} started on {host}:{port}")
             print_info(f"PID: {process.pid}")
@@ -264,7 +262,7 @@ class ServiceManager:
             print_error(f"Failed to stop {config['name']}: {e}")
             return False
 
-    def get_service_status(self, service: str) -> Dict:
+    def get_service_status(self, service: str) -> dict:
         """Get detailed service status."""
         if service not in self.services_config:  # [attr-defined]
             return {"error": f"Unknown service: {service}"}
@@ -286,7 +284,7 @@ class ServiceManager:
             try:
                 url = f"http://localhost:{config['default_port']}{config['health_endpoint']}"
                 response = requests.get(url, timeout=5)
-                status["health"] = "healthy" if response.status_code = = 200 else "unhealthy"
+                status["health"] = "healthy" if response.status_code == 200 else "unhealthy"
                 status["health_details"] = response.json() if response.headers.get(
                     "content-type", "").startswith("application/json") else response.text
             except Exception as e:
@@ -295,7 +293,7 @@ class ServiceManager:
 
         return status
 
-    def health_check(self, service: Optional[str] = None) -> Dict:
+    def health_check(self, service: str | None = None) -> dict:
         """Perform health check on services."""
         if service:
             services = [service] if service in self.services_config else []  # [attr-defined]
@@ -313,7 +311,7 @@ class ServiceManager:
 def start(
     service: str = typer.Argument(...,
                                   help="Service to start (web, mcp, or all)"),
-    port: Optional[int] = typer.Option(
+    port: int | None = typer.Option(
         None, "--port", "-p", help="Port to use"),
     host: str = typer.Option("localhost", "--host",
                              "-h", help="Host to bind to"),
@@ -377,7 +375,7 @@ def stop(
 def restart(
     service: str = typer.Argument(...,
                                   help="Service to restart (web, mcp, or all)"),
-    port: Optional[int] = typer.Option(
+    port: int | None = typer.Option(
         None, "--port", "-p", help="Port to use"),
     host: str = typer.Option("localhost", "--host",
                              "-h", help="Host to bind to"),
@@ -410,7 +408,7 @@ def restart(
 
 @app.command()
 def status(
-    service: Optional[str] = typer.Argument(
+    service: str | None = typer.Argument(
         None, help="Service to check (web, mcp, or all)"),
     watch: bool = typer.Option(
         False, "--watch", "-w", help="Watch status continuously"),
@@ -428,7 +426,7 @@ def status(
 
         health_results = manager.health_check(service)
 
-        for svc, status_info in health_results.items():
+        for _svc, status_info in health_results.items():
             status_text = "🟢 Running" if status_info["running"] else "🔴 Stopped"
             pid_text = str(status_info["pid"]) if status_info["pid"] else "-"
             port_text = str(status_info["port"])
@@ -481,7 +479,7 @@ def logs(
     if follow:
         # Follow logs (tail -f equivalent)
         try:
-            with open(log_file, 'r') as f:
+            with open(log_file) as f:
                 # Go to end of file
                 f.seek(0, 2)
 
@@ -497,7 +495,7 @@ def logs(
     else:
         # Show last N lines
         try:
-            with open(log_file, 'r') as f:
+            with open(log_file) as f:
                 all_lines = f.readlines()
                 recent_lines = all_lines[-lines:] if len(
                     all_lines) > lines else all_lines
@@ -510,7 +508,7 @@ def logs(
 
 @app.command()
 def health(
-    service: Optional[str] = typer.Argument(
+    service: str | None = typer.Argument(
         None, help="Service to check (web, mcp, or all)"),
 ) -> None:
     """Perform health check on services."""

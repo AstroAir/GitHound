@@ -8,30 +8,33 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        GITHOUND_VERSION: "0.1.0"
+        GITHOUND_VERSION: "${GITHOUND_VERSION:-latest}"
         BUILD_DATE: "${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}"
         VCS_REF: "${VCS_REF:-$(git rev-parse --short HEAD)}"
     container_name: githound-web
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${GITHOUND_WEB_PORT:-8000}:8000"
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
       - GITHOUND_DATA_DIR=/app/data
       - GITHOUND_LOG_DIR=/app/logs
       - GITHOUND_CACHE_DIR=/app/cache
       - REDIS_URL=redis://redis:6379/0
       - GITHOUND_WEB_HOST=0.0.0.0
       - GITHOUND_WEB_PORT=8000
-      - GITHOUND_LOG_LEVEL=info
+      - GITHOUND_LOG_LEVEL=${GITHOUND_LOG_LEVEL:-info}
+      - GITHOUND_ENV=${GITHOUND_ENV:-production}
     volumes:
       - githound_data:/app/data
       - githound_logs:/app/logs
       - githound_cache:/app/cache
       - ./repositories:/app/repositories:ro  # Mount repositories for analysis
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - githound-network
     healthcheck:
@@ -40,6 +43,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Set to true if app doesn't need write access
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
     command: ["uvicorn", "githound.web.api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
 
   # GitHound MCP Server Service
@@ -49,38 +65,54 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        GITHOUND_VERSION: "0.1.0"
+        GITHOUND_VERSION: "${GITHOUND_VERSION:-latest}"
         BUILD_DATE: "${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}"
         VCS_REF: "${VCS_REF:-$(git rev-parse --short HEAD)}"
     container_name: githound-mcp
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${GITHOUND_MCP_PORT:-3000}:3000"
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
       - GITHOUND_DATA_DIR=/app/data
       - GITHOUND_LOG_DIR=/app/logs
       - GITHOUND_CACHE_DIR=/app/cache
       - REDIS_URL=redis://redis:6379/1
       - GITHOUND_MCP_HOST=0.0.0.0
       - GITHOUND_MCP_PORT=3000
-      - GITHOUND_LOG_LEVEL=info
+      - GITHOUND_LOG_LEVEL=${GITHOUND_LOG_LEVEL:-info}
+      - GITHOUND_ENV=${GITHOUND_ENV:-production}
     volumes:
       - githound_data:/app/data
       - githound_logs:/app/logs
       - githound_cache:/app/cache
       - ./repositories:/app/repositories:ro  # Mount repositories for analysis
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - githound-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 3000)); s.close()' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
     command: ["python", "-m", "githound.mcp_server", "--host", "0.0.0.0", "--port", "3000"]
 
   # Redis Cache Service
@@ -89,9 +121,10 @@ services:
     container_name: githound-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+      - redis_config:/usr/local/etc/redis
     networks:
       - githound-network
     healthcheck:
@@ -99,7 +132,28 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
+    user: "999:999"  # Redis user
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --tcp-keepalive 300
+      --timeout 0
 
   # Nginx Reverse Proxy (Optional)
   nginx:
@@ -107,33 +161,95 @@ services:
     container_name: githound-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./docker/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+      - nginx_logs:/var/log/nginx
     depends_on:
-      - githound-web
-      - githound-mcp
+      githound-web:
+        condition: service_healthy
+      githound-mcp:
+        condition: service_healthy
+    networks:
+      - githound-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - production
+
+  # Monitoring (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: githound-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./docker/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
     networks:
       - githound-network
     profiles:
-      - production
+      - monitoring
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
 
 volumes:
   githound_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${GITHOUND_DATA_PATH:-./data}
   githound_logs:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${GITHOUND_LOGS_PATH:-./logs}
   githound_cache:
     driver: local
   redis_data:
+    driver: local
+  redis_config:
+    driver: local
+  nginx_cache:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
     driver: local
 
 networks:
   githound-network:
     driver: bridge
     ipam:
+      driver: default
       config:
         - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.bridge.name: githound-br0

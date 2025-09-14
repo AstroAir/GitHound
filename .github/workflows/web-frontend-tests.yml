@@ -95,11 +95,16 @@ jobs:
     - name: Run Playwright tests - ${{ matrix.browser }}
       run: |
         cd githound/web/tests
-        playwright test --project=${{ matrix.browser }} --reporter=html:test-results/playwright-report-${{ matrix.browser }} --reporter=junit:test-results/playwright-results-${{ matrix.browser }}.xml
+        playwright test --project=${{ matrix.browser }} \
+          --reporter=html:test-results/playwright-report-${{ matrix.browser }} \
+          --reporter=junit:test-results/playwright-results-${{ matrix.browser }}.xml \
+          --reporter=./utils/custom-reporter.js:test-results/custom-report-${{ matrix.browser }}
       env:
         BROWSER: ${{ matrix.browser }}
         HEADLESS: true
         RECORD_VIDEO: true
+        RECORD_TRACE: true
+        TAKE_SCREENSHOTS: true
 
     - name: Run integration tests
       run: |
@@ -110,6 +115,20 @@ jobs:
       run: |
         pytest githound/web/tests/ -m "performance" --browser=chromium --html=test-results/performance-report.html
 
+    - name: Generate coverage reports
+      if: matrix.browser == 'chromium' && matrix.python-version == '3.11'
+      run: |
+        cd githound/web/tests
+        node -e "
+          const CoverageReporter = require('./utils/coverage-reporter.js');
+          const reporter = new CoverageReporter({
+            outputDir: 'test-results/coverage',
+            generateHtml: true,
+            threshold: { statements: 75, branches: 70, functions: 75, lines: 75 }
+          });
+          reporter.generateReports();
+        "
+
     - name: Upload test results
       uses: actions/upload-artifact@v3
       if: always()
@@ -118,6 +137,19 @@ jobs:
         path: |
           test-results/
           githound/web/tests/test-results/
+        retention-days: 30
+
+    - name: Upload enhanced test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: enhanced-artifacts-${{ matrix.browser }}-py${{ matrix.python-version }}
+        path: |
+          githound/web/tests/test-results/custom/
+          githound/web/tests/test-results/coverage/
+          githound/web/tests/test-results/screenshots/
+          githound/web/tests/test-results/videos/
+          githound/web/tests/test-results/traces/
         retention-days: 30
 
     - name: Upload coverage to Codecov

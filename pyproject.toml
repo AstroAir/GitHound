@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "githound"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Advanced Git repository analysis and search tool with MCP server capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -241,6 +241,15 @@ precision = 2
 directory = "htmlcov"
 
 # Hatch build configuration
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "githound/_version.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["githound"]
 
@@ -285,6 +294,9 @@ test = [
     "pytest-xdist>=3.0.0",
     "httpx>=0.25.0",
     "respx>=0.20.0",
+    "playwright>=1.40.0",
+    "pytest-playwright>=0.4.0",
+    "axe-playwright>=1.2.3",
 ]
 docs = [
     "mkdocs>=1.5.0",

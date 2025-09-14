@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-09-12T10:51:58.691Z",
+  "duration": 392,
+  "totalTests": 4018,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 0,
+  "flaky": 0,
+  "successRate": "0.00%",
+  "averageTestTime": "NaNms",
+  "artifacts": {
+    "screenshots": 0,
+    "videos": 0,
+    "traces": 0
+  }
+}

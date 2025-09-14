@@ -1187,7 +1187,11 @@ def mcp_server(
 
 
 @app.command()
-def version() -> None:
+def version(
+    build_info: bool = typer.Option(
+        False, "--build-info", "-b", help="Show detailed build information"
+    )
+) -> None:
     """Show GitHound version and system information."""
     try:
         import platform
@@ -1195,42 +1199,63 @@ def version() -> None:
 
         from git import __version__ as git_version
 
-        import githound
+        from .utils.version import format_version_info, get_build_info, is_development_version
 
         console.print("[bold blue]🐕 GitHound Version Information[/bold blue]")
         console.print()
 
-        # GitHound version
-        try:
-            version_str = githound.__version__
-        except AttributeError:
-            version_str = "development"
-        console.print(f"[green]GitHound:[/green] {version_str}")
+        # GitHound version with optional build info
+        if build_info:
+            version_display = format_version_info(include_build_info=True)
+            for line in version_display.split('\n'):
+                console.print(f"[green]{line}[/green]")
+        else:
+            version_str = format_version_info(include_build_info=False)
+            console.print(f"[green]GitHound:[/green] {version_str}")
+
+            if is_development_version():
+                console.print("[yellow]⚠ Development version[/yellow]")
+
+        console.print()
 
         # Dependencies
         console.print(f"[green]GitPython:[/green] {git_version}")
         console.print(f"[green]Python:[/green] {sys.version.split()[0]}")
         console.print(
-            f"[green]Platform:[/green] {platform.system if platform is not None else None()} {platform.release()}")
+            f"[green]Platform:[/green] {platform.system()} {platform.release()}")
 
         # Optional dependencies
         optional_deps: list[Any] = []
         try:
             import pandas
-
             optional_deps.append(f"pandas {pandas.__version__}")
         except (ImportError, AttributeError):
             optional_deps.append("pandas (not available)")
 
         try:
             import yaml
-
             optional_deps.append(f"PyYAML {yaml.__version__}")
         except (ImportError, AttributeError):
             optional_deps.append("PyYAML (not available)")
 
+        try:
+            import uvicorn
+            optional_deps.append(f"uvicorn {uvicorn.__version__}")
+        except (ImportError, AttributeError):
+            optional_deps.append("uvicorn (not available)")
+
         console.print(f"[green]Optional:[/green] {', '.join(optional_deps)}")
 
+        # Build information (if requested)
+        if build_info:
+            console.print()
+            build_data = get_build_info()
+            console.print("[bold]Build Information:[/bold]")
+            for key, value in build_data.items():
+                if value is not None:
+                    console.print(f"  [dim]{key}:[/dim] {value}")
+
+        # Footer
         console.print()
         console.print(
             "[dim]For more information, visit: https://github.com/your-org/githound[/dim]"

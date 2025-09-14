@@ -1,0 +1,27 @@
+{
+  "startTime": "2025-09-12T10:51:58.299Z",
+  "endTime": "2025-09-12T10:51:58.691Z",
+  "totalTests": 4018,
+  "passedTests": 0,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "flakyTests": 0,
+  "suites": [],
+  "errors": [],
+  "performance": {
+    "slowestTests": [],
+    "averageTestTime": null,
+    "totalTestTime": 0
+  },
+  "coverage": {
+    "statements": 0,
+    "branches": 0,
+    "functions": 0,
+    "lines": 0
+  },
+  "artifacts": {
+    "screenshots": [],
+    "videos": [],
+    "traces": []
+  }
+}

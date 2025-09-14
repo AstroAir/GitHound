@@ -45,23 +45,73 @@
     <!-- Connection Status Indicator will be created dynamically by JavaScript -->
 
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg" data-testid="desktop-navigation">
       <div class="container">
         <span class="navbar-brand mb-0 h1">
           <i class="fas fa-dog"></i> GitHound
         </span>
-        <span class="navbar-text">
+        <span class="navbar-text d-none d-lg-inline">
           <i class="fas fa-search me-2"></i>Advanced Git History Search
         </span>
-        <div class="navbar-nav ms-auto">
+
+        <!-- Mobile Menu Button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" aria-label="Toggle navigation" data-testid="mobile-menu-button">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="navbar-nav ms-auto d-none d-lg-flex">
+          <!-- Authentication buttons (will be shown/hidden by JavaScript) -->
+          <button type="button" class="btn btn-outline-light btn-sm me-2" data-testid="login-button" onclick="showLoginModal()" style="display: none;">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+          <button type="button" class="btn btn-outline-light btn-sm me-2" data-testid="register-button" onclick="showRegisterModal()" style="display: none;">
+            <i class="fas fa-user-plus"></i> Register
+          </button>
+          <!-- User menu (will be shown when logged in) -->
+          <div class="dropdown" data-testid="user-menu" style="display: none;">
+            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user"></i> <span data-testid="username-display">User</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" data-testid="profile-link" onclick="showProfile()"><i class="fas fa-user-cog"></i> Profile</a></li>
+              <li><a class="dropdown-item" href="#" data-testid="admin-panel-link" onclick="showAdminPanel()" style="display: none;"><i class="fas fa-shield-alt"></i> Admin Panel</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" data-testid="logout-button" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+          </div>
           <button type="button" class="btn btn-outline-light btn-sm" onclick="showHelp()">
             <i class="fas fa-question-circle"></i> Help
           </button>
         </div>
+
+        <!-- Mobile Menu -->
+        <div class="collapse navbar-collapse d-lg-none" id="mobileMenu" data-testid="mobile-menu">
+          <div class="navbar-nav">
+            <div class="nav-item" id="mobileUserMenuContainer" style="display: none;">
+              <a class="nav-link" href="#" data-testid="mobile-profile-link" onclick="showProfile()">
+                <i class="fas fa-user"></i> Profile
+              </a>
+              <a class="nav-link" href="#" data-testid="mobile-admin-link" onclick="showAdminPanel()" style="display: none;">
+                <i class="fas fa-cog"></i> Admin Panel
+              </a>
+              <a class="nav-link" href="#" data-testid="mobile-logout-link" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </div>
+            <div id="mobileAuthButtons">
+              <a class="nav-link" href="#" data-testid="mobile-login-button" onclick="showLoginModal()">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </a>
+              <a class="nav-link" href="#" data-testid="mobile-register-button" onclick="showRegisterModal()">
+                <i class="fas fa-user-plus"></i> Register
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4" data-testid="main-container">
       <!-- Dashboard Section -->
       <div class="row mb-4">
         <div class="col-md-3">
@@ -160,7 +210,7 @@
           </div>
         </div>
         <div class="card-body">
-          <form id="searchForm">
+          <form id="searchForm" data-testid="search-form">
             <!-- Repository Path -->
             <div class="row mb-3">
               <div class="col-md-6">
@@ -171,10 +221,12 @@
                   type="text"
                   class="form-control"
                   id="repoPath"
+                  data-testid="repo-path-input"
                   required
                   placeholder="/path/to/git/repository"
                   value="."
                 />
+                <div class="invalid-feedback" data-testid="repo-path-error"></div>
               </div>
               <div class="col-md-6">
                 <label for="branch" class="form-label">Branch</label>
@@ -182,6 +234,7 @@
                   type="text"
                   class="form-control"
                   id="branch"
+                  data-testid="branch-input"
                   placeholder="main (leave empty for current branch)"
                 />
               </div>
@@ -195,6 +248,7 @@
                   id="content-tab"
                   data-bs-toggle="tab"
                   data-bs-target="#content"
+                  data-testid="content-search-tab"
                   type="button"
                   role="tab"
                 >
@@ -207,6 +261,7 @@
                   id="commit-tab"
                   data-bs-toggle="tab"
                   data-bs-target="#commit"
+                  data-testid="commit-search-tab"
                   type="button"
                   role="tab"
                 >
@@ -219,6 +274,7 @@
                   id="files-tab"
                   data-bs-toggle="tab"
                   data-bs-target="#files"
+                  data-testid="files-search-tab"
                   type="button"
                   role="tab"
                 >
@@ -231,10 +287,63 @@
                   id="advanced-tab"
                   data-bs-toggle="tab"
                   data-bs-target="#advanced"
+                  data-testid="advanced-search-tab"
                   type="button"
                   role="tab"
                 >
                   <i class="fas fa-cogs"></i> Advanced
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="fuzzy-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#fuzzy"
+                  data-testid="fuzzy-search-tab"
+                  type="button"
+                  role="tab"
+                >
+                  <i class="fas fa-search-plus"></i> Fuzzy
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="historical-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#historical"
+                  data-testid="historical-search-tab"
+                  type="button"
+                  role="tab"
+                >
+                  <i class="fas fa-history"></i> Historical
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="filters-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#filters"
+                  data-testid="filters-tab"
+                  type="button"
+                  role="tab"
+                >
+                  <i class="fas fa-filter"></i> Filters
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link"
+                  id="history-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#history"
+                  data-testid="search-history-tab"
+                  type="button"
+                  role="tab"
+                >
+                  <i class="fas fa-clock"></i> History
                 </button>
               </li>
             </ul>
@@ -255,8 +364,10 @@
                       type="text"
                       class="form-control"
                       id="contentPattern"
+                      data-testid="search-query-input"
                       placeholder="Regular expression or text to search for"
                     />
+                    <div class="invalid-feedback" data-testid="query-error"></div>
                   </div>
                   <div class="col-md-4">
                     <label class="form-label">&nbsp;</label>
@@ -265,6 +376,7 @@
                         class="form-check-input"
                         type="checkbox"
                         id="caseSensitive"
+                        data-testid="case-sensitive-checkbox"
                       />
                       <label class="form-check-label" for="caseSensitive">
                         Case Sensitive
@@ -448,6 +560,127 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Fuzzy Search -->
+              <div class="tab-pane fade" id="fuzzy" role="tabpanel">
+                <div class="row">
+                  <div class="col-md-8">
+                    <label for="fuzzyQuery" class="form-label">Fuzzy Search Query</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="fuzzyQuery"
+                      data-testid="fuzzy-query-input"
+                      placeholder="Search with typos and approximate matches"
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <label for="fuzzyThresholdInput" class="form-label">Fuzzy Threshold</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="fuzzyThresholdInput"
+                      data-testid="fuzzy-threshold"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value="0.8"
+                      placeholder="0.8"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Historical Search -->
+              <div class="tab-pane fade" id="historical" role="tabpanel">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="historicalDateFrom" class="form-label">From Date</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      id="historicalDateFrom"
+                      data-testid="historical-date-from"
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="historicalDateTo" class="form-label">To Date</label>
+                    <input
+                      type="date"
+                      class="form-control"
+                      id="historicalDateTo"
+                      data-testid="historical-date-to"
+                    />
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-12">
+                    <label for="historicalQuery" class="form-label">Historical Query</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="historicalQuery"
+                      data-testid="historical-query-input"
+                      placeholder="Search in historical commits"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filters -->
+              <div class="tab-pane fade" id="filters" role="tabpanel">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label class="form-label">File Types</label>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fileTypePy" data-testid="file-type-py">
+                      <label class="form-check-label" for="fileTypePy">Python (.py)</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fileTypeJs" data-testid="file-type-js">
+                      <label class="form-check-label" for="fileTypeJs">JavaScript (.js)</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fileTypeJava" data-testid="file-type-java">
+                      <label class="form-check-label" for="fileTypeJava">Java (.java)</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fileTypeCpp" data-testid="file-type-cpp">
+                      <label class="form-check-label" for="fileTypeCpp">C++ (.cpp)</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="authorFilter" class="form-label">Author Filter</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="authorFilter"
+                      data-testid="author-filter"
+                      placeholder="Filter by author email or name"
+                    />
+                    <label for="maxResultsFilter" class="form-label mt-3">Max Results</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="maxResultsFilter"
+                      data-testid="max-results"
+                      min="1"
+                      max="1000"
+                      value="100"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Search History -->
+              <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="mt-3">
+                  <h6>Recent Searches</h6>
+                  <div id="searchHistoryContainer" data-testid="search-history-container">
+                    <p class="text-muted">No search history available.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Search Button -->
@@ -457,6 +690,7 @@
                   type="submit"
                   class="btn btn-primary btn-lg"
                   id="searchButton"
+                  data-testid="submit-search"
                 >
                   <i class="fas fa-search"></i> Start Search
                 </button>
@@ -464,6 +698,7 @@
                   type="button"
                   class="btn btn-secondary btn-lg ms-2 d-none"
                   id="cancelButton"
+                  data-testid="cancel-search"
                 >
                   <i class="fas fa-stop"></i> Cancel Search
                 </button>
@@ -474,7 +709,7 @@
       </div>
 
       <!-- Progress Section -->
-      <div class="card mb-4 d-none" id="progressCard">
+      <div class="card mb-4 d-none" id="progressCard" data-testid="search-progress">
         <div class="card-header">
           <h5 class="mb-0">
             <i class="fas fa-spinner fa-spin"></i> Search Progress
@@ -485,6 +720,7 @@
             <div
               class="progress-bar progress-bar-striped progress-bar-animated progress-bar-initial"
               id="progressBar"
+              data-testid="progress-bar"
               role="progressbar"
               aria-valuenow="0"
               aria-valuemin="0"
@@ -492,23 +728,28 @@
               aria-label="Search progress"
             ></div>
           </div>
-          <div id="progressMessage" class="text-muted">
+          <div id="progressMessage" class="text-muted" data-testid="progress-message">
             Initializing search...
           </div>
           <div class="row mt-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <small class="text-muted"
-                >Results Found: <span id="resultsCount">0</span></small
+                >Results Found: <span id="resultsCount" data-testid="results-count">0</span></small
               >
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <small class="text-muted"
-                >Status: <span id="searchStatus">Starting</span></small
+                >Status: <span id="searchStatus" data-testid="search-status">Starting</span></small
               >
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <small class="text-muted"
-                >Search ID: <span id="searchId">-</span></small
+                >Type: <span id="searchType" data-testid="search-type-indicator">Content Search</span></small
+              >
+            </div>
+            <div class="col-md-3">
+              <small class="text-muted"
+                >Search ID: <span id="searchId" data-testid="search-id">-</span></small
               >
             </div>
           </div>
@@ -516,7 +757,7 @@
       </div>
 
       <!-- Results Section -->
-      <div class="card d-none" id="resultsCard">
+      <div class="card d-none" id="resultsCard" data-testid="search-results">
         <div
           class="card-header d-flex justify-content-between align-items-center"
         >
@@ -526,6 +767,7 @@
               type="button"
               class="btn btn-outline-primary btn-sm"
               id="exportJson"
+              data-testid="export-json"
             >
               <i class="fas fa-download"></i> JSON
             </button>
@@ -533,14 +775,371 @@
               type="button"
               class="btn btn-outline-primary btn-sm"
               id="exportCsv"
+              data-testid="export-csv"
             >
               <i class="fas fa-download"></i> CSV
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#exportModal"
+              data-testid="export-button"
+            >
+              <i class="fas fa-cog"></i> Advanced Export
             </button>
           </div>
         </div>
         <div class="card-body">
-          <div id="resultsContainer">
+          <div id="resultsContainer" data-testid="results-container">
             <!-- Results will be populated here -->
+          </div>
+
+          <!-- Pagination -->
+          <nav aria-label="Search results pagination" data-testid="pagination" style="display: none;">
+            <ul class="pagination justify-content-center">
+              <li class="page-item">
+                <a class="page-link" href="#" data-testid="prev-page">Previous</a>
+              </li>
+              <li class="page-item active">
+                <span class="page-link" data-testid="current-page">1</span>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="#" data-testid="next-page">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authentication Modals -->
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="loginModalLabel">Login to GitHound</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="loginForm" data-testid="login-form">
+              <div class="mb-3">
+                <label for="loginUsername" class="form-label">Username</label>
+                <input type="text" class="form-control" id="loginUsername" data-testid="username-input" required aria-required="true" aria-describedby="login-username-error">
+                <div class="invalid-feedback" data-testid="username-error" id="login-username-error"></div>
+              </div>
+              <div class="mb-3">
+                <label for="loginPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="loginPassword" data-testid="password-input" required aria-required="true" aria-describedby="login-password-error">
+                <div class="invalid-feedback" data-testid="password-error" id="login-password-error"></div>
+              </div>
+              <div class="alert alert-danger d-none" data-testid="login-error" role="alert">
+                Invalid username or password
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-testid="submit-login" form="loginForm">Login</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="registerModalLabel">Register for GitHound</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="registerForm" data-testid="registration-form">
+              <div class="mb-3">
+                <label for="registerUsername" class="form-label">Username</label>
+                <input type="text" class="form-control" id="registerUsername" data-testid="register-username" required aria-required="true" aria-describedby="username-error">
+                <div class="invalid-feedback" data-testid="username-error" id="username-error"></div>
+              </div>
+              <div class="mb-3">
+                <label for="registerEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="registerEmail" data-testid="register-email" required aria-required="true" aria-describedby="email-error">
+                <div class="invalid-feedback" data-testid="email-error" id="email-error"></div>
+              </div>
+              <div class="mb-3">
+                <label for="registerPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="registerPassword" data-testid="register-password" required aria-required="true" aria-describedby="password-error">
+                <div class="invalid-feedback" data-testid="password-error" id="password-error"></div>
+              </div>
+              <div class="mb-3">
+                <label for="registerConfirmPassword" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="registerConfirmPassword" data-testid="register-confirm-password" required aria-required="true" aria-describedby="confirm-password-error">
+                <div class="invalid-feedback" data-testid="password-mismatch-error" id="confirm-password-error"></div>
+              </div>
+              <div class="alert alert-success d-none" data-testid="registration-success" role="alert">
+                Registration successful! You can now login.
+              </div>
+              <div class="alert alert-danger d-none" data-testid="registration-error" role="alert">
+                Registration failed. Please try again.
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-testid="submit-registration" form="registerForm">Register</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error/Success Messages -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+      <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto" id="toastTitle">GitHound</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+          <!-- Toast message will be inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Search cancelled message -->
+    <div class="alert alert-warning d-none" data-testid="search-cancelled" role="alert">
+      Search was cancelled.
+    </div>
+
+    <!-- Search error message -->
+    <div class="alert alert-danger d-none" data-testid="search-error" role="alert">
+      An error occurred during search.
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="profileModalLabel">User Profile</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Profile tabs -->
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="profile-info-tab" data-bs-toggle="tab" data-bs-target="#profile-info" type="button" role="tab">
+                  Profile Info
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="change-password-tab" data-testid="change-password-tab" data-bs-toggle="tab" data-bs-target="#change-password" type="button" role="tab">
+                  Change Password
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="profileTabContent">
+              <!-- Profile Info Tab -->
+              <div class="tab-pane fade show active" id="profile-info" role="tabpanel">
+                <div class="mt-3">
+                  <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" id="profileUsername" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="profileEmail" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" id="profileRole" readonly>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Change Password Tab -->
+              <div class="tab-pane fade" id="change-password" role="tabpanel">
+                <div class="mt-3">
+                  <form id="changePasswordForm">
+                    <div class="mb-3">
+                      <label for="currentPassword" class="form-label">Current Password</label>
+                      <input type="password" class="form-control" id="currentPassword" data-testid="current-password" required>
+                      <div class="invalid-feedback" data-testid="current-password-error"></div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="newPassword" class="form-label">New Password</label>
+                      <input type="password" class="form-control" id="newPassword" data-testid="new-password" required>
+                      <div class="invalid-feedback" data-testid="new-password-error"></div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                      <input type="password" class="form-control" id="confirmNewPassword" data-testid="confirm-new-password" required>
+                      <div class="invalid-feedback" data-testid="confirm-new-password-error"></div>
+                    </div>
+                    <div class="alert alert-success d-none" data-testid="password-change-success" role="alert">
+                      Password changed successfully!
+                    </div>
+                    <div class="alert alert-danger d-none" data-testid="password-change-error" role="alert">
+                      Failed to change password. Please try again.
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" data-testid="submit-password-change" form="changePasswordForm" style="display: none;">
+              Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-labelledby="adminModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminModalLabel">Admin Panel</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div data-testid="admin-dashboard">
+              <h6>Admin Dashboard</h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h6 data-testid="user-management">User Management</h6>
+                    </div>
+                    <div class="card-body">
+                      <p>Manage users, roles, and permissions.</p>
+                      <button class="btn btn-primary btn-sm">Manage Users</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h6>System Settings</h6>
+                    </div>
+                    <div class="card-body">
+                      <p>Configure system-wide settings.</p>
+                      <button class="btn btn-primary btn-sm">Settings</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true" data-testid="export-modal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exportModalLabel">Export Search Results</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="exportForm" data-testid="export-form">
+              <!-- Format Selection -->
+              <div class="mb-3">
+                <label for="exportFormat" class="form-label">Export Format</label>
+                <select class="form-select" id="exportFormat" data-testid="export-format">
+                  <option value="json" data-testid="format-json">JSON</option>
+                  <option value="csv" data-testid="format-csv">CSV</option>
+                  <option value="yaml" data-testid="format-yaml">YAML</option>
+                  <option value="xml" data-testid="format-xml">XML</option>
+                </select>
+              </div>
+
+              <!-- Export Options -->
+              <div class="mb-3">
+                <label class="form-label">Export Options</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="includeMetadata" data-testid="include-metadata" checked>
+                  <label class="form-check-label" for="includeMetadata">Include Metadata</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="includeCommitInfo" data-testid="include-commit-info" checked>
+                  <label class="form-check-label" for="includeCommitInfo">Include Commit Information</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="includeFileContent" data-testid="include-file-content">
+                  <label class="form-check-label" for="includeFileContent">Include File Content</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="compressOutput" data-testid="compress-output">
+                  <label class="form-check-label" for="compressOutput">Compress Output</label>
+                </div>
+              </div>
+
+              <!-- Field Selection -->
+              <div class="mb-3" data-testid="field-selection">
+                <label class="form-label">Fields to Include</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="selectAllFields" data-testid="select-all-fields" checked>
+                  <label class="form-check-label" for="selectAllFields">Select All Fields</label>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldFilePath" data-testid="field-file-path" checked>
+                      <label class="form-check-label" for="fieldFilePath">File Path</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldLineNumber" data-testid="field-line-number" checked>
+                      <label class="form-check-label" for="fieldLineNumber">Line Number</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldContent" data-testid="field-content" checked>
+                      <label class="form-check-label" for="fieldContent">Content</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldAuthor" data-testid="field-author" checked>
+                      <label class="form-check-label" for="fieldAuthor">Author</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldCommitHash" data-testid="field-commit-hash" checked>
+                      <label class="form-check-label" for="fieldCommitHash">Commit Hash</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldCommitDate" data-testid="field-commit-date" checked>
+                      <label class="form-check-label" for="fieldCommitDate">Commit Date</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="fieldCommitMessage" data-testid="field-commit-message" checked>
+                      <label class="form-check-label" for="fieldCommitMessage">Commit Message</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filename -->
+              <div class="mb-3">
+                <label for="exportFilename" class="form-label">Filename</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="exportFilename" data-testid="export-filename" placeholder="search-results">
+                  <button class="btn btn-outline-secondary" type="button" data-testid="generate-filename">Generate</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="cancel-export">Cancel</button>
+            <button type="button" class="btn btn-primary" data-testid="confirm-export">Export</button>
           </div>
         </div>
       </div>

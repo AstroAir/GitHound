@@ -7,39 +7,74 @@ Comprehensive Playwright-based testing suite for the GitHound web interface, cov
 ### Directory Structure
 ```
 githound/web/tests/
-├── README.md                    # This file
-├── conftest.py                  # Pytest configuration and shared fixtures
-├── pytest.ini                  # Pytest settings
-├── playwright.config.js        # Playwright configuration
-├── package.json                 # Node.js dependencies
-├── run_tests.py                 # Test runner script
-├── fixtures/                    # Test fixtures and utilities
+├── README.md                     # This file
+├── conftest.py                   # Pytest configuration and shared fixtures
+├── pytest.ini                   # Pytest settings
+├── playwright.config.js          # Playwright configuration
+├── test-reporting.config.js      # Test reporting configuration
+├── package.json                  # Node.js dependencies
+├── run-tests.sh                  # Test runner script (Linux/Mac)
+├── run-tests.bat                 # Test runner script (Windows)
+├── fixtures/                     # Test fixtures and utilities
 │   ├── __init__.py
-│   ├── global-setup.js          # Global test setup
-│   ├── global-teardown.js       # Global test teardown
-│   ├── test_data.py             # Test data management
-│   ├── test_repository.py       # Test repository creation
-│   └── test_server.py           # Test server management
-├── auth/                        # Authentication tests
+│   ├── auth_fixtures.py          # Authentication fixtures
+│   ├── data_fixtures.py          # Test data fixtures
+│   ├── page_fixtures.py          # Page object fixtures
+│   └── server_fixtures.py        # Test server fixtures
+├── pages/                        # Page Object Model
 │   ├── __init__.py
-│   └── test_authentication.py   # Login, logout, registration, etc.
-├── search/                      # Search functionality tests
+│   ├── base_page.py              # Base page class
+│   ├── login_page.py             # Login page object
+│   ├── search_page.py            # Search page object
+│   ├── profile_page.py           # Profile page object
+│   └── export_page.py            # Export page object
+├── utils/                        # Test utilities
 │   ├── __init__.py
-│   ├── test_search_interface.py # Search forms and results
-│   └── test_websocket_updates.py # Real-time updates
-├── api/                         # API integration tests
-│   ├── __init__.py
-│   └── test_api_integration.py  # API calls through frontend
-├── ui/                          # UI/UX tests
-│   ├── __init__.py
-│   ├── test_responsive_design.py # Responsive layout
-│   └── test_accessibility.py    # Accessibility compliance
-├── performance/                 # Performance tests
-│   ├── __init__.py
-│   └── test_performance.py      # Load times, memory usage
-└── utils/                       # Test utilities
-    ├── __init__.py
-    └── test_helpers.py           # Helper functions
+│   ├── test_data_manager.py      # Test data management
+│   ├── performance_helper.py     # Performance testing utilities
+│   ├── accessibility_helper.py   # Accessibility testing utilities
+│   ├── custom_reporter.js        # Custom test reporter
+│   ├── coverage_reporter.js      # Coverage reporter
+│   └── artifact_manager.js       # Artifact management
+├── auth/                         # Authentication tests
+│   ├── authentication.spec.js    # Login/logout tests
+│   ├── registration.spec.js      # User registration tests
+│   └── password_reset.spec.js    # Password reset tests
+├── search/                       # Search functionality tests
+│   ├── basic_search.spec.js      # Basic search tests
+│   ├── advanced_search.spec.js   # Advanced search tests
+│   ├── fuzzy_search.spec.js      # Fuzzy search tests
+│   └── historical_search.spec.js # Historical search tests
+├── ui/                           # UI/UX tests
+│   ├── responsive_design.spec.js # Responsive design tests
+│   ├── navigation.spec.js        # Navigation tests
+│   └── form_validation.spec.js   # Form validation tests
+├── api/                          # API integration tests
+│   ├── search_api.spec.js        # Search API tests
+│   ├── auth_api.spec.js          # Authentication API tests
+│   └── export_api.spec.js        # Export API tests
+├── accessibility/                # Accessibility tests
+│   ├── wcag_compliance.spec.js   # WCAG compliance tests
+│   └── form_accessibility.spec.js # Form accessibility tests
+├── performance/                  # Performance tests
+│   ├── page_performance.spec.js  # Page load performance
+│   ├── load_testing.spec.js      # Load testing
+│   ├── stress_testing.spec.js    # Stress testing
+│   └── benchmark.spec.js         # Performance benchmarks
+├── visual/                       # Visual regression tests
+│   ├── visual_regression.spec.js # Visual regression tests
+│   └── README.md                 # Visual testing guide
+├── error_handling/               # Error handling tests
+│   ├── network_errors.spec.js    # Network error tests
+│   ├── api_errors.spec.js        # API error tests
+│   └── form_validation_errors.spec.js # Form validation tests
+└── test_results/                 # Test output directory
+    ├── html_report/              # HTML test reports
+    ├── screenshots/              # Test screenshots
+    ├── videos/                   # Test videos
+    ├── traces/                   # Playwright traces
+    ├── coverage/                 # Coverage reports
+    └── custom/                   # Custom reports
 ```
 
 ## 🚀 Quick Start
@@ -66,24 +101,29 @@ npm install
 
 ### Running Tests
 
-#### Using the Test Runner Script
+#### Using the Test Runner Script (Recommended)
 ```bash
 # Run all tests
-python githound/web/tests/run_tests.py all
+./run-tests.sh                    # Linux/Mac
+./run-tests.bat                   # Windows
 
-# Run specific test suites
-python githound/web/tests/run_tests.py auth
-python githound/web/tests/run_tests.py search
-python githound/web/tests/run_tests.py api
-python githound/web/tests/run_tests.py ui
-python githound/web/tests/run_tests.py performance
+# Run with coverage and performance tests
+./run-tests.sh --coverage --performance
 
-# Run tests with different browsers
-python githound/web/tests/run_tests.py all --browser firefox
-python githound/web/tests/run_tests.py all --browser webkit
+# Run accessibility tests
+./run-tests.sh --accessibility
 
-# Run tests in headed mode (visible browser)
-python githound/web/tests/run_tests.py all --headed
+# Run visual regression tests
+./run-tests.sh --visual
+
+# Run load tests
+./run-tests.sh --load
+
+# Run all browsers with verbose output
+./run-tests.sh --browser all --verbose
+
+# Run with custom output directory
+./run-tests.sh --output custom-results --clean
 ```
 
 #### Using Playwright Directly
