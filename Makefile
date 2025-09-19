@@ -118,11 +118,69 @@ benchmark: ## Run benchmark tests
 	@echo "$(BLUE)Running benchmarks...$(NC)"
 	$(PYTEST) $(TEST_DIR)/performance/ --benchmark-only
 
+# Frontend build targets
+.PHONY: frontend-install
+frontend-install: ## Install frontend dependencies
+	@echo "$(BLUE)Installing frontend dependencies...$(NC)"
+	cd githound/web/static && npm install
+
+.PHONY: frontend-build
+frontend-build: frontend-install ## Build and validate frontend assets
+	@echo "$(BLUE)Building frontend assets...$(NC)"
+	cd githound/web/static && node build-frontend.js
+
+.PHONY: frontend-validate
+frontend-validate: ## Validate frontend structure and imports
+	@echo "$(BLUE)Validating frontend...$(NC)"
+	cd githound/web/static && node validate-build.js
+
+.PHONY: frontend-dev
+frontend-dev: frontend-install ## Start frontend development server
+	@echo "$(BLUE)Starting frontend development...$(NC)"
+	@echo "Frontend files are served directly by FastAPI"
+	@echo "Edit files in githound/web/static/ and refresh browser"
+	@echo "Debug panel: Ctrl+Shift+D"
+
+.PHONY: frontend-test
+frontend-test: frontend-install ## Run frontend unit tests
+	@echo "$(BLUE)Running frontend tests...$(NC)"
+	cd githound/web/static && npm test
+
+.PHONY: frontend-test-coverage
+frontend-test-coverage: frontend-install ## Run frontend tests with coverage
+	@echo "$(BLUE)Running frontend tests with coverage...$(NC)"
+	cd githound/web/static && npm run test:coverage
+
+.PHONY: frontend-lint
+frontend-lint: frontend-install ## Lint frontend code
+	@echo "$(BLUE)Linting frontend code...$(NC)"
+	cd githound/web/static && npm run lint
+
+.PHONY: frontend-format
+frontend-format: frontend-install ## Format frontend code
+	@echo "$(BLUE)Formatting frontend code...$(NC)"
+	cd githound/web/static && npm run format
+
+.PHONY: frontend-quality
+frontend-quality: frontend-install ## Run all frontend quality checks
+	@echo "$(BLUE)Running frontend quality checks...$(NC)"
+	cd githound/web/static && npm run quality
+
+.PHONY: frontend-quality-fix
+frontend-quality-fix: frontend-install ## Fix frontend quality issues
+	@echo "$(BLUE)Fixing frontend quality issues...$(NC)"
+	cd githound/web/static && npm run quality:fix
+
+.PHONY: frontend-clean
+frontend-clean: ## Clean frontend build artifacts
+	@echo "$(BLUE)Cleaning frontend artifacts...$(NC)"
+	cd githound/web/static && rm -rf node_modules build-info.json component-manifest.json COMPONENT_DOCS.json styles/main.min.css index.prod.html
+
 # Web frontend testing targets
 .PHONY: test-web-install
 test-web-install: ## Install web frontend test dependencies
 	@echo "$(BLUE)Installing web frontend test dependencies...$(NC)"
-	pip install playwright pytest-playwright axe-playwright
+	pip install playwright pytest-playwright axe-playwright-python
 	playwright install
 	cd githound/web/tests && npm install
 

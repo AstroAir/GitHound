@@ -29,7 +29,7 @@ def get_version() -> str:
             return "0.1.0-dev"
 
 
-def get_build_info() -> Dict[str, Optional[str]]:
+def get_build_info() -> Dict[str, Optional[str] | bool]:
     """Get build information including git metadata.
     
     Returns:
@@ -41,7 +41,7 @@ def get_build_info() -> Dict[str, Optional[str]]:
         - build_date: Build date (if available)
         - dirty: Whether working directory has uncommitted changes
     """
-    info = {
+    info: Dict[str, Optional[str] | bool] = {
         "version": get_version(),
         "git_commit": None,
         "git_branch": None,
@@ -178,7 +178,7 @@ def format_version_info(include_build_info: bool = False) -> str:
     build_info = get_build_info()
     lines = [f"GitHound {version}"]
     
-    if build_info["git_commit"]:
+    if build_info["git_commit"] and isinstance(build_info["git_commit"], str):
         commit = build_info["git_commit"][:8]  # Short hash
         if build_info["dirty"]:
             commit += "-dirty"
@@ -206,8 +206,8 @@ def check_version_compatibility(required_version: str) -> bool:
         True if current version meets requirements.
     """
     try:
-        current = get_version_info()[:3]  # (major, minor, patch)
-        required = tuple(map(int, required_version.split('.')))
+        current: tuple[int, ...] = get_version_info()[:3]  # (major, minor, patch)
+        required: tuple[int, ...] = tuple(map(int, required_version.split('.')))
         
         # Pad shorter tuple with zeros
         max_len = max(len(current), len(required))

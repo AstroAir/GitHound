@@ -66,23 +66,23 @@ def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> Fil
 
         line_number = 1
         # GitPython blame data structure is complex, use type ignore for now
-        for commit_info, lines in blame_data:  #
-            for line in lines:  #
+        for commit_info, lines in blame_data:  # type: ignore
+            for line in lines:  # type: ignore
                 blame_entry = BlameInfo(
                     line_number=line_number,
                     content=str(line).rstrip("\n\r"),
-                    commit_hash=commit_info.hexsha,  #
-                    author_name=commit_info.author.name,  #
-                    author_email=commit_info.author.email,  #
+                    commit_hash=commit_info.hexsha,  # type: ignore
+                    author_name=commit_info.author.name,  # type: ignore
+                    author_email=commit_info.author.email,  # type: ignore
                     commit_date=datetime.fromtimestamp(
-                        commit_info.committed_date),  #
+                        commit_info.committed_date),  # type: ignore
                     commit_message=str(
-                        commit_info.message).strip(),  #
+                        commit_info.message).strip(),  # type: ignore
                 )
 
                 blame_info.append(blame_entry)
                 contributors.add(
-                    f"{commit_info.author.name} <{commit_info.author.email}>")  #
+                    f"{commit_info.author.name} <{commit_info.author.email}>")  # type: ignore
                 dates.append(blame_entry.commit_date)
                 line_number += 1
 
@@ -129,23 +129,19 @@ def get_line_history(
 
                 current_line = 1
                 # GitPython blame data structure is complex, use type ignore
-                for commit_info, lines in blame_data:  #
-                    for line in lines:  #
+                for commit_info, lines in blame_data:  # type: ignore
+                    for line in lines:  # type: ignore
                         if current_line == line_number:
                             history.append(
                                 {
                                     "commit_hash": commit.hexsha,
-                                    "commit_date": datetime.fromtimestamp if datetime is not None else None(commit.committed_date),
-                                    #
-                                    "author": f"{commit_info.author.name} <{commit_info.author.email}>",
-                                    #
-                                    "message": str(commit_info.message).strip(),
+                                    "commit_date": datetime.fromtimestamp(commit.committed_date),
+                                    "author": f"{commit_info.author.name} <{commit_info.author.email}>",  # type: ignore
+                                    "message": str(commit_info.message).strip(),  # type: ignore
                                     "line_content": str(line).rstrip("\n\r"),
-                                    "line_commit_hash": commit_info.hexsha,  #
-                                    #
-                                    "line_author": f"{commit_info.author.name} <{commit_info.author.email}>",
-                                    #
-                                    "line_date": datetime.fromtimestamp(commit_info.committed_date),
+                                    "line_commit_hash": commit_info.hexsha,  # type: ignore
+                                    "line_author": f"{commit_info.author.name} <{commit_info.author.email}>",  # type: ignore
+                                    "line_date": datetime.fromtimestamp(commit_info.committed_date),  # type: ignore
                                 }
                             )
                             break

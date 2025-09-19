@@ -594,7 +594,7 @@ class TestMCPInputValidation:
             fuzzy_threshold=0.8,
             max_results=100
         )
-        assert valid_input.content_pattern = = "test"
+        assert valid_input.content_pattern == "test"
 
         # Test invalid fuzzy threshold
         with pytest.raises(ValueError, match="Fuzzy threshold must be between 0.0 and 1.0"):
@@ -624,7 +624,7 @@ class TestMCPInputValidation:
             search_term="test",
             threshold=0.7
         )
-        assert valid_input.search_term = = "test"
+        assert valid_input.search_term == "test"
 
         # Test empty search term
         with pytest.raises(ValueError, match="Search term cannot be empty"):
@@ -654,7 +654,7 @@ class TestMCPInputValidation:
             host="localhost",
             port=8000
         )
-        assert valid_input.port = = 8000
+        assert valid_input.port == 8000
 
         # Test invalid port
         with pytest.raises(ValueError, match="Port must be between 1024 and 65535"):
@@ -671,7 +671,7 @@ class TestMCPServerConfiguration:
         """Test MCP server creation and configuration."""
         server = get_mcp_server()
 
-        assert server.name = = "GitHound MCP Server"
+        assert server.name == "GitHound MCP Server"
         assert hasattr(server, 'version')  # FastMCP has version attribute
         # Note: FastMCP doesn't have a description attribute
 
@@ -683,7 +683,7 @@ class TestFastMCPInMemoryPatterns:
     async def test_in_memory_server_instance(self, mcp_server: FastMCP) -> None:
         """Test in-memory server instance creation."""
         assert mcp_server is not None
-        assert mcp_server.name = = "GitHound MCP Server"
+        assert mcp_server.name == "GitHound MCP Server"
         assert hasattr(mcp_server, 'version')
 
     @pytest.mark.asyncio

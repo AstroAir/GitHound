@@ -387,7 +387,7 @@ def get_file_history(
                 history.append(
                     {
                         "commit_hash": commit.hexsha,
-                        "commit_date": datetime.fromtimestamp if datetime is not None else None(commit.committed_date),
+                        "commit_date": datetime.fromtimestamp(commit.committed_date) if datetime is not None else None,
                         "author": f"{commit.author.name} <{commit.author.email}>",
                         "message": commit.message.strip(),
                         "file_size": file_size,

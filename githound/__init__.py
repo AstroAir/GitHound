@@ -22,15 +22,8 @@ from .git_handler import get_repository, get_repository_metadata
 from .models import SearchQuery, SearchResult
 from .schemas import ExportOptions, OutputFormat
 from .search_engine import (
-    AuthorSearcher,
-    CommitHashSearcher,
-    ContentSearcher,
-    DateRangeSearcher,
-    FilePathSearcher,
-    FileTypeSearcher,
-    FuzzySearcher,
-    MessageSearcher,
     SearchOrchestrator,
+    create_search_orchestrator,
 )
 
 # Suppress NumPy compatibility warnings for better user experience
@@ -196,17 +189,8 @@ class GitHound:
     def search_orchestrator(self) -> SearchOrchestrator:
         """Get or create the search orchestrator with all searchers registered."""
         if self._search_orchestrator is None:
-            self._search_orchestrator = SearchOrchestrator()
-
-            # Register all available searchers
-            self._search_orchestrator.register_searcher(CommitHashSearcher())
-            self._search_orchestrator.register_searcher(AuthorSearcher())
-            self._search_orchestrator.register_searcher(MessageSearcher())
-            self._search_orchestrator.register_searcher(DateRangeSearcher())
-            self._search_orchestrator.register_searcher(FilePathSearcher())
-            self._search_orchestrator.register_searcher(FileTypeSearcher())
-            self._search_orchestrator.register_searcher(ContentSearcher())
-            self._search_orchestrator.register_searcher(FuzzySearcher())
+            # Use factory for consistent configuration
+            self._search_orchestrator = create_search_orchestrator(enable_advanced=True)
 
         return self._search_orchestrator
 

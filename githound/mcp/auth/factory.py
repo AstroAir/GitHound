@@ -185,16 +185,16 @@ def create_provider_from_environment() -> AuthProvider | None:
         authorization_type = os.getenv("GITHOUND_AUTHORIZATION_TYPE")
         if authorization_type:
             # Collect authorization configuration from environment
-            auth_config: dict[str, Any] = {}
+            authorization_config: dict[str, Any] = {}
             auth_prefix = "GITHOUND_AUTHORIZATION_"
             for key, value in os.environ.items():
                 if key.startswith(auth_prefix) and key != "GITHOUND_AUTHORIZATION_TYPE":
                     config_key = key[len(auth_prefix):].lower()
-                    auth_config[config_key] = value
+                    authorization_config[config_key] = value
 
             # Wrap with authorization provider
             base_provider = create_authorization_provider(
-                base_provider, authorization_type, **auth_config
+                base_provider, authorization_type, **authorization_config
             )
 
         return base_provider

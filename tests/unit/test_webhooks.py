@@ -64,11 +64,11 @@ class TestWebhookEvent:
             data={"status": "created"}
         )
 
-        assert event.event_type = = "repository.created"
-        assert event.event_id = = "event-123"
-        assert event.repository_path = = "/test/repo"
-        assert event.user_id = = "test-user"
-        assert event.data = = {"status": "created"}
+        assert event.event_type == "repository.created"
+        assert event.event_id == "event-123"
+        assert event.repository_path == "/test/repo"
+        assert event.user_id == "test-user"
+        assert event.data == {"status": "created"}
         assert isinstance(event.timestamp, datetime)
 
     def test_webhook_event_default_timestamp(self) -> None:
@@ -93,14 +93,14 @@ class TestWebhookEndpoint:
         """Test webhook endpoint creation."""
         endpoint = sample_webhook_endpoint
 
-        assert endpoint.id = = "test-webhook-1"
-        assert endpoint.url = = "https://example.com/webhook"
-        assert endpoint.events = = ["repository.created", "branch.merged"]
-        assert endpoint.secret = = "test-secret"
+        assert endpoint.id == "test-webhook-1"
+        assert endpoint.url == "https://example.com/webhook"
+        assert endpoint.events == ["repository.created", "branch.merged"]
+        assert endpoint.secret == "test-secret"
         assert endpoint.active is True
         assert isinstance(endpoint.created_at, datetime)
-        assert endpoint.failure_count = = 0
-        assert endpoint.max_failures = = 5
+        assert endpoint.failure_count == 0
+        assert endpoint.max_failures == 5
 
     def test_webhook_endpoint_defaults(self) -> None:
         """Test webhook endpoint with default values."""
@@ -112,8 +112,8 @@ class TestWebhookEndpoint:
 
         assert endpoint.secret is None
         assert endpoint.active is True
-        assert endpoint.failure_count = = 0
-        assert endpoint.max_failures = = 5
+        assert endpoint.failure_count == 0
+        assert endpoint.max_failures == 5
         assert endpoint.last_delivery is None
 
 
@@ -179,7 +179,7 @@ class TestWebhookManager:
         assert result is True
         updated_endpoint = webhook_manager.get_endpoint(
             sample_webhook_endpoint.id)
-        assert updated_endpoint.url = = "https://updated.example.com/webhook"
+        assert updated_endpoint.url == "https://updated.example.com/webhook"
         assert updated_endpoint.active is False
 
     def test_update_nonexistent_endpoint(self, webhook_manager) -> None:
@@ -266,7 +266,7 @@ class TestWebhookManager:
             delivery_id = await webhook_manager._deliver_webhook(sample_webhook_endpoint, sample_webhook_event)
 
             assert delivery_id.startswith("delivery_")
-            assert sample_webhook_endpoint.failure_count = = 0
+            assert sample_webhook_endpoint.failure_count == 0
             assert sample_webhook_endpoint.last_delivery is not None
 
     @pytest.mark.asyncio
@@ -287,7 +287,7 @@ class TestWebhookManager:
                 delivery_id = await webhook_manager._deliver_webhook(sample_webhook_endpoint, sample_webhook_event)
 
                 assert delivery_id.startswith("delivery_")
-                assert sample_webhook_endpoint.failure_count = = 1
+                assert sample_webhook_endpoint.failure_count == 1
                 mock_retry.assert_called_once()
 
     @pytest.mark.asyncio
@@ -304,7 +304,7 @@ class TestWebhookManager:
                 delivery_id = await webhook_manager._deliver_webhook(sample_webhook_endpoint, sample_webhook_event)
 
                 assert delivery_id.startswith("delivery_")
-                assert sample_webhook_endpoint.failure_count = = 1
+                assert sample_webhook_endpoint.failure_count == 1
                 mock_retry.assert_called_once()
 
     def test_generate_signature(self, webhook_manager) -> None:
@@ -440,10 +440,10 @@ class TestHelperFunctions:
             # Check the event that was passed
             call_args = mock_manager.trigger_event.call_args[0]
             event = call_args[0]
-            assert event.event_type = = "repository.created"
-            assert event.repository_path = = "/test/repo"
-            assert event.user_id = = "test-user"
-            assert event.data = = {"status": "created"}
+            assert event.event_type == "repository.created"
+            assert event.repository_path == "/test/repo"
+            assert event.user_id == "test-user"
+            assert event.data == {"status": "created"}
 
     @pytest.mark.asyncio
     async def test_trigger_search_event(self) -> None:

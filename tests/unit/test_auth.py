@@ -128,9 +128,9 @@ class TestAuthManager:
         token_data = auth_manager.verify_token(token)
 
         assert token_data is not None
-        assert token_data.user_id = = "test_user"
-        assert token_data.username = = "test_user"
-        assert token_data.roles = = ["user"]
+        assert token_data.user_id == "test_user"
+        assert token_data.username == "test_user"
+        assert token_data.roles == ["user"]
 
     def test_verify_token_invalid(self, auth_manager) -> None:
         """Test verification of invalid token."""
@@ -182,8 +182,8 @@ class TestAuthManager:
         token = auth_manager.login(login_data)
 
         assert isinstance(token, Token)
-        assert token.token_type = = "bearer"
-        assert token.user_id = = "admin"
+        assert token.token_type == "bearer"
+        assert token.user_id == "admin"
         assert "admin" in token.roles
         assert len(token.access_token) > 50
         assert token.expires_in > 0
@@ -342,9 +342,9 @@ class TestTokenData:
             roles=["user", "editor"]
         )
 
-        assert token_data.user_id = = "test_user"
-        assert token_data.username = = "test_user"
-        assert token_data.roles = = ["user", "editor"]
+        assert token_data.user_id == "test_user"
+        assert token_data.username == "test_user"
+        assert token_data.roles == ["user", "editor"]
 
     def test_token_data_defaults(self) -> None:
         """Test TokenData model with default values."""
@@ -352,7 +352,7 @@ class TestTokenData:
 
         assert token_data.user_id is None
         assert token_data.username is None
-        assert token_data.roles = = []
+        assert token_data.roles == []
 
 
 class TestUserModels:
@@ -367,10 +367,10 @@ class TestUserModels:
             roles=["user", "editor"]
         )
 
-        assert user_data.username = = "test_user"
-        assert user_data.email = = "test@example.com"
-        assert user_data.password = = "password123"
-        assert user_data.roles = = ["user", "editor"]
+        assert user_data.username == "test_user"
+        assert user_data.email == "test@example.com"
+        assert user_data.password == "password123"
+        assert user_data.roles == ["user", "editor"]
 
     def test_user_create_default_roles(self) -> None:
         """Test UserCreate model with default roles."""
@@ -380,7 +380,7 @@ class TestUserModels:
             password="password123"
         )
 
-        assert user_data.roles = = ["user"]
+        assert user_data.roles == ["user"]
 
     def test_user_login_model(self) -> None:
         """Test UserLogin model."""
@@ -389,8 +389,8 @@ class TestUserModels:
             password="password123"
         )
 
-        assert login_data.username = = "test_user"
-        assert login_data.password = = "password123"
+        assert login_data.username == "test_user"
+        assert login_data.password == "password123"
 
     def test_token_model(self) -> None:
         """Test Token model."""
@@ -401,8 +401,8 @@ class TestUserModels:
             roles=["user"]
         )
 
-        assert token.access_token = = "jwt.token.here"
-        assert token.token_type = = "bearer"
-        assert token.expires_in = = 3600
-        assert token.user_id = = "test_user"
-        assert token.roles = = ["user"]
+        assert token.access_token == "jwt.token.here"
+        assert token.token_type == "bearer"
+        assert token.expires_in == 3600
+        assert token.user_id == "test_user"
+        assert token.roles == ["user"]

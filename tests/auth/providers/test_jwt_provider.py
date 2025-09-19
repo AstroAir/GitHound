@@ -29,9 +29,9 @@ class TestJWTVerifier:
                 audience="test-audience"
             )
 
-            assert verifier.jwks_uri = = "https://example.com/.well-known/jwks.json"
-            assert verifier.issuer = = "test-issuer"
-            assert verifier.audience = = "test-audience"
+            assert verifier.jwks_uri == "https://example.com/.well-known/jwks.json"
+            assert verifier.issuer == "test-issuer"
+            assert verifier.audience == "test-audience"
 
         except ImportError:
             pytest.skip("PyJWT not available")
@@ -127,9 +127,9 @@ class TestStaticJWTVerifier:
                 audience="test-audience"
             )
 
-            assert verifier.secret_key = = "test-secret-key"
-            assert verifier.issuer = = "test-issuer"
-            assert verifier.audience = = "test-audience"
+            assert verifier.secret_key == "test-secret-key"
+            assert verifier.issuer == "test-issuer"
+            assert verifier.audience == "test-audience"
 
         except ImportError:
             pytest.skip("PyJWT not available")
@@ -172,8 +172,8 @@ class TestStaticJWTVerifier:
             # Test token validation
             token_info = await verifier.validate_token(token)
             assert token_info is not None
-            assert token_info.username = = "testuser"
-            assert token_info.user_id = = "testuser"
+            assert token_info.username == "testuser"
+            assert token_info.user_id == "testuser"
             assert "user" in token_info.roles
             assert "read" in token_info.permissions
             assert "search" in token_info.permissions

@@ -104,11 +104,11 @@ class TestSchemas:
             files_touched=25,
         )
 
-        assert author.name = = "Test Author"
-        assert author.email = = "test@example.com"
-        assert author.commits_count = = 10
-        assert author.lines_authored = = 500
-        assert author.files_touched = = 25
+        assert author.name == "Test Author"
+        assert author.email == "test@example.com"
+        assert author.commits_count == 10
+        assert author.lines_authored == 500
+        assert author.files_touched == 25
 
     def test_commit_schema_creation(self, sample_commit_info) -> None:
         """Test CommitSchema creation."""
@@ -134,7 +134,7 @@ class TestSchemas:
             },
         )
 
-        assert commit.hash = = sample_commit_info.hash
+        assert commit.hash == sample_commit_info.hash
         assert commit.author.name == sample_commit_info.author_name
         assert commit.stats["files_changed"] == sample_commit_info.files_changed
 
@@ -152,7 +152,7 @@ class TestSchemas:
                                   order=SortOrder.DESC)],
         )
 
-        assert options.format = = OutputFormat.JSON
+        assert options.format == OutputFormat.JSON
         assert options.include_metadata is True
         assert len(options.filters) == 1
         assert len(options.sort_by) == 1
@@ -174,10 +174,10 @@ class TestEnhancedModels:
             last_commit_author="Test Author <test@example.com>",
         )
 
-        assert branch.name = = "main"
-        assert branch.commit_hash = = "abc123def456"
+        assert branch.name == "main"
+        assert branch.commit_hash == "abc123def456"
         assert branch.is_remote is False
-        assert branch.ahead_count = = 5
+        assert branch.ahead_count == 5
 
     def test_tag_info_creation(self) -> None:
         """Test TagInfo model creation."""
@@ -190,8 +190,8 @@ class TestEnhancedModels:
             is_annotated=True,
         )
 
-        assert tag.name = = "v1.0.0"
-        assert tag.commit_hash = = "abc123def456"
+        assert tag.name == "v1.0.0"
+        assert tag.commit_hash == "abc123def456"
         assert tag.is_annotated is True
 
     def test_blame_line_info_creation(self) -> None:
@@ -206,9 +206,9 @@ class TestEnhancedModels:
             commit_message="Add test function",
         )
 
-        assert blame_line.line_number = = 1
-        assert blame_line.content = = "def test_function() -> None:"
-        assert blame_line.commit_hash = = "abc123def456"
+        assert blame_line.line_number == 1
+        assert blame_line.content == "def test_function() -> None:"
+        assert blame_line.commit_hash == "abc123def456"
 
     def test_file_blame_info_creation(self) -> None:
         """Test FileBlameInfo model creation."""
@@ -234,8 +234,8 @@ class TestEnhancedModels:
             file_age_days=365,
         )
 
-        assert file_blame.file_path = = "test.py"
-        assert file_blame.total_lines = = 1
+        assert file_blame.file_path == "test.py"
+        assert file_blame.total_lines == 1
         assert len(file_blame.blame_lines) == 1
         assert len(file_blame.contributors) == 1
 
@@ -416,7 +416,7 @@ class TestDataValidation:
         """Test enum validation in models."""
         # Test valid enum value
         options = ExportOptions(format=OutputFormat.JSON)
-        assert options.format = = OutputFormat.JSON
+        assert options.format == OutputFormat.JSON
 
         # Test invalid enum value should be caught by Pydantic
         with pytest.raises(ValueError):

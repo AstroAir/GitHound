@@ -20,7 +20,7 @@ class TestWebServer:
         """Test serve command with default parameters."""
         result = self.runner.invoke(app, ['serve'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         mock_uvicorn_run.assert_called_once_with(
             "githound.web.api:app",
             host="0.0.0.0",
@@ -43,7 +43,7 @@ class TestWebServer:
             '--workers', '4'
         ])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         mock_uvicorn_run.assert_called_once_with(
             "githound.web.api:app",
             host="127.0.0.1",
@@ -62,7 +62,7 @@ class TestWebServer:
             '--workers', '4'
         ])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         mock_uvicorn_run.assert_called_once_with(
             "githound.web.api:app",
             host="0.0.0.0",
@@ -80,7 +80,7 @@ class TestWebServer:
 
         result = self.runner.invoke(app, ['serve'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         assert "GitHound server stopped" in result.output
 
     @patch('githound.web.server.uvicorn.run')
@@ -102,7 +102,7 @@ class TestWebServer:
         """Test dev command."""
         result = self.runner.invoke(app, ['dev'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         mock_serve.assert_called_once_with(
             host="127.0.0.1",
             port=8000,
@@ -116,7 +116,7 @@ class TestWebServer:
         """Test prod command with default parameters."""
         result = self.runner.invoke(app, ['prod'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         mock_serve.assert_called_once_with(
             host="0.0.0.0",
             port=8000,
@@ -135,7 +135,7 @@ class TestWebServer:
             '--workers', '8'
         ])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         mock_serve.assert_called_once_with(
             host="192.168.1.100",
             port=9000,
@@ -148,7 +148,7 @@ class TestWebServer:
         """Test serve command help output."""
         result = self.runner.invoke(app, ['serve', '--help'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         assert "Start the GitHound web server" in result.output
         assert "--host" in result.output
         assert "--port" in result.output
@@ -160,14 +160,14 @@ class TestWebServer:
         """Test dev command help output."""
         result = self.runner.invoke(app, ['dev', '--help'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         assert "Start the development server" in result.output
 
     def test_prod_command_help(self) -> None:
         """Test prod command help output."""
         result = self.runner.invoke(app, ['prod', '--help'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         assert "Start the production server" in result.output
 
     @patch('githound.web.server.uvicorn.run')
@@ -204,7 +204,7 @@ class TestWebServer:
         """Test main app help output."""
         result = self.runner.invoke(app, ['--help'])
 
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
         assert "serve" in result.output
         assert "dev" in result.output
         assert "prod" in result.output
@@ -214,30 +214,30 @@ class TestWebServer:
         """Test serve command with different port values."""
         # Test with valid port
         result = self.runner.invoke(app, ['serve', '--port', '3000'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
         # Test with port 0 (should be allowed)
         result = self.runner.invoke(app, ['serve', '--port', '0'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
         # Test with high port number
         result = self.runner.invoke(app, ['serve', '--port', '65535'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
     @patch('githound.web.server.uvicorn.run')
     def test_serve_host_validation(self, mock_uvicorn_run) -> None:
         """Test serve command with different host values."""
         # Test with localhost
         result = self.runner.invoke(app, ['serve', '--host', 'localhost'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
         # Test with specific IP
         result = self.runner.invoke(app, ['serve', '--host', '192.168.1.100'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
         # Test with IPv6
         result = self.runner.invoke(app, ['serve', '--host', '::1'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
     @patch('githound.web.server.uvicorn.run')
     def test_serve_log_level_validation(self, mock_uvicorn_run) -> None:
@@ -246,7 +246,7 @@ class TestWebServer:
 
         for level in log_levels:
             result = self.runner.invoke(app, ['serve', '--log-level', level])
-            assert result.exit_code = = 0
+            assert result.exit_code == 0
             mock_uvicorn_run.assert_called()
 
             # Check that the log level was passed correctly
@@ -260,12 +260,12 @@ class TestWebServer:
         """Test serve command with different worker counts."""
         # Test with 1 worker
         result = self.runner.invoke(app, ['serve', '--workers', '1'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
         # Test with multiple workers
         result = self.runner.invoke(app, ['serve', '--workers', '8'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0
 
         # Test with 0 workers (should still work, uvicorn will handle it)
         result = self.runner.invoke(app, ['serve', '--workers', '0'])
-        assert result.exit_code = = 0
+        assert result.exit_code == 0

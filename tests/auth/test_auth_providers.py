@@ -96,9 +96,9 @@ class TestGitHubProvider:
             base_url="http://localhost:8000"
         )
 
-        assert provider.client_id = = "test-client-id"
-        assert provider.client_secret = = "test-client-secret"
-        assert provider.base_url = = "http://localhost:8000"
+        assert provider.client_id == "test-client-id"
+        assert provider.client_secret == "test-client-secret"
+        assert provider.base_url == "http://localhost:8000"
 
     def test_github_oauth_metadata(self) -> None:
         """Test GitHub OAuth metadata generation."""
@@ -186,9 +186,9 @@ class TestGoogleProvider:
             base_url="http://localhost:8000"
         )
 
-        assert provider.client_id = = "test-client-id"
-        assert provider.client_secret = = "test-client-secret"
-        assert provider.base_url = = "http://localhost:8000"
+        assert provider.client_id == "test-client-id"
+        assert provider.client_secret == "test-client-secret"
+        assert provider.base_url == "http://localhost:8000"
 
     def test_google_oauth_metadata(self) -> None:
         """Test Google OAuth metadata generation."""
@@ -280,9 +280,9 @@ class TestOAuthProxy:
             userinfo_endpoint="https://example.com/oauth/userinfo"
         )
 
-        assert proxy.client_id = = "test-client-id"
-        assert proxy.client_secret = = "test-client-secret"
-        assert proxy.authorization_endpoint = = "https://example.com/oauth/authorize"
+        assert proxy.client_id == "test-client-id"
+        assert proxy.client_secret == "test-client-secret"
+        assert proxy.authorization_endpoint == "https://example.com/oauth/authorize"
 
     def test_oauth_proxy_metadata(self) -> None:
         """Test OAuth proxy metadata generation."""

@@ -150,7 +150,7 @@ class TestBaseSearcher:
         """Test that concrete searcher can be instantiated."""
         searcher = MockSearcher()
         assert searcher is not None
-        assert searcher.name = = "test_searcher"
+        assert searcher.name == "test_searcher"
 
     @pytest.mark.asyncio
     async def test_concrete_searcher_can_handle(self, sample_search_query) -> None:
@@ -196,7 +196,7 @@ class TestCacheableSearcherClass:
         """Test that CacheableSearcher can be instantiated."""
         searcher = MockCacheableSearcher()
         assert searcher is not None
-        assert searcher.name = = "test_cacheable_searcher"
+        assert searcher.name == "test_cacheable_searcher"
 
     @pytest.mark.asyncio
     async def test_cacheable_searcher_cache_key_generation(self, search_context) -> None:
@@ -331,10 +331,10 @@ class TestSearchContextClass:
 
         assert context.repo is mock_repo
         # Use == for Pydantic model comparison
-        assert context.query = = sample_search_query
-        assert context.branch = = "main"
+        assert context.query == sample_search_query
+        assert context.branch == "main"
         assert context.progress_callback is None
-        assert context.cache = = {}
+        assert context.cache == {}
 
     def test_search_context_with_progress_callback(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with progress callback."""
@@ -354,7 +354,7 @@ class TestSearchContextClass:
             repo=mock_repo, query=sample_search_query, cache=cache
         )
 
-        assert context.cache = = cache
+        assert context.cache == cache
         assert context.cache["test_key"] == "test_value"
 
     def test_search_context_default_values(self, mock_repo, sample_search_query) -> None:
@@ -363,7 +363,7 @@ class TestSearchContextClass:
 
         assert context.repo is mock_repo
         # Use == for Pydantic model comparison
-        assert context.query = = sample_search_query
+        assert context.query == sample_search_query
         assert context.branch is None
         assert context.progress_callback is None
         assert context.cache is None

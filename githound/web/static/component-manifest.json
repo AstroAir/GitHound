@@ -1,0 +1,89 @@
+{
+  "components": [
+    {
+      "name": "core/component",
+      "path": "components/core/component.js",
+      "lazy": false,
+      "size": 5003
+    },
+    {
+      "name": "core/registry",
+      "path": "components/core/registry.js",
+      "lazy": false,
+      "size": 6967
+    },
+    {
+      "name": "core/event-bus",
+      "path": "components/core/event-bus.js",
+      "lazy": false,
+      "size": 4886
+    },
+    {
+      "name": "core/state-manager",
+      "path": "components/core/state-manager.js",
+      "lazy": false,
+      "size": 6284
+    },
+    {
+      "name": "core/app",
+      "path": "components/core/app.js",
+      "lazy": false,
+      "size": 13830
+    },
+    {
+      "name": "core/lazy-loader",
+      "path": "components/core/lazy-loader.js",
+      "lazy": false,
+      "size": 10511
+    },
+    {
+      "name": "auth/auth-manager",
+      "path": "components/auth/auth-manager.js",
+      "lazy": true,
+      "size": 13730
+    },
+    {
+      "name": "search/search-manager",
+      "path": "components/search/search-manager.js",
+      "lazy": true,
+      "size": 11269
+    },
+    {
+      "name": "ui/theme-manager",
+      "path": "components/ui/theme-manager.js",
+      "lazy": true,
+      "size": 9791
+    },
+    {
+      "name": "ui/notification-manager",
+      "path": "components/ui/notification-manager.js",
+      "lazy": true,
+      "size": 10647
+    },
+    {
+      "name": "ui/accessibility-manager",
+      "path": "components/ui/accessibility-manager.js",
+      "lazy": true,
+      "size": 18179
+    },
+    {
+      "name": "websocket/websocket-manager",
+      "path": "components/websocket/websocket-manager.js",
+      "lazy": true,
+      "size": 8429
+    },
+    {
+      "name": "utils/export-manager",
+      "path": "components/utils/export-manager.js",
+      "lazy": true,
+      "size": 11790
+    },
+    {
+      "name": "dev/debug-panel",
+      "path": "components/dev/debug-panel.js",
+      "lazy": true,
+      "size": 15581
+    }
+  ],
+  "totalSize": 146897
+}

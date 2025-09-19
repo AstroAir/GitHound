@@ -11,6 +11,10 @@ from .providers import (
     OAuthProxy,
 )
 
+# Import auth functions from the main auth module
+# Note: Avoiding circular import - these functions are available in githound.mcp.auth
+# from githound.mcp.auth import check_rate_limit, get_current_user
+
 # Import authorization providers if available
 if EUNOMIA_AVAILABLE:
     from .providers import EunomiaAuthorizationProvider

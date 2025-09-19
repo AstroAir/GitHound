@@ -65,12 +65,7 @@ async def register_user(
             )
         
         # Create the user
-        user_profile = auth_manager.create_user(
-            username=user_data.username,
-            email=user_data.email,
-            password=user_data.password,
-            roles=user_data.roles
-        )
+        user_profile = auth_manager.create_user(user_data)
         
         return RegisterResponse(
             user=user_profile,
@@ -99,18 +94,9 @@ async def login_user(
     Validates credentials and returns JWT token for API access.
     """
     try:
-        # Authenticate user
-        token = auth_manager.authenticate_user(
-            username=login_data.username,
-            password=login_data.password
-        )
-        
-        if not token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid username or password"
-            )
-        
+        # Use the login method which returns a Token
+        token = auth_manager.login(login_data)
+
         # Get user profile
         user_data = auth_manager.get_user(login_data.username)
         if not user_data:
@@ -118,17 +104,17 @@ async def login_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
-        
+
         user_profile = UserProfile(
-            user_id=user_data["user_id"],
-            username=user_data["username"],
-            email=user_data["email"],
-            roles=user_data["roles"],
-            is_active=user_data["is_active"],
-            created_at=user_data["created_at"],
-            last_login=user_data.get("last_login")
+            user_id=user_data.user_id,
+            username=user_data.username,
+            email=user_data.email,
+            roles=user_data.roles,
+            is_active=user_data.is_active,
+            created_at=user_data.created_at,
+            last_login=user_data.last_login
         )
-        
+
         return LoginResponse(
             token=token,
             user=user_profile
@@ -279,13 +265,21 @@ async def refresh_token(
     """
     try:
         # Generate new token
-        token = auth_manager.create_access_token(
+        access_token = auth_manager.create_access_token(
+            data={
+                "sub": current_user["user_id"],
+                "username": current_user["username"],
+                "roles": current_user["roles"]
+            }
+        )
+
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=3600,  # 1 hour
             user_id=current_user["user_id"],
-            username=current_user["username"],
             roles=current_user["roles"]
         )
-        
-        return token
         
     except Exception as e:
         raise HTTPException(

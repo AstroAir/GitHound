@@ -1,6 +1,7 @@
 """Commit-based searchers for GitHound."""
 
 import re
+import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
 
@@ -12,7 +13,7 @@ except ImportError:
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz  # [assignment]
+    fuzz = mock_rapidfuzz.fuzz
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -107,6 +108,7 @@ class AuthorSearcher(CacheableSearcher):
         if not author_pattern:
             return
 
+        search_start_time = time.time()
         self._report_progress(
             context, f"Searching for author '{author_pattern}'...", 0.0)
 
@@ -141,9 +143,9 @@ class AuthorSearcher(CacheableSearcher):
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
                     name_score = fuzz.ratio(
-                        author_pattern.lower if author_pattern is not None else None(), author_name.lower()) / 100.0
+                        author_pattern.lower() if author_pattern is not None else "", author_name.lower()) / 100.0
                     email_score = fuzz.ratio(
-                        author_pattern.lower if author_pattern is not None else None(), author_email.lower()) / 100.0
+                        author_pattern.lower() if author_pattern is not None else "", author_email.lower()) / 100.0
 
                     if name_score >= context.query.fuzzy_threshold:
                         match_score = name_score
@@ -210,7 +212,7 @@ class AuthorSearcher(CacheableSearcher):
                             "matched_field": match_field,
                             "matched_value": author_name if match_field == "name" else author_email,
                         },
-                        search_time_ms=None,
+                        search_time_ms=self._calculate_search_time_ms(search_start_time),
                     )
 
                     results_found += 1
@@ -266,6 +268,7 @@ class MessageSearcher(CacheableSearcher):
         if not message_pattern:
             return
 
+        search_start_time = time.time()
         self._report_progress(
             context, f"Searching commit messages for '{message_pattern}'...", 0.0)
 
@@ -293,7 +296,7 @@ class MessageSearcher(CacheableSearcher):
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
                     score = fuzz.partial_ratio(
-                        message_pattern.lower if message_pattern is not None else None(), message.lower()) / 100.0
+                        message_pattern.lower() if message_pattern is not None else "", message.lower()) / 100.0
                     if score >= context.query.fuzzy_threshold:
                         match_score = score
                 else:
@@ -337,7 +340,7 @@ class MessageSearcher(CacheableSearcher):
                         commit_info=commit_info,
                         match_context={
                             "search_term": message_pattern, "matched_message": message},
-                        search_time_ms=None,
+                        search_time_ms=self._calculate_search_time_ms(search_start_time),
                     )
 
                     results_found += 1
@@ -402,6 +405,7 @@ class DateRangeSearcher(CacheableSearcher):
         if not date_from and not date_to:
             return
 
+        search_start_time = time.time()
         self._report_progress(
             context, "Searching commits by date range...", 0.0)
 
@@ -452,7 +456,7 @@ class DateRangeSearcher(CacheableSearcher):
                             "date_to": date_to.isoformat() if date_to else None,
                             "commit_date": commit_date.isoformat(),
                         },
-                        search_time_ms=None,
+                        search_time_ms=self._calculate_search_time_ms(search_start_time),
                     )
 
                     results_found += 1

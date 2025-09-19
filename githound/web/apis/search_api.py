@@ -26,17 +26,7 @@ from pydantic import BaseModel, Field
 
 from ...git_handler import get_repository
 from ...models import SearchQuery, SearchResult
-from ...search_engine import (
-    AuthorSearcher,
-    CommitHashSearcher,
-    ContentSearcher,
-    DateRangeSearcher,
-    FilePathSearcher,
-    FileTypeSearcher,
-    FuzzySearcher,
-    MessageSearcher,
-    SearchOrchestrator,
-)
+from ...search_engine import SearchOrchestrator
 from ..core.search_orchestrator import create_search_orchestrator
 from ..middleware.rate_limiting import get_limiter
 from ..models.api_models import (
@@ -392,10 +382,14 @@ async def _perform_sync_search(
     
     try:
         repo = get_repository(Path(repo_path))
-        results = orchestrator.search(repo, search_query)
-        
+
+        # Collect results from async generator
+        results = []
+        async for result in orchestrator.search(repo, search_query):
+            results.append(result)
+
         search_duration = (datetime.now() - start_time).total_seconds() * 1000
-        
+
         return {
             "search_id": str(uuid.uuid4()),
             "status": "completed",

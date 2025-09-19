@@ -30,7 +30,7 @@ class TestCancellationToken:
         token.cancel(reason)
 
         assert token.is_cancelled
-        assert token.cancellation_reason = = reason
+        assert token.cancellation_reason == reason
 
     def test_cancellation_token_check_cancelled(self) -> None:
         """Test check_cancelled method."""
@@ -86,7 +86,7 @@ class TestProgressManager:
         manager = ProgressManager(
             console=self.console, enable_cancellation=True)
 
-        assert manager.console = = self.console
+        assert manager.console == self.console
         assert manager.enable_cancellation is True
         assert isinstance(manager.cancellation_token, CancellationToken)
 
@@ -99,7 +99,7 @@ class TestProgressManager:
             mock_progress_class.return_value = mock_progress
 
             with ProgressManager(console=self.console) as manager:
-                assert manager._progress = = mock_progress
+                assert manager._progress == mock_progress
                 mock_progress.__enter__.assert_called_once()
 
             mock_progress.__exit__.assert_called_once()
@@ -250,9 +250,9 @@ class TestSimpleProgressReporter:
         """Test creating a SimpleProgressReporter."""
         reporter = SimpleProgressReporter(console=self.console)
 
-        assert reporter.console = = self.console
-        assert reporter._last_update = = 0.0
-        assert reporter._update_interval = = 0.5
+        assert reporter.console == self.console
+        assert reporter._last_update == 0.0
+        assert reporter._update_interval == 0.5
 
     def test_simple_progress_reporter_report_message_only(self) -> None:
         """Test reporting progress with message only."""
@@ -279,16 +279,16 @@ class TestSimpleProgressReporter:
 
         # First call should go through
         reporter.report("First message")
-        assert self.console.print.call_count = = 1
+        assert self.console.print.call_count == 1
 
         # Immediate second call should be throttled
         reporter.report("Second message")
-        assert self.console.print.call_count = = 1
+        assert self.console.print.call_count == 1
 
         # After waiting, call should go through
         with patch('time.time', return_value=time.time() + 1.0):
             reporter.report("Third message")
-            assert self.console.print.call_count = = 2
+            assert self.console.print.call_count == 2
 
     def test_simple_progress_reporter_custom_interval(self) -> None:
         """Test SimpleProgressReporter with custom update interval."""
@@ -296,11 +296,11 @@ class TestSimpleProgressReporter:
         reporter._update_interval = 0.1  # Very short interval
 
         reporter.report("First message")
-        assert self.console.print.call_count = = 1
+        assert self.console.print.call_count == 1
 
         # Should still be throttled immediately
         reporter.report("Second message")
-        assert self.console.print.call_count = = 1
+        assert self.console.print.call_count == 1
 
     def test_simple_progress_reporter_zero_progress(self) -> None:
         """Test reporting with zero progress."""
@@ -330,5 +330,5 @@ class TestSimpleProgressReporter:
 
             reporter = SimpleProgressReporter()
 
-            assert reporter.console = = mock_console
+            assert reporter.console == mock_console
             mock_console_class.assert_called_once()

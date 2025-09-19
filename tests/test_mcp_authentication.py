@@ -111,8 +111,8 @@ class TestAuthenticationMiddleware:
             # Simulate no authenticated user
             Optional[mock_auth.return_value] = None
 
-           # Test should still work but with limited access
-           async with Client(mcp_server) as client:
+            # Test should still work but with limited access
+            async with Client(mcp_server) as client:
                 tools = await client.list_tools()
                 # Tools should still be available even without auth in current implementation
                 assert isinstance(tools, list)
@@ -179,8 +179,8 @@ class TestAuthorizationScenarios:
         with patch('githound.mcp_server.get_current_user') as mock_user:
             Optional[mock_user.return_value] = None  # No user context
 
-           # Should still work in in-memory testing (no HTTP auth)
-           tools = await mcp_client.list_tools()
+            # Should still work in in-memory testing (no HTTP auth)
+            tools = await mcp_client.list_tools()
             # In-memory testing bypasses auth, so this tests server availability
             assert isinstance(tools, list)
 

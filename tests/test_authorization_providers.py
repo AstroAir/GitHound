@@ -5,7 +5,7 @@ import json
 import pytest
 import tempfile
 from unittest.mock import Mock, patch, AsyncMock
-from typing import Optionalnal
+from typing import Optional
 
 from githound.mcp.auth.providers.base import AuthProvider, AuthResult, TokenInfo
 from githound.mcp.models import User
@@ -107,7 +107,7 @@ class TestEunomiaAuthorizationProvider:
                 server_name="test-server"
             )
             
-            assert provider.base_provider = = mock_base_provider
+            assert provider.base_provider == mock_base_provider
             assert provider.config.policy_file == policy_file  # [attr-defined]
             assert provider.config.server_name == "test-server"  # [attr-defined]
             
@@ -225,7 +225,7 @@ class TestPermitAuthorizationProvider:
                 server_name="test-server"
             )
             
-            assert provider.base_provider = = mock_base_provider
+            assert provider.base_provider == mock_base_provider
             assert provider.config.permit_api_key == "test-api-key"  # [attr-defined]
             assert provider.config.permit_pdp_url == "http://localhost:7766"  # [attr-defined]
             assert provider.config.server_name == "test-server"  # [attr-defined]

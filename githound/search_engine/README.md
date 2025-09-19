@@ -77,12 +77,9 @@ from githound.search_engine import (
 from githound.models import SearchQuery
 from git import Repo
 
-# Create orchestrator and register searchers
-orchestrator = SearchOrchestrator()
-orchestrator.register_searcher(CommitHashSearcher())
-orchestrator.register_searcher(AuthorSearcher())
-orchestrator.register_searcher(ContentSearcher())
-orchestrator.register_searcher(FuzzySearcher())
+# Create orchestrator using factory for consistent configuration
+from githound.search_engine import create_search_orchestrator
+orchestrator = create_search_orchestrator()
 
 # Create search query
 query = SearchQuery(

@@ -1,0 +1,334 @@
+/* Notification Component Styles */
+
+.notification-container {
+  position: fixed;
+  z-index: var(--z-toast);
+  pointer-events: none;
+  max-width: var(--notification-max-width);
+  width: var(--notification-width);
+}
+
+/* Position variants */
+.notification-container.top-right {
+  top: var(--notification-spacing);
+  right: var(--notification-spacing);
+}
+
+.notification-container.top-left {
+  top: var(--notification-spacing);
+  left: var(--notification-spacing);
+}
+
+.notification-container.bottom-right {
+  bottom: var(--notification-spacing);
+  right: var(--notification-spacing);
+}
+
+.notification-container.bottom-left {
+  bottom: var(--notification-spacing);
+  left: var(--notification-spacing);
+}
+
+.notification-container.top-center {
+  top: var(--notification-spacing);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.notification-container.bottom-center {
+  bottom: var(--notification-spacing);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Notification item */
+.notification {
+  pointer-events: auto;
+  margin-bottom: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+  animation: slideInRight var(--animation-duration) var(--animation-easing);
+}
+
+.notification.removing {
+  animation: slideOutRight var(--animation-duration) var(--animation-easing);
+}
+
+/* Notification types */
+.notification.success {
+  background: var(--success-color);
+  color: white;
+}
+
+.notification.error {
+  background: var(--danger-color);
+  color: white;
+}
+
+.notification.warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.notification.info {
+  background: var(--info-color);
+  color: white;
+}
+
+/* Notification content */
+.notification-content {
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  margin-top: 0.125rem;
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+  font-size: 0.875rem;
+}
+
+.notification-message {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.notification-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+  padding: 0;
+  margin-left: var(--spacing-sm);
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+/* Progress bar */
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.notification-progress-bar {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  transition: width linear;
+  width: 100%;
+}
+
+/* Action buttons */
+.notification-actions {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.notification-action {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: inherit;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.notification-action:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* Position-specific animations */
+.notification-container.top-left .notification {
+  animation: slideInLeft var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.top-left .notification.removing {
+  animation: slideOutLeft var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.top-center .notification {
+  animation: slideInDown var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.top-center .notification.removing {
+  animation: slideOutUp var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.bottom-right .notification {
+  animation: slideInRight var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.bottom-right .notification.removing {
+  animation: slideOutRight var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.bottom-left .notification {
+  animation: slideInLeft var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.bottom-left .notification.removing {
+  animation: slideOutLeft var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.bottom-center .notification {
+  animation: slideInUp var(--animation-duration) var(--animation-easing);
+}
+
+.notification-container.bottom-center .notification.removing {
+  animation: slideOutDown var(--animation-duration) var(--animation-easing);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .notification-container {
+    width: calc(100vw - 2 * var(--notification-spacing));
+    max-width: none;
+  }
+  
+  .notification-content {
+    padding: var(--spacing-sm);
+  }
+  
+  .notification-title,
+  .notification-message {
+    font-size: 0.8rem;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .notification {
+    animation: none !important;
+  }
+  
+  .notification-progress-bar {
+    transition: none;
+  }
+}
+
+/* High contrast support */
+[data-theme="high-contrast"] .notification {
+  border: 2px solid currentColor;
+}
+
+[data-theme="high-contrast"] .notification-action {
+  border-width: 2px;
+}

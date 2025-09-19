@@ -184,6 +184,71 @@ class AuthManager:
                 )
         return None
 
+    def get_user(self, username: str) -> User | None:
+        """Get user by username."""
+        user_dict = self.users.get(username)
+        if not user_dict:
+            return None
+
+        return User(
+            user_id=user_dict["user_id"],
+            username=user_dict["username"],
+            email=user_dict["email"],
+            roles=user_dict["roles"],
+            is_active=user_dict["is_active"],
+            created_at=user_dict["created_at"],
+            last_login=user_dict["last_login"]
+        )
+
+    def update_user(self, user_id: str, updates: dict[str, Any]) -> bool:
+        """Update user profile."""
+        for username, user_dict in self.users.items():
+            if user_dict["user_id"] == user_id:
+                # Update allowed fields
+                allowed_fields = ["email", "roles"]
+                for field, value in updates.items():
+                    if field in allowed_fields:
+                        user_dict[field] = value
+                return True
+        return False
+
+    def change_password(self, username: str, current_password: str, new_password: str) -> bool:
+        """Change user password."""
+        user_dict = self.users.get(username)
+        if not user_dict:
+            return False
+
+        # Verify current password
+        if not self.verify_password(current_password, user_dict["password_hash"]):
+            return False
+
+        # Update password
+        user_dict["password_hash"] = self.hash_password(new_password)
+        return True
+
+    def list_users(self) -> list[dict[str, Any]]:
+        """List all users."""
+        users = []
+        for user_dict in self.users.values():
+            users.append({
+                "user_id": user_dict["user_id"],
+                "username": user_dict["username"],
+                "email": user_dict["email"],
+                "roles": user_dict["roles"],
+                "is_active": user_dict["is_active"],
+                "created_at": user_dict["created_at"].isoformat() if user_dict["created_at"] else None,
+                "last_login": user_dict["last_login"].isoformat() if user_dict["last_login"] else None
+            })
+        return users
+
+    def delete_user(self, user_id: str) -> bool:
+        """Delete user by ID."""
+        for username, user_dict in list(self.users.items()):
+            if user_dict["user_id"] == user_id:
+                del self.users[username]
+                return True
+        return False
+
     def revoke_token(self, token: str) -> bool:
         """Revoke a token."""
         if token in self.active_tokens:

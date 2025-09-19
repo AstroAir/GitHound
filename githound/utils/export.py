@@ -227,7 +227,7 @@ class ExportManager:
         try:
             if format.lower() == "json":
                 with open(output_file, "w", encoding="utf-8") as f:
-                    json.dump(metrics.dict if metrics is not None else None(), f, indent=2,
+                    json.dump(metrics.dict() if metrics is not None else None, f, indent=2,
                               default=self._json_serializer)
             elif format.lower() == "txt":
                 with open(output_file, "w", encoding="utf-8") as f:

@@ -39,7 +39,7 @@ class TestRepositoryInitialization:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["path"] == repo_path
@@ -55,7 +55,7 @@ class TestRepositoryInitialization:
             json={"path": repo_path, "bare": False}
         )
 
-        assert response.status_code = = status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_init_repository_insufficient_permissions(self, api_client, readonly_auth_headers, temp_dir) -> None:
         """Test repository initialization with insufficient permissions."""
@@ -67,7 +67,7 @@ class TestRepositoryInitialization:
             json={"path": repo_path, "bare": False}
         )
 
-        assert response.status_code = = status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_init_repository_invalid_path(self, api_client, admin_auth_headers) -> None:
         """Test repository initialization with invalid path."""
@@ -80,7 +80,7 @@ class TestRepositoryInitialization:
                 json={"path": "/invalid/path", "bare": False}
             )
 
-            assert response.status_code = = status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.integration
@@ -105,7 +105,7 @@ class TestRepositoryCloning:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert "operation_id" in data["data"]
@@ -129,7 +129,7 @@ class TestRepositoryCloning:
             }
         )
 
-        assert response.status_code = = status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["success"] is True
 
@@ -163,7 +163,7 @@ class TestRepositoryStatus:
                 headers=admin_auth_headers
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["current_branch"] == "master"
@@ -179,7 +179,7 @@ class TestRepositoryStatus:
                 headers=admin_auth_headers
             )
 
-            assert response.status_code = = status.HTTP_400_BAD_REQUEST
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.integration
@@ -210,7 +210,7 @@ class TestBranchOperations:
                 headers=admin_auth_headers
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert len(data["data"]["branches"]) == 1
@@ -242,7 +242,7 @@ class TestBranchOperations:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["name"] == "feature-branch"
@@ -267,7 +267,7 @@ class TestBranchOperations:
                 headers=admin_auth_headers
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["name"] == branch_name
@@ -291,7 +291,7 @@ class TestBranchOperations:
                 headers=admin_auth_headers
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["branch"] == branch_name
@@ -324,7 +324,7 @@ class TestBranchOperations:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["status"] == "merged"
@@ -364,7 +364,7 @@ class TestCommitOperations:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["commit_hash"] == "new123"
@@ -395,7 +395,7 @@ class TestCommitOperations:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["status"] == "amended"
@@ -423,7 +423,7 @@ class TestCommitOperations:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["reverted_commit"] == commit_hash
@@ -453,7 +453,7 @@ class TestCommitOperations:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["original_commit"] == commit_hash

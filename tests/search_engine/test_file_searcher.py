@@ -104,7 +104,7 @@ class TestFilePathSearcher:
     def test_file_path_searcher_name(self) -> None:
         """Test FilePathSearcher name property."""
         searcher = FilePathSearcher()
-        assert searcher.name = = "file_path"
+        assert searcher.name == "file_path"
 
     @pytest.mark.asyncio
     async def test_file_path_searcher_estimate_work(self, sample_search_query) -> None:
@@ -163,7 +163,7 @@ class TestFileTypeSearcher:
     def test_file_type_searcher_name(self) -> None:
         """Test FileTypeSearcher name property."""
         searcher = FileTypeSearcher()
-        assert searcher.name = = "file_type"
+        assert searcher.name == "file_type"
 
     @pytest.mark.asyncio
     async def test_file_type_searcher_estimate_work(self, sample_search_query) -> None:
@@ -221,7 +221,7 @@ class TestContentSearcher:
     def test_content_searcher_name(self) -> None:
         """Test ContentSearcher name property."""
         searcher = ContentSearcher()
-        assert searcher.name = = "content"
+        assert searcher.name == "content"
 
     @pytest.mark.asyncio
     async def test_content_searcher_estimate_work(self, sample_search_query) -> None:

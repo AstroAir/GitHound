@@ -216,9 +216,14 @@ Error: Cannot find module 'axe-playwright'
 ```
 
 **Solutions:**
-1. **Install axe-playwright:**
+1. **Install axe-playwright (JavaScript/npm):**
    ```bash
    npm install axe-playwright
+   ```
+
+   **For Python accessibility testing, install axe-playwright-python:**
+   ```bash
+   pip install axe-playwright-python
    ```
 
 2. **Import correctly:**

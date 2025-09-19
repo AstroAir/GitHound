@@ -14,14 +14,14 @@ try:
     from .eunomia import EunomiaAuthorizationProvider
     EUNOMIA_AVAILABLE = True
 except ImportError:
-    EunomiaAuthorizationProvider = None  #
+    EunomiaAuthorizationProvider = None  # type: ignore[misc,assignment]
     EUNOMIA_AVAILABLE = False
 
 try:
     from .permit import PermitAuthorizationProvider
     PERMIT_AVAILABLE = True
 except ImportError:
-    PermitAuthorizationProvider = None  #
+    PermitAuthorizationProvider = None  # type: ignore[misc,assignment]
     PERMIT_AVAILABLE = False
 
 __all__ = [

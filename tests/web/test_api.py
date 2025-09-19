@@ -32,7 +32,7 @@ class TestWebAPI:
         """Test health check endpoint."""
         response = self.client.get("/health")
 
-        assert response.status_code = = 200
+        assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
         assert "version" in data
@@ -65,7 +65,7 @@ class TestWebAPI:
                 response = self.client.post(
                     "/api/search", json=self.sample_search_request)
 
-                assert response.status_code = = 200
+                assert response.status_code == 200
                 data = response.json()
                 assert "search_id" in data
                 assert data["status"] == "started"
@@ -78,7 +78,7 @@ class TestWebAPI:
             "/api/search", json=self.sample_search_request)
 
         # Fixed: API returns 200 for async search start
-        assert response.status_code = = 200
+        assert response.status_code == 200
         data = response.json()
         # Search is started but will fail in background
         assert data["status"] == "started"
@@ -114,7 +114,7 @@ class TestWebAPI:
                 status_response = self.client.get(
                     f"/api/search/{search_id}/status")
 
-                assert status_response.status_code = = 200
+                assert status_response.status_code == 200
                 data = status_response.json()
                 assert data["search_id"] == search_id
                 assert "status" in data
@@ -123,7 +123,7 @@ class TestWebAPI:
         """Test search status endpoint with non-existent search ID."""
         response = self.client.get("/api/search/nonexistent/status")
 
-        assert response.status_code = = 404
+        assert response.status_code == 404
         data = response.json()
         assert "error" in data
 
@@ -166,7 +166,7 @@ class TestWebAPI:
         }):
             response = self.client.get(f"/api/search/{search_id}/results")
 
-            assert response.status_code = = 200
+            assert response.status_code == 200
             data = response.json()
             assert len(data["results"]) == 1
             assert data["total_count"] == 1
@@ -176,7 +176,7 @@ class TestWebAPI:
         """Test search results endpoint with non-existent search ID."""
         response = self.client.get("/api/search/nonexistent/results")
 
-        assert response.status_code = = 404
+        assert response.status_code == 404
         data = response.json()
         assert "error" in data
 
@@ -193,7 +193,7 @@ class TestWebAPI:
             response = self.client.delete(
                 f"/api/search/{search_id}")  # Fixed: POST -> DELETE
 
-            assert response.status_code = = 200
+            assert response.status_code == 200
             data = response.json()
             # Fixed: match actual API response
             assert data["message"] == "Search cancelled successfully"
@@ -203,7 +203,7 @@ class TestWebAPI:
         response = self.client.delete(
             "/api/search/nonexistent")  # Fixed: POST -> DELETE
 
-        assert response.status_code = = 404
+        assert response.status_code == 404
         data = response.json()
         assert "message" in data  # Fixed: API returns "message" in error response
 
@@ -271,7 +271,7 @@ class TestWebAPI:
                     response = self.client.post(
                         f"/api/search/{search_id}/export", json=export_request)
 
-                    assert response.status_code = = 200
+                    assert response.status_code == 200
                 finally:
                     # Clean up the temporary file
                     if temp_file_path.exists():
@@ -286,11 +286,11 @@ class TestActiveSearchState:
         search_id = "test_123"
         state = ActiveSearchState(id=search_id)
 
-        assert state.id = = search_id
-        assert state.status = = "starting"
-        assert state.progress = = 0.0
-        assert state.message = = ""
-        assert state.results_count = = 0
+        assert state.id == search_id
+        assert state.status == "starting"
+        assert state.progress == 0.0
+        assert state.message == ""
+        assert state.results_count == 0
         assert state.request is None
         assert state.response is None
         assert state.results is None
@@ -329,11 +329,11 @@ class TestActiveSearchState:
             metrics=metrics
         )
 
-        assert state.id = = search_id
-        assert state.status = = "completed"
-        assert state.progress = = 1.0
-        assert state.message = = "Search completed"
-        assert state.results_count = = 1
-        assert state.request = = request
-        assert state.results = = results
-        assert state.metrics = = metrics
+        assert state.id == search_id
+        assert state.status == "completed"
+        assert state.progress == 1.0
+        assert state.message == "Search completed"
+        assert state.results_count == 1
+        assert state.request == request
+        assert state.results == results
+        assert state.metrics == metrics

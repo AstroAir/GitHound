@@ -154,8 +154,7 @@ def load_mcp_json_config(config_path: Path) -> MCPJsonConfig | None:
 
         # Support both pydantic v1 and v2
         if hasattr(MCPJsonConfig, "model_validate"):
-            config = MCPJsonConfig.model_validate(
-                data)  # type: ignore[attr-defined]
+            config = MCPJsonConfig.model_validate(data)
         else:
             config = MCPJsonConfig.parse_obj(data)
         logging.getLogger(__name__).info(
@@ -290,7 +289,6 @@ def get_server_config() -> ServerConfig:
                         merged_config[key] = default_value
 
                 if hasattr(ServerConfig, "model_validate"):
-                    # type: ignore[attr-defined]
                     return ServerConfig.model_validate(merged_config)
                 else:
                     return ServerConfig(**merged_config)

@@ -35,7 +35,7 @@ class TestRepositoryWorkflow:
                 json={"path": repo_path, "bare": False}
             )
 
-            assert init_response.status_code = = status.HTTP_200_OK
+            assert init_response.status_code == status.HTTP_200_OK
             assert init_response.json()["data"]["status"] == "created"
 
         # Step 2: Get repository status
@@ -56,7 +56,7 @@ class TestRepositoryWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert status_response.status_code = = status.HTTP_200_OK
+            assert status_response.status_code == status.HTTP_200_OK
             assert status_response.json()["data"]["current_branch"] == "main"
 
         # Step 3: Create a branch
@@ -78,7 +78,7 @@ class TestRepositoryWorkflow:
                 }
             )
 
-            assert branch_response.status_code = = status.HTTP_200_OK
+            assert branch_response.status_code == status.HTTP_200_OK
             assert branch_response.json()["data"]["name"] == "feature-branch"
 
         # Step 4: Create a commit
@@ -101,7 +101,7 @@ class TestRepositoryWorkflow:
                 }
             )
 
-            assert commit_response.status_code = = status.HTTP_200_OK
+            assert commit_response.status_code == status.HTTP_200_OK
             assert commit_response.json(
             )["data"]["message"] == "Add new feature"
 
@@ -120,7 +120,7 @@ class TestRepositoryWorkflow:
                 params={"repo_path": repo_path}
             )
 
-            assert stats_response.status_code = = status.HTTP_200_OK
+            assert stats_response.status_code == status.HTTP_200_OK
             assert stats_response.json(
             )["data"]["summary"]["total_commits"] == 2
 
@@ -141,7 +141,7 @@ class TestRepositoryWorkflow:
                 }
             )
 
-            assert clone_response.status_code = = status.HTTP_200_OK
+            assert clone_response.status_code == status.HTTP_200_OK
             operation_id = clone_response.json()["data"]["operation_id"]
 
         # Step 2: Check operation status
@@ -161,7 +161,7 @@ class TestRepositoryWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert status_response.status_code = = status.HTTP_200_OK
+            assert status_response.status_code == status.HTTP_200_OK
             assert status_response.json()["data"]["status"] == "completed"
 
         # Step 3: Perform blame analysis
@@ -186,7 +186,7 @@ class TestRepositoryWorkflow:
                 json={"file_path": "README.md"}
             )
 
-            assert blame_response.status_code = = status.HTTP_200_OK
+            assert blame_response.status_code == status.HTTP_200_OK
             assert "line_blame" in blame_response.json()["data"]
 
 
@@ -241,7 +241,7 @@ class TestSearchWorkflow:
                 }
             )
 
-            assert search_response.status_code = = status.HTTP_200_OK
+            assert search_response.status_code == status.HTTP_200_OK
             search_data = search_response.json()
             assert search_data["status"] == "completed"
             assert len(search_data["results"]) == 2
@@ -260,7 +260,7 @@ class TestSearchWorkflow:
                 }
             )
 
-            assert export_response.status_code = = status.HTTP_200_OK
+            assert export_response.status_code == status.HTTP_200_OK
             export_data = export_response.json()
             assert export_data["data"]["export_type"] == "search_results"
             export_id = export_data["data"]["export_id"]
@@ -280,7 +280,7 @@ class TestSearchWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert export_status_response.status_code = = status.HTTP_200_OK
+            assert export_status_response.status_code == status.HTTP_200_OK
             assert export_status_response.json(
             )["data"]["status"] == "completed"
 
@@ -323,7 +323,7 @@ class TestSearchWorkflow:
                 }
             )
 
-            assert fuzzy_response.status_code = = status.HTTP_200_OK
+            assert fuzzy_response.status_code == status.HTTP_200_OK
             fuzzy_data = fuzzy_response.json()
             assert fuzzy_data["status"] == "completed"
             assert len(fuzzy_data["results"]) == 1
@@ -346,7 +346,7 @@ class TestSearchWorkflow:
                 }
             )
 
-            assert historical_response.status_code = = status.HTTP_200_OK
+            assert historical_response.status_code == status.HTTP_200_OK
             historical_data = historical_response.json()
             assert historical_data["status"] == "started"
             search_id = historical_data["search_id"]
@@ -368,7 +368,7 @@ class TestSearchWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert progress_response.status_code = = status.HTTP_200_OK
+            assert progress_response.status_code == status.HTTP_200_OK
             progress_data = progress_response.json()
             assert progress_data["status"] == "running"
             assert progress_data["progress"] == 0.6
@@ -396,7 +396,7 @@ class TestSearchWorkflow:
                 params={"page": 1, "page_size": 10}
             )
 
-            assert results_response.status_code = = status.HTTP_200_OK
+            assert results_response.status_code == status.HTTP_200_OK
             results_data = results_response.json()
             assert results_data["status"] == "completed"
             assert len(results_data["results"]) == 2
@@ -426,7 +426,7 @@ class TestWebhookWorkflow:
                 }
             )
 
-            assert webhook_response.status_code = = status.HTTP_200_OK
+            assert webhook_response.status_code == status.HTTP_200_OK
             webhook_data = webhook_response.json()
             assert webhook_data["data"]["url"] == "https://example.com/webhook"
             webhook_id = webhook_data["data"]["webhook_id"]
@@ -457,7 +457,7 @@ class TestWebhookWorkflow:
                     headers=admin_auth_headers
                 )
 
-                assert list_response.status_code = = status.HTTP_200_OK
+                assert list_response.status_code == status.HTTP_200_OK
                 list_data = list_response.json()
                 assert len(list_data["data"]["webhooks"]) == 1
 
@@ -483,7 +483,7 @@ class TestWebhookWorkflow:
                     }
                 )
 
-                assert branch_response.status_code = = status.HTTP_200_OK
+                assert branch_response.status_code == status.HTTP_200_OK
                 # Webhook should be triggered automatically
                 mock_trigger.assert_called_once()
 
@@ -513,7 +513,7 @@ class TestBatchOperationsWorkflow:
                 }
             )
 
-            assert batch_response.status_code = = status.HTTP_200_OK
+            assert batch_response.status_code == status.HTTP_200_OK
             batch_data = batch_response.json()
             assert batch_data["data"]["operation_type"] == "status_check"
             assert batch_data["data"]["repository_count"] == 3
@@ -538,7 +538,7 @@ class TestBatchOperationsWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert status_response.status_code = = status.HTTP_200_OK
+            assert status_response.status_code == status.HTTP_200_OK
             status_data = status_response.json()
             assert status_data["data"]["status"] == "running"
             assert status_data["data"]["completed_count"] == 2
@@ -566,7 +566,7 @@ class TestBatchOperationsWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert results_response.status_code = = status.HTTP_200_OK
+            assert results_response.status_code == status.HTTP_200_OK
             results_data = results_response.json()
             assert results_data["data"]["status"] == "completed"
             assert len(results_data["data"]["results"]) == 3
@@ -591,7 +591,7 @@ class TestErrorHandlingWorkflow:
                 json={"path": "/invalid/permission/path", "bare": False}
             )
 
-            assert init_response.status_code = = status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert init_response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             assert "Permission denied" in init_response.json()["detail"]
 
         # Step 2: Retry with valid path
@@ -607,7 +607,7 @@ class TestErrorHandlingWorkflow:
                 json={"path": repo_path, "bare": False}
             )
 
-            assert retry_response.status_code = = status.HTTP_200_OK
+            assert retry_response.status_code == status.HTTP_200_OK
             assert retry_response.json()["data"]["status"] == "created"
 
     def test_search_timeout_handling(self, api_client, admin_auth_headers, temp_repo) -> None:
@@ -626,7 +626,7 @@ class TestErrorHandlingWorkflow:
                 }
             )
 
-            assert search_response.status_code = = status.HTTP_200_OK
+            assert search_response.status_code == status.HTTP_200_OK
             search_id = search_response.json()["search_id"]
 
         # Step 2: Check search status shows timeout
@@ -644,7 +644,7 @@ class TestErrorHandlingWorkflow:
                 headers=admin_auth_headers
             )
 
-            assert status_response.status_code = = status.HTTP_200_OK
+            assert status_response.status_code == status.HTTP_200_OK
             status_data = status_response.json()
             assert status_data["status"] == "error"
             assert "timed out" in status_data["message"]

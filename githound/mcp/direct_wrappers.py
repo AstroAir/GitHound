@@ -367,7 +367,7 @@ async def get_repository_contributors_direct(repo_path: str) -> str:
 
         result_lines.extend([
             "",
-            f"Generated at: {datetime.now if datetime is not None else None().isoformat()}"
+            f"Generated at: {datetime.now().isoformat() if datetime is not None else None}"
         ])
 
         return "\n".join(result_lines)

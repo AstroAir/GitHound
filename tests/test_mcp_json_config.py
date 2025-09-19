@@ -29,11 +29,11 @@ class TestMCPJsonModels:
             env={"PYTHONPATH": "/path/to/githound"},
             description="Test server"
         )
-        assert config.command = = "python"  # [attr-defined]
-        assert config.args = = ["-m", "githound.mcp_server"]  # [attr-defined]
+        assert config.command == "python"  # [attr-defined]
+        assert config.args == ["-m", "githound.mcp_server"]  # [attr-defined]
         # [attr-defined]
-        assert config.env = = {"PYTHONPATH": "/path/to/githound"}
-        assert config.description = = "Test server"  # [attr-defined]
+        assert config.env == {"PYTHONPATH": "/path/to/githound"}
+        assert config.description == "Test server"  # [attr-defined]
 
         # Empty command should fail
         with pytest.raises(ValueError, match="Command cannot be empty"):
@@ -168,9 +168,9 @@ class TestMCPJsonConfigLoading:
 
         config = get_server_config_from_mcp_json(mcp_config)
         assert config is not None
-        assert config.name = = "Test Server"  # [attr-defined]
-        assert config.version = = "1.0.0"  # [attr-defined]
-        assert config.log_level = = "DEBUG"  # [attr-defined]
+        assert config.name == "Test Server"  # [attr-defined]
+        assert config.version == "1.0.0"  # [attr-defined]
+        assert config.log_level == "DEBUG"  # [attr-defined]
         assert config.enable_auth is True  # [attr-defined]
 
     def test_get_server_config_from_mcp_json_no_githound(self) -> None:
@@ -202,7 +202,7 @@ class TestMCPJsonIntegration:
         mock_load.return_value = mcp_config  # [attr-defined]
 
         config = get_server_config()
-        assert config.name = = "MCP Test Server"  # [attr-defined]
+        assert config.name == "MCP Test Server"  # [attr-defined]
 
     @patch('githound.mcp.config.find_mcp_json_files')  # [attr-defined]
     def test_get_server_config_no_mcp_json(self, mock_find) -> None:
@@ -212,7 +212,7 @@ class TestMCPJsonIntegration:
 
         with patch.dict('os.environ', {'FASTMCP_SERVER_NAME': 'Env Test Server'}):
             config = get_server_config()
-            assert config.name = = "Env Test Server"  # [attr-defined]
+            assert config.name == "Env Test Server"  # [attr-defined]
 
     def test_find_mcp_json_files(self) -> None:
         """Test finding MCP.json files in standard locations."""

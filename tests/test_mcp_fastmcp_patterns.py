@@ -32,7 +32,7 @@ class TestFastMCPInMemoryTesting:
     async def test_in_memory_server_creation(self, mcp_server: FastMCP) -> None:
         """Test that we can create a server instance for in-memory testing."""
         assert mcp_server is not None
-        assert mcp_server.name = = "GitHound MCP Server"
+        assert mcp_server.name == "GitHound MCP Server"
         assert hasattr(mcp_server, 'version')
 
     @pytest.mark.asyncio

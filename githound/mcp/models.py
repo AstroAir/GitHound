@@ -5,26 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-# Pydantic v1/v2 compatibility shims for validators
-try:  # Prefer v2-style if available
-    from pydantic import field_validator as field_validator
-    from pydantic import model_validator as model_validator
-except Exception:
-    # Fallback to v1 validators
-    from pydantic import root_validator as _root_validator  # type: ignore
-    from pydantic import validator as _validator  # type: ignore
-
-    def field_validator(*fields):
-        def _decorator(fn):
-            return _validator(*fields, allow_reuse=True)(fn)
-        return _decorator
-
-    def model_validator(*, mode: str = "after"):
-        def _decorator(fn):
-            if mode == "before" or mode == "pre":
-                return _root_validator(pre=True, allow_reuse=True)(fn)
-            return _root_validator(allow_reuse=True)(fn)
-        return _decorator
+# Pydantic v2 imports (project uses Pydantic >=2.0.0)
+from pydantic import field_validator, model_validator
 
 
 # Authentication and Configuration Models
@@ -465,3 +447,87 @@ class WebServerInput(BaseModel):
         if not v.strip():
             raise ValueError("Host cannot be empty")
         return v.strip()
+
+
+# Advanced Search Engine Models
+
+class SearchEngineConfigInput(BaseModel):
+    """Input for search engine configuration."""
+
+    enable_advanced_searchers: bool = Field(True, description="Enable advanced searchers")
+    enable_basic_searchers: bool = Field(True, description="Enable basic searchers")
+    enable_caching: bool = Field(True, description="Enable result caching")
+    enable_ranking: bool = Field(True, description="Enable result ranking")
+    enable_analytics: bool = Field(True, description="Enable performance analytics")
+    enable_fuzzy_search: bool = Field(True, description="Enable fuzzy search")
+    enable_pattern_detection: bool = Field(True, description="Enable pattern detection")
+    max_workers: int = Field(4, description="Maximum worker threads")
+    cache_backend: str = Field("memory", description="Cache backend (memory/redis)")
+    cache_ttl_seconds: int = Field(3600, description="Cache TTL in seconds")
+
+
+class SearcherRegistryQueryInput(BaseModel):
+    """Input for searcher registry queries."""
+
+    repo_path: str = Field(..., description="Path to the Git repository")
+    search_types: list[str] | None = Field(None, description="Filter by search types")
+    capabilities: list[str] | None = Field(None, description="Filter by capabilities")
+    enabled_only: bool = Field(True, description="Only return enabled searchers")
+
+
+class SearchAnalyticsQueryInput(BaseModel):
+    """Input for search analytics queries."""
+
+    repo_path: str | None = Field(None, description="Filter by repository path")
+    time_range_hours: int = Field(24, description="Time range in hours")
+    include_performance: bool = Field(True, description="Include performance metrics")
+    include_usage_patterns: bool = Field(True, description="Include usage patterns")
+
+
+class BranchAnalysisInput(BaseModel):
+    """Input for branch analysis operations."""
+
+    repo_path: str = Field(..., description="Path to the Git repository")
+    branch_name: str | None = Field(None, description="Specific branch to analyze")
+    compare_with: str | None = Field(None, description="Branch to compare with")
+    include_metrics: bool = Field(True, description="Include branch metrics")
+    max_commits: int = Field(100, description="Maximum commits to analyze")
+
+
+class DiffAnalysisInput(BaseModel):
+    """Input for diff analysis operations."""
+
+    repo_path: str = Field(..., description="Path to the Git repository")
+    from_ref: str = Field(..., description="Source reference (commit/branch/tag)")
+    to_ref: str = Field(..., description="Target reference (commit/branch/tag)")
+    file_patterns: list[str] | None = Field(None, description="File patterns to analyze")
+    include_stats: bool = Field(True, description="Include diff statistics")
+
+
+class PatternDetectionInput(BaseModel):
+    """Input for code pattern detection."""
+
+    repo_path: str = Field(..., description="Path to the Git repository")
+    pattern_types: list[str] | None = Field(None, description="Types of patterns to detect")
+    file_extensions: list[str] | None = Field(None, description="File extensions to analyze")
+    severity_threshold: str = Field("medium", description="Minimum severity (low/medium/high)")
+    max_files: int = Field(1000, description="Maximum files to analyze")
+
+
+class StatisticalAnalysisInput(BaseModel):
+    """Input for statistical repository analysis."""
+
+    repo_path: str = Field(..., description="Path to the Git repository")
+    analysis_types: list[str] | None = Field(None, description="Types of analysis to perform")
+    time_range_days: int = Field(90, description="Time range in days")
+    include_trends: bool = Field(True, description="Include trend analysis")
+    group_by: str = Field("author", description="Group results by (author/file/date)")
+
+
+class TagAnalysisInput(BaseModel):
+    """Input for tag and version analysis."""
+
+    repo_path: str = Field(..., description="Path to the Git repository")
+    tag_pattern: str | None = Field(None, description="Tag pattern to filter")
+    include_releases: bool = Field(True, description="Include release information")
+    compare_versions: bool = Field(True, description="Compare version changes")

@@ -1,0 +1,265 @@
+/* Connection Status Component Styles */
+
+.connection-status {
+  position: fixed;
+  top: var(--connection-status-spacing);
+  left: var(--connection-status-spacing);
+  z-index: var(--z-fixed);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+}
+
+.connection-status:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Connection status indicator */
+.connection-indicator {
+  width: var(--connection-status-size);
+  height: var(--connection-status-size);
+  border-radius: 50%;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.connection-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+/* Connection states */
+.connection-indicator.connected {
+  background: var(--success-color);
+}
+
+.connection-indicator.connected::before {
+  background: var(--success-color);
+}
+
+.connection-indicator.disconnected {
+  background: var(--danger-color);
+}
+
+.connection-indicator.disconnected::before {
+  background: var(--danger-color);
+}
+
+.connection-indicator.connecting {
+  background: var(--warning-color);
+}
+
+.connection-indicator.connecting::before {
+  background: var(--warning-color);
+  animation: pulse 1s infinite;
+}
+
+.connection-indicator.reconnecting {
+  background: var(--info-color);
+}
+
+.connection-indicator.reconnecting::before {
+  background: var(--info-color);
+  animation: pulse 0.5s infinite;
+}
+
+/* Status text */
+.connection-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+/* Detailed status tooltip */
+.connection-status[data-bs-toggle="tooltip"] {
+  cursor: help;
+}
+
+/* WebSocket status details */
+.websocket-details {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: var(--spacing-sm);
+  box-shadow: var(--shadow-md);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.connection-status:hover .websocket-details {
+  display: block;
+}
+
+.websocket-detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+}
+
+.websocket-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
+}
+
+/* Error state animation */
+.connection-indicator.error {
+  background: var(--danger-color);
+  animation: blink 1s infinite;
+}
+
+/* Reconnecting animation */
+.connection-indicator.reconnecting {
+  animation: pulse 1s infinite, blink 2s infinite;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .connection-status {
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .connection-indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+  
+  .connection-text {
+    font-size: 0.7rem;
+  }
+  
+  .websocket-details {
+    display: none !important; /* Hide details on mobile */
+  }
+}
+
+/* Compact mode */
+.connection-status.compact {
+  padding: var(--spacing-xs);
+}
+
+.connection-status.compact .connection-text {
+  display: none;
+}
+
+/* High contrast support */
+[data-theme="high-contrast"] .connection-status {
+  border-width: 2px;
+}
+
+[data-theme="high-contrast"] .connection-indicator {
+  border: 2px solid var(--text-primary);
+}
+
+/* Accessibility improvements */
+.connection-status:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Screen reader support */
+.connection-status .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Connection quality indicator */
+.connection-quality {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: var(--spacing-xs);
+}
+
+.connection-quality-bar {
+  width: 2px;
+  background: var(--border-color);
+  border-radius: 1px;
+  transition: background-color var(--transition-fast);
+}
+
+.connection-quality-bar:nth-child(1) { height: 4px; }
+.connection-quality-bar:nth-child(2) { height: 6px; }
+.connection-quality-bar:nth-child(3) { height: 8px; }
+.connection-quality-bar:nth-child(4) { height: 10px; }
+
+/* Quality levels */
+.connection-quality.excellent .connection-quality-bar {
+  background: var(--success-color);
+}
+
+.connection-quality.good .connection-quality-bar:nth-child(-n+3) {
+  background: var(--success-color);
+}
+
+.connection-quality.fair .connection-quality-bar:nth-child(-n+2) {
+  background: var(--warning-color);
+}
+
+.connection-quality.poor .connection-quality-bar:nth-child(1) {
+  background: var(--danger-color);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .connection-indicator::before {
+    animation: none;
+  }
+  
+  .connection-indicator.error,
+  .connection-indicator.reconnecting {
+    animation: none;
+  }
+}

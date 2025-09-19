@@ -43,7 +43,7 @@ class WebSocketManager {
       }
     };
 
-    this.websocket.onmessage = (event) => {
+    this.websocket.onmessage = event => {
       try {
         const message = JSON.parse(event.data);
 
@@ -80,7 +80,7 @@ class WebSocketManager {
       }
     };
 
-    this.websocket.onerror = (error) => {
+    this.websocket.onerror = error => {
       console.error('WebSocket error:', error);
     };
   }
@@ -122,68 +122,68 @@ class GitHoundApp {
     this.initializeTheme();
     this.initializeAuth();
     this.loadStats();
-    this.updateConnectionStatus("disconnected");
+    this.updateConnectionStatus('disconnected');
     this.updateDashboard();
     this.loadQuickActions();
   }
 
   initializeEventListeners() {
     // Form submission
-    document.getElementById("searchForm").addEventListener("submit", (e) => {
+    document.getElementById('searchForm').addEventListener('submit', e => {
       e.preventDefault();
       this.startSearch();
     });
 
     // Cancel button
-    document.getElementById("cancelButton").addEventListener("click", () => {
+    document.getElementById('cancelButton').addEventListener('click', () => {
       this.cancelSearch();
     });
 
     // Export buttons
-    document.getElementById("exportJson").addEventListener("click", () => {
-      this.exportResults("json");
+    document.getElementById('exportJson').addEventListener('click', () => {
+      this.exportResults('json');
     });
 
-    document.getElementById("exportCsv").addEventListener("click", () => {
-      this.exportResults("csv");
+    document.getElementById('exportCsv').addEventListener('click', () => {
+      this.exportResults('csv');
     });
 
     // Authentication event listeners
-    document.getElementById("loginForm").addEventListener("submit", (e) => {
+    document.getElementById('loginForm').addEventListener('submit', e => {
       e.preventDefault();
       this.handleLogin();
     });
 
-    document.getElementById("registerForm").addEventListener("submit", (e) => {
+    document.getElementById('registerForm').addEventListener('submit', e => {
       e.preventDefault();
       this.handleRegistration();
     });
 
     // Profile event listeners
-    document.getElementById("changePasswordForm").addEventListener("submit", (e) => {
+    document.getElementById('changePasswordForm').addEventListener('submit', e => {
       e.preventDefault();
       this.handlePasswordChange();
     });
 
     // Fuzzy threshold slider
-    const fuzzyThreshold = document.getElementById("fuzzyThreshold");
-    const fuzzyThresholdValue = document.getElementById("fuzzyThresholdValue");
-    fuzzyThreshold.addEventListener("input", (e) => {
+    const fuzzyThreshold = document.getElementById('fuzzyThreshold');
+    const fuzzyThresholdValue = document.getElementById('fuzzyThresholdValue');
+    fuzzyThreshold.addEventListener('input', e => {
       fuzzyThresholdValue.textContent = e.target.value;
     });
 
     // Enable/disable fuzzy threshold based on checkbox
-    document.getElementById("fuzzySearch").addEventListener("change", (e) => {
+    document.getElementById('fuzzySearch').addEventListener('change', e => {
       fuzzyThreshold.disabled = !e.target.checked;
     });
 
     // Theme toggle
-    document.getElementById("themeToggle").addEventListener("click", () => {
+    document.getElementById('themeToggle').addEventListener('click', () => {
       this.toggleTheme();
     });
 
     // Keyboard shortcuts
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener('keydown', e => {
       this.handleKeyboardShortcuts(e);
     });
 
@@ -248,7 +248,7 @@ class GitHoundApp {
   saveFormState() {
     const formData = new FormData(document.getElementById('searchForm'));
     const formState = {};
-    for (let [key, value] of formData.entries()) {
+    for (const [key, value] of formData.entries()) {
       formState[key] = value;
     }
     localStorage.setItem('githound-form-state', JSON.stringify(formState));
@@ -358,9 +358,9 @@ class GitHoundApp {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) { return 'Just now'; }
+    if (diffMins < 60) { return `${diffMins}m ago`; }
+    if (diffHours < 24) { return `${diffHours}h ago`; }
     return `${diffDays}d ago`;
   }
 
@@ -371,7 +371,7 @@ class GitHoundApp {
 
   async startSearch() {
     if (this.isSearching) {
-      this.showAlert("A search is already in progress", "warning");
+      this.showAlert('A search is already in progress', 'warning');
       return;
     }
 
@@ -385,7 +385,7 @@ class GitHoundApp {
 
     try {
       this.isSearching = true;
-      this.updateUI("searching");
+      this.updateUI('searching');
 
       // Update stats
       this.stats.totalSearches++;
@@ -397,12 +397,12 @@ class GitHoundApp {
       this.addToSearchHistory(searchRequest);
 
       // Start search
-      const response = await fetch("/api/search", {
-        method: "POST",
+      const response = await fetch('/api/search', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(searchRequest),
+        body: JSON.stringify(searchRequest)
       });
 
       if (!response.ok) {
@@ -418,12 +418,12 @@ class GitHoundApp {
       // Start polling for status updates (fallback)
       this.startStatusPolling();
     } catch (error) {
-      console.error("Search failed:", error);
-      this.showAlert(`Search failed: ${error.message}`, "danger");
+      console.error('Search failed:', error);
+      this.showAlert(`Search failed: ${error.message}`, 'danger');
       this.isSearching = false;
       this.stats.activeSearches--;
       this.updateDashboard();
-      this.updateUI("idle");
+      this.updateUI('idle');
     }
   }
 
@@ -471,7 +471,7 @@ class GitHoundApp {
     if (templateId && this.searchTemplates[templateId]) {
       const template = this.searchTemplates[templateId];
       this.applySearchConfig(template.config);
-      this.showAlert(`Loaded template: ${template.name}`, "success");
+      this.showAlert(`Loaded template: ${template.name}`, 'success');
     } else {
       this.showSearchTemplateDialog();
     }
@@ -503,10 +503,10 @@ class GitHoundApp {
                 </button>
               `).join('')}
             </div>
-            ${Object.keys(this.searchTemplates).length === 0 ?
-              '<p class="text-muted text-center">No templates available. Create one by saving your current search configuration.</p>' :
-              ''
-            }
+            ${Object.keys(this.searchTemplates).length === 0
+    ? '<p class="text-muted text-center">No templates available. Create one by saving your current search configuration.</p>'
+    : ''
+}
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -528,7 +528,7 @@ class GitHoundApp {
     const template = this.searchTemplates[templateId];
     if (template) {
       this.applySearchConfig(template.config);
-      this.showAlert(`Loaded template: ${template.name}`, "success");
+      this.showAlert(`Loaded template: ${template.name}`, 'success');
 
       // Close modal
       const modal = document.querySelector('.modal.show');
@@ -553,19 +553,19 @@ class GitHoundApp {
 
   saveSearchTemplate() {
     const name = prompt('Enter template name:');
-    if (!name) return;
+    if (!name) { return; }
 
     const config = this.getCurrentSearchConfig();
     const templateId = name.toLowerCase().replace(/\s+/g, '-');
 
     this.searchTemplates[templateId] = {
-      name: name,
+      name,
       description: `Custom template: ${name}`,
-      config: config
+      config
     };
 
     this.saveSearchTemplates();
-    this.showAlert(`Template "${name}" saved successfully`, "success");
+    this.showAlert(`Template "${name}" saved successfully`, 'success');
   }
 
   getCurrentSearchConfig() {
@@ -662,14 +662,14 @@ class GitHoundApp {
 
     try {
       const response = await fetch(`/api/search/${this.currentSearchId}`, {
-        method: "DELETE",
+        method: 'DELETE'
       });
 
       if (response.ok) {
-        this.showAlert("Search cancelled", "info");
+        this.showAlert('Search cancelled', 'info');
       }
     } catch (error) {
-      console.error("Cancel failed:", error);
+      console.error('Cancel failed:', error);
     }
 
     this.stopSearch();
@@ -682,7 +682,7 @@ class GitHoundApp {
     }
 
     // Create WebSocket connection
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/${searchId}`;
 
     // Use the global WebSocket manager
@@ -690,16 +690,16 @@ class GitHoundApp {
       window.websocketManager.connect(wsUrl, this.authToken);
 
       // Set up message handler for search updates
-      window.websocketManager.onMessage((message) => {
+      window.websocketManager.onMessage(message => {
         this.handleWebSocketMessage(message);
       });
 
-      this.updateConnectionStatus("connecting");
+      this.updateConnectionStatus('connecting');
 
       // Check connection status periodically
       const checkConnection = () => {
         if (window.websocketManager.isConnected()) {
-          this.updateConnectionStatus("connected");
+          this.updateConnectionStatus('connected');
         } else {
           setTimeout(checkConnection, 100);
         }
@@ -710,23 +710,23 @@ class GitHoundApp {
       this.websocket = new WebSocket(wsUrl);
 
       this.websocket.onopen = () => {
-        console.log("WebSocket connected");
-        this.updateConnectionStatus("connected");
+        console.log('WebSocket connected');
+        this.updateConnectionStatus('connected');
       };
 
-      this.websocket.onmessage = (event) => {
+      this.websocket.onmessage = event => {
         const message = JSON.parse(event.data);
         this.handleWebSocketMessage(message);
       };
 
       this.websocket.onclose = () => {
-        console.log("WebSocket disconnected");
-        this.updateConnectionStatus("disconnected");
+        console.log('WebSocket disconnected');
+        this.updateConnectionStatus('disconnected');
       };
 
-      this.websocket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        this.updateConnectionStatus("disconnected");
+      this.websocket.onerror = error => {
+        console.error('WebSocket error:', error);
+        this.updateConnectionStatus('disconnected');
       };
     }
   }
@@ -735,123 +735,123 @@ class GitHoundApp {
     const { type, data } = message;
 
     switch (type) {
-      case "connected":
-        console.log("WebSocket connection confirmed");
+      case 'connected':
+        console.log('WebSocket connection confirmed');
         break;
 
-      case "progress":
+      case 'progress':
         this.updateProgress(data.progress, data.message, data.results_count);
         break;
 
-      case "result":
+      case 'result':
         this.addResult(data.result);
         break;
 
-      case "completed":
+      case 'completed':
         this.handleSearchCompletion(data);
         break;
 
-      case "error":
+      case 'error':
         this.handleSearchError(data.error);
         break;
 
-      case "ping":
+      case 'ping':
         // Respond to ping
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-          this.websocket.send(JSON.stringify({ type: "pong" }));
+          this.websocket.send(JSON.stringify({ type: 'pong' }));
         }
         break;
 
       default:
-        console.log("Unknown WebSocket message type:", type);
+        console.log('Unknown WebSocket message type:', type);
     }
   }
 
   buildSearchRequest() {
     const request = {
-      repo_path: document.getElementById("repoPath").value,
-      branch: document.getElementById("branch").value || null,
-      content_pattern: document.getElementById("contentPattern").value || null,
-      commit_hash: document.getElementById("commitHash").value || null,
-      author_pattern: document.getElementById("authorPattern").value || null,
-      message_pattern: document.getElementById("messagePattern").value || null,
+      repo_path: document.getElementById('repoPath').value,
+      branch: document.getElementById('branch').value || null,
+      content_pattern: document.getElementById('contentPattern').value || null,
+      commit_hash: document.getElementById('commitHash').value || null,
+      author_pattern: document.getElementById('authorPattern').value || null,
+      message_pattern: document.getElementById('messagePattern').value || null,
       file_path_pattern:
-        document.getElementById("filePathPattern").value || null,
-      case_sensitive: document.getElementById("caseSensitive").checked,
-      fuzzy_search: document.getElementById("fuzzySearch").checked,
+        document.getElementById('filePathPattern').value || null,
+      case_sensitive: document.getElementById('caseSensitive').checked,
+      fuzzy_search: document.getElementById('fuzzySearch').checked,
       fuzzy_threshold: parseFloat(
-        document.getElementById("fuzzyThreshold").value
+        document.getElementById('fuzzyThreshold').value
       ),
       max_results:
-        parseInt(document.getElementById("maxResults").value) || null,
+        parseInt(document.getElementById('maxResults').value) || null,
       max_file_size:
-        parseInt(document.getElementById("maxFileSize").value) || null,
+        parseInt(document.getElementById('maxFileSize').value) || null,
       timeout_seconds:
-        parseInt(document.getElementById("timeoutSeconds").value) || 300,
+        parseInt(document.getElementById('timeoutSeconds').value) || 300
     };
 
     // Handle date fields
-    const dateFrom = document.getElementById("dateFrom").value;
-    const dateTo = document.getElementById("dateTo").value;
-    if (dateFrom) request.date_from = dateFrom + "T00:00:00";
-    if (dateTo) request.date_to = dateTo + "T23:59:59";
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    if (dateFrom) { request.date_from = `${dateFrom}T00:00:00`; }
+    if (dateTo) { request.date_to = `${dateTo}T23:59:59`; }
 
     // Handle comma-separated lists
-    const fileExtensions = document.getElementById("fileExtensions").value;
+    const fileExtensions = document.getElementById('fileExtensions').value;
     if (fileExtensions) {
       request.file_extensions = fileExtensions
-        .split(",")
-        .map((ext) => ext.trim())
-        .filter((ext) => ext);
+        .split(',')
+        .map(ext => ext.trim())
+        .filter(ext => ext);
     }
 
-    const includeGlobs = document.getElementById("includeGlobs").value;
+    const includeGlobs = document.getElementById('includeGlobs').value;
     if (includeGlobs) {
       request.include_globs = includeGlobs
-        .split(",")
-        .map((glob) => glob.trim())
-        .filter((glob) => glob);
+        .split(',')
+        .map(glob => glob.trim())
+        .filter(glob => glob);
     }
 
-    const excludeGlobs = document.getElementById("excludeGlobs").value;
+    const excludeGlobs = document.getElementById('excludeGlobs').value;
     if (excludeGlobs) {
       request.exclude_globs = excludeGlobs
-        .split(",")
-        .map((glob) => glob.trim())
-        .filter((glob) => glob);
+        .split(',')
+        .map(glob => glob.trim())
+        .filter(glob => glob);
     }
 
     return request;
   }
 
   validateForm() {
-    const repoPath = document.getElementById("repoPath").value;
+    const repoPath = document.getElementById('repoPath').value;
     if (!repoPath.trim()) {
-      this.showAlert("Repository path is required", "danger");
+      this.showAlert('Repository path is required', 'danger');
       return false;
     }
 
     // Check if at least one search criterion is provided
     const criteria = [
-      "contentPattern",
-      "commitHash",
-      "authorPattern",
-      "messagePattern",
-      "filePathPattern",
-      "fileExtensions",
-      "dateFrom",
-      "dateTo",
+      'contentPattern',
+      'commitHash',
+      'authorPattern',
+      'messagePattern',
+      'filePathPattern',
+      'fileExtensions',
+      'dateFrom',
+      'dateTo'
     ];
 
-    const hasAnyCriteria = criteria.some((id) => {
-      const value = document.getElementById(id).value;
+    const hasAnyCriteria = criteria.some(id => {
+      const { value } = document.getElementById(id);
       return value && value.trim();
     });
 
     if (!hasAnyCriteria) {
       this.showAlert(
-        "At least one search criterion must be provided",
-        "danger"
+        'At least one search criterion must be provided',
+        'danger'
       );
       return false;
     }
@@ -860,16 +860,16 @@ class GitHoundApp {
   }
 
   updateUI(state) {
-    const searchButton = document.getElementById("searchButton");
-    const cancelButton = document.getElementById("cancelButton");
-    const progressCard = document.getElementById("progressCard");
-    const resultsCard = document.getElementById("resultsCard");
+    const searchButton = document.getElementById('searchButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const progressCard = document.getElementById('progressCard');
+    const resultsCard = document.getElementById('resultsCard');
 
     switch (state) {
-      case "searching":
+      case 'searching':
         searchButton.disabled = true;
-        searchButton.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Searching...';
+        searchButton.innerHTML
+          = '<i class="fas fa-spinner fa-spin"></i> Searching...';
         searchButton.classList.add('pulse');
         cancelButton.classList.remove('d-none');
         progressCard.classList.remove('d-none');
@@ -877,7 +877,7 @@ class GitHoundApp {
         this.clearResults();
         break;
 
-      case "idle":
+      case 'idle':
         searchButton.disabled = false;
         searchButton.innerHTML = '<i class="fas fa-search"></i> Start Search';
         searchButton.classList.remove('pulse');
@@ -888,7 +888,7 @@ class GitHoundApp {
         this.updateDashboard();
         break;
 
-      case "completed":
+      case 'completed':
         searchButton.disabled = false;
         searchButton.innerHTML = '<i class="fas fa-search"></i> Start Search';
         searchButton.classList.remove('pulse');
@@ -903,21 +903,21 @@ class GitHoundApp {
   }
 
   updateProgress(progress, message, resultsCount = 0) {
-    const progressBar = document.getElementById("progressBar");
-    const progressMessage = document.getElementById("progressMessage");
-    const resultsCountEl = document.getElementById("resultsCount");
+    const progressBar = document.getElementById('progressBar');
+    const progressMessage = document.getElementById('progressMessage');
+    const resultsCountEl = document.getElementById('resultsCount');
 
     const percentage = Math.round(progress * 100);
     progressBar.style.width = `${percentage}%`;
-    progressBar.setAttribute("aria-valuenow", percentage);
+    progressBar.setAttribute('aria-valuenow', percentage);
 
     progressMessage.textContent = message;
     resultsCountEl.textContent = resultsCount;
   }
 
-  showAlert(message, type = "info") {
+  showAlert(message, type = 'info') {
     // Create alert element
-    const alertDiv = document.createElement("div");
+    const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
     alertDiv.innerHTML = `
             ${message}
@@ -925,7 +925,7 @@ class GitHoundApp {
         `;
 
     // Insert at top of container
-    const container = document.querySelector(".container");
+    const container = document.querySelector('.container');
     container.insertBefore(alertDiv, container.firstChild);
 
     // Auto-dismiss after 5 seconds
@@ -937,50 +937,50 @@ class GitHoundApp {
   }
 
   updateConnectionStatus(status) {
-    let statusEl = document.querySelector(".connection-status");
+    let statusEl = document.querySelector('.connection-status');
 
     if (!statusEl) {
-      statusEl = document.createElement("div");
-      statusEl.className = "connection-status";
+      statusEl = document.createElement('div');
+      statusEl.className = 'connection-status';
       document.body.appendChild(statusEl);
     }
 
     statusEl.className = `connection-status ${status}`;
 
     switch (status) {
-      case "connected":
+      case 'connected':
         statusEl.innerHTML = '<i class="fas fa-wifi"></i> Connected';
         break;
-      case "disconnected":
+      case 'disconnected':
         statusEl.innerHTML = '<i class="fas fa-wifi"></i> Disconnected';
         break;
-      case "connecting":
-        statusEl.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+      case 'connecting':
+        statusEl.innerHTML
+          = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
         break;
     }
 
     // Hide after 3 seconds if connected
-    if (status === "connected") {
+    if (status === 'connected') {
       setTimeout(() => {
-        if (statusEl.classList.contains("connected")) {
-          statusEl.style.display = "none";
+        if (statusEl.classList.contains('connected')) {
+          statusEl.style.display = 'none';
         }
       }, 3000);
     } else {
-      statusEl.style.display = "block";
+      statusEl.style.display = 'block';
     }
   }
 
   clearResults() {
     this.searchResults = [];
-    const container = document.getElementById("resultsContainer");
-    container.innerHTML = "";
+    const container = document.getElementById('resultsContainer');
+    container.innerHTML = '';
   }
 
   displayResults(results) {
     this.searchResults = results;
-    const container = document.getElementById("resultsContainer");
+    const container = document.getElementById('resultsContainer');
 
     if (results.length === 0) {
       container.innerHTML = `
@@ -993,7 +993,7 @@ class GitHoundApp {
       return;
     }
 
-    container.innerHTML = "";
+    container.innerHTML = '';
 
     results.forEach((result, index) => {
       const resultEl = this.createResultElement(result, index);
@@ -1002,59 +1002,59 @@ class GitHoundApp {
   }
 
   createResultElement(result, index) {
-    const div = document.createElement("div");
-    div.className = "result-item fade-in-up";
+    const div = document.createElement('div');
+    div.className = 'result-item fade-in-up';
     div.style.animationDelay = `${index * 0.1}s`;
     div.setAttribute('data-testid', 'result-card');
 
     const searchTypeBadge = `<span class="badge search-type-${
       result.search_type
-    }">${result.search_type.replace("_", " ")}</span>`;
+    }">${result.search_type.replace('_', ' ')}</span>`;
     const scoreBadge = `<span class="result-score">${(
       result.relevance_score * 100
     ).toFixed(0)}%</span>`;
 
-    let contentHtml = "";
+    let contentHtml = '';
     if (result.matching_line) {
       contentHtml = `
                 <div class="result-content" data-testid="code-content">
                     ${this.escapeHtml(result.matching_line)}
                     ${
-                      result.line_number
-                        ? `<small class="text-muted ms-2" data-testid="line-number">Line ${result.line_number}</small>`
-                        : ""
-                    }
+  result.line_number
+    ? `<small class="text-muted ms-2" data-testid="line-number">Line ${result.line_number}</small>`
+    : ''
+}
                 </div>
             `;
     }
 
-    let metaHtml = "";
+    let metaHtml = '';
     if (result.author_name || result.commit_date || result.commit_message) {
       metaHtml = `
                 <div class="result-meta" data-testid="commit-info">
                     ${
-                      result.author_name
-                        ? `<span class="badge bg-secondary">${this.escapeHtml(
-                            result.author_name
-                          )}</span>`
-                        : ""
-                    }
+  result.author_name
+    ? `<span class="badge bg-secondary">${this.escapeHtml(
+      result.author_name
+    )}</span>`
+    : ''
+}
                     ${
-                      result.commit_date
-                        ? `<span class="badge bg-info">${new Date(
-                            result.commit_date
-                          ).toLocaleDateString()}</span>`
-                        : ""
-                    }
+  result.commit_date
+    ? `<span class="badge bg-info">${new Date(
+      result.commit_date
+    ).toLocaleDateString()}</span>`
+    : ''
+}
                     ${
-                      result.commit_message
-                        ? `<div class="mt-1"><small>${this.escapeHtml(
-                            result.commit_message.substring(0, 100)
-                          )}${
-                            result.commit_message.length > 100 ? "..." : ""
-                          }</small></div>`
-                        : ""
-                    }
+  result.commit_message
+    ? `<div class="mt-1"><small>${this.escapeHtml(
+      result.commit_message.substring(0, 100)
+    )}${
+      result.commit_message.length > 100 ? '...' : ''
+    }</small></div>`
+    : ''
+}
                 </div>
             `;
     }
@@ -1063,9 +1063,9 @@ class GitHoundApp {
             <div class="result-header">
                 <div>
                     <span class="result-commit">${result.commit_hash.substring(
-                      0,
-                      8
-                    )}</span>
+    0,
+    8
+  )}</span>
                     ${searchTypeBadge}
                 </div>
                 ${scoreBadge}
@@ -1081,32 +1081,32 @@ class GitHoundApp {
   }
 
   escapeHtml(text) {
-    const div = document.createElement("div");
+    const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
 
   async exportResults(format) {
     if (!this.currentSearchId || this.searchResults.length === 0) {
-      this.showAlert("No results to export", "warning");
+      this.showAlert('No results to export', 'warning');
       return;
     }
 
     try {
       const exportRequest = {
         search_id: this.currentSearchId,
-        format: format,
-        include_metadata: true,
+        format,
+        include_metadata: true
       };
 
       const response = await fetch(
         `/api/search/${this.currentSearchId}/export`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify(exportRequest),
+          body: JSON.stringify(exportRequest)
         }
       );
 
@@ -1114,7 +1114,7 @@ class GitHoundApp {
         // Trigger download
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
         a.download = `githound_results.${format}`;
         document.body.appendChild(a);
@@ -1124,14 +1124,14 @@ class GitHoundApp {
 
         this.showAlert(
           `Results exported as ${format.toUpperCase()}`,
-          "success"
+          'success'
         );
       } else {
         throw new Error(`Export failed: ${response.statusText}`);
       }
     } catch (error) {
-      console.error("Export failed:", error);
-      this.showAlert(`Export failed: ${error.message}`, "danger");
+      console.error('Export failed:', error);
+      this.showAlert(`Export failed: ${error.message}`, 'danger');
     }
   }
 
@@ -1144,13 +1144,13 @@ class GitHoundApp {
       this.websocket = null;
     }
 
-    this.updateUI("idle");
+    this.updateUI('idle');
   }
 
   handleSearchCompletion(data) {
     this.showAlert(
       `Search completed! Found ${data.total_results} results.`,
-      "success"
+      'success'
     );
 
     // Update stats
@@ -1159,11 +1159,11 @@ class GitHoundApp {
 
     this.loadSearchResults();
     this.stopSearch();
-    this.updateUI("completed");
+    this.updateUI('completed');
   }
 
   handleSearchError(errorMessage) {
-    this.showAlert(`Search failed: ${errorMessage}`, "danger");
+    this.showAlert(`Search failed: ${errorMessage}`, 'danger');
     this.stopSearch();
   }
 
@@ -1181,17 +1181,17 @@ class GitHoundApp {
         const status = await response.json();
 
         // Update UI elements
-        document.getElementById("searchStatus").textContent = status.status;
-        document.getElementById("searchId").textContent =
-          this.currentSearchId.substring(0, 8);
+        document.getElementById('searchStatus').textContent = status.status;
+        document.getElementById('searchId').textContent
+          = this.currentSearchId.substring(0, 8);
 
-        if (status.status === "completed") {
+        if (status.status === 'completed') {
           await this.loadSearchResults();
           this.handleSearchCompletion({ total_results: status.results_count });
-        } else if (status.status === "error") {
+        } else if (status.status === 'error') {
           this.handleSearchError(status.message);
-        } else if (status.status === "cancelled") {
-          this.showAlert("Search was cancelled", "warning");
+        } else if (status.status === 'cancelled') {
+          this.showAlert('Search was cancelled', 'warning');
           this.stopSearch();
         } else {
           // Update progress if not getting WebSocket updates
@@ -1208,7 +1208,7 @@ class GitHoundApp {
         }
       }
     } catch (error) {
-      console.error("Status polling failed:", error);
+      console.error('Status polling failed:', error);
       setTimeout(() => this.startStatusPolling(), 2000);
     }
   }
@@ -1229,16 +1229,16 @@ class GitHoundApp {
         this.showResultsSummary(data);
       }
     } catch (error) {
-      console.error("Failed to load results:", error);
-      this.showAlert("Failed to load search results", "danger");
+      console.error('Failed to load results:', error);
+      this.showAlert('Failed to load search results', 'danger');
     }
   }
 
   showResultsSummary(data) {
-    const container = document.getElementById("resultsContainer");
+    const container = document.getElementById('resultsContainer');
 
-    const summaryDiv = document.createElement("div");
-    summaryDiv.className = "results-summary mb-3";
+    const summaryDiv = document.createElement('div');
+    summaryDiv.className = 'results-summary mb-3';
     summaryDiv.innerHTML = `
             <h6><i class="fas fa-chart-bar"></i> Search Summary</h6>
             <div class="row">
@@ -1253,8 +1253,8 @@ class GitHoundApp {
                 </div>
                 <div class="col-md-3">
                     <strong>Duration:</strong> ${(
-                      data.search_duration_ms / 1000
-                    ).toFixed(2)}s
+    data.search_duration_ms / 1000
+  ).toFixed(2)}s
                 </div>
             </div>
         `;
@@ -1266,18 +1266,18 @@ class GitHoundApp {
     // Add new result to the list (for real-time updates)
     this.searchResults.push(result);
 
-    const container = document.getElementById("resultsContainer");
+    const container = document.getElementById('resultsContainer');
     const resultEl = this.createResultElement(
       result,
       this.searchResults.length - 1
     );
-    resultEl.classList.add("new-result");
+    resultEl.classList.add('new-result');
 
     container.appendChild(resultEl);
 
     // Update results count
-    document.getElementById("resultsCount").textContent =
-      this.searchResults.length;
+    document.getElementById('resultsCount').textContent
+      = this.searchResults.length;
   }
 
   // Authentication methods
@@ -1298,10 +1298,10 @@ class GitHoundApp {
 
     if (this.currentUser && this.authToken) {
       // User is logged in
-      if (loginButton) loginButton.style.display = 'none';
-      if (registerButton) registerButton.style.display = 'none';
-      if (userMenu) userMenu.style.display = 'block';
-      if (usernameDisplay) usernameDisplay.textContent = this.currentUser.username;
+      if (loginButton) { loginButton.style.display = 'none'; }
+      if (registerButton) { registerButton.style.display = 'none'; }
+      if (userMenu) { userMenu.style.display = 'block'; }
+      if (usernameDisplay) { usernameDisplay.textContent = this.currentUser.username; }
 
       // Show admin panel link if user is admin
       if (adminPanelLink && this.currentUser.roles && this.currentUser.roles.includes('admin')) {
@@ -1309,10 +1309,10 @@ class GitHoundApp {
       }
     } else {
       // User is not logged in
-      if (loginButton) loginButton.style.display = 'inline-block';
-      if (registerButton) registerButton.style.display = 'inline-block';
-      if (userMenu) userMenu.style.display = 'none';
-      if (adminPanelLink) adminPanelLink.style.display = 'none';
+      if (loginButton) { loginButton.style.display = 'inline-block'; }
+      if (registerButton) { registerButton.style.display = 'inline-block'; }
+      if (userMenu) { userMenu.style.display = 'none'; }
+      if (adminPanelLink) { adminPanelLink.style.display = 'none'; }
     }
   }
 
@@ -1334,9 +1334,9 @@ class GitHoundApp {
       const response = await fetch('/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password })
       });
 
       const data = await response.json();
@@ -1346,7 +1346,7 @@ class GitHoundApp {
         this.authToken = data.access_token;
         this.currentUser = {
           user_id: data.user_id,
-          username: username,
+          username,
           roles: data.roles || ['user']
         };
 
@@ -1409,15 +1409,15 @@ class GitHoundApp {
       hasErrors = true;
     }
 
-    if (hasErrors) return;
+    if (hasErrors) { return; }
 
     try {
       const response = await fetch('/auth/register', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password })
       });
 
       const data = await response.json();
@@ -1464,13 +1464,9 @@ class GitHoundApp {
     let fieldName = field;
 
     if (formType === 'register') {
-      if (field === 'username') fieldName = 'registerUsername';
-      else if (field === 'email') fieldName = 'registerEmail';
-      else if (field === 'password') fieldName = 'registerPassword';
-      else if (field === 'password-mismatch') fieldName = 'registerConfirmPassword';
+      if (field === 'username') { fieldName = 'registerUsername'; } else if (field === 'email') { fieldName = 'registerEmail'; } else if (field === 'password') { fieldName = 'registerPassword'; } else if (field === 'password-mismatch') { fieldName = 'registerConfirmPassword'; }
     } else {
-      if (field === 'username') fieldName = 'loginUsername';
-      else if (field === 'password') fieldName = 'loginPassword';
+      if (field === 'username') { fieldName = 'loginUsername'; } else if (field === 'password') { fieldName = 'loginPassword'; }
     }
 
     const input = document.getElementById(fieldName);
@@ -1542,19 +1538,19 @@ class GitHoundApp {
       hasErrors = true;
     }
 
-    if (hasErrors) return;
+    if (hasErrors) { return; }
 
     try {
       const response = await fetch('/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.authToken}`
+          Authorization: `Bearer ${this.authToken}`
         },
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword
-        }),
+        })
       });
 
       const data = await response.json();
@@ -1583,8 +1579,8 @@ class GitHoundApp {
   }
 
   showPasswordChangeError(field, message) {
-    const input = document.getElementById(field === 'current-password' ? 'currentPassword' :
-                                        field === 'new-password' ? 'newPassword' : 'confirmNewPassword');
+    const input = document.getElementById(field === 'current-password' ? 'currentPassword'
+      : field === 'new-password' ? 'newPassword' : 'confirmNewPassword');
     const errorElement = input.nextElementSibling;
 
     if (input && errorElement && errorElement.classList.contains('invalid-feedback')) {
@@ -1733,7 +1729,7 @@ function showAdminPanel() {
 }
 
 // Initialize the application when DOM is loaded
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   window.app = new GitHoundApp();
   window.websocketManager = new WebSocketManager();
 

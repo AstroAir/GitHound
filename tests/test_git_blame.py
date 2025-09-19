@@ -63,7 +63,7 @@ class TestFileBlame:
         blame_info = get_file_blame(repo, "test.py")
 
         assert isinstance(blame_info, FileBlameResult)
-        assert blame_info.file_path = = "test.py"
+        assert blame_info.file_path == "test.py"
         assert blame_info.total_lines >= 4  # Should have at least 4 lines
         assert len(blame_info.blame_info) == blame_info.total_lines
         assert len(blame_info.contributors) >= 1
@@ -93,11 +93,11 @@ class TestFileBlame:
             repo, "test.py", commit=initial_commit.hexsha)
 
         assert isinstance(blame_info, FileBlameResult)
-        assert blame_info.total_lines = = 2  # Initial commit had only 2 lines
+        assert blame_info.total_lines == 2  # Initial commit had only 2 lines
 
         # All lines should be from the initial commit
         for line in blame_info.blame_info:
-            assert line.commit_hash = = initial_commit.hexsha
+            assert line.commit_hash == initial_commit.hexsha
 
     def test_get_file_blame_with_line_range(self, temp_repo) -> None:
         """Test file blame with line range."""
@@ -110,7 +110,7 @@ class TestFileBlame:
         # Verify we can access specific lines
         assert len(blame_info.blame_info) > 0
         first_line = blame_info.blame_info[0]
-        assert first_line.line_number = = 1
+        assert first_line.line_number == 1
 
     def test_blame_line_info_properties(self, temp_repo) -> None:
         """Test BlameInfo properties."""
@@ -353,7 +353,7 @@ class TestBlameErrorHandling:
         blame_info = get_file_blame(repo, "large.py")
 
         assert isinstance(blame_info, FileBlameResult)
-        assert blame_info.total_lines = = 1000
+        assert blame_info.total_lines == 1000
         assert len(blame_info.blame_info) == 1000
 
 

@@ -1,4 +1,4 @@
-ji"""Tests for GitHound schemas."""
+"""Tests for GitHound schemas."""
 
 from datetime import datetime
 from pathlib import Path
@@ -31,12 +31,12 @@ class TestOutputFormat:
 
     def test_output_format_values(self) -> None:
         """Test that OutputFormat has expected values."""
-        assert OutputFormat.TEXT = = "text"
-        assert OutputFormat.JSON = = "json"
-        assert OutputFormat.CSV = = "csv"
-        assert OutputFormat.YAML = = "yaml"
-        assert OutputFormat.XML = = "xml"
-        assert OutputFormat.TEXT = = "text"  # Fixed: HTML doesn't exist, use TEXT instead
+        assert OutputFormat.TEXT == "text"
+        assert OutputFormat.JSON == "json"
+        assert OutputFormat.CSV == "csv"
+        assert OutputFormat.YAML == "yaml"
+        assert OutputFormat.XML == "xml"
+        assert OutputFormat.TEXT == "text"  # Fixed: HTML doesn't exist, use TEXT instead
 
 
 class TestExportOptions:
@@ -50,7 +50,7 @@ class TestExportOptions:
             pretty_print=True
         )
         
-        assert options.format = = OutputFormat.JSON
+        assert options.format == OutputFormat.JSON
         assert options.include_metadata is True
         assert options.pretty_print is True
 
@@ -58,13 +58,13 @@ class TestExportOptions:
         """Test ExportOptions default values."""
         options = ExportOptions(format=OutputFormat.JSON)
         
-        assert options.format = = OutputFormat.JSON
+        assert options.format == OutputFormat.JSON
         assert options.include_metadata is True  # Fixed: defaults to True, not False
         assert options.pretty_print is True  # Fixed: defaults to True, not False
         assert options.fields is None  # Fixed: defaults to None, not []
         assert options.exclude_fields is None  # Fixed: defaults to None, not []
-        assert options.filters = = []
-        assert options.sort_by = = []
+        assert options.filters == []
+        assert options.sort_by == []
 
 
 class TestPaginationInfo:
@@ -81,10 +81,10 @@ class TestPaginationInfo:
             has_previous=True  # Added required field
         )
         
-        assert pagination.page = = 2
-        assert pagination.page_size = = 50
-        assert pagination.total_items = = 200
-        assert pagination.total_pages = = 4
+        assert pagination.page == 2
+        assert pagination.page_size == 50
+        assert pagination.total_items == 200
+        assert pagination.total_pages == 4
 
     def test_pagination_info_defaults(self) -> None:
         """Test PaginationInfo default values."""
@@ -95,10 +95,10 @@ class TestPaginationInfo:
             has_previous=False  # Required field
         )
 
-        assert pagination.page = = 1  # Default value
-        assert pagination.page_size = = 100  # Default value
-        assert pagination.total_items = = 100  # Value we provided
-        assert pagination.total_pages = = 10   # Value we provided
+        assert pagination.page == 1  # Default value
+        assert pagination.page_size == 100  # Default value
+        assert pagination.total_items == 100  # Value we provided
+        assert pagination.total_pages == 10   # Value we provided
 
 
 class TestSortCriteria:
@@ -111,15 +111,15 @@ class TestSortCriteria:
             order=SortOrder.DESC  # Fixed: ascending -> order
         )
 
-        assert sort.field = = "date"
-        assert sort.order = = SortOrder.DESC  # Fixed: ascending -> order
+        assert sort.field == "date"
+        assert sort.order == SortOrder.DESC  # Fixed: ascending -> order
 
     def test_sort_criteria_defaults(self) -> None:
         """Test SortCriteria default values."""
         sort = SortCriteria(field="date")
         
-        assert sort.field = = "date"
-        assert sort.order = = SortOrder.ASC  # Fixed: ascending -> order, defaults to ASC
+        assert sort.field == "date"
+        assert sort.order == SortOrder.ASC  # Fixed: ascending -> order, defaults to ASC
 
 
 class TestDataFilter:
@@ -133,9 +133,9 @@ class TestDataFilter:
             value="john"
         )
         
-        assert filter_obj.field = = "author"
-        assert filter_obj.operator = = "contains"
-        assert filter_obj.value = = "john"
+        assert filter_obj.field == "author"
+        assert filter_obj.operator == "contains"
+        assert filter_obj.value == "john"
 
 
 class TestAuthorSchema:
@@ -150,10 +150,10 @@ class TestAuthorSchema:
             lines_authored=1000
         )
         
-        assert author.name = = "John Doe"
-        assert author.email = = "john@example.com"
-        assert author.commits_count = = 50
-        assert author.lines_authored = = 1000
+        assert author.name == "John Doe"
+        assert author.email == "john@example.com"
+        assert author.commits_count == 50
+        assert author.lines_authored == 1000
 
     def test_author_schema_minimal(self) -> None:
         """Test creating AuthorSchema with minimal data."""
@@ -162,8 +162,8 @@ class TestAuthorSchema:
             email="john@example.com"
         )
         
-        assert author.name = = "John Doe"
-        assert author.email = = "john@example.com"
+        assert author.name == "John Doe"
+        assert author.email == "john@example.com"
         assert author.commits_count is None
         assert author.lines_authored is None
 
@@ -179,8 +179,8 @@ class TestBranchSchema:
             is_remote=False
         )
 
-        assert branch.name = = "main"
-        assert branch.commit_hash = = "abc123"
+        assert branch.name == "main"
+        assert branch.commit_hash == "abc123"
         assert branch.is_remote is False
 
 
@@ -195,9 +195,9 @@ class TestTagSchema:
             message="Release version 1.0.0"
         )
         
-        assert tag.name = = "v1.0.0"
-        assert tag.commit_hash = = "abc123"
-        assert tag.message = = "Release version 1.0.0"
+        assert tag.name == "v1.0.0"
+        assert tag.commit_hash == "abc123"
+        assert tag.message == "Release version 1.0.0"
 
 
 class TestFileChangeSchema:
@@ -213,10 +213,10 @@ class TestFileChangeSchema:
             is_binary=False
         )
         
-        assert change.file_path = = "src/main.py"
-        assert change.change_type = = "modified"
-        assert change.lines_added = = 10
-        assert change.lines_deleted = = 5
+        assert change.file_path == "src/main.py"
+        assert change.change_type == "modified"
+        assert change.lines_added == 10
+        assert change.lines_deleted == 5
         assert change.is_binary is False
 
 
@@ -238,12 +238,12 @@ class TestCommitSchema:
             date=commit_date
         )
         
-        assert commit.hash = = "abc123def456"
-        assert commit.short_hash = = "abc123d"
-        assert commit.author = = author
-        assert commit.committer = = committer
-        assert commit.message = = "Fix bug in search"
-        assert commit.date = = commit_date
+        assert commit.hash == "abc123def456"
+        assert commit.short_hash == "abc123d"
+        assert commit.author == author
+        assert commit.committer == committer
+        assert commit.message == "Fix bug in search"
+        assert commit.date == commit_date
 
 
 class TestBlameLineSchema:
@@ -262,12 +262,12 @@ class TestBlameLineSchema:
             commit_message="Test commit"  # Added required field
         )
         
-        assert blame_line.line_number = = 10
-        assert blame_line.content = = "def test() -> None:"
-        assert blame_line.commit_hash = = "abc123"
+        assert blame_line.line_number == 10
+        assert blame_line.content == "def test() -> None:"
+        assert blame_line.commit_hash == "abc123"
         assert blame_line.author.name == "John Doe"  # Fixed: access through author object
         assert blame_line.author.email == "john@example.com"  # Fixed: access through author object
-        assert blame_line.commit_date = = blame_date  # Fixed: date -> commit_date
+        assert blame_line.commit_date == blame_date  # Fixed: date -> commit_date
 
 
 class TestFileBlameSchema:
@@ -292,8 +292,8 @@ class TestFileBlameSchema:
             contributors=[author]  # Added required field
         )
         
-        assert file_blame.file_path = = "test.py"
-        assert file_blame.total_lines = = 100
+        assert file_blame.file_path == "test.py"
+        assert file_blame.total_lines == 100
         assert len(file_blame.lines) == 1  # Fixed: blame_lines -> lines
 
 
@@ -308,9 +308,9 @@ class TestDiffLineSchema:
             change_type="added"
         )
 
-        assert diff_line.line_number_new = = 10  # Fixed: line_number -> line_number_new
-        assert diff_line.content = = "def test() -> None:"
-        assert diff_line.change_type = = "added"
+        assert diff_line.line_number_new == 10  # Fixed: line_number -> line_number_new
+        assert diff_line.content == "def test() -> None:"
+        assert diff_line.change_type == "added"
 
 
 class TestFileDiffSchema:
@@ -332,10 +332,10 @@ class TestFileDiffSchema:
             diff_lines=[diff_line]
         )
         
-        assert file_diff.file_path = = "test.py"
-        assert file_diff.change_type = = "added"
-        assert file_diff.lines_added = = 10
-        assert file_diff.lines_deleted = = 0
+        assert file_diff.file_path == "test.py"
+        assert file_diff.change_type == "added"
+        assert file_diff.lines_added == 10
+        assert file_diff.lines_deleted == 0
         assert len(file_diff.diff_lines) == 1
 
 
@@ -361,11 +361,11 @@ class TestCommitDiffSchema:
             file_diffs=[file_diff]  # Added required field
         )
         
-        assert commit_diff.from_commit = = "abc123"
-        assert commit_diff.to_commit = = "def456"
-        assert commit_diff.files_changed = = 1  # Fixed: files_changed is int, not list
-        assert commit_diff.total_additions = = 5  # Fixed: total_lines_added -> total_additions
-        assert commit_diff.total_deletions = = 2  # Fixed: total_lines_deleted -> total_deletions
+        assert commit_diff.from_commit == "abc123"
+        assert commit_diff.to_commit == "def456"
+        assert commit_diff.files_changed == 1  # Fixed: files_changed is int, not list
+        assert commit_diff.total_additions == 5  # Fixed: total_lines_added -> total_additions
+        assert commit_diff.total_deletions == 2  # Fixed: total_lines_deleted -> total_deletions
 
 
 class TestRepositorySchema:
@@ -390,11 +390,11 @@ class TestRepositorySchema:
             contributors=[author]
         )
         
-        assert repo.path = = "/path/to/repo"
-        assert repo.name = = "test-repo"
+        assert repo.path == "/path/to/repo"
+        assert repo.name == "test-repo"
         assert repo.is_bare is False
-        assert repo.head_commit = = "abc123"
-        assert repo.active_branch = = "main"
+        assert repo.head_commit == "abc123"
+        assert repo.active_branch == "main"
         assert len(repo.branches) == 1
         assert len(repo.tags) == 1
         assert len(repo.contributors) == 1
@@ -424,12 +424,12 @@ class TestSearchResultSchema:
         )
         
         assert result.commit.hash == "abc123"  # Fixed: access through commit object
-        assert result.file_path = = "test.py"
-        assert result.line_number = = 10
-        assert result.matching_line = = "def test() -> None:"  # Fixed: line_content -> matching_line
-        assert result.search_type = = "content"  # Fixed: match_type -> search_type
-        assert result.relevance_score = = 0.95
-        assert result.commit = = commit  # Fixed: commit_info -> commit
+        assert result.file_path == "test.py"
+        assert result.line_number == 10
+        assert result.matching_line == "def test() -> None:"  # Fixed: line_content -> matching_line
+        assert result.search_type == "content"  # Fixed: match_type -> search_type
+        assert result.relevance_score == 0.95
+        assert result.commit == commit  # Fixed: commit_info -> commit
 
 
 class TestSearchResultsCollectionSchema:
@@ -473,6 +473,6 @@ class TestSearchResultsCollectionSchema:
         )
         
         assert len(collection.results) == 1
-        assert collection.total_results = = 1  # Fixed: total_count -> total_results
-        assert collection.pagination = = pagination
-        assert collection.search_time_ms = = 150.0  # Fixed: search_duration_ms -> search_time_ms
+        assert collection.total_results == 1  # Fixed: total_count -> total_results
+        assert collection.pagination == pagination
+        assert collection.search_time_ms == 150.0  # Fixed: search_duration_ms -> search_time_ms

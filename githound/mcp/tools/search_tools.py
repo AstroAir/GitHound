@@ -10,17 +10,25 @@ from git import GitCommandError
 from ...git_handler import get_repository
 from ...models import SearchQuery
 from ...search_engine import (
-    AuthorSearcher,
-    CommitHashSearcher,
-    ContentSearcher,
-    DateRangeSearcher,
-    FilePathSearcher,
-    FileTypeSearcher,
-    FuzzySearcher,
-    MessageSearcher,
     SearchOrchestrator,
+    create_search_orchestrator,
+    SearchEngineFactory,
+    get_global_registry,
+    get_global_analytics,
 )
-from ..models import AdvancedSearchInput, ContentSearchInput, FuzzySearchInput
+from ..models import (
+    AdvancedSearchInput,
+    ContentSearchInput,
+    FuzzySearchInput,
+    SearchEngineConfigInput,
+    SearcherRegistryQueryInput,
+    SearchAnalyticsQueryInput,
+    BranchAnalysisInput,
+    DiffAnalysisInput,
+    PatternDetectionInput,
+    StatisticalAnalysisInput,
+    TagAnalysisInput,
+)
 
 # Initialize search orchestrator with all searchers
 _search_orchestrator: SearchOrchestrator | None = None
@@ -30,17 +38,8 @@ def get_search_orchestrator() -> SearchOrchestrator:
     """Get or create the search orchestrator with all searchers registered."""
     global _search_orchestrator
     if _search_orchestrator is None:
-        _search_orchestrator = SearchOrchestrator()
-
-        # Register all available searchers
-        _search_orchestrator.register_searcher(CommitHashSearcher())
-        _search_orchestrator.register_searcher(AuthorSearcher())
-        _search_orchestrator.register_searcher(MessageSearcher())
-        _search_orchestrator.register_searcher(DateRangeSearcher())
-        _search_orchestrator.register_searcher(FilePathSearcher())
-        _search_orchestrator.register_searcher(FileTypeSearcher())
-        _search_orchestrator.register_searcher(ContentSearcher())
-        _search_orchestrator.register_searcher(FuzzySearcher())
+        # Use factory for consistent configuration
+        _search_orchestrator = create_search_orchestrator(enable_advanced=True)
 
     return _search_orchestrator
 
@@ -267,3 +266,501 @@ async def content_search(input_data: ContentSearchInput, ctx: Context) -> dict[s
     except Exception as e:
         await ctx.error(f"Unexpected error during content search: {str(e)}")
         return {"status": "error", "error": f"Unexpected error: {str(e)}"}
+
+
+# Advanced Search Engine Tools
+
+async def create_search_engine(input_data: SearchEngineConfigInput, ctx: Context) -> dict[str, Any]:
+    """
+    Create a customized search engine with specific configuration.
+
+    Allows fine-tuned control over search engine behavior, performance settings,
+    and feature enablement for optimal repository analysis.
+    """
+    try:
+        await ctx.info("Creating customized search engine configuration")
+
+        from ...models import SearchEngineConfig
+
+        # Create configuration from input
+        config = SearchEngineConfig(
+            enable_advanced_searchers=input_data.enable_advanced_searchers,
+            enable_basic_searchers=input_data.enable_basic_searchers,
+            enable_caching=input_data.enable_caching,
+            enable_ranking=input_data.enable_ranking,
+            enable_analytics=input_data.enable_analytics,
+            enable_fuzzy_search=input_data.enable_fuzzy_search,
+            enable_pattern_detection=input_data.enable_pattern_detection,
+            max_workers=input_data.max_workers,
+            cache_backend=input_data.cache_backend,
+            cache_ttl_seconds=input_data.cache_ttl_seconds
+        )
+
+        # Create factory with custom configuration
+        factory = SearchEngineFactory(config)
+        orchestrator = factory.create_orchestrator()
+
+        # Get orchestrator statistics
+        searcher_count = len(orchestrator._searchers)
+        searcher_names = [s.name for s in orchestrator._searchers]
+
+        await ctx.info(f"Search engine created with {searcher_count} searchers")
+
+        return {
+            "status": "success",
+            "configuration": {
+                "advanced_searchers_enabled": config.enable_advanced_searchers,
+                "basic_searchers_enabled": config.enable_basic_searchers,
+                "caching_enabled": config.enable_caching,
+                "ranking_enabled": config.enable_ranking,
+                "analytics_enabled": config.enable_analytics,
+                "max_workers": config.max_workers,
+                "cache_backend": config.cache_backend,
+            },
+            "orchestrator_info": {
+                "searcher_count": searcher_count,
+                "available_searchers": searcher_names,
+            },
+            "creation_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error creating search engine: {str(e)}")
+        return {"status": "error", "error": f"Failed to create search engine: {str(e)}"}
+
+
+async def query_searcher_registry(input_data: SearcherRegistryQueryInput, ctx: Context) -> dict[str, Any]:
+    """
+    Query the searcher registry for available searchers and their capabilities.
+
+    Provides detailed information about registered searchers, their capabilities,
+    performance characteristics, and compatibility with different search types.
+    """
+    try:
+        await ctx.info(f"Querying searcher registry for repository {input_data.repo_path}")
+
+        registry = get_global_registry()
+
+        # Get all searchers or filter by criteria
+        if input_data.search_types or input_data.capabilities:
+            from ...models import SearchQuery
+
+            # Create a mock query to test searcher compatibility
+            query = SearchQuery()
+            if input_data.search_types:
+                # Set query fields based on search types
+                for search_type in input_data.search_types:
+                    if search_type.lower() == "content":
+                        query.content_pattern = "test"
+                    elif search_type.lower() == "author":
+                        query.author_pattern = "test"
+                    # Add more mappings as needed
+
+            matching_searchers = registry.get_searchers_for_query(query)
+        else:
+            matching_searchers = registry.list_searchers(enabled_only=input_data.enabled_only)
+
+        # Get detailed information for each searcher
+        searcher_details = []
+        for searcher_name in matching_searchers:
+            metadata = registry.get_metadata(searcher_name)
+            if metadata:
+                searcher_details.append({
+                    "name": metadata.name,
+                    "description": metadata.description,
+                    "search_types": [st.value for st in metadata.search_types],
+                    "capabilities": metadata.capabilities,
+                    "priority": metadata.priority,
+                    "enabled": metadata.enabled,
+                    "requires_advanced": metadata.requires_advanced,
+                    "performance_cost": metadata.performance_cost,
+                    "memory_usage": metadata.memory_usage,
+                    "dependencies": metadata.dependencies,
+                })
+
+        # Get registry statistics
+        stats = registry.get_registry_stats()
+
+        await ctx.info(f"Found {len(searcher_details)} matching searchers")
+
+        return {
+            "status": "success",
+            "searchers": searcher_details,
+            "registry_stats": stats,
+            "query_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error querying searcher registry: {str(e)}")
+        return {"status": "error", "error": f"Failed to query registry: {str(e)}"}
+
+
+async def get_search_analytics(input_data: SearchAnalyticsQueryInput, ctx: Context) -> dict[str, Any]:
+    """
+    Retrieve search performance analytics and usage patterns.
+
+    Provides insights into search performance, usage patterns, optimization
+    opportunities, and system health metrics.
+    """
+    try:
+        await ctx.info("Retrieving search analytics data")
+
+        analytics = get_global_analytics()
+
+        # Get performance metrics
+        from datetime import timedelta
+        time_range = timedelta(hours=input_data.time_range_hours)
+
+        result = {
+            "status": "success",
+            "query_timestamp": datetime.now().isoformat(),
+            "time_range_hours": input_data.time_range_hours,
+        }
+
+        if input_data.include_performance:
+            performance_metrics = await analytics.get_performance_metrics(time_range)
+            result["performance_metrics"] = {
+                "total_searches": performance_metrics.total_searches,
+                "avg_duration_ms": performance_metrics.avg_duration_ms,
+                "median_duration_ms": performance_metrics.median_duration_ms,
+                "p95_duration_ms": performance_metrics.p95_duration_ms,
+                "avg_results_per_search": performance_metrics.avg_results_per_search,
+                "cache_hit_rate": performance_metrics.cache_hit_rate,
+                "error_rate": performance_metrics.error_rate,
+                "avg_memory_usage_mb": performance_metrics.avg_memory_usage_mb,
+                "peak_concurrent_searches": performance_metrics.peak_concurrent_searches,
+            }
+
+        if input_data.include_usage_patterns:
+            usage_patterns = await analytics.get_usage_patterns()
+            result["usage_patterns"] = usage_patterns
+
+        # Get optimization recommendations
+        recommendations = await analytics.get_optimization_recommendations()
+        result["optimization_recommendations"] = recommendations
+
+        await ctx.info(f"Analytics retrieved for {input_data.time_range_hours} hour period")
+
+        return result
+
+    except Exception as e:
+        await ctx.error(f"Error retrieving analytics: {str(e)}")
+        return {"status": "error", "error": f"Failed to retrieve analytics: {str(e)}"}
+
+
+async def analyze_branches(input_data: BranchAnalysisInput, ctx: Context) -> dict[str, Any]:
+    """
+    Perform comprehensive branch analysis including metrics and comparisons.
+
+    Analyzes branch structure, commit patterns, merge history, and provides
+    insights into branch health and development patterns.
+    """
+    try:
+        await ctx.info(f"Starting branch analysis for repository {input_data.repo_path}")
+
+        repo = get_repository(Path(input_data.repo_path))
+        orchestrator = get_search_orchestrator()
+
+        # Create SearchQuery for branch analysis
+        from ...models import SearchQuery
+        query = SearchQuery(
+            branch_analysis=True,
+            max_results=input_data.max_commits
+        )
+
+        # Perform branch analysis search
+        results: list[dict[str, Any]] = []
+        async for result in orchestrator.search(
+            repo=repo,
+            query=query,
+            branch=input_data.branch_name,
+            max_results=input_data.max_commits
+        ):
+            results.append({
+                "commit_hash": result.commit_hash,
+                "file_path": str(result.file_path) if result.file_path else None,
+                "commit_info": result.commit_info.dict() if result.commit_info else None,
+                "search_type": result.search_type.value,
+                "relevance_score": result.relevance_score,
+                "match_context": result.match_context,
+            })
+
+        # Get branch-specific metrics if requested
+        branch_metrics = {}
+        if input_data.include_metrics:
+            branch_metrics = {
+                "total_commits": len(results),
+                "analyzed_branch": input_data.branch_name or "current",
+                "analysis_timestamp": datetime.now().isoformat(),
+            }
+
+        await ctx.info(f"Branch analysis complete: analyzed {len(results)} commits")
+
+        return {
+            "status": "success",
+            "results": results,
+            "branch_metrics": branch_metrics,
+            "total_count": len(results),
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error during branch analysis: {str(e)}")
+        return {"status": "error", "error": f"Branch analysis failed: {str(e)}"}
+
+
+async def analyze_diffs(input_data: DiffAnalysisInput, ctx: Context) -> dict[str, Any]:
+    """
+    Perform detailed diff analysis between references.
+
+    Analyzes changes between commits, branches, or tags with detailed
+    statistics and change patterns.
+    """
+    try:
+        await ctx.info(f"Starting diff analysis: {input_data.from_ref} -> {input_data.to_ref}")
+
+        repo = get_repository(Path(input_data.repo_path))
+        orchestrator = get_search_orchestrator()
+
+        # Create SearchQuery for diff analysis
+        from ...models import SearchQuery
+        query = SearchQuery(
+            diff_analysis=True,
+            file_path_pattern="|".join(input_data.file_patterns) if input_data.file_patterns else None
+        )
+
+        # Perform diff analysis search
+        results: list[dict[str, Any]] = []
+        async for result in orchestrator.search(repo=repo, query=query):
+            results.append({
+                "commit_hash": result.commit_hash,
+                "file_path": str(result.file_path) if result.file_path else None,
+                "line_number": result.line_number,
+                "matching_line": result.matching_line,
+                "commit_info": result.commit_info.dict() if result.commit_info else None,
+                "search_type": result.search_type.value,
+                "relevance_score": result.relevance_score,
+                "match_context": result.match_context,
+            })
+
+        # Calculate diff statistics if requested
+        diff_stats = {}
+        if input_data.include_stats:
+            diff_stats = {
+                "total_changes": len(results),
+                "from_ref": input_data.from_ref,
+                "to_ref": input_data.to_ref,
+                "files_analyzed": len(set(r["file_path"] for r in results if r["file_path"])),
+                "analysis_timestamp": datetime.now().isoformat(),
+            }
+
+        await ctx.info(f"Diff analysis complete: found {len(results)} changes")
+
+        return {
+            "status": "success",
+            "results": results,
+            "diff_statistics": diff_stats,
+            "total_count": len(results),
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error during diff analysis: {str(e)}")
+        return {"status": "error", "error": f"Diff analysis failed: {str(e)}"}
+
+
+async def detect_patterns(input_data: PatternDetectionInput, ctx: Context) -> dict[str, Any]:
+    """
+    Detect code patterns, anti-patterns, and potential issues.
+
+    Analyzes code for common patterns, security issues, code smells,
+    and best practice violations.
+    """
+    try:
+        await ctx.info(f"Starting pattern detection for repository {input_data.repo_path}")
+
+        repo = get_repository(Path(input_data.repo_path))
+        orchestrator = get_search_orchestrator()
+
+        # Create SearchQuery for pattern detection
+        from ...models import SearchQuery
+        query = SearchQuery(
+            pattern_detection=True,
+            file_extensions=input_data.file_extensions,
+            max_results=input_data.max_files
+        )
+
+        # Perform pattern detection search
+        results: list[dict[str, Any]] = []
+        async for result in orchestrator.search(repo=repo, query=query):
+            results.append({
+                "commit_hash": result.commit_hash,
+                "file_path": str(result.file_path) if result.file_path else None,
+                "line_number": result.line_number,
+                "matching_line": result.matching_line,
+                "commit_info": result.commit_info.dict() if result.commit_info else None,
+                "search_type": result.search_type.value,
+                "relevance_score": result.relevance_score,
+                "match_context": result.match_context,
+            })
+
+        # Group results by pattern type
+        pattern_summary: dict[str, int] = {}
+        for result in results:
+            match_context = result.get("match_context", {})
+            if isinstance(match_context, dict):
+                pattern_type = match_context.get("pattern_type", "unknown")
+            else:
+                pattern_type = "unknown"
+            if pattern_type not in pattern_summary:
+                pattern_summary[pattern_type] = 0
+            pattern_summary[pattern_type] += 1
+
+        await ctx.info(f"Pattern detection complete: found {len(results)} patterns")
+
+        return {
+            "status": "success",
+            "results": results,
+            "pattern_summary": pattern_summary,
+            "total_count": len(results),
+            "severity_threshold": input_data.severity_threshold,
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error during pattern detection: {str(e)}")
+        return {"status": "error", "error": f"Pattern detection failed: {str(e)}"}
+
+
+async def analyze_statistics(input_data: StatisticalAnalysisInput, ctx: Context) -> dict[str, Any]:
+    """
+    Perform statistical analysis of repository data.
+
+    Provides comprehensive statistical insights including commit patterns,
+    author contributions, file change frequencies, and trend analysis.
+    """
+    try:
+        await ctx.info(f"Starting statistical analysis for repository {input_data.repo_path}")
+
+        repo = get_repository(Path(input_data.repo_path))
+        orchestrator = get_search_orchestrator()
+
+        # Create SearchQuery for statistical analysis
+        from ...models import SearchQuery
+        query = SearchQuery(
+            statistical_analysis=True,
+            max_results=1000  # Analyze more data for statistics
+        )
+
+        # Perform statistical analysis search
+        results: list[dict[str, Any]] = []
+        async for result in orchestrator.search(repo=repo, query=query):
+            results.append({
+                "commit_hash": result.commit_hash,
+                "file_path": str(result.file_path) if result.file_path else None,
+                "commit_info": result.commit_info.dict() if result.commit_info else None,
+                "search_type": result.search_type.value,
+                "relevance_score": result.relevance_score,
+                "match_context": result.match_context,
+            })
+
+        # Calculate statistical metrics
+        statistics = {
+            "total_analyzed_commits": len(results),
+            "time_range_days": input_data.time_range_days,
+            "group_by": input_data.group_by,
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+        # Group results by specified criteria
+        grouped_data: dict[str, list[dict[str, Any]]] = {}
+        for result in results:
+            if input_data.group_by == "author" and result.get("commit_info"):
+                commit_info = result.get("commit_info", {})
+                if isinstance(commit_info, dict):
+                    key = commit_info.get("author_name", "unknown")
+                else:
+                    key = "unknown"
+            elif input_data.group_by == "file" and result.get("file_path"):
+                key = str(result.get("file_path", "unknown"))
+            else:
+                key = "all"
+
+            if key not in grouped_data:
+                grouped_data[key] = []
+            grouped_data[key].append(result)
+
+        statistics["grouped_results"] = {
+            key: len(items) for key, items in grouped_data.items()
+        }
+
+        await ctx.info(f"Statistical analysis complete: analyzed {len(results)} items")
+
+        return {
+            "status": "success",
+            "results": results,
+            "statistics": statistics,
+            "grouped_data": grouped_data,
+            "total_count": len(results),
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error during statistical analysis: {str(e)}")
+        return {"status": "error", "error": f"Statistical analysis failed: {str(e)}"}
+
+
+async def analyze_tags(input_data: TagAnalysisInput, ctx: Context) -> dict[str, Any]:
+    """
+    Analyze repository tags and version information.
+
+    Provides insights into versioning patterns, release history,
+    and tag-based development workflows.
+    """
+    try:
+        await ctx.info(f"Starting tag analysis for repository {input_data.repo_path}")
+
+        repo = get_repository(Path(input_data.repo_path))
+        orchestrator = get_search_orchestrator()
+
+        # Create SearchQuery for tag analysis
+        from ...models import SearchQuery
+        query = SearchQuery(
+            tag_analysis=True,
+            content_pattern=input_data.tag_pattern
+        )
+
+        # Perform tag analysis search
+        results: list[dict[str, Any]] = []
+        async for result in orchestrator.search(repo=repo, query=query):
+            results.append({
+                "commit_hash": result.commit_hash,
+                "file_path": str(result.file_path) if result.file_path else None,
+                "commit_info": result.commit_info.dict() if result.commit_info else None,
+                "search_type": result.search_type.value,
+                "relevance_score": result.relevance_score,
+                "match_context": result.match_context,
+            })
+
+        # Extract tag information
+        tag_info = {
+            "total_tags_analyzed": len(results),
+            "tag_pattern": input_data.tag_pattern,
+            "include_releases": input_data.include_releases,
+            "compare_versions": input_data.compare_versions,
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+        await ctx.info(f"Tag analysis complete: analyzed {len(results)} tags")
+
+        return {
+            "status": "success",
+            "results": results,
+            "tag_info": tag_info,
+            "total_count": len(results),
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        await ctx.error(f"Error during tag analysis: {str(e)}")
+        return {"status": "error", "error": f"Tag analysis failed: {str(e)}"}

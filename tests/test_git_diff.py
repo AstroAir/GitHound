@@ -67,8 +67,8 @@ class TestCompareCommits:
             repo, initial_commit.hexsha, third_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
-        assert comparison.from_commit = = initial_commit.hexsha
-        assert comparison.to_commit = = third_commit.hexsha
+        assert comparison.from_commit == initial_commit.hexsha
+        assert comparison.to_commit == third_commit.hexsha
         assert len(comparison.file_diffs) >= 2  # test.py and utils.py
 
         # Check summary statistics
@@ -85,8 +85,8 @@ class TestCompareCommits:
             repo, third_commit.hexsha, initial_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
-        assert comparison.from_commit = = third_commit.hexsha
-        assert comparison.to_commit = = initial_commit.hexsha
+        assert comparison.from_commit == third_commit.hexsha
+        assert comparison.to_commit == initial_commit.hexsha
 
         # Should show deletions where forward comparison showed additions
         # May be 0 if diff parsing doesn't work perfectly
@@ -100,9 +100,9 @@ class TestCompareCommits:
             repo, second_commit.hexsha, second_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
-        assert comparison.total_additions = = 0
-        assert comparison.total_deletions = = 0
-        assert comparison.files_changed = = 0
+        assert comparison.total_additions == 0
+        assert comparison.total_deletions == 0
+        assert comparison.files_changed == 0
 
     def test_compare_commits_invalid_hash(self, temp_repo) -> None:
         """Test comparing with invalid commit hash."""
@@ -142,7 +142,7 @@ class TestCompareBranches:
             (fd for fd in comparison.file_diffs if fd.file_path == "feature.py"), None
         )
         assert feature_diff is not None
-        assert feature_diff.change_type = = ChangeType.ADDED
+        assert feature_diff.change_type == ChangeType.ADDED
 
     def test_compare_branches_invalid_branch(self, temp_repo) -> None:
         """Test comparing with invalid branch."""
@@ -242,10 +242,10 @@ class TestFileDiffInfo:
             diff_lines=[],
         )
 
-        assert file_diff.file_path = = "example.py"
-        assert file_diff.change_type = = ChangeType.ADDED
-        assert file_diff.lines_added = = 10
-        assert file_diff.lines_deleted = = 0
+        assert file_diff.file_path == "example.py"
+        assert file_diff.change_type == ChangeType.ADDED
+        assert file_diff.lines_added == 10
+        assert file_diff.lines_deleted == 0
         assert file_diff.is_binary is False
 
 
@@ -274,12 +274,12 @@ class TestCommitDiffResult:
             file_diffs=file_diffs,
         )
 
-        assert diff_result.from_commit = = "abc123"
-        assert diff_result.to_commit = = "def456"
+        assert diff_result.from_commit == "abc123"
+        assert diff_result.to_commit == "def456"
         assert len(diff_result.file_diffs) == 1
-        assert diff_result.total_additions = = 5
-        assert diff_result.total_deletions = = 2
-        assert diff_result.files_changed = = 1
+        assert diff_result.total_additions == 5
+        assert diff_result.total_deletions == 2
+        assert diff_result.files_changed == 1
 
 
 class TestErrorHandling:

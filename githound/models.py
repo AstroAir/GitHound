@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class SearchType(str, Enum):
     """Types of searches supported by GitHound."""
 
+    # Basic search types
     CONTENT = "content"
     COMMIT_HASH = "commit_hash"
     AUTHOR = "author"
@@ -20,6 +21,18 @@ class SearchType(str, Enum):
     FILE_PATH = "file_path"
     FILE_TYPE = "file_type"
     COMBINED = "combined"
+
+    # Advanced analysis types
+    BRANCH_ANALYSIS = "branch_analysis"
+    DIFF_ANALYSIS = "diff_analysis"
+    PATTERN_DETECTION = "pattern_detection"
+    STATISTICAL_ANALYSIS = "statistical_analysis"
+    TEMPORAL_ANALYSIS = "temporal_analysis"
+    TAG_ANALYSIS = "tag_analysis"
+    CODE_QUALITY = "code_quality"
+    SECURITY_ANALYSIS = "security_analysis"
+    PERFORMANCE_ANALYSIS = "performance_analysis"
+    REPOSITORY_INSIGHTS = "repository_insights"
 
 
 class OutputFormat(str, Enum):
@@ -80,6 +93,161 @@ class SearchQuery(BaseModel):
     max_commit_size: int | None = Field(
         None, description="Maximum number of files changed in commit"
     )
+
+    # Advanced analysis modes
+    branch_analysis: bool = Field(
+        False, description="Enable branch structure and relationship analysis")
+    branch_pattern: str | None = Field(
+        None, description="Pattern to match branch names")
+    compare_branches: bool = Field(
+        False, description="Enable branch comparison analysis")
+
+    diff_analysis: bool = Field(
+        False, description="Enable diff and change pattern analysis")
+    change_analysis: bool = Field(
+        False, description="Enable detailed change analysis")
+    commit_range: str | None = Field(
+        None, description="Commit range for diff analysis (e.g., 'HEAD~10..HEAD')")
+
+    pattern_analysis: bool = Field(
+        False, description="Enable code pattern detection")
+    code_quality: bool = Field(
+        False, description="Enable code quality analysis")
+    security_patterns: bool = Field(
+        False, description="Enable security vulnerability detection")
+
+    statistical_analysis: bool = Field(
+        False, description="Enable statistical repository analysis")
+    temporal_analysis: bool = Field(
+        False, description="Enable temporal pattern analysis")
+
+    tag_pattern: str | None = Field(
+        None, description="Pattern to match tag names")
+    version_analysis: bool = Field(
+        False, description="Enable version and release analysis")
+    release_analysis: bool = Field(
+        False, description="Enable release pattern analysis")
+
+    # Performance and behavior settings
+    enable_caching: bool = Field(
+        True, description="Enable result caching")
+    cache_ttl_seconds: int = Field(
+        3600, description="Cache time-to-live in seconds")
+    enable_ranking: bool = Field(
+        True, description="Enable result ranking")
+    enable_parallel: bool = Field(
+        True, description="Enable parallel search execution")
+    max_workers: int = Field(
+        4, description="Maximum number of parallel workers")
+
+    # Result processing options
+    enable_enrichment: bool = Field(
+        False, description="Enable result enrichment with additional context")
+    context_lines: int = Field(
+        3, description="Number of context lines around matches")
+    group_results: bool = Field(
+        False, description="Enable result grouping")
+    group_by: list[str] | None = Field(
+        None, description="Fields to group results by (file_type, author, etc.)")
+
+    # Search scope and limits
+    max_results: int | None = Field(
+        None, description="Maximum number of results to return")
+    timeout_seconds: int | None = Field(
+        None, description="Search timeout in seconds")
+    search_depth: int | None = Field(
+        None, description="Maximum search depth (commits to analyze)")
+
+    # Text processing options
+    text: str | None = Field(
+        None, description="Free-form text query for natural language processing")
+    semantic_search: bool = Field(
+        False, description="Enable semantic search capabilities")
+    language_detection: bool = Field(
+        False, description="Enable programming language detection and filtering")
+
+    # Helper methods for query analysis
+    def has_basic_search_criteria(self) -> bool:
+        """Check if query has basic search criteria."""
+        return any([
+            self.content_pattern,
+            self.commit_hash,
+            self.author_pattern,
+            self.message_pattern,
+            self.file_path_pattern,
+            self.file_extensions,
+            self.date_from,
+            self.date_to,
+        ])
+
+    def has_advanced_analysis(self) -> bool:
+        """Check if query requests advanced analysis."""
+        return any([
+            self.branch_analysis,
+            self.diff_analysis,
+            self.pattern_analysis,
+            self.statistical_analysis,
+            self.temporal_analysis,
+            self.version_analysis,
+            self.code_quality,
+            self.security_patterns,
+        ])
+
+    def get_enabled_analysis_types(self) -> list[str]:
+        """Get list of enabled analysis types."""
+        analysis_types = []
+        if self.branch_analysis:
+            analysis_types.append("branch")
+        if self.diff_analysis or self.change_analysis:
+            analysis_types.append("diff")
+        if self.pattern_analysis or self.code_quality or self.security_patterns:
+            analysis_types.append("pattern")
+        if self.statistical_analysis:
+            analysis_types.append("statistical")
+        if self.temporal_analysis:
+            analysis_types.append("temporal")
+        if self.version_analysis or self.release_analysis:
+            analysis_types.append("version")
+        return analysis_types
+
+    def is_complex_query(self) -> bool:
+        """Check if this is a complex query requiring multiple searchers."""
+        criteria_count = sum([
+            bool(self.content_pattern),
+            bool(self.author_pattern),
+            bool(self.message_pattern),
+            bool(self.file_path_pattern),
+            bool(self.commit_hash),
+            bool(self.date_from or self.date_to),
+        ])
+        return criteria_count >= 2 or self.has_advanced_analysis()
+
+    def get_search_scope(self) -> dict[str, Any]:
+        """Get search scope configuration."""
+        return {
+            "max_results": self.max_results,
+            "timeout_seconds": self.timeout_seconds,
+            "search_depth": self.search_depth,
+            "max_workers": self.max_workers,
+            "enable_parallel": self.enable_parallel,
+        }
+
+    def get_processing_options(self) -> dict[str, Any]:
+        """Get result processing options."""
+        return {
+            "enable_enrichment": self.enable_enrichment,
+            "context_lines": self.context_lines,
+            "group_results": self.group_results,
+            "group_by": self.group_by or [],
+            "enable_ranking": self.enable_ranking,
+        }
+
+    def get_caching_config(self) -> dict[str, Any]:
+        """Get caching configuration."""
+        return {
+            "enable_caching": self.enable_caching,
+            "cache_ttl_seconds": self.cache_ttl_seconds,
+        }
 
 
 class CommitInfo(BaseModel):
@@ -231,6 +399,162 @@ class GitHoundConfig(BaseModel):
                 max_commit_size=None,
             )
         return self.search_query
+
+
+class SearchEngineConfig(BaseModel):
+    """Comprehensive configuration for the GitHound search engine."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    # Core engine settings
+    enable_advanced_searchers: bool = Field(
+        True, description="Enable advanced searchers (branch, diff, pattern, etc.)")
+    enable_basic_searchers: bool = Field(
+        True, description="Enable basic searchers (content, author, etc.)")
+
+    # Performance settings
+    max_workers: int = Field(
+        4, description="Maximum number of parallel workers")
+    enable_parallel_execution: bool = Field(
+        True, description="Enable parallel searcher execution")
+    search_timeout_seconds: int = Field(
+        300, description="Global search timeout in seconds")
+    max_memory_mb: int = Field(
+        1024, description="Maximum memory usage in MB")
+
+    # Caching configuration
+    enable_caching: bool = Field(
+        True, description="Enable result caching")
+    cache_backend: Literal["memory", "redis"] = Field(
+        "memory", description="Cache backend type")
+    cache_ttl_seconds: int = Field(
+        3600, description="Default cache TTL in seconds")
+    cache_max_size: int = Field(
+        1000, description="Maximum cache entries (memory backend)")
+    redis_url: str = Field(
+        "redis://localhost:6379", description="Redis URL for caching")
+
+    # Result processing
+    enable_ranking: bool = Field(
+        True, description="Enable result ranking")
+    enable_result_processing: bool = Field(
+        True, description="Enable result processing pipeline")
+    default_max_results: int = Field(
+        1000, description="Default maximum results per search")
+
+    # Ranking configuration
+    ranking_weights: dict[str, float] = Field(
+        default_factory=lambda: {
+            "query_match": 0.3,
+            "recency": 0.2,
+            "file_importance": 0.15,
+            "author_relevance": 0.1,
+            "commit_quality": 0.1,
+            "context_relevance": 0.1,
+            "frequency": 0.05,
+        },
+        description="Weights for ranking factors"
+    )
+
+    # Feature toggles
+    enable_fuzzy_search: bool = Field(
+        True, description="Enable fuzzy search capabilities")
+    enable_semantic_search: bool = Field(
+        False, description="Enable semantic search (experimental)")
+    enable_pattern_detection: bool = Field(
+        True, description="Enable code pattern detection")
+    enable_security_analysis: bool = Field(
+        True, description="Enable security vulnerability detection")
+
+    # Monitoring and analytics
+    enable_metrics: bool = Field(
+        True, description="Enable search metrics collection")
+    enable_analytics: bool = Field(
+        False, description="Enable search analytics")
+    metrics_retention_days: int = Field(
+        30, description="Metrics retention period in days")
+
+    # Repository limits
+    max_commits_to_analyze: int = Field(
+        5000, description="Maximum commits to analyze per search")
+    max_files_per_commit: int = Field(
+        100, description="Maximum files to analyze per commit")
+    max_file_size_mb: int = Field(
+        10, description="Maximum file size to analyze in MB")
+
+    # Error handling
+    continue_on_errors: bool = Field(
+        True, description="Continue search when individual searchers fail")
+    max_error_rate: float = Field(
+        0.1, description="Maximum acceptable error rate (0.0-1.0)")
+
+    # Logging configuration
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(
+        "INFO", description="Logging level")
+    log_search_queries: bool = Field(
+        False, description="Log search queries for debugging")
+    log_performance_metrics: bool = Field(
+        True, description="Log performance metrics")
+
+    def get_cache_config(self) -> dict[str, Any]:
+        """Get cache configuration."""
+        return {
+            "enable_caching": self.enable_caching,
+            "backend": self.cache_backend,
+            "ttl_seconds": self.cache_ttl_seconds,
+            "max_size": self.cache_max_size,
+            "redis_url": self.redis_url,
+        }
+
+    def get_performance_config(self) -> dict[str, Any]:
+        """Get performance configuration."""
+        return {
+            "max_workers": self.max_workers,
+            "enable_parallel": self.enable_parallel_execution,
+            "timeout_seconds": self.search_timeout_seconds,
+            "max_memory_mb": self.max_memory_mb,
+            "max_commits": self.max_commits_to_analyze,
+            "max_files_per_commit": self.max_files_per_commit,
+            "max_file_size_mb": self.max_file_size_mb,
+        }
+
+    def get_feature_flags(self) -> dict[str, bool]:
+        """Get feature flags."""
+        return {
+            "advanced_searchers": self.enable_advanced_searchers,
+            "basic_searchers": self.enable_basic_searchers,
+            "fuzzy_search": self.enable_fuzzy_search,
+            "semantic_search": self.enable_semantic_search,
+            "pattern_detection": self.enable_pattern_detection,
+            "security_analysis": self.enable_security_analysis,
+            "ranking": self.enable_ranking,
+            "result_processing": self.enable_result_processing,
+            "metrics": self.enable_metrics,
+            "analytics": self.enable_analytics,
+        }
+
+    def validate_config(self) -> list[str]:
+        """Validate configuration and return list of issues."""
+        issues = []
+
+        if self.max_workers < 1:
+            issues.append("max_workers must be at least 1")
+
+        if self.search_timeout_seconds < 1:
+            issues.append("search_timeout_seconds must be at least 1")
+
+        if self.cache_ttl_seconds < 0:
+            issues.append("cache_ttl_seconds must be non-negative")
+
+        if not (0.0 <= self.max_error_rate <= 1.0):
+            issues.append("max_error_rate must be between 0.0 and 1.0")
+
+        # Validate ranking weights sum to approximately 1.0
+        weight_sum = sum(self.ranking_weights.values())
+        if abs(weight_sum - 1.0) > 0.01:
+            issues.append(f"ranking_weights should sum to 1.0, got {weight_sum}")
+
+        return issues
 
 
 # Legacy dataclass models for backward compatibility

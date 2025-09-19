@@ -33,7 +33,7 @@ try:
     from githound.mcp_server import mcp, get_mcp_server
     MCP_SERVER_AVAILABLE = True
 except ImportError:
-    Optional[mcp] = None
+    mcp = None
     get_mcp_server = None
     MCP_SERVER_AVAILABLE = False
 
@@ -42,7 +42,7 @@ from githound.search_engine import SearchOrchestrator
 
 
 @pytest.fixture(scope="session")
-def event_loop() -> None:
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -690,7 +690,7 @@ class TestUtils:
     @staticmethod
     def assert_api_response(response, expected_status: int = 200, expected_success: bool = True) -> None:
         """Assert API response format and status."""
-        assert response.status_code = = expected_status
+        assert response.status_code == expected_status
 
         if response.headers.get("content-type", "").startswith("application/json"):
             data = response.json()

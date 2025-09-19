@@ -271,9 +271,9 @@ class TestSearchContext:
 
         assert context.repo is mock_repo
         # Use == for Pydantic model comparison
-        assert context.query = = sample_search_query
-        assert context.branch = = "main"
-        assert context.cache = = {}
+        assert context.query == sample_search_query
+        assert context.branch == "main"
+        assert context.cache == {}
 
     def test_search_context_with_progress_callback(self, mock_repo, sample_search_query) -> None:
         """Test SearchContext with progress callback."""

@@ -103,7 +103,7 @@ class TestCommitHashSearcher:
     def test_commit_hash_searcher_name(self) -> None:
         """Test CommitHashSearcher name property."""
         searcher = CommitHashSearcher()
-        assert searcher.name = = "commit_hash"
+        assert searcher.name == "commit_hash"
 
     @pytest.mark.asyncio
     async def test_commit_hash_searcher_estimate_work(self, sample_search_query) -> None:
@@ -143,7 +143,7 @@ class TestAuthorSearcher:
     def test_author_searcher_name(self) -> None:
         """Test AuthorSearcher name property."""
         searcher = AuthorSearcher()
-        assert searcher.name = = "author"
+        assert searcher.name == "author"
 
     @pytest.mark.asyncio
     async def test_author_searcher_estimate_work(self, sample_search_query) -> None:
@@ -185,7 +185,7 @@ class TestMessageSearcher:
     def test_message_searcher_name(self) -> None:
         """Test MessageSearcher name property."""
         searcher = MessageSearcher()
-        assert searcher.name = = "message"
+        assert searcher.name == "message"
 
     @pytest.mark.asyncio
     async def test_message_searcher_estimate_work(self, sample_search_query) -> None:
@@ -225,7 +225,7 @@ class TestDateRangeSearcher:
     def test_date_range_searcher_name(self) -> None:
         """Test DateRangeSearcher name property."""
         searcher = DateRangeSearcher()
-        assert searcher.name = = "date_range"
+        assert searcher.name == "date_range"
 
     @pytest.mark.asyncio
     async def test_date_range_searcher_estimate_work(self, sample_search_query) -> None:

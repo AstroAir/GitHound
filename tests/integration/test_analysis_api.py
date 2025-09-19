@@ -52,7 +52,7 @@ class TestBlameAnalysis:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert "line_blame" in data["data"]
@@ -81,7 +81,7 @@ class TestBlameAnalysis:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
 
@@ -99,7 +99,7 @@ class TestBlameAnalysis:
                 json={"file_path": "nonexistent.py"}
             )
 
-            assert response.status_code = = status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.integration
@@ -147,7 +147,7 @@ class TestDiffAnalysis:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert "files_changed" in data["data"]
@@ -182,7 +182,7 @@ class TestDiffAnalysis:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["files_changed"] == 3
@@ -204,7 +204,7 @@ class TestDiffAnalysis:
                 }
             )
 
-            assert response.status_code = = status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.integration
@@ -245,7 +245,7 @@ class TestCommitFiltering:
                     }
                 )
 
-                assert response.status_code = = status.HTTP_200_OK
+                assert response.status_code == status.HTTP_200_OK
                 data = response.json()
                 assert data["success"] is True
                 assert len(data["data"]["commits"]) == 2
@@ -268,7 +268,7 @@ class TestCommitFiltering:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert len(data["data"]["commits"]) == 0
@@ -311,7 +311,7 @@ class TestFileHistory:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert len(data["data"]["history"]) == 2
@@ -334,7 +334,7 @@ class TestFileHistory:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert len(data["data"]["history"]) == 0
@@ -384,7 +384,7 @@ class TestRepositoryStatistics:
                     }
                 )
 
-                assert response.status_code = = status.HTTP_200_OK
+                assert response.status_code == status.HTTP_200_OK
                 data = response.json()
                 assert data["success"] is True
                 assert "repository_info" in data["data"]
@@ -415,7 +415,7 @@ class TestRepositoryStatistics:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert "repository_info" in data["data"]
@@ -443,7 +443,7 @@ class TestMergeConflicts:
                 params={"repo_path": repo_path}
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["has_conflicts"] is False
@@ -476,7 +476,7 @@ class TestMergeConflicts:
                 params={"repo_path": repo_path}
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["has_conflicts"] is True
@@ -504,7 +504,7 @@ class TestMergeConflicts:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
             data = response.json()
             assert data["success"] is True
             assert data["data"]["file_path"] == "conflicted_file.py"
@@ -525,4 +525,4 @@ class TestMergeConflicts:
             }
         )
 
-        assert response.status_code = = status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

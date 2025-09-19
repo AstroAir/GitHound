@@ -1,0 +1,260 @@
+/* GitHound Web Interface - Main Stylesheet */
+
+/* Base Styles */
+@import url('./base/variables.css');
+@import url('./base/reset.css');
+
+/* Component Styles */
+@import url('./components/theme.css');
+@import url('./components/notifications.css');
+@import url('./components/connection.css');
+@import url('./components/debug-panel.css');
+
+/* Layout Styles */
+@import url('./layout/navigation.css');
+@import url('./layout/forms.css');
+@import url('./layout/grid.css');
+
+/* Utility Styles */
+@import url('./utilities/animations.css');
+@import url('./utilities/spacing.css');
+@import url('./utilities/typography.css');
+
+/* Legacy compatibility - will be removed after migration */
+@import url('../style.css');
+
+/* Global application styles */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: var(--spacing-lg);
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error states */
+.error {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--danger-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--danger-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* Success states */
+.success {
+  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.success-message {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--success-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--success-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* Warning states */
+.warning {
+  color: var(--warning-color);
+  border-color: var(--warning-color);
+}
+
+.warning-message {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--warning-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--warning-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* Info states */
+.info {
+  color: var(--info-color);
+  border-color: var(--info-color);
+}
+
+.info-message {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid var(--info-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--info-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* Focus management */
+.focus-trap {
+  position: relative;
+}
+
+.focus-trap::before,
+.focus-trap::after {
+  content: '';
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Skip links for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--primary-color);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  z-index: var(--z-tooltip);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Print styles */
+@media print {
+  .theme-toggle,
+  .connection-status,
+  .notification-container,
+  .navbar,
+  .btn,
+  .modal {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .main-content {
+    padding: 0;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .loading::after {
+    border-width: 3px;
+  }
+  
+  .error-message,
+  .success-message,
+  .warning-message,
+  .info-message {
+    border-width: 2px;
+    font-weight: 600;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .loading::after {
+    animation: none;
+  }
+  
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode specific adjustments */
+[data-theme="dark"] .loading::after {
+  border-color: var(--border-color);
+  border-top-color: var(--primary-color);
+}
+
+/* Component visibility utilities */
+.hidden {
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden !important;
+}
+
+.visible {
+  visibility: visible !important;
+}
+
+/* Responsive utilities */
+@media (max-width: 576px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 577px) {
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-tablet {
+    display: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 993px) {
+  .show-desktop {
+    display: none !important;
+  }
+}

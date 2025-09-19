@@ -1,5 +1,6 @@
 """Fuzzy search capabilities for GitHound."""
 
+import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any
@@ -12,8 +13,8 @@ except ImportError:
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz  # [assignment]
-    process = mock_rapidfuzz.process  # [assignment]
+    fuzz = mock_rapidfuzz.fuzz
+    process = mock_rapidfuzz.process
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -51,6 +52,7 @@ class FuzzySearcher(CacheableSearcher):
         if not query.fuzzy_search:
             return
 
+        search_start_time = time.time()
         self._report_progress(context, "Starting fuzzy search...", 0.0)
 
         # Build search targets from repository
@@ -61,19 +63,19 @@ class FuzzySearcher(CacheableSearcher):
 
         if query.author_pattern:
             author_results = await self._fuzzy_search_authors(
-                query.author_pattern, search_targets, query.fuzzy_threshold
+                query.author_pattern, search_targets, query.fuzzy_threshold, search_start_time
             )
             results.extend(author_results)
 
         if query.message_pattern:
             message_results = await self._fuzzy_search_messages(
-                query.message_pattern, search_targets, query.fuzzy_threshold
+                query.message_pattern, search_targets, query.fuzzy_threshold, search_start_time
             )
             results.extend(message_results)
 
         if query.content_pattern:
             content_results = await self._fuzzy_search_content(
-                query.content_pattern, search_targets, query.fuzzy_threshold
+                query.content_pattern, search_targets, query.fuzzy_threshold, search_start_time
             )
             results.extend(content_results)
 
@@ -149,7 +151,7 @@ class FuzzySearcher(CacheableSearcher):
         return targets
 
     async def _fuzzy_search_authors(
-        self, pattern: str, targets: list[dict], threshold: float
+        self, pattern: str, targets: list[dict], threshold: float, search_start_time: float
     ) -> list[SearchResult]:
         """Perform fuzzy search on author names and emails."""
         results: list[Any] = []
@@ -190,14 +192,14 @@ class FuzzySearcher(CacheableSearcher):
                         "matched_author": match,
                         "fuzzy_score": score,
                     },
-                    search_time_ms=None,
+                    search_time_ms=self._calculate_search_time_ms(search_start_time),
                 )
                 results.append(result)
 
         return results
 
     async def _fuzzy_search_messages(
-        self, pattern: str, targets: list[dict], threshold: float
+        self, pattern: str, targets: list[dict], threshold: float, search_start_time: float
     ) -> list[SearchResult]:
         """Perform fuzzy search on commit messages."""
         results: list[Any] = []
@@ -233,14 +235,14 @@ class FuzzySearcher(CacheableSearcher):
                     "matched_message": match,
                     "fuzzy_score": score,
                 },
-                search_time_ms=None,
+                search_time_ms=self._calculate_search_time_ms(search_start_time),
             )
             results.append(result)
 
         return results
 
     async def _fuzzy_search_content(
-        self, pattern: str, targets: list[dict], threshold: float
+        self, pattern: str, targets: list[dict], threshold: float, search_start_time: float
     ) -> list[SearchResult]:
         """Perform fuzzy search on file content."""
         results: list[Any] = []
@@ -293,7 +295,7 @@ class FuzzySearcher(CacheableSearcher):
                     "fuzzy_score": score,
                     "file_path": context["file_path"],
                 },
-                search_time_ms=None,
+                search_time_ms=self._calculate_search_time_ms(search_start_time),
             )
             results.append(result)
 

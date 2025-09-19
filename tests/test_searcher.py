@@ -51,14 +51,14 @@ class TestSearchBlobContent:
 
             assert len(results) == 1
             result = results[0]
-            assert result.commit_hash = = commit_hash
+            assert result.commit_hash == commit_hash
             # Fixed: file_path is a Path object
             assert str(result.file_path) == file_path
-            assert result.line_number = = 1
+            assert result.line_number == 1
             # Fixed: line_content -> matching_line
-            assert result.matching_line = = "def test_function() -> None:"
+            assert result.matching_line == "def test_function() -> None:"
             # Fixed: match_type -> search_type
-            assert result.search_type = = SearchType.CONTENT
+            assert result.search_type == SearchType.CONTENT
 
     def test_search_blob_content_case_sensitive(self) -> None:
         """Test case sensitive search."""

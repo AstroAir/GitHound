@@ -15,7 +15,7 @@ import pytest
 try:
     import psutil
 except ImportError:
-    Optional[psutil] = None  #
+    psutil = None  #
 
 from githound.git_blame import get_author_statistics, get_file_blame
 from githound.git_diff import compare_commits
@@ -399,7 +399,7 @@ class TestBenchmarkOperations:
 
         result = benchmark(extract_metadata)
         assert result is not None
-        assert result.hash = = initial_commit.hexsha
+        assert result.hash == initial_commit.hexsha
 
     def test_benchmark_repository_metadata(self, temp_repo_with_commits, benchmark) -> None:
         """Benchmark repository metadata extraction."""

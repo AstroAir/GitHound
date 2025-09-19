@@ -144,7 +144,7 @@ class GoogleProvider(OAuthProxy):
             "provider": "google",
             "provider_name": "Google"
         })
-        return cast(dict[str, Any], metadata)
+        return metadata
 
 
 class GoogleWorkspaceProvider(GoogleProvider):

@@ -399,7 +399,8 @@ def get_cpu_usage() -> float:
 class PerformanceMonitor:
     """Context manager for monitoring performance metrics."""
     
-    def __init__(self) -> None: Optional[self.start_time] = None
+    def __init__(self) -> None:
+        self.start_time = None
         self.start_memory = None
         self.start_cpu = None
     

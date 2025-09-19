@@ -1,13 +1,19 @@
 """Base classes for the search engine architecture."""
 
 import asyncio
+import time
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, Awaitable, Callable
-from typing import Any
+from typing import Any, Union
 
 from pydantic import BaseModel, ConfigDict
 
 from ..models import SearchMetrics, SearchQuery, SearchResult
+
+# Forward declaration to avoid circular imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .cache import SearchCache
 
 
 class SearchContext(BaseModel):
@@ -19,7 +25,7 @@ class SearchContext(BaseModel):
     query: SearchQuery
     branch: str | None = None
     progress_callback: Callable[[str, float], None] | None = None
-    cache: dict[str, Any] | None = None
+    cache: Union[dict[str, Any], 'SearchCache', None] = None
 
 
 class BaseSearcher(ABC):
@@ -73,6 +79,10 @@ class BaseSearcher(ABC):
                 else:
                     setattr(self._metrics, key, value)
 
+    def _calculate_search_time_ms(self, start_time: float) -> float:
+        """Calculate search time in milliseconds from start time."""
+        return (time.time() - start_time) * 1000
+
 
 class CacheableSearcher(BaseSearcher):
     """Base class for searchers that support caching."""
@@ -94,7 +104,18 @@ class CacheableSearcher(BaseSearcher):
             return None
 
         try:
-            value = context.cache.get(key)
+            # Handle both dict and SearchCache
+            if hasattr(context.cache, 'get') and callable(getattr(context.cache, 'get')):
+                # SearchCache or similar async cache
+                get_method = getattr(context.cache, 'get')
+                if asyncio.iscoroutinefunction(get_method):
+                    value = await get_method(key)
+                else:
+                    value = get_method(key)
+            else:
+                # Regular dict
+                value = context.cache.get(key) if hasattr(context.cache, 'get') else None
+
             if value is not None:
                 self._update_metrics(cache_hits=1)
             else:
@@ -112,7 +133,18 @@ class CacheableSearcher(BaseSearcher):
             return
 
         try:
-            context.cache[key] = value
+            # Handle both dict and SearchCache
+            if hasattr(context.cache, 'set') and callable(getattr(context.cache, 'set')):
+                # SearchCache or similar async cache
+                set_method = getattr(context.cache, 'set')
+                if asyncio.iscoroutinefunction(set_method):
+                    await set_method(value, key, ttl=ttl)
+                else:
+                    set_method(value, key, ttl=ttl)
+            else:
+                # Regular dict
+                if hasattr(context.cache, '__setitem__'):
+                    context.cache[key] = value
         except Exception:
             pass  # Ignore cache errors
 

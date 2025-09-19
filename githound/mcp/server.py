@@ -161,6 +161,188 @@ async def content_search(
     return await search_tools.content_search(input_data, ensure_context(ctx))
 
 
+# Advanced Search Engine Tools
+
+@mcp.tool
+async def create_search_engine(
+    enable_advanced_searchers: bool = True,
+    enable_basic_searchers: bool = True,
+    enable_caching: bool = True,
+    enable_ranking: bool = True,
+    enable_analytics: bool = True,
+    enable_fuzzy_search: bool = True,
+    enable_pattern_detection: bool = True,
+    max_workers: int = 4,
+    cache_backend: str = "memory",
+    cache_ttl_seconds: int = 3600,
+    ctx: Context | None = None
+) -> Any:
+    """Create a customized search engine with specific configuration."""
+    from .models import SearchEngineConfigInput
+
+    input_data = SearchEngineConfigInput(
+        enable_advanced_searchers=enable_advanced_searchers,
+        enable_basic_searchers=enable_basic_searchers,
+        enable_caching=enable_caching,
+        enable_ranking=enable_ranking,
+        enable_analytics=enable_analytics,
+        enable_fuzzy_search=enable_fuzzy_search,
+        enable_pattern_detection=enable_pattern_detection,
+        max_workers=max_workers,
+        cache_backend=cache_backend,
+        cache_ttl_seconds=cache_ttl_seconds
+    )
+    return await search_tools.create_search_engine(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def query_searcher_registry(
+    repo_path: str,
+    search_types: list[str] | None = None,
+    capabilities: list[str] | None = None,
+    enabled_only: bool = True,
+    ctx: Context | None = None
+) -> Any:
+    """Query the searcher registry for available searchers and capabilities."""
+    from .models import SearcherRegistryQueryInput
+
+    input_data = SearcherRegistryQueryInput(
+        repo_path=repo_path,
+        search_types=search_types,
+        capabilities=capabilities,
+        enabled_only=enabled_only
+    )
+    return await search_tools.query_searcher_registry(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def get_search_analytics(
+    repo_path: str | None = None,
+    time_range_hours: int = 24,
+    include_performance: bool = True,
+    include_usage_patterns: bool = True,
+    ctx: Context | None = None
+) -> Any:
+    """Retrieve search performance analytics and usage patterns."""
+    from .models import SearchAnalyticsQueryInput
+
+    input_data = SearchAnalyticsQueryInput(
+        repo_path=repo_path,
+        time_range_hours=time_range_hours,
+        include_performance=include_performance,
+        include_usage_patterns=include_usage_patterns
+    )
+    return await search_tools.get_search_analytics(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def analyze_branches(
+    repo_path: str,
+    branch_name: str | None = None,
+    compare_with: str | None = None,
+    include_metrics: bool = True,
+    max_commits: int = 100,
+    ctx: Context | None = None
+) -> Any:
+    """Perform comprehensive branch analysis including metrics and comparisons."""
+    from .models import BranchAnalysisInput
+
+    input_data = BranchAnalysisInput(
+        repo_path=repo_path,
+        branch_name=branch_name,
+        compare_with=compare_with,
+        include_metrics=include_metrics,
+        max_commits=max_commits
+    )
+    return await search_tools.analyze_branches(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def analyze_diffs(
+    repo_path: str,
+    from_ref: str,
+    to_ref: str,
+    file_patterns: list[str] | None = None,
+    include_stats: bool = True,
+    ctx: Context | None = None
+) -> Any:
+    """Perform detailed diff analysis between references."""
+    from .models import DiffAnalysisInput
+
+    input_data = DiffAnalysisInput(
+        repo_path=repo_path,
+        from_ref=from_ref,
+        to_ref=to_ref,
+        file_patterns=file_patterns,
+        include_stats=include_stats
+    )
+    return await search_tools.analyze_diffs(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def detect_patterns(
+    repo_path: str,
+    pattern_types: list[str] | None = None,
+    file_extensions: list[str] | None = None,
+    severity_threshold: str = "medium",
+    max_files: int = 1000,
+    ctx: Context | None = None
+) -> Any:
+    """Detect code patterns, anti-patterns, and potential issues."""
+    from .models import PatternDetectionInput
+
+    input_data = PatternDetectionInput(
+        repo_path=repo_path,
+        pattern_types=pattern_types,
+        file_extensions=file_extensions,
+        severity_threshold=severity_threshold,
+        max_files=max_files
+    )
+    return await search_tools.detect_patterns(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def analyze_statistics(
+    repo_path: str,
+    analysis_types: list[str] | None = None,
+    time_range_days: int = 90,
+    include_trends: bool = True,
+    group_by: str = "author",
+    ctx: Context | None = None
+) -> Any:
+    """Perform statistical analysis of repository data."""
+    from .models import StatisticalAnalysisInput
+
+    input_data = StatisticalAnalysisInput(
+        repo_path=repo_path,
+        analysis_types=analysis_types,
+        time_range_days=time_range_days,
+        include_trends=include_trends,
+        group_by=group_by
+    )
+    return await search_tools.analyze_statistics(input_data, ensure_context(ctx))
+
+
+@mcp.tool
+async def analyze_tags(
+    repo_path: str,
+    tag_pattern: str | None = None,
+    include_releases: bool = True,
+    compare_versions: bool = True,
+    ctx: Context | None = None
+) -> Any:
+    """Analyze repository tags and version information."""
+    from .models import TagAnalysisInput
+
+    input_data = TagAnalysisInput(
+        repo_path=repo_path,
+        tag_pattern=tag_pattern,
+        include_releases=include_releases,
+        compare_versions=compare_versions
+    )
+    return await search_tools.analyze_tags(input_data, ensure_context(ctx))
+
+
 @mcp.tool
 async def analyze_repository(repo_path: str, ctx: Context | None = None) -> Any:
     """Analyze a Git repository and return comprehensive metadata."""

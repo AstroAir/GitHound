@@ -6,6 +6,7 @@ Consolidates all API components into a single, unified application.
 
 import time
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Dict, Any
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,7 +26,7 @@ from .utils.validation import get_request_id
 
 # Lifespan management
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifespan events."""
     # Startup
     print("🚀 GitHound API starting up...")
@@ -120,7 +121,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add global exception handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Global exception handler."""
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -151,7 +152,7 @@ app.mount("/static", StaticFiles(directory="githound/web/static"), name="static"
 # Root endpoints
 
 @app.get("/", tags=["root"])
-async def root():
+async def root() -> Dict[str, Any]:
     """API root endpoint with basic information."""
     return {
         "name": "GitHound API",
@@ -169,7 +170,7 @@ async def root():
     }
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])
-async def health_check():
+async def health_check() -> HealthResponse:
     """API health check endpoint."""
     return HealthResponse(
         status="healthy",
@@ -196,7 +197,7 @@ async def register(
     request: Request,
     user_data: UserCreate,
     request_id: str = get_request_id()
-):
+) -> ApiResponse:
     """Register a new user."""
     try:
         user = auth_manager.create_user(user_data)
@@ -226,7 +227,7 @@ async def register(
 async def login(
     request: Request,
     login_data: UserLogin
-):
+) -> Token:
     """Login and receive an access token."""
     try:
         token = auth_manager.login(login_data)
@@ -244,7 +245,7 @@ async def login(
 async def logout(
     request: Request,
     request_id: str = get_request_id()
-):
+) -> ApiResponse:
     """Logout and revoke the access token."""
     # In a real implementation, you would extract the token from the request
     # and revoke it. For now, this is a placeholder.
@@ -259,7 +260,7 @@ async def logout(
 # API Information endpoint
 
 @app.get("/api/info", response_model=ApiResponse, tags=["information"])
-async def api_info(request_id: str = get_request_id()):
+async def api_info(request_id: str = get_request_id()) -> ApiResponse:
     """Get comprehensive API information."""
     return ApiResponse(
         success=True,
@@ -287,7 +288,7 @@ async def api_info(request_id: str = get_request_id()):
 
 # Add request ID middleware
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
+async def add_request_id(request: Request, call_next) -> Any:
     """Add request ID to all requests."""
     request.state.request_id = get_request_id()
     response = await call_next(request)

@@ -78,7 +78,7 @@ class MockAuthorizationProvider(AuthProvider):
     async def check_permission(self, user: User, permission: str, resource: Optional[str] = None, **context) -> bool:
         """Mock authorization logic."""
         # Admin always has access
-        if user.role = = "admin":
+        if user.role == "admin":
             return True
 
         # Check for specific resource restrictions
@@ -91,7 +91,7 @@ class MockAuthorizationProvider(AuthProvider):
     async def check_tool_permission(self, user: User, tool_name: str, tool_args: Dict[str, Any]) -> bool:
         """Mock tool-level authorization."""
         # Admin always has access
-        if user.role = = "admin":
+        if user.role == "admin":
             return True
 
         # Check for secure repository access
@@ -131,8 +131,8 @@ class TestAuthenticationIntegration:
         # Test successful authentication
         user = await authenticate_request("admin_token")
         assert user is not None
-        assert user.username = = "admin"
-        assert user.role = = "admin"
+        assert user.username == "admin"
+        assert user.role == "admin"
         assert "admin" in user.permissions
 
         # Test failed authentication
@@ -176,7 +176,7 @@ class TestAuthenticationIntegration:
         # Test that authentication still works
         user = await authenticate_request("user_token")
         assert user is not None
-        assert user.username = = "user"
+        assert user.username == "user"
 
         # Test enhanced permission checking
         user_user = base_provider.users["user_token"]
@@ -383,7 +383,7 @@ class TestEndToEndFlow:
         # Test authentication
         user = await authenticate_request("user_token")
         assert user is not None
-        assert user.username = = "user"
+        assert user.username == "user"
 
         # Test basic permission
         assert await check_permission(user, "read") is True

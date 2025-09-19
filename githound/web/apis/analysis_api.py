@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from ...git_blame import get_author_statistics, get_file_blame
@@ -17,6 +17,7 @@ from ...git_diff import compare_branches, compare_commits
 from ...git_handler import (
     extract_commit_metadata,
     get_commits_with_filters,
+    get_file_history,
     get_repository,
     get_repository_metadata,
 )
@@ -329,7 +330,7 @@ async def get_file_history_endpoint(
 async def analyze_repository(
     request: Request,
     repo_path: str = Query(..., description="Repository path"),
-    analysis_request: RepositoryAnalysisRequest = ...,
+    analysis_request: RepositoryAnalysisRequest = Body(...),
     current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:

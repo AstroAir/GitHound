@@ -3,7 +3,7 @@
 import os
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from typing import Optionalnal
+from typing import Optional
 
 from githound.mcp.auth import (
     set_auth_provider,
@@ -49,7 +49,7 @@ class MockAuthProvider(AuthProvider):
 
     async def check_permission(self, user: User, permission: str, resource: Optional[str] = None, **context) -> bool:
         """Mock permission checking."""
-        if user.role = = "admin":
+        if user.role == "admin":
             return True
         return permission in (user.permissions or [])
 
@@ -96,8 +96,8 @@ class TestAuthCore:
 
         user = await authenticate_request("valid_token")
         assert user is not None
-        assert user.username = = "testuser"
-        assert user.role = = "user"
+        assert user.username == "testuser"
+        assert user.role == "user"
 
     @pytest.mark.asyncio
     async def test_authenticate_request_failure(self) -> None:
@@ -122,7 +122,7 @@ class TestAuthCore:
 
         token_info = await validate_token("valid_token")
         assert token_info is not None
-        assert token_info.username = = "testuser"
+        assert token_info.username == "testuser"
         assert "user" in token_info.roles
         assert "read" in token_info.permissions
 

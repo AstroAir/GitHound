@@ -24,15 +24,9 @@ from githound.models import (
 )
 from githound.schemas import OutputFormat
 from githound.search_engine import (
-    AuthorSearcher,
-    CommitHashSearcher,
-    ContentSearcher,
-    DateRangeSearcher,
-    FilePathSearcher,
-    FileTypeSearcher,
-    FuzzySearcher,
-    MessageSearcher,
     SearchOrchestrator,
+    SearchEngineFactory,
+    create_search_orchestrator,
 )
 from githound.utils import ProgressManager
 from githound.utils.export import ExportManager
@@ -234,18 +228,8 @@ async def enhanced_search(
 ) -> list[SearchResult]:
     """Perform enhanced search using the new search engine."""
 
-    # Create and configure search orchestrator
-    orchestrator = SearchOrchestrator()
-
-    # Register all searchers
-    orchestrator.register_searcher(CommitHashSearcher())
-    orchestrator.register_searcher(AuthorSearcher())
-    orchestrator.register_searcher(MessageSearcher())
-    orchestrator.register_searcher(DateRangeSearcher())
-    orchestrator.register_searcher(FilePathSearcher())
-    orchestrator.register_searcher(FileTypeSearcher())
-    orchestrator.register_searcher(ContentSearcher())
-    orchestrator.register_searcher(FuzzySearcher())
+    # Create orchestrator using factory for consistent configuration
+    orchestrator = create_search_orchestrator(enable_advanced=query.has_advanced_analysis())
 
     results: list[Any] = []
 
@@ -772,8 +756,7 @@ def analyze(
                 try:
                     import yaml
 
-                    console.print(yaml.dump if yaml is not None else None(analysis_result,
-                                  default_flow_style=False))
+                    console.print(yaml.dump(analysis_result, default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
@@ -809,7 +792,7 @@ def analyze(
         import traceback
 
         console.print(
-            f"[dim]Debug: {traceback.format_exc if traceback is not None else None()}[/dim]")
+            f"[dim]Debug: {traceback.format_exc() if traceback is not None else None}[/dim]")
         raise typer.Exit(1)
 
 
@@ -904,20 +887,19 @@ def blame(
                         f"Object of type {type(obj)} is not JSON serializable")
 
                 json_str = json.dumps(
-                    blame_result.dict if blame_result is not None else None(), default=json_serializer, indent=2)
+                    blame_result.dict() if blame_result is not None else None, default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump if yaml is not None else None(blame_result.dict if blame_result is not None else None(),
-                                  default_flow_style=False))
+                    console.print(yaml.dump(blame_result.dict() if blame_result is not None else {}, default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
                     console.print_json(
-                        data=blame_result.dict if blame_result is not None else None())
+                        data=blame_result.dict() if blame_result is not None else None)
             else:
                 # Text format
                 _print_blame_text(blame_result, show_line_numbers)
@@ -1007,21 +989,20 @@ def diff(
                     raise TypeError(
                         f"Object of type {type(obj)} is not JSON serializable")
 
-                json_str = json.dumps(diff_result.dict if diff_result is not None else None(),
+                json_str = json.dumps(diff_result.dict() if diff_result is not None else None,
                                       default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump if yaml is not None else None(diff_result.dict if diff_result is not None else None(),
-                                  default_flow_style=False))
+                    console.print(yaml.dump(diff_result.dict() if diff_result is not None else {}, default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
                     console.print_json(
-                        data=diff_result.dict if diff_result is not None else None())
+                        data=diff_result.dict() if diff_result is not None else None)
             else:
                 # Text format
                 _print_diff_text(diff_result)
@@ -1547,28 +1528,28 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
     if "repository_info" in analysis:
         info = analysis["repository_info"]
         console.print(
-            f"\n[bold]Repository Path:[/bold] {info.get if info is not None else None('path', 'N/A')}")
+            f"\n[bold]Repository Path:[/bold] {info.get('path', 'N/A') if info is not None else 'N/A'}")
         console.print(
-            f"[bold]Current Branch:[/bold] {info.get if info is not None else None('current_branch', 'N/A')}")
+            f"[bold]Current Branch:[/bold] {info.get('current_branch', 'N/A') if info is not None else 'N/A'}")
         console.print(
-            f"[bold]Total Branches:[/bold] {len(info.get if info is not None else None('branches', []))}")
+            f"[bold]Total Branches:[/bold] {len(info.get('branches', []) if info is not None else [])}")
         console.print(
-            f"[bold]Total Tags:[/bold] {len(info.get if info is not None else None('tags', []))}")
+            f"[bold]Total Tags:[/bold] {len(info.get('tags', []) if info is not None else [])}")
         console.print(
-            f"[bold]Remotes:[/bold] {len(info.get if info is not None else None('remotes', []))}")
+            f"[bold]Remotes:[/bold] {len(info.get('remotes', []) if info is not None else [])}")
 
     # Commit statistics
     if "commit_statistics" in analysis:
         stats = analysis["commit_statistics"]
         console.print("\n[bold]Commit Statistics:[/bold]")
         console.print(
-            f"  Total Commits: {stats.get if stats is not None else None('total_commits', 'N/A')}")
+            f"  Total Commits: {stats.get('total_commits', 'N/A') if stats is not None else 'N/A'}")
         console.print(
-            f"  Contributors: {stats.get if stats is not None else None('total_contributors', 'N/A')}")
+            f"  Contributors: {stats.get('total_contributors', 'N/A') if stats is not None else 'N/A'}")
         console.print(
-            f"  First Commit: {stats.get if stats is not None else None('first_commit_date', 'N/A')}")
+            f"  First Commit: {stats.get('first_commit_date', 'N/A') if stats is not None else 'N/A'}")
         console.print(
-            f"  Last Commit: {stats.get if stats is not None else None('last_commit_date', 'N/A')}")
+            f"  Last Commit: {stats.get('last_commit_date', 'N/A') if stats is not None else 'N/A'}")
 
     # Author statistics
     if "author_statistics" in analysis:
@@ -1584,11 +1565,10 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         # Show top 10 contributors
         for author_info in list(author_stats.get("by_author", {}).values())[:10]:
             table.add_row(
-                author_info.get if author_info is not None else None(
-                    "name", "Unknown"),
-                str(author_info.get("commit_count", 0)),
-                str(author_info.get("lines_added", 0)),
-                str(author_info.get("lines_deleted", 0)),
+                author_info.get("name", "Unknown") if author_info is not None else "Unknown",
+                str(author_info.get("commit_count", 0) if author_info is not None else 0),
+                str(author_info.get("lines_added", 0) if author_info is not None else 0),
+                str(author_info.get("lines_deleted", 0) if author_info is not None else 0),
             )
 
         console.print(table)
@@ -1615,11 +1595,10 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
             row: list[Any] = []
             if show_line_numbers:
                 row.append(
-                    str(line_info.get if line_info is not None else None("line_number", "")))
+                    str(line_info.get("line_number", "") if line_info is not None else ""))
             row.extend(
                 [
-                    line_info.get if line_info is not None else None("author", "Unknown")[
-                        :18],
+                    (line_info.get("author", "Unknown") if line_info is not None else "Unknown")[:18],
                     line_info.get("commit_hash", "")[:10],
                     line_info.get("date", "")[:10],
                     line_info.get("content", "")[:80],
@@ -1651,11 +1630,10 @@ def _print_diff_text(diff_result: Any) -> None:
 
         for file_change in diff_result.file_changes:
             table.add_row(
-                file_change.get if file_change is not None else None(
-                    "file_path", ""),
-                file_change.get("change_type", ""),
-                str(file_change.get("lines_added", 0)),
-                str(file_change.get("lines_deleted", 0)),
+                file_change.get("file_path", "") if file_change is not None else "",
+                file_change.get("change_type", "") if file_change is not None else "",
+                str(file_change.get("lines_added", 0) if file_change is not None else 0),
+                str(file_change.get("lines_deleted", 0) if file_change is not None else 0),
             )
 
         console.print(table)
@@ -1665,11 +1643,11 @@ def _print_diff_text(diff_result: Any) -> None:
         stats = diff_result.statistics
         console.print("\n[bold]Summary:[/bold]")
         console.print(
-            f"  Files Changed: {stats.get if stats is not None else None('files_changed', 0)}")
+            f"  Files Changed: {stats.get('files_changed', 0) if stats is not None else 0}")
         console.print(
-            f"  Total Lines Added: {stats.get if stats is not None else None('total_lines_added', 0)}")
+            f"  Total Lines Added: {stats.get('total_lines_added', 0) if stats is not None else 0}")
         console.print(
-            f"  Total Lines Deleted: {stats.get if stats is not None else None('total_lines_deleted', 0)}")
+            f"  Total Lines Deleted: {stats.get('total_lines_deleted', 0) if stats is not None else 0}")
 
 
 if __name__ == "__main__":

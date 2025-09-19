@@ -12,7 +12,7 @@ except ImportError:
     JWT_AVAILABLE = False
     # Create dummy classes for type checking
 
-    class PyJWKClient:  #
+    class PyJWKClient:  # type: ignore[no-redef]
         def __init__(self, uri: str) -> None: ...
         def get_signing_key_from_jwt(self, token: str) -> Any: ...
 

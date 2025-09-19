@@ -1,0 +1,101 @@
+{
+  "title": "GitHound Frontend Components",
+  "version": "2.0.0",
+  "buildDate": "2025-09-14T15:59:19.359Z",
+  "components": {
+    "core/component": {
+      "description": "* Base Component Class\n * \n * Provides a foundation for all GitHound web components with lifecycle management,\n * event handling, and dependency injection capabilities.",
+      "exports": "class",
+      "dependencies": 0,
+      "size": 5003
+    },
+    "core/registry": {
+      "description": "* Component Registry\n * \n * Manages component registration, dependency resolution, and initialization order.",
+      "exports": "class",
+      "dependencies": 0,
+      "size": 6967
+    },
+    "core/event-bus": {
+      "description": "* Event Bus\n * \n * Global event system for component communication.",
+      "exports": "class",
+      "dependencies": 0,
+      "size": 4886
+    },
+    "core/state-manager": {
+      "description": "* State Manager\n * \n * Global state management for the GitHound application.",
+      "exports": "class",
+      "dependencies": 1,
+      "size": 6284
+    },
+    "core/app": {
+      "description": "* Main Application Component\n * \n * Orchestrates all other components and manages the overall application lifecycle.",
+      "exports": "class",
+      "dependencies": 10,
+      "size": 13830
+    },
+    "core/lazy-loader": {
+      "description": "* Lazy loading system for GitHound components\n * Provides dynamic import and on-demand loading capabilities",
+      "exports": "class",
+      "dependencies": 0,
+      "size": 10511
+    },
+    "auth/auth-manager": {
+      "description": "* Authentication Manager Component\n * \n * Manages user authentication, registration, and session management.",
+      "exports": "class",
+      "dependencies": 3,
+      "size": 13730
+    },
+    "search/search-manager": {
+      "description": "* Search Manager Component\n * \n * Manages search operations, history, and templates.",
+      "exports": "class",
+      "dependencies": 3,
+      "size": 11269
+    },
+    "ui/theme-manager": {
+      "description": "* Theme Manager Component\n * \n * Manages application themes and visual preferences.",
+      "exports": "class",
+      "dependencies": 3,
+      "size": 9791
+    },
+    "ui/notification-manager": {
+      "description": "* Notification Manager Component\n * \n * Manages application notifications and alerts.",
+      "exports": "class",
+      "dependencies": 3,
+      "size": 10647
+    },
+    "ui/accessibility-manager": {
+      "description": "* Accessibility Manager for GitHound\n * Provides comprehensive accessibility features and WCAG compliance",
+      "exports": "class",
+      "dependencies": 1,
+      "size": 18179
+    },
+    "websocket/websocket-manager": {
+      "description": "* WebSocket Manager Component\n * \n * Manages WebSocket connections with automatic reconnection and authentication.",
+      "exports": "class",
+      "dependencies": 3,
+      "size": 8429
+    },
+    "utils/export-manager": {
+      "description": "* Export Manager Component\n * \n * Manages data export functionality for search results.",
+      "exports": "class",
+      "dependencies": 3,
+      "size": 11790
+    },
+    "dev/debug-panel": {
+      "description": "* Development Debug Panel for GitHound\n * Provides component inspection, state monitoring, and debugging tools",
+      "exports": "class",
+      "dependencies": 1,
+      "size": 15581
+    }
+  },
+  "architecture": {
+    "type": "ES6 Modules",
+    "pattern": "Component-based",
+    "features": [
+      "Lazy Loading",
+      "Service Worker",
+      "Accessibility",
+      "Testing"
+    ]
+  }
+}

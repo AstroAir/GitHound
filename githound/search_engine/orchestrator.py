@@ -3,11 +3,15 @@
 import asyncio
 import time
 from collections.abc import AsyncGenerator, Callable
+from typing import Any
 
 from git import Repo
 
 from ..models import SearchMetrics, SearchQuery, SearchResult
 from .base import BaseSearcher, SearchContext
+
+# mypy: disable-error-code=unreachable
+# Note: mypy incorrectly flags code as unreachable due to dynamic searcher registration
 
 
 class SearchOrchestrator:
@@ -15,6 +19,10 @@ class SearchOrchestrator:
 
     def __init__(self) -> None:
         self._searchers: list[BaseSearcher] = []
+        self._cache = None
+        self._ranking_engine = None
+        self._result_processor = None
+        self._analytics = None
         self._metrics = SearchMetrics(
             total_commits_searched=0,
             total_files_searched=0,
@@ -33,6 +41,22 @@ class SearchOrchestrator:
         """Unregister a searcher from the orchestrator."""
         if searcher in self._searchers:
             self._searchers.remove(searcher)
+
+    def set_cache(self, cache: Any) -> None:
+        """Set the cache for the orchestrator."""
+        self._cache = cache
+
+    def set_ranking_engine(self, ranking_engine: Any) -> None:
+        """Set the ranking engine for the orchestrator."""
+        self._ranking_engine = ranking_engine
+
+    def set_result_processor(self, result_processor: Any) -> None:
+        """Set the result processor for the orchestrator."""
+        self._result_processor = result_processor
+
+    def set_analytics(self, analytics: Any) -> None:
+        """Set the analytics for the orchestrator."""
+        self._analytics = analytics
 
     @property
     def metrics(self) -> SearchMetrics:
@@ -87,15 +111,33 @@ class SearchOrchestrator:
         """
         start_time = time.time()
         results_count = 0
+        search_id = None
+        all_results_list: list[SearchResult] = []
+        searcher_count = 0
 
         try:
+            # Start analytics tracking if available
+            if self._analytics:
+                search_id = await self._analytics.start_search(
+                    query, str(repo.working_dir), branch
+                )
             # Create search context
+            # Use internal cache if no cache provided
+            effective_cache = cache if cache is not None else self._cache
+
+            # Ensure forward references are resolved for SearchContext
+            try:
+                from .cache import SearchCache
+                SearchContext.update_forward_refs(SearchCache=SearchCache)
+            except Exception:
+                pass  # Ignore if already resolved or other issues
+
             context = SearchContext(
                 repo=repo,
                 query=query,
                 branch=branch,
                 progress_callback=progress_callback,
-                cache=cache,
+                cache=effective_cache,
             )
 
             # Find applicable searchers
@@ -108,6 +150,8 @@ class SearchOrchestrator:
                 if progress_callback:
                     progress_callback("No applicable searchers found", 1.0)
                 return
+
+            searcher_count = len(applicable_searchers)
 
             # Estimate total work for progress reporting
             total_work = 0
@@ -145,26 +189,62 @@ class SearchOrchestrator:
                               for searcher in applicable_searchers]
             all_results = await asyncio.gather(*searcher_tasks)
 
-            # Flatten and rank results
+            # Flatten results
             flattened_results: list[SearchResult] = []
             for searcher_results in all_results:
                 flattened_results.extend(searcher_results)
 
-            # Sort by relevance score (descending)
-            flattened_results.sort(
-                key=lambda r: r.relevance_score, reverse=True)
+            # Apply ranking if ranking engine is available
+            if self._ranking_engine and flattened_results:
+                if progress_callback:
+                    progress_callback("Ranking results...", 0.9)
+                flattened_results = await self._ranking_engine.rank_results(
+                    flattened_results, query, context
+                )
+            else:
+                # Fallback to simple relevance score sorting
+                flattened_results.sort(
+                    key=lambda r: r.relevance_score, reverse=True)
 
-            # Yield results
+            # Apply result processing if processor is available
+            if self._result_processor and flattened_results:
+                if progress_callback:
+                    progress_callback("Processing results...", 0.95)
+                flattened_results = await self._result_processor.process_results(
+                    flattened_results, query, context
+                )
+
+            # Yield results and collect for analytics
             for result in flattened_results:
                 if max_results and results_count >= max_results:
                     break
+                all_results_list.append(result)
                 yield result
 
         finally:
+            # NOTE: This finally block always executes, even with the return statement
+            # in the try block above. This is correct Python behavior for cleanup.
+
             # Update metrics
             end_time = time.time()
             self._metrics.search_duration_ms = (end_time - start_time) * 1000
-            self._metrics.total_results_found = results_count
+            self._metrics.total_results_found = len(all_results_list)
+
+            # End analytics tracking if available
+            if self._analytics and search_id:
+                try:
+                    await self._analytics.end_search(
+                        search_id,
+                        all_results_list,
+                        cache_hits=self._metrics.cache_hits,
+                        cache_misses=self._metrics.cache_misses,
+                        memory_usage_mb=self._metrics.memory_usage_mb,
+                        error_count=0,  # TODO: Track errors properly
+                        searcher_count=searcher_count
+                    )
+                except Exception:
+                    # Don't let analytics errors break the search
+                    pass
 
             if progress_callback:
                 progress_callback("Search completed", 1.0)

@@ -8,7 +8,7 @@ commit operations, and tag management.
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from ..core.git_operations import GitOperationError, GitOperationsManager
@@ -200,7 +200,7 @@ async def get_repository_status(
 async def create_branch(
     request: Request,
     repo_path: str = Query(..., description="Repository path"),
-    branch_request: BranchCreateRequest = ...,
+    branch_request: BranchCreateRequest = Body(...),
     current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
@@ -341,7 +341,7 @@ async def switch_branch(
 async def create_commit(
     request: Request,
     repo_path: str = Query(..., description="Repository path"),
-    commit_request: CommitCreateRequest = ...,
+    commit_request: CommitCreateRequest = Body(...),
     current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:
@@ -388,7 +388,7 @@ async def create_commit(
 async def create_tag(
     request: Request,
     repo_path: str = Query(..., description="Repository path"),
-    tag_request: TagCreateRequest = ...,
+    tag_request: TagCreateRequest = Body(...),
     current_user: dict[str, Any] = Depends(require_user),
     request_id: str = Depends(get_request_id)
 ) -> ApiResponse:

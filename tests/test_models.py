@@ -26,14 +26,14 @@ class TestSearchType:
 
     def test_search_type_values(self) -> None:
         """Test that SearchType has expected values."""
-        assert SearchType.CONTENT = = "content"
-        assert SearchType.COMMIT_HASH = = "commit_hash"
-        assert SearchType.AUTHOR = = "author"
-        assert SearchType.MESSAGE = = "message"
-        assert SearchType.DATE_RANGE = = "date_range"
-        assert SearchType.FILE_PATH = = "file_path"
-        assert SearchType.FILE_TYPE = = "file_type"
-        assert SearchType.COMBINED = = "combined"
+        assert SearchType.CONTENT == "content"
+        assert SearchType.COMMIT_HASH == "commit_hash"
+        assert SearchType.AUTHOR == "author"
+        assert SearchType.MESSAGE == "message"
+        assert SearchType.DATE_RANGE == "date_range"
+        assert SearchType.FILE_PATH == "file_path"
+        assert SearchType.FILE_TYPE == "file_type"
+        assert SearchType.COMBINED == "combined"
 
 
 class TestOutputFormat:
@@ -41,9 +41,9 @@ class TestOutputFormat:
 
     def test_output_format_values(self) -> None:
         """Test that OutputFormat has expected values."""
-        assert OutputFormat.TEXT = = "text"
-        assert OutputFormat.JSON = = "json"
-        assert OutputFormat.CSV = = "csv"
+        assert OutputFormat.TEXT == "text"
+        assert OutputFormat.JSON == "json"
+        assert OutputFormat.CSV == "csv"
 
 
 class TestSearchQuery:
@@ -58,8 +58,8 @@ class TestSearchQuery:
             fuzzy_search=False
         )
 
-        assert query.content_pattern = = "test"
-        assert query.author_pattern = = "john"
+        assert query.content_pattern == "test"
+        assert query.author_pattern == "john"
         assert query.case_sensitive is True
         assert query.fuzzy_search is False
 
@@ -73,7 +73,7 @@ class TestSearchQuery:
         assert query.message_pattern is None
         assert query.case_sensitive is False
         assert query.fuzzy_search is False
-        assert query.fuzzy_threshold = = 0.8
+        assert query.fuzzy_threshold == 0.8
         assert query.include_globs is None  # Fixed: defaults to None, not []
         assert query.exclude_globs is None  # Fixed: defaults to None, not []
 
@@ -87,8 +87,8 @@ class TestSearchQuery:
             date_to=date_to
         )
 
-        assert query.date_from = = date_from
-        assert query.date_to = = date_to
+        assert query.date_from == date_from
+        assert query.date_to == date_to
 
 
 class TestSearchResult:
@@ -105,15 +105,15 @@ class TestSearchResult:
             relevance_score=0.95
         )
 
-        assert result.commit_hash = = "abc123"
+        assert result.commit_hash == "abc123"
         # Fixed: file_path is a Path object
         assert str(result.file_path) == "test.py"
-        assert result.line_number = = 10
+        assert result.line_number == 10
         # Fixed: line_content -> matching_line
-        assert result.matching_line = = "def test() -> None:"
+        assert result.matching_line == "def test() -> None:"
         # Fixed: match_type -> search_type
-        assert result.search_type = = SearchType.CONTENT
-        assert result.relevance_score = = 0.95
+        assert result.search_type == SearchType.CONTENT
+        assert result.relevance_score == 0.95
 
     def test_search_result_with_commit_info(self) -> None:
         """Test SearchResult with commit information."""
@@ -138,7 +138,7 @@ class TestSearchResult:
             commit_info=commit_info
         )
 
-        assert result.commit_info = = commit_info
+        assert result.commit_info == commit_info
         assert result.commit_info.author_name == "John Doe"
 
 
@@ -154,21 +154,21 @@ class TestSearchMetrics:
             search_duration_ms=1500.0
         )
 
-        assert metrics.total_commits_searched = = 100
-        assert metrics.total_files_searched = = 500
+        assert metrics.total_commits_searched == 100
+        assert metrics.total_files_searched == 500
         # Fixed: matches_found -> total_results_found
-        assert metrics.total_results_found = = 25
-        assert metrics.search_duration_ms = = 1500.0
+        assert metrics.total_results_found == 25
+        assert metrics.search_duration_ms == 1500.0
 
     def test_search_metrics_defaults(self) -> None:
         """Test SearchMetrics default values."""
         metrics = SearchMetrics()
 
-        assert metrics.total_commits_searched = = 0
-        assert metrics.total_files_searched = = 0
+        assert metrics.total_commits_searched == 0
+        assert metrics.total_files_searched == 0
         # Fixed: matches_found -> total_results_found
-        assert metrics.total_results_found = = 0
-        assert metrics.search_duration_ms = = 0.0
+        assert metrics.total_results_found == 0
+        assert metrics.search_duration_ms == 0.0
 
 
 class TestSearchConfig:
@@ -183,8 +183,8 @@ class TestSearchConfig:
         )
 
         assert config.case_sensitive is True  # [attr-defined]
-        assert config.max_results = = 100  # [attr-defined]
-        assert config.timeout_seconds = = 30  # [attr-defined]
+        assert config.max_results == 100  # [attr-defined]
+        assert config.timeout_seconds == 30  # [attr-defined]
 
     def test_search_config_defaults(self) -> None:
         """Test SearchConfig default values."""
@@ -209,10 +209,10 @@ class TestFileChangeInfo:
             lines_deleted=5
         )
 
-        assert change.file_path = = "test.py"
-        assert change.change_type = = "modified"
-        assert change.lines_added = = 10
-        assert change.lines_deleted = = 5
+        assert change.file_path == "test.py"
+        assert change.change_type == "modified"
+        assert change.lines_added == 10
+        assert change.lines_deleted == 5
 
 
 class TestCommitInfo:
@@ -233,12 +233,12 @@ class TestCommitInfo:
             files_changed=3  # Added required field
         )
 
-        assert commit.hash = = "abc123def456"
-        assert commit.short_hash = = "abc123d"
-        assert commit.author_name = = "John Doe"
-        assert commit.author_email = = "john@example.com"
-        assert commit.message = = "Fix bug in search"
-        assert commit.date = = commit_date
+        assert commit.hash == "abc123def456"
+        assert commit.short_hash == "abc123d"
+        assert commit.author_name == "John Doe"
+        assert commit.author_email == "john@example.com"
+        assert commit.message == "Fix bug in search"
+        assert commit.date == commit_date
 
 
 class TestRepositoryInfo:
@@ -255,12 +255,12 @@ class TestRepositoryInfo:
             total_commits=100
         )
 
-        assert repo.path = = "/path/to/repo"
-        assert repo.name = = "test-repo"
+        assert repo.path == "/path/to/repo"
+        assert repo.name == "test-repo"
         assert repo.is_bare is False
-        assert repo.head_commit = = "abc123"
-        assert repo.active_branch = = "main"
-        assert repo.total_commits = = 100
+        assert repo.head_commit == "abc123"
+        assert repo.active_branch == "main"
+        assert repo.total_commits == 100
 
 
 class TestBlameLineInfo:
@@ -279,12 +279,12 @@ class TestBlameLineInfo:
             commit_message="Test commit"  # Added required field
         )
 
-        assert blame_line.line_number = = 10
-        assert blame_line.content = = "def test() -> None:"
-        assert blame_line.commit_hash = = "abc123"
-        assert blame_line.author_name = = "John Doe"
-        assert blame_line.author_email = = "john@example.com"
-        assert blame_line.commit_date = = blame_date  # Fixed: date -> commit_date
+        assert blame_line.line_number == 10
+        assert blame_line.content == "def test() -> None:"
+        assert blame_line.commit_hash == "abc123"
+        assert blame_line.author_name == "John Doe"
+        assert blame_line.author_email == "john@example.com"
+        assert blame_line.commit_date == blame_date  # Fixed: date -> commit_date
 
 
 class TestFileBlameInfo:
@@ -309,7 +309,7 @@ class TestFileBlameInfo:
             contributors=["John Doe"]
         )
 
-        assert file_blame.file_path = = "test.py"
-        assert file_blame.total_lines = = 100
+        assert file_blame.file_path == "test.py"
+        assert file_blame.total_lines == 100
         assert len(file_blame.blame_lines) == 1
-        assert file_blame.contributors = = ["John Doe"]
+        assert file_blame.contributors == ["John Doe"]

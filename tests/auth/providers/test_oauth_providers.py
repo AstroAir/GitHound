@@ -20,9 +20,9 @@ class TestGitHubProvider:
             base_url="http://localhost:8000"
         )
 
-        assert provider.client_id = = "test-client-id"
-        assert provider.client_secret = = "test-client-secret"
-        assert provider.base_url = = "http://localhost:8000"
+        assert provider.client_id == "test-client-id"
+        assert provider.client_secret == "test-client-secret"
+        assert provider.base_url == "http://localhost:8000"
 
     def test_github_oauth_metadata(self) -> None:
         """Test GitHub OAuth metadata generation."""
@@ -106,7 +106,7 @@ class TestGitHubProvider:
             assert result.user.username == "testuser"
             assert result.user.email == "test@example.com"
             assert result.user.role == "user"  # Default role
-            assert result.token = = "gho_test_token"
+            assert result.token == "gho_test_token"
 
     @pytest.mark.asyncio
     async def test_github_authentication_token_failure(self) -> None:
@@ -185,9 +185,9 @@ class TestGoogleProvider:
             base_url="http://localhost:8000"
         )
 
-        assert provider.client_id = = "test-client-id.apps.googleusercontent.com"
-        assert provider.client_secret = = "test-client-secret"
-        assert provider.base_url = = "http://localhost:8000"
+        assert provider.client_id == "test-client-id.apps.googleusercontent.com"
+        assert provider.client_secret == "test-client-secret"
+        assert provider.base_url == "http://localhost:8000"
 
     def test_google_oauth_metadata(self) -> None:
         """Test Google OAuth metadata generation."""
@@ -262,7 +262,7 @@ class TestGoogleProvider:
             assert result.user.username == "test@gmail.com"  # Google uses email as username
             assert result.user.email == "test@gmail.com"
             assert result.user.role == "user"  # Default role
-            assert result.token = = "ya29.test_token"
+            assert result.token == "ya29.test_token"
 
 
 class TestOAuthProxy:
@@ -281,11 +281,11 @@ class TestOAuthProxy:
             userinfo_endpoint="https://auth.example.com/oauth/userinfo"
         )
 
-        assert proxy.client_id = = "test-client-id"
-        assert proxy.client_secret = = "test-client-secret"
-        assert proxy.authorization_endpoint = = "https://auth.example.com/oauth/authorize"
-        assert proxy.token_endpoint = = "https://auth.example.com/oauth/token"
-        assert proxy.userinfo_endpoint = = "https://auth.example.com/oauth/userinfo"
+        assert proxy.client_id == "test-client-id"
+        assert proxy.client_secret == "test-client-secret"
+        assert proxy.authorization_endpoint == "https://auth.example.com/oauth/authorize"
+        assert proxy.token_endpoint == "https://auth.example.com/oauth/token"
+        assert proxy.userinfo_endpoint == "https://auth.example.com/oauth/userinfo"
 
     def test_oauth_proxy_metadata(self) -> None:
         """Test OAuth proxy metadata generation."""
@@ -400,4 +400,4 @@ class TestOAuthProxy:
             assert result.success is True
             assert result.user.username == "testuser"
             assert result.user.email == "test@example.com"
-            assert result.token = = "test-access-token"
+            assert result.token == "test-access-token"

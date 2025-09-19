@@ -4,8 +4,10 @@ import fnmatch
 import json
 import re
 import subprocess
+import time
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from typing import Any
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, ParallelSearcher, SearchContext
@@ -36,6 +38,7 @@ class FilePathSearcher(CacheableSearcher):
         if not file_pattern:
             return
 
+        search_start_time = time.time()
         self._report_progress(
             context, f"Searching for files matching '{file_pattern}'...", 0.0)
 
@@ -110,7 +113,7 @@ class FilePathSearcher(CacheableSearcher):
                                     "search_pattern": file_pattern,
                                     "matched_path": file_path,
                                 },
-                                search_time_ms=None,
+                                search_time_ms=self._calculate_search_time_ms(search_start_time),
                             )
 
                             results_found += 1
@@ -164,13 +167,13 @@ class FileTypeSearcher(CacheableSearcher):
         if not extensions:
             return
 
+        search_start_time = time.time()
         # Normalize extensions (ensure they start with .)
         normalized_extensions: list[Any] = []
         for ext in extensions:
             if not ext.startswith("."):
                 ext = "." + ext
-            normalized_extensions.append(
-                ext.lower if ext is not None else None())
+            normalized_extensions.append(ext.lower())
 
         self._report_progress(
             context, f"Searching for files with extensions: {', '.join(normalized_extensions)}", 0.0
@@ -231,7 +234,7 @@ class FileTypeSearcher(CacheableSearcher):
                                     "matched_extension": file_ext,
                                     "file_path": file_path,
                                 },
-                                search_time_ms=None,
+                                search_time_ms=self._calculate_search_time_ms(search_start_time),
                             )
 
                             results_found += 1
@@ -295,6 +298,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         if not content_pattern:
             return
 
+        search_start_time = time.time()
         self._report_progress(
             context, f"Searching file content for '{content_pattern}'...", 0.0)
 
@@ -374,7 +378,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                         "column_start": match.get("column_start"),
                                         "column_end": match.get("column_end"),
                                     },
-                                    search_time_ms=None,
+                                    search_time_ms=self._calculate_search_time_ms(search_start_time),
                                 )
 
                                 results_found += 1

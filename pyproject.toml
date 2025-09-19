@@ -252,6 +252,10 @@ version-file = "githound/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["githound"]
+include = [
+    "githound/web/static/**/*",
+    "githound/web/templates/**/*",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -261,6 +265,8 @@ include = [
     "/README.md",
     "/LICENSE",
     "/pyproject.toml",
+    "/githound/web/static/**/*",
+    "/githound/web/templates/**/*",
 ]
 exclude = [
     "/.git",
@@ -296,7 +302,7 @@ test = [
     "respx>=0.20.0",
     "playwright>=1.40.0",
     "pytest-playwright>=0.4.0",
-    "axe-playwright>=1.2.3",
+    "axe-playwright-python>=0.1.5",
 ]
 docs = [
     "mkdocs>=1.5.0",

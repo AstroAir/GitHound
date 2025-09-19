@@ -142,7 +142,7 @@ class TestServerDeployment:
                     # For stdio transport, the server might exit immediately if no input is provided
                     # This is actually expected behavior, so we'll consider this a pass
                     # as long as there are no obvious error messages
-                    if process.returncode = = 0 or "Starting GitHound MCP Server" in stdout_output:
+                    if process.returncode == 0 or "Starting GitHound MCP Server" in stdout_output:
                         pass  # Server started successfully
                     else:
                         pytest.fail(
@@ -177,8 +177,8 @@ class TestServerDeployment:
             port=3000,
             transport="http"
         )
-        assert config.host = = "localhost"  # [attr-defined]
-        assert config.port = = 3000  # [attr-defined]
+        assert config.host == "localhost"  # [attr-defined]
+        assert config.port == 3000  # [attr-defined]
 
         # Test configuration with different valid values
         config2 = ServerConfig(
@@ -186,9 +186,9 @@ class TestServerDeployment:
             port=8080,
             transport="stdio"
         )
-        assert config2.host = = "0.0.0.0"  # [attr-defined]
-        assert config2.port = = 8080  # [attr-defined]
-        assert config2.transport = = "stdio"  # [attr-defined]
+        assert config2.host == "0.0.0.0"  # [attr-defined]
+        assert config2.port == 8080  # [attr-defined]
+        assert config2.transport == "stdio"  # [attr-defined]
 
 
 class TestNetworkBehavior:

@@ -62,11 +62,11 @@ class TestGitHandler:
 
         metadata = extract_commit_metadata(commit)
 
-        assert metadata.hash = = commit.hexsha
-        assert metadata.short_hash = = commit.hexsha[:8]
-        assert metadata.author_name = = "Test User"
-        assert metadata.author_email = = "test@example.com"
-        assert metadata.message = = "Initial commit"
+        assert metadata.hash == commit.hexsha
+        assert metadata.short_hash == commit.hexsha[:8]
+        assert metadata.author_name == "Test User"
+        assert metadata.author_email == "test@example.com"
+        assert metadata.message == "Initial commit"
         assert isinstance(metadata.date, datetime)
         assert metadata.files_changed >= 0
         assert metadata.insertions >= 0
@@ -108,8 +108,7 @@ class TestGitHandler:
         commits = list(get_commits_with_filters(
             repo, message_pattern="Initial"))
         assert len(commits) >= 1
-        assert any(commit.hexsha if commit is not None else None ==
-                   initial_commit.hexsha for commit in commits)
+        assert any(commit.hexsha if commit is not None else None == initial_commit.hexsha for commit in commits)
 
         # Test max count
         commits = list(get_commits_with_filters(repo, max_count=1))
@@ -144,7 +143,7 @@ class TestGitBlame:
         blame_result = get_file_blame(repo, "test.txt")
 
         assert isinstance(blame_result, FileBlameResult)
-        assert blame_result.file_path = = "test.txt"
+        assert blame_result.file_path == "test.txt"
         assert blame_result.total_lines >= 3
         assert len(blame_result.blame_info) == blame_result.total_lines
         assert len(blame_result.contributors) >= 1
@@ -154,9 +153,9 @@ class TestGitBlame:
         # Check first line blame info
         first_line = blame_result.blame_info[0]
         assert isinstance(first_line, BlameInfo)
-        assert first_line.line_number = = 1
-        assert first_line.author_name = = "Test User"
-        assert first_line.commit_hash = = commit.hexsha
+        assert first_line.line_number == 1
+        assert first_line.author_name == "Test User"
+        assert first_line.commit_hash == commit.hexsha
 
     def test_get_line_history(self, temp_repo) -> None:
         """Test line history tracking."""
@@ -215,15 +214,15 @@ class TestGitDiff:
         diff_result = compare_commits(
             repo, initial_commit.hexsha, second_commit.hexsha)
 
-        assert diff_result.from_commit = = initial_commit.hexsha
-        assert diff_result.to_commit = = second_commit.hexsha
+        assert diff_result.from_commit == initial_commit.hexsha
+        assert diff_result.to_commit == second_commit.hexsha
         assert diff_result.files_changed >= 1
         assert len(diff_result.file_diffs) >= 1
 
         file_diff = diff_result.file_diffs[0]
         assert isinstance(file_diff, FileDiffInfo)
-        assert file_diff.file_path = = "test.txt"
-        assert file_diff.change_type = = ChangeType.MODIFIED
+        assert file_diff.file_path == "test.txt"
+        assert file_diff.change_type == ChangeType.MODIFIED
 
     def test_get_file_diff_history(self, temp_repo) -> None:
         """Test file diff history."""
@@ -309,4 +308,4 @@ class TestEdgeCases:
         assert binary_diff is not None
         # Note: Binary detection may not work perfectly in all cases
         # The important thing is that the file is detected and processed
-        assert binary_diff.change_type = = ChangeType.ADDED
+        assert binary_diff.change_type == ChangeType.ADDED

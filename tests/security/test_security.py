@@ -35,7 +35,7 @@ class TestAuthentication:
             elif method == "POST":
                 response = api_client.post(endpoint, json=data)
 
-            assert response.status_code = = status.HTTP_401_UNAUTHORIZED, \
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED, \
                 f"Endpoint {endpoint} should require authentication"
 
     def test_invalid_token_format(self, api_client) -> None:
@@ -52,7 +52,7 @@ class TestAuthentication:
             headers = {"Authorization": f"Bearer {token}"}
             response = api_client.get("/api/v3/health", headers=headers)
 
-            assert response.status_code = = status.HTTP_401_UNAUTHORIZED, \
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED, \
                 f"Invalid token '{token}' should be rejected"
 
     def test_expired_token(self, api_client, auth_manager) -> None:
@@ -70,7 +70,7 @@ class TestAuthentication:
         headers = {"Authorization": f"Bearer {expired_token}"}
 
         response = api_client.get("/api/v3/health", headers=headers)
-        assert response.status_code = = status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_token_with_invalid_signature(self, api_client) -> None:
         """Test with token signed with wrong key."""
@@ -87,7 +87,7 @@ class TestAuthentication:
         headers = {"Authorization": f"Bearer {wrong_token}"}
 
         response = api_client.get("/api/v3/health", headers=headers)
-        assert response.status_code = = status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_token_without_required_claims(self, api_client, auth_manager) -> None:
         """Test with token missing required claims."""
@@ -106,7 +106,7 @@ class TestAuthentication:
             headers = {"Authorization": f"Bearer {token}"}
 
             response = api_client.get("/api/v3/health", headers=headers)
-            assert response.status_code = = status.HTTP_401_UNAUTHORIZED, \
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED, \
                 f"Token with incomplete claims should be rejected: {token_data}"
 
 
@@ -139,7 +139,7 @@ class TestAuthorization:
                 response = api_client.delete(
                     endpoint, headers=user_auth_headers)
 
-            assert response.status_code = = status.HTTP_403_FORBIDDEN, \
+            assert response.status_code == status.HTTP_403_FORBIDDEN, \
                 f"User should not access admin endpoint {endpoint}"
 
             # Test with read-only role (should be forbidden)
@@ -153,7 +153,7 @@ class TestAuthorization:
                 response = api_client.delete(
                     endpoint, headers=readonly_auth_headers)
 
-            assert response.status_code = = status.HTTP_403_FORBIDDEN, \
+            assert response.status_code == status.HTTP_403_FORBIDDEN, \
                 f"Read-only user should not access admin endpoint {endpoint}"
 
     def test_write_operations_readonly_user(self, api_client, readonly_auth_headers, temp_dir) -> None:
@@ -179,7 +179,7 @@ class TestAuthorization:
             response = api_client.post(
                 endpoint, headers=readonly_auth_headers, json=data)
 
-            assert response.status_code = = status.HTTP_403_FORBIDDEN, \
+            assert response.status_code == status.HTTP_403_FORBIDDEN, \
                 f"Read-only user should not perform write operation on {endpoint}"
 
     def test_user_access_to_own_resources(self, api_client, user_auth_headers) -> None:
@@ -204,14 +204,14 @@ class TestAuthorization:
                 "/api/v3/search/user-search/status",
                 headers=user_auth_headers
             )
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
 
             # Should not access other user's search
             response = api_client.get(
                 "/api/v3/search/other-search/status",
                 headers=user_auth_headers
             )
-            assert response.status_code = = status.HTTP_403_FORBIDDEN
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.security
@@ -350,7 +350,7 @@ class TestInputValidation:
             )
 
             # Response should not contain unescaped XSS
-            if response.status_code = = 200:
+            if response.status_code == 200:
                 response_text = response.text
                 assert "<script>" not in response_text, "XSS script tags should be escaped"
                 assert "javascript:" not in response_text, "JavaScript URLs should be escaped"
@@ -380,7 +380,7 @@ class TestWebhookSecurity:
                 }
             )
 
-            assert response.status_code = = status.HTTP_200_OK
+            assert response.status_code == status.HTTP_200_OK
 
             # Verify signature generation was called
             mock_signature.assert_called()
@@ -503,7 +503,7 @@ class TestRateLimitingSecurity:
             )
 
             # Should eventually start rate limiting
-            if response.status_code = = 429:
+            if response.status_code == 429:
                 break
 
         # At least some requests should be rate limited

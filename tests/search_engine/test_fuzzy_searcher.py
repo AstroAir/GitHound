@@ -118,7 +118,7 @@ class TestFuzzySearcher:
     def test_fuzzy_searcher_name(self) -> None:
         """Test FuzzySearcher name property."""
         searcher = FuzzySearcher()
-        assert searcher.name = = "fuzzy"
+        assert searcher.name == "fuzzy"
 
     @pytest.mark.asyncio
     async def test_fuzzy_searcher_estimate_work(self, sample_search_query) -> None:
