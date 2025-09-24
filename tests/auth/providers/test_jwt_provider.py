@@ -1,11 +1,12 @@
 """Tests for JWT authentication providers."""
 
-import os
-import pytest
-import jwt
 import datetime
-from unittest.mock import patch, Mock, AsyncMock
+import os
 from typing import Optional
+from unittest.mock import AsyncMock, Mock, patch
+
+import jwt
+import pytest
 
 from githound.mcp.auth.providers.base import AuthResult, TokenInfo
 from githound.mcp.models import User
@@ -16,7 +17,7 @@ class TestJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     def test_jwt_verifier_creation(self) -> None:
         """Test JWT verifier creation."""
@@ -26,7 +27,7 @@ class TestJWTVerifier:
             verifier = JWTVerifier(
                 jwks_uri="https://example.com/.well-known/jwks.json",
                 issuer="test-issuer",
-                audience="test-audience"
+                audience="test-audience",
             )
 
             assert verifier.jwks_uri == "https://example.com/.well-known/jwks.json"
@@ -38,7 +39,7 @@ class TestJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     @pytest.mark.asyncio
     async def test_jwt_verifier_invalid_token(self) -> None:
@@ -49,7 +50,7 @@ class TestJWTVerifier:
             verifier = JWTVerifier(
                 jwks_uri="https://example.com/.well-known/jwks.json",
                 issuer="test-issuer",
-                audience="test-audience"
+                audience="test-audience",
             )
 
             # Test with invalid token
@@ -66,7 +67,7 @@ class TestJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     @pytest.mark.asyncio
     async def test_jwt_verifier_with_mocked_jwks(self) -> None:
@@ -83,12 +84,12 @@ class TestJWTVerifier:
                         "use": "sig",
                         "alg": "RS256",
                         "n": "test-modulus",
-                        "e": "AQAB"
+                        "e": "AQAB",
                     }
                 ]
             }
 
-            with patch('aiohttp.ClientSession.get') as mock_get:
+            with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 mock_response.json.return_value = mock_jwks
                 mock_response.status = 200
@@ -97,7 +98,7 @@ class TestJWTVerifier:
                 verifier = JWTVerifier(
                     jwks_uri="https://example.com/.well-known/jwks.json",
                     issuer="test-issuer",
-                    audience="test-audience"
+                    audience="test-audience",
                 )
 
                 # This would normally fail due to invalid signature,
@@ -114,7 +115,7 @@ class TestStaticJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     def test_static_jwt_verifier_creation(self) -> None:
         """Test static JWT verifier creation."""
@@ -122,9 +123,7 @@ class TestStaticJWTVerifier:
             from githound.mcp.auth.providers.jwt import StaticJWTVerifier
 
             verifier = StaticJWTVerifier(
-                secret_key="test-secret-key",
-                issuer="test-issuer",
-                audience="test-audience"
+                secret_key="test-secret-key", issuer="test-issuer", audience="test-audience"
             )
 
             assert verifier.secret_key == "test-secret-key"
@@ -136,7 +135,7 @@ class TestStaticJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     @pytest.mark.asyncio
     async def test_static_jwt_verifier_valid_token(self) -> None:
@@ -148,11 +147,7 @@ class TestStaticJWTVerifier:
             issuer = "test-issuer"
             audience = "test-audience"
 
-            verifier = StaticJWTVerifier(
-                secret_key=secret_key,
-                issuer=issuer,
-                audience=audience
-            )
+            verifier = StaticJWTVerifier(secret_key=secret_key, issuer=issuer, audience=audience)
 
             # Create a valid JWT token
             payload = {
@@ -164,7 +159,7 @@ class TestStaticJWTVerifier:
                 "iss": issuer,
                 "aud": audience,
                 "exp": int(datetime.datetime.utcnow().timestamp()) + 3600,
-                "iat": int(datetime.datetime.utcnow().timestamp())
+                "iat": int(datetime.datetime.utcnow().timestamp()),
             }
 
             token = jwt.encode(payload, secret_key, algorithm="HS256")
@@ -191,7 +186,7 @@ class TestStaticJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     @pytest.mark.asyncio
     async def test_static_jwt_verifier_expired_token(self) -> None:
@@ -203,11 +198,7 @@ class TestStaticJWTVerifier:
             issuer = "test-issuer"
             audience = "test-audience"
 
-            verifier = StaticJWTVerifier(
-                secret_key=secret_key,
-                issuer=issuer,
-                audience=audience
-            )
+            verifier = StaticJWTVerifier(secret_key=secret_key, issuer=issuer, audience=audience)
 
             # Create an expired JWT token
             payload = {
@@ -218,7 +209,7 @@ class TestStaticJWTVerifier:
                 # Expired 1 hour ago
                 "exp": int(datetime.datetime.utcnow().timestamp()) - 3600,
                 # Issued 2 hours ago
-                "iat": int(datetime.datetime.utcnow().timestamp()) - 7200
+                "iat": int(datetime.datetime.utcnow().timestamp()) - 7200,
             }
 
             token = jwt.encode(payload, secret_key, algorithm="HS256")
@@ -237,7 +228,7 @@ class TestStaticJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     @pytest.mark.asyncio
     async def test_static_jwt_verifier_wrong_issuer(self) -> None:
@@ -249,11 +240,7 @@ class TestStaticJWTVerifier:
             issuer = "test-issuer"
             audience = "test-audience"
 
-            verifier = StaticJWTVerifier(
-                secret_key=secret_key,
-                issuer=issuer,
-                audience=audience
-            )
+            verifier = StaticJWTVerifier(secret_key=secret_key, issuer=issuer, audience=audience)
 
             # Create a JWT token with wrong issuer
             payload = {
@@ -262,7 +249,7 @@ class TestStaticJWTVerifier:
                 "iss": "wrong-issuer",  # Wrong issuer
                 "aud": audience,
                 "exp": int(datetime.datetime.utcnow().timestamp()) + 3600,
-                "iat": int(datetime.datetime.utcnow().timestamp())
+                "iat": int(datetime.datetime.utcnow().timestamp()),
             }
 
             token = jwt.encode(payload, secret_key, algorithm="HS256")
@@ -281,7 +268,7 @@ class TestStaticJWTVerifier:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_JWT", "false").lower() == "true",
-        reason="JWT tests require PyJWT package and TEST_JWT=true"
+        reason="JWT tests require PyJWT package and TEST_JWT=true",
     )
     @pytest.mark.asyncio
     async def test_static_jwt_verifier_invalid_signature(self) -> None:
@@ -294,11 +281,7 @@ class TestStaticJWTVerifier:
             issuer = "test-issuer"
             audience = "test-audience"
 
-            verifier = StaticJWTVerifier(
-                secret_key=secret_key,
-                issuer=issuer,
-                audience=audience
-            )
+            verifier = StaticJWTVerifier(secret_key=secret_key, issuer=issuer, audience=audience)
 
             # Create a JWT token with wrong secret
             payload = {
@@ -307,7 +290,7 @@ class TestStaticJWTVerifier:
                 "iss": issuer,
                 "aud": audience,
                 "exp": int(datetime.datetime.utcnow().timestamp()) + 3600,
-                "iat": int(datetime.datetime.utcnow().timestamp())
+                "iat": int(datetime.datetime.utcnow().timestamp()),
             }
 
             token = jwt.encode(payload, wrong_secret, algorithm="HS256")

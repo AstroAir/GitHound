@@ -9,7 +9,7 @@ const BasePage = require('./base-page');
 class SearchPage extends BasePage {
   constructor(page) {
     super(page);
-    
+
     // Page elements
     this.elements = {
       // Search form elements
@@ -17,23 +17,23 @@ class SearchPage extends BasePage {
       searchQueryInput: '[data-testid="search-query-input"]',
       submitSearchButton: '[data-testid="submit-search"]',
       cancelSearchButton: '[data-testid="cancel-search"]',
-      
+
       // Search type tabs
       advancedSearchTab: '[data-testid="advanced-search-tab"]',
       fuzzySearchTab: '[data-testid="fuzzy-search-tab"]',
       historicalSearchTab: '[data-testid="historical-search-tab"]',
-      
+
       // Fuzzy search elements
       fuzzyQueryInput: '[data-testid="fuzzy-query-input"]',
       fuzzyThresholdInput: '[data-testid="fuzzy-threshold"]',
       submitFuzzySearchButton: '[data-testid="submit-fuzzy-search"]',
-      
+
       // Historical search elements
       historicalQueryInput: '[data-testid="historical-query-input"]',
       commitFromInput: '[data-testid="commit-from"]',
       commitToInput: '[data-testid="commit-to"]',
       submitHistoricalSearchButton: '[data-testid="submit-historical-search"]',
-      
+
       // Filter elements
       filtersTab: '[data-testid="filters-tab"]',
       fileTypePy: '[data-testid="file-type-py"]',
@@ -46,13 +46,13 @@ class SearchPage extends BasePage {
       maxResultsInput: '[data-testid="max-results"]',
       caseSensitiveCheckbox: '[data-testid="case-sensitive"]',
       includeBinaryCheckbox: '[data-testid="include-binary"]',
-      
+
       // Search progress and status
       searchProgress: '[data-testid="search-progress"]',
       searchStatus: '[data-testid="search-status"]',
       searchTypeIndicator: '[data-testid="search-type-indicator"]',
       searchCancelled: '[data-testid="search-cancelled"]',
-      
+
       // Results elements
       searchResults: '[data-testid="search-results"]',
       resultCard: '[data-testid="result-card"]',
@@ -60,23 +60,23 @@ class SearchPage extends BasePage {
       lineNumber: '[data-testid="line-number"]',
       codeContent: '[data-testid="code-content"]',
       commitInfo: '[data-testid="commit-info"]',
-      
+
       // Pagination elements
       pagination: '[data-testid="pagination"]',
       nextPage: '[data-testid="next-page"]',
       prevPage: '[data-testid="prev-page"]',
       currentPage: '[data-testid="current-page"]',
-      
+
       // Export elements
       exportButton: '[data-testid="export-button"]',
       exportFormat: '[data-testid="export-format"]',
       confirmExport: '[data-testid="confirm-export"]',
       exportProgress: '[data-testid="export-progress"]',
-      
+
       // Search history
       searchHistoryTab: '[data-testid="search-history-tab"]',
       historyItem: '[data-testid="history-item"]',
-      
+
       // Error elements
       searchError: '[data-testid="search-error"]',
       repoPathError: '[data-testid="repo-path-error"]',
@@ -112,17 +112,17 @@ class SearchPage extends BasePage {
    */
   async performAdvancedSearch(searchData) {
     await this.navigateToSearch();
-    
+
     // Fill basic search fields
     await this.fillBasicSearch(searchData.repoPath, searchData.query);
-    
+
     // Apply filters if provided
     if (searchData.filters) {
       await this.applyFilters(searchData.filters);
     }
-    
+
     await this.submitSearch();
-    
+
     // Wait for search to start
     await this.waitForElement(this.elements.searchProgress);
   }
@@ -132,34 +132,34 @@ class SearchPage extends BasePage {
    */
   async applyFilters(filters) {
     await this.page.click(this.elements.filtersTab);
-    
+
     if (filters.fileTypes) {
       for (const fileType of filters.fileTypes) {
         const checkbox = `[data-testid="file-type-${fileType}"]`;
         await this.page.check(checkbox);
       }
     }
-    
+
     if (filters.author) {
       await this.page.fill(this.elements.authorFilter, filters.author);
     }
-    
+
     if (filters.dateFrom) {
       await this.page.fill(this.elements.dateFromFilter, filters.dateFrom);
     }
-    
+
     if (filters.dateTo) {
       await this.page.fill(this.elements.dateToFilter, filters.dateTo);
     }
-    
+
     if (filters.maxResults) {
       await this.page.fill(this.elements.maxResultsInput, filters.maxResults.toString());
     }
-    
+
     if (filters.caseSensitive) {
       await this.page.check(this.elements.caseSensitiveCheckbox);
     }
-    
+
     if (filters.includeBinary) {
       await this.page.check(this.elements.includeBinaryCheckbox);
     }
@@ -171,11 +171,11 @@ class SearchPage extends BasePage {
   async performFuzzySearch(repoPath, query, threshold = '0.8') {
     await this.navigateToSearch();
     await this.page.click(this.elements.fuzzySearchTab);
-    
+
     await this.page.fill(this.elements.repoPathInput, repoPath);
     await this.page.fill(this.elements.fuzzyQueryInput, query);
     await this.page.fill(this.elements.fuzzyThresholdInput, threshold);
-    
+
     await this.page.click(this.elements.submitFuzzySearchButton);
     await this.waitForElement(this.elements.searchProgress);
   }
@@ -186,12 +186,12 @@ class SearchPage extends BasePage {
   async performHistoricalSearch(repoPath, query, commitFrom, commitTo) {
     await this.navigateToSearch();
     await this.page.click(this.elements.historicalSearchTab);
-    
+
     await this.page.fill(this.elements.repoPathInput, repoPath);
     await this.page.fill(this.elements.historicalQueryInput, query);
     await this.page.fill(this.elements.commitFromInput, commitFrom);
     await this.page.fill(this.elements.commitToInput, commitTo);
-    
+
     await this.page.click(this.elements.submitHistoricalSearchButton);
     await this.waitForElement(this.elements.searchProgress);
   }
@@ -207,11 +207,11 @@ class SearchPage extends BasePage {
       // Check if search was cancelled or errored
       const cancelled = await this.page.isVisible(this.elements.searchCancelled);
       const errorMessage = await this.getSearchError();
-      
-      return { 
-        completed: false, 
-        cancelled, 
-        error: errorMessage 
+
+      return {
+        completed: false,
+        cancelled,
+        error: errorMessage
       };
     }
   }
@@ -231,24 +231,24 @@ class SearchPage extends BasePage {
    */
   async getSearchResults() {
     await this.waitForElement(this.elements.searchResults);
-    
+
     const resultCards = this.page.locator(this.elements.resultCard);
     const count = await resultCards.count();
     const results = [];
-    
+
     for (let i = 0; i < Math.min(count, 10); i++) { // Limit to first 10 for performance
       const card = resultCards.nth(i);
-      
+
       const result = {
         filePath: await card.locator(this.elements.filePath).textContent(),
         lineNumber: await card.locator(this.elements.lineNumber).textContent(),
         codeContent: await card.locator(this.elements.codeContent).textContent(),
         commitInfo: await card.locator(this.elements.commitInfo).textContent()
       };
-      
+
       results.push(result);
     }
-    
+
     return {
       count,
       results
@@ -299,10 +299,10 @@ class SearchPage extends BasePage {
   async exportResults(format = 'json') {
     await this.waitForElement(this.elements.exportButton);
     await this.page.click(this.elements.exportButton);
-    
+
     await this.page.selectOption(this.elements.exportFormat, format);
     await this.page.click(this.elements.confirmExport);
-    
+
     // Wait for export to start
     await this.waitForElement(this.elements.exportProgress);
   }
@@ -326,15 +326,15 @@ class SearchPage extends BasePage {
    */
   async getValidationErrors() {
     const errors = {};
-    
+
     if (await this.page.isVisible(this.elements.repoPathError)) {
       errors.repoPath = await this.page.textContent(this.elements.repoPathError);
     }
-    
+
     if (await this.page.isVisible(this.elements.queryError)) {
       errors.query = await this.page.textContent(this.elements.queryError);
     }
-    
+
     return errors;
   }
 
@@ -343,10 +343,10 @@ class SearchPage extends BasePage {
    */
   async verifySearchFormValidation() {
     await this.navigateToSearch();
-    
+
     // Try to submit empty form
     await this.submitSearch();
-    
+
     const errors = await this.getValidationErrors();
     return {
       hasRepoPathError: !!errors.repoPath,
@@ -361,16 +361,16 @@ class SearchPage extends BasePage {
   async getSearchHistory() {
     await this.page.click(this.elements.searchHistoryTab);
     await this.waitForElement(this.elements.historyItem);
-    
+
     const historyItems = this.page.locator(this.elements.historyItem);
     const count = await historyItems.count();
     const history = [];
-    
+
     for (let i = 0; i < count; i++) {
       const item = await historyItems.nth(i).textContent();
       history.push(item);
     }
-    
+
     return history;
   }
 
@@ -380,7 +380,7 @@ class SearchPage extends BasePage {
   async clickHistoryItem(index = 0) {
     await this.page.click(this.elements.searchHistoryTab);
     await this.waitForElement(this.elements.historyItem);
-    
+
     const historyItems = this.page.locator(this.elements.historyItem);
     await historyItems.nth(index).click();
   }

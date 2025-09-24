@@ -184,7 +184,7 @@ export class NotificationManager extends Component {
     if (notification.actions.length > 0) {
       content += '<div class="mt-2">';
       notification.actions.forEach(action => {
-        content += `<button type="button" class="btn btn-sm btn-outline-${this.getBootstrapType(notification.type)} me-2" 
+        content += `<button type="button" class="btn btn-sm btn-outline-${this.getBootstrapType(notification.type)} me-2"
                     onclick="window.GitHound.notificationManager.handleAction('${notification.id}', '${action.id}')">${action.label}</button>`;
       });
       content += '</div>';

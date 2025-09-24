@@ -15,23 +15,28 @@ class TagSearcher(CacheableSearcher):
 
     def __init__(self) -> None:
         super().__init__("tag", "tag")
-        
+
         # Version patterns for semantic versioning
         self.version_patterns = [
-            r'v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9\-\.]+))?(?:\+([a-zA-Z0-9\-\.]+))?',  # Semantic versioning
-            r'v?(\d+)\.(\d+)(?:\.(\d+))?',  # Major.minor(.patch)
-            r'(\d{4})\.(\d{1,2})\.(\d{1,2})',  # Date-based versioning
-            r'release[_\-]?(\d+)\.(\d+)(?:\.(\d+))?',  # Release versioning
+            r"v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9\-\.]+))?(?:\+([a-zA-Z0-9\-\.]+))?",  # Semantic versioning
+            r"v?(\d+)\.(\d+)(?:\.(\d+))?",  # Major.minor(.patch)
+            r"(\d{4})\.(\d{1,2})\.(\d{1,2})",  # Date-based versioning
+            r"release[_\-]?(\d+)\.(\d+)(?:\.(\d+))?",  # Release versioning
         ]
 
     async def can_handle(self, query: SearchQuery) -> bool:
         """Check if this searcher can handle tag-related queries."""
         # Handle queries that mention tags, releases, or versions
         return (
-            hasattr(query, 'tag_pattern') and query.tag_pattern is not None or
-            hasattr(query, 'version_analysis') and query.version_analysis or
-            hasattr(query, 'release_analysis') and query.release_analysis or
-            any(keyword in (query.text or "").lower() for keyword in ['tag', 'release', 'version'])
+            hasattr(query, "tag_pattern")
+            and query.tag_pattern is not None
+            or hasattr(query, "version_analysis")
+            and query.version_analysis
+            or hasattr(query, "release_analysis")
+            and query.release_analysis
+            or any(
+                keyword in (query.text or "").lower() for keyword in ["tag", "release", "version"]
+            )
         )
 
     async def estimate_work(self, context: SearchContext) -> int:
@@ -57,17 +62,17 @@ class TagSearcher(CacheableSearcher):
 
         # Perform tag analysis
         results: List[SearchResult] = []
-        
+
         # Analyze tags
         self._report_progress(context, "Analyzing tags...", 0.2)
         tag_results = await self._analyze_tags(context)
         results.extend(tag_results)
-        
+
         # Analyze version patterns
         self._report_progress(context, "Analyzing version patterns...", 0.5)
         version_results = await self._analyze_version_patterns(context)
         results.extend(version_results)
-        
+
         # Analyze release timeline
         self._report_progress(context, "Analyzing release timeline...", 0.8)
         timeline_results = await self._analyze_release_timeline(context)
@@ -75,20 +80,20 @@ class TagSearcher(CacheableSearcher):
 
         # Cache results
         await self._set_cache(context, cache_key, results)
-        
+
         # Yield results
         for result in results:
             yield result
-            
+
         self._report_progress(context, "Tag analysis completed", 1.0)
 
     async def _analyze_tags(self, context: SearchContext) -> List[SearchResult]:
         """Analyze repository tags."""
         results: List[SearchResult] = []
-        
+
         try:
             tags = list(context.repo.tags)
-            
+
             if not tags:
                 result = SearchResult(
                     commit_hash="tag_analysis",
@@ -98,31 +103,30 @@ class TagSearcher(CacheableSearcher):
                     commit_info=None,
                     search_type=SearchType.COMBINED,
                     relevance_score=0.5,
-                    match_context={
-                        "analysis_type": "tag_summary",
-                        "tag_count": 0
-                    }
+                    match_context={"analysis_type": "tag_summary", "tag_count": 0},
                 )
                 results.append(result)
                 return results
-            
+
             # Basic tag information
             insights = [
                 f"Total tags: {len(tags)}",
             ]
-            
+
             # Analyze recent tags (last 10)
-            recent_tags = sorted(tags, key=lambda t: self._get_tag_date(t) or datetime.min, reverse=True)[:10]
-            
+            recent_tags = sorted(
+                tags, key=lambda t: self._get_tag_date(t) or datetime.min, reverse=True
+            )[:10]
+
             for i, tag in enumerate(recent_tags):
                 try:
                     commit = tag.commit
                     commit_info = self._create_commit_info(commit)
                     tag_date = self._get_tag_date(tag)
-                    
+
                     # Check if it's a version tag
                     is_version, version_info = self._parse_version(tag.name)
-                    
+
                     result = SearchResult(
                         commit_hash=commit.hexsha,
                         file_path=f"tags/{tag.name}.txt",
@@ -137,14 +141,14 @@ class TagSearcher(CacheableSearcher):
                             "tag_date": tag_date.isoformat() if tag_date else None,
                             "is_version": is_version,
                             "version_info": version_info,
-                            "rank": i + 1
-                        }
+                            "rank": i + 1,
+                        },
                     )
                     results.append(result)
-                    
+
                 except Exception:
                     continue
-            
+
             # Add summary insights
             for i, insight in enumerate(insights):
                 result = SearchResult(
@@ -155,13 +159,10 @@ class TagSearcher(CacheableSearcher):
                     commit_info=None,
                     search_type=SearchType.COMBINED,
                     relevance_score=1.0,
-                    match_context={
-                        "analysis_type": "tag_summary",
-                        "insight": insight
-                    }
+                    match_context={"analysis_type": "tag_summary", "insight": insight},
                 )
                 results.append(result)
-                
+
         except Exception as e:
             # Error handling
             result = SearchResult(
@@ -172,45 +173,42 @@ class TagSearcher(CacheableSearcher):
                 commit_info=None,
                 search_type=SearchType.COMBINED,
                 relevance_score=0.5,
-                match_context={
-                    "analysis_type": "tag_error",
-                    "error": str(e)
-                }
+                match_context={"analysis_type": "tag_error", "error": str(e)},
             )
             results.append(result)
-        
+
         return results
 
     async def _analyze_version_patterns(self, context: SearchContext) -> List[SearchResult]:
         """Analyze version patterns in tags."""
         results: List[SearchResult] = []
-        
+
         try:
             tags = list(context.repo.tags)
             version_tags = []
-            
+
             # Find version tags
             for tag in tags:
                 is_version, version_info = self._parse_version(tag.name)
                 if is_version:
                     tag_date = self._get_tag_date(tag)
                     version_tags.append((tag, version_info, tag_date))
-            
+
             if not version_tags:
                 return results
-            
+
             # Sort by version
             version_tags.sort(key=lambda x: self._version_sort_key(x[1]), reverse=True)
-            
+
             # Analyze version progression
             if len(version_tags) > 1:
                 latest_version = version_tags[0][1]
                 previous_version = version_tags[1][1] if len(version_tags) > 1 else None
-                
+
                 # Latest version info
                 latest_tag, latest_info, latest_date = version_tags[0]
                 commit_info = self._create_commit_info(latest_tag.commit)
-                
+
                 result = SearchResult(
                     commit_hash=latest_tag.commit.hexsha,
                     file_path="versions/latest.txt",
@@ -223,15 +221,15 @@ class TagSearcher(CacheableSearcher):
                         "analysis_type": "version_latest",
                         "version": latest_info,
                         "tag_name": latest_tag.name,
-                        "release_date": latest_date.isoformat() if latest_date else None
-                    }
+                        "release_date": latest_date.isoformat() if latest_date else None,
+                    },
                 )
                 results.append(result)
-                
+
                 # Version progression analysis
                 if previous_version:
                     version_jump = self._analyze_version_jump(previous_version, latest_version)
-                    
+
                     result = SearchResult(
                         commit_hash="version_analysis",
                         file_path="versions/progression.txt",
@@ -242,33 +240,33 @@ class TagSearcher(CacheableSearcher):
                         relevance_score=0.8,
                         match_context={
                             "analysis_type": "version_progression",
-                            "jump_type": version_jump['type'],
+                            "jump_type": version_jump["type"],
                             "previous_version": previous_version,
-                            "current_version": latest_version
-                        }
+                            "current_version": latest_version,
+                        },
                     )
                     results.append(result)
-            
+
             # Version statistics
             major_versions = set()
             minor_versions = set()
             patch_versions = set()
-            
+
             for _, version_info, _ in version_tags:
-                if 'major' in version_info:
-                    major_versions.add(version_info['major'])
-                if 'minor' in version_info:
-                    minor_versions.add(version_info['minor'])
-                if 'patch' in version_info:
-                    patch_versions.add(version_info['patch'])
-            
+                if "major" in version_info:
+                    major_versions.add(version_info["major"])
+                if "minor" in version_info:
+                    minor_versions.add(version_info["minor"])
+                if "patch" in version_info:
+                    patch_versions.add(version_info["patch"])
+
             stats = [
                 f"Version tags: {len(version_tags)}",
                 f"Major versions: {len(major_versions)}",
                 f"Minor versions: {len(minor_versions)}",
                 f"Patch versions: {len(patch_versions)}",
             ]
-            
+
             for i, stat in enumerate(stats):
                 result = SearchResult(
                     commit_hash="version_analysis",
@@ -278,59 +276,56 @@ class TagSearcher(CacheableSearcher):
                     commit_info=None,
                     search_type=SearchType.COMBINED,
                     relevance_score=0.7,
-                    match_context={
-                        "analysis_type": "version_stats",
-                        "statistic": stat
-                    }
+                    match_context={"analysis_type": "version_stats", "statistic": stat},
                 )
                 results.append(result)
-                
+
         except Exception:
             pass
-        
+
         return results
 
     async def _analyze_release_timeline(self, context: SearchContext) -> List[SearchResult]:
         """Analyze release timeline and frequency."""
         results: List[SearchResult] = []
-        
+
         try:
             tags = list(context.repo.tags)
             if len(tags) < 2:
                 return results
-            
+
             # Get tag dates
             tag_dates = []
             for tag in tags:
                 tag_date = self._get_tag_date(tag)
                 if tag_date:
                     tag_dates.append((tag, tag_date))
-            
+
             if len(tag_dates) < 2:
                 return results
-            
+
             # Sort by date
             tag_dates.sort(key=lambda x: x[1])
-            
+
             # Calculate release frequency
             intervals = []
             for i in range(1, len(tag_dates)):
-                prev_date = tag_dates[i-1][1]
+                prev_date = tag_dates[i - 1][1]
                 curr_date = tag_dates[i][1]
                 interval = (curr_date - prev_date).days
                 intervals.append(interval)
-            
+
             if intervals:
                 avg_interval = sum(intervals) / len(intervals)
                 min_interval = min(intervals)
                 max_interval = max(intervals)
-                
+
                 timeline_info = [
                     f"Average release interval: {avg_interval:.1f} days",
                     f"Shortest interval: {min_interval} days",
                     f"Longest interval: {max_interval} days",
                 ]
-                
+
                 for i, info in enumerate(timeline_info):
                     result = SearchResult(
                         commit_hash="timeline_analysis",
@@ -345,21 +340,21 @@ class TagSearcher(CacheableSearcher):
                             "metric": info,
                             "avg_interval": avg_interval,
                             "min_interval": min_interval,
-                            "max_interval": max_interval
-                        }
+                            "max_interval": max_interval,
+                        },
                     )
                     results.append(result)
-                
+
         except Exception:
             pass
-        
+
         return results
 
     def _get_tag_date(self, tag: Any) -> Optional[datetime]:
         """Get the date of a tag."""
         try:
             # Try to get tag object date first (annotated tags)
-            if hasattr(tag, 'tag') and tag.tag:
+            if hasattr(tag, "tag") and tag.tag:
                 return datetime.fromtimestamp(tag.tag.tagged_date)
             # Fall back to commit date
             return datetime.fromtimestamp(tag.commit.committed_date)
@@ -382,9 +377,9 @@ class TagSearcher(CacheableSearcher):
                     version_info["prerelease"] = groups[3]
                 if len(groups) > 4 and groups[4]:
                     version_info["build"] = groups[4]
-                
+
                 return True, version_info
-        
+
         return False, {}
 
     def _version_sort_key(self, version_info: Dict[str, Any]) -> Tuple[int, int, int]:
@@ -392,19 +387,21 @@ class TagSearcher(CacheableSearcher):
         return (
             version_info.get("major", 0),
             version_info.get("minor", 0),
-            version_info.get("patch", 0)
+            version_info.get("patch", 0),
         )
 
-    def _analyze_version_jump(self, prev_version: Dict[str, Any], curr_version: Dict[str, Any]) -> Dict[str, str]:
+    def _analyze_version_jump(
+        self, prev_version: Dict[str, Any], curr_version: Dict[str, Any]
+    ) -> Dict[str, str]:
         """Analyze the type of version jump between two versions."""
         prev_major = prev_version.get("major", 0)
         prev_minor = prev_version.get("minor", 0)
         prev_patch = prev_version.get("patch", 0)
-        
+
         curr_major = curr_version.get("major", 0)
         curr_minor = curr_version.get("minor", 0)
         curr_patch = curr_version.get("patch", 0)
-        
+
         if curr_major > prev_major:
             return {"type": "major", "description": "Breaking changes expected"}
         elif curr_minor > prev_minor:

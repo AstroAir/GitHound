@@ -1,17 +1,17 @@
 """Tests for GitHound commit-based searchers."""
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
+import pytest
 from git import Repo
 
 from githound.models import SearchQuery
 from githound.search_engine import (
-    CommitHashSearcher,
     AuthorSearcher,
-    MessageSearcher,
+    CommitHashSearcher,
     DateRangeSearcher,
+    MessageSearcher,
     SearchContext,
 )
 
@@ -34,11 +34,9 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int(
-            (datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {
-            "insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -242,16 +240,12 @@ class TestDateRangeSearcher:
 
         # Test with only date_from
         query_from_only = SearchQuery(
-            content_pattern="test",
-            date_from=datetime.now() - timedelta(days=30)
+            content_pattern="test", date_from=datetime.now() - timedelta(days=30)
         )
         assert await searcher.can_handle(query_from_only) is True
 
         # Test with only date_to
-        query_to_only = SearchQuery(
-            content_pattern="test",
-            date_to=datetime.now()
-        )
+        query_to_only = SearchQuery(content_pattern="test", date_to=datetime.now())
         assert await searcher.can_handle(query_to_only) is True
 
 
@@ -293,10 +287,8 @@ class TestCacheableSearcher:
         query1 = SearchQuery(commit_hash="abc123")
         query2 = SearchQuery(commit_hash="def456")
 
-        context1 = SearchContext(
-            repo=mock_repo, query=query1, branch="main", cache={})
-        context2 = SearchContext(
-            repo=mock_repo, query=query2, branch="main", cache={})
+        context1 = SearchContext(repo=mock_repo, query=query1, branch="main", cache={})
+        context2 = SearchContext(repo=mock_repo, query=query2, branch="main", cache={})
 
         key1 = searcher._get_cache_key(context1)
         key2 = searcher._get_cache_key(context2)

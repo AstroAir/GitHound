@@ -11,10 +11,12 @@ except ImportError:
     # Use mock for testing when rapidfuzz is not available
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz
-    process = mock_rapidfuzz.process
+
+    fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
+    process = mock_rapidfuzz.process  # type: ignore[assignment]
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -88,10 +90,9 @@ class FuzzySearcher(CacheableSearcher):
         self._update_metrics(
             total_commits_searched=len(search_targets), total_results_found=len(results)
         )
-        self._report_progress(
-            context, f"Fuzzy search completed: {len(results)} matches", 1.0)
+        self._report_progress(context, f"Fuzzy search completed: {len(results)} matches", 1.0)
 
-    async def _build_search_targets(self, context: SearchContext) -> list[dict]:
+    async def _build_search_targets(self, context: SearchContext) -> list[dict[str, Any]]:
         """Build a list of search targets from the repository."""
         targets: list[Any] = []
         branch = context.branch or context.repo.active_branch.name
@@ -128,14 +129,12 @@ class FuzzySearcher(CacheableSearcher):
 
                     try:
                         content = diff.b_blob.data_stream.read().decode("utf-8", errors="ignore")
-                        file_contents.append(
-                            {"path": diff.b_path, "content": content})
+                        file_contents.append({"path": diff.b_path, "content": content})
                     except (UnicodeDecodeError, AttributeError):
                         continue
 
             targets.append(
-                {"commit": commit, "commit_info": commit_info,
-                    "file_contents": file_contents}
+                {"commit": commit, "commit_info": commit_info, "file_contents": file_contents}
             )
 
             # Limit to prevent memory issues
@@ -143,15 +142,17 @@ class FuzzySearcher(CacheableSearcher):
                 break
 
             if commits_processed % 100 == 0:
-                progress = 0.1 + (commits_processed / 1000) * \
-                    0.2  # 10-30% progress
-                self._report_progress(
-                    context, f"Indexed {commits_processed} commits", progress)
+                progress = 0.1 + (commits_processed / 1000) * 0.2  # 10-30% progress
+                self._report_progress(context, f"Indexed {commits_processed} commits", progress)
 
         return targets
 
     async def _fuzzy_search_authors(
-        self, pattern: str, targets: list[dict], threshold: float, search_start_time: float
+        self,
+        pattern: str,
+        targets: list[dict[str, Any]],
+        threshold: float,
+        search_start_time: float,
     ) -> list[SearchResult]:
         """Perform fuzzy search on author names and emails."""
         results: list[Any] = []
@@ -199,7 +200,11 @@ class FuzzySearcher(CacheableSearcher):
         return results
 
     async def _fuzzy_search_messages(
-        self, pattern: str, targets: list[dict], threshold: float, search_start_time: float
+        self,
+        pattern: str,
+        targets: list[dict[str, Any]],
+        threshold: float,
+        search_start_time: float,
     ) -> list[SearchResult]:
         """Perform fuzzy search on commit messages."""
         results: list[Any] = []
@@ -242,7 +247,11 @@ class FuzzySearcher(CacheableSearcher):
         return results
 
     async def _fuzzy_search_content(
-        self, pattern: str, targets: list[dict], threshold: float, search_start_time: float
+        self,
+        pattern: str,
+        targets: list[dict[str, Any]],
+        threshold: float,
+        search_start_time: float,
     ) -> list[SearchResult]:
         """Perform fuzzy search on file content."""
         results: list[Any] = []

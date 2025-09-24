@@ -13,7 +13,7 @@ class ArtifactManager {
       ...testReportingConfig,
       ...options
     };
-    
+
     this.artifacts = {
       screenshots: [],
       videos: [],
@@ -21,7 +21,7 @@ class ArtifactManager {
       reports: [],
       coverage: []
     };
-    
+
     this.metadata = {
       startTime: new Date(),
       endTime: null,
@@ -87,7 +87,7 @@ class ArtifactManager {
       };
 
       this.artifacts.screenshots.push(artifact);
-      
+
       // Attach to test
       await testInfo.attach('screenshot', {
         path: screenshotPath,
@@ -124,7 +124,7 @@ class ArtifactManager {
 
       // Video recording is typically handled by Playwright's built-in functionality
       // This method tracks the video for our artifact management
-      
+
       const artifact = {
         type: 'video',
         path: videoPath,
@@ -154,7 +154,7 @@ class ArtifactManager {
     try {
       videoArtifact.status = 'completed';
       videoArtifact.endTime = new Date().toISOString();
-      
+
       if (fs.existsSync(videoArtifact.path)) {
         videoArtifact.size = fs.statSync(videoArtifact.path).size;
       }
@@ -214,10 +214,10 @@ class ArtifactManager {
 
     try {
       await page.context().tracing.stop({ path: traceArtifact.path });
-      
+
       traceArtifact.status = 'completed';
       traceArtifact.endTime = new Date().toISOString();
-      
+
       if (fs.existsSync(traceArtifact.path)) {
         traceArtifact.size = fs.statSync(traceArtifact.path).size;
       }
@@ -241,7 +241,7 @@ class ArtifactManager {
       const metrics = await page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0];
         const paint = performance.getEntriesByType('paint');
-        
+
         const result = {
           timestamp: new Date().toISOString(),
           navigation: {
@@ -275,7 +275,7 @@ class ArtifactManager {
   // Generate artifact summary
   generateSummary() {
     this.metadata.endTime = new Date();
-    
+
     const summary = {
       metadata: this.metadata,
       artifacts: {
@@ -307,9 +307,9 @@ class ArtifactManager {
   async saveSummary() {
     const summary = this.generateSummary();
     const summaryPath = path.join(this.config.outputDir, 'artifact-summary.json');
-    
+
     fs.writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
-    
+
     console.log(`📊 Artifact summary saved to: ${summaryPath}`);
     return summaryPath;
   }
@@ -317,7 +317,7 @@ class ArtifactManager {
   // Generate HTML artifact viewer
   async generateArtifactViewer() {
     const summary = this.generateSummary();
-    
+
     const html = `
 <!DOCTYPE html>
 <html>
@@ -345,7 +345,7 @@ class ArtifactManager {
             <p>Generated: ${summary.metadata.endTime}</p>
             <p>Duration: ${Math.round(summary.duration / 1000)}s</p>
         </div>
-        
+
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number">${summary.artifacts.screenshots.count}</div>
@@ -364,14 +364,14 @@ class ArtifactManager {
                 <div>Performance Tests</div>
             </div>
         </div>
-        
+
         <div class="artifact-section">
             <h2>📸 Screenshots</h2>
             <div class="artifact-grid">
                 ${summary.artifacts.screenshots.files.map(screenshot => `
                     <div class="artifact-item">
                         <h4>${screenshot.testName}</h4>
-                        <img src="${path.relative(this.config.outputDir, screenshot.path)}" 
+                        <img src="${path.relative(this.config.outputDir, screenshot.path)}"
                              alt="Screenshot" class="artifact-preview">
                         <p><small>${screenshot.timestamp}</small></p>
                         <p>Size: ${(screenshot.size / 1024).toFixed(1)} KB</p>
@@ -379,7 +379,7 @@ class ArtifactManager {
                 `).join('')}
             </div>
         </div>
-        
+
         <div class="artifact-section">
             <h2>🎥 Videos</h2>
             <div class="artifact-grid">
@@ -395,14 +395,14 @@ class ArtifactManager {
                 `).join('')}
             </div>
         </div>
-        
+
         <div class="artifact-section">
             <h2>🔍 Traces</h2>
             <div class="artifact-grid">
                 ${summary.artifacts.traces.files.map(trace => `
                     <div class="artifact-item">
                         <h4>${trace.testName}</h4>
-                        <p><a href="${path.relative(this.config.outputDir, trace.path)}" 
+                        <p><a href="${path.relative(this.config.outputDir, trace.path)}"
                               target="_blank">Download Trace</a></p>
                         <p><small>${trace.timestamp}</small></p>
                         <p>Size: ${trace.size ? (trace.size / 1024).toFixed(1) + ' KB' : 'Unknown'}</p>
@@ -410,7 +410,7 @@ class ArtifactManager {
                 `).join('')}
             </div>
         </div>
-        
+
         ${summary.errors.length > 0 ? `
         <div class="artifact-section">
             <h2>⚠️ Errors</h2>
@@ -430,7 +430,7 @@ class ArtifactManager {
 
     const viewerPath = path.join(this.config.outputDir, 'artifact-viewer.html');
     fs.writeFileSync(viewerPath, html);
-    
+
     console.log(`🌐 Artifact viewer generated: ${viewerPath}`);
     return viewerPath;
   }
@@ -450,13 +450,13 @@ class ArtifactManager {
   // Get artifact statistics
   getStatistics() {
     const summary = this.generateSummary();
-    
+
     return {
-      totalArtifacts: summary.artifacts.screenshots.count + 
-                     summary.artifacts.videos.count + 
+      totalArtifacts: summary.artifacts.screenshots.count +
+                     summary.artifacts.videos.count +
                      summary.artifacts.traces.count,
-      totalSize: summary.artifacts.screenshots.totalSize + 
-                summary.artifacts.videos.totalSize + 
+      totalSize: summary.artifacts.screenshots.totalSize +
+                summary.artifacts.videos.totalSize +
                 summary.artifacts.traces.totalSize,
       duration: summary.duration,
       errors: summary.errors.length,

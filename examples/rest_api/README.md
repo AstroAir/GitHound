@@ -55,7 +55,7 @@ The API supports various authentication methods:
 # API Key authentication
 headers = {"X-API-Key": "your-api-key"}
 
-# Bearer token authentication  
+# Bearer token authentication
 headers = {"Authorization": "Bearer your-token"}
 ```
 

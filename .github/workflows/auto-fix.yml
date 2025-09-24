@@ -34,13 +34,13 @@ jobs:
             } else {
               prNumber = context.payload.pull_request.number;
             }
-            
+
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber,
             });
-            
+
             return {
               number: prNumber,
               head_ref: pr.head.ref,
@@ -73,10 +73,10 @@ jobs:
         id: fixes
         run: |
           echo "Starting auto-fixes..."
-          
+
           # Track if any changes were made
           CHANGES_MADE=false
-          
+
           # Run black formatter
           echo "Running black formatter..."
           if ! black --check githound tests; then
@@ -86,7 +86,7 @@ jobs:
           else
             echo "✅ Code already formatted with black"
           fi
-          
+
           # Run isort
           echo "Running isort..."
           if ! isort --check-only githound tests; then
@@ -96,7 +96,7 @@ jobs:
           else
             echo "✅ Imports already sorted"
           fi
-          
+
           # Run ruff auto-fixes
           echo "Running ruff auto-fixes..."
           if ruff check --fix githound tests; then
@@ -109,7 +109,7 @@ jobs:
           else
             echo "⚠️ Some ruff issues require manual fixing"
           fi
-          
+
           # Check if any changes were made
           if [ "$CHANGES_MADE" = true ]; then
             echo "changes_made=true" >> $GITHUB_OUTPUT
@@ -124,16 +124,16 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           git add -A
           git commit -m "🤖 Auto-fix: Apply code formatting and linting fixes
-          
+
           - Applied black code formatting
           - Fixed import sorting with isort
           - Applied ruff auto-fixes
-          
+
           Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          
+
           git push
 
       - name: Comment on PR
@@ -142,21 +142,21 @@ jobs:
         with:
           script: |
             const prNumber = ${{ fromJson(steps.pr.outputs.result).number }};
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
               body: `🤖 **Auto-fix Applied**
-              
+
               I've automatically applied the following fixes to your PR:
-              
+
               - ✅ Code formatting with \`black\`
               - ✅ Import sorting with \`isort\`
               - ✅ Auto-fixable linting issues with \`ruff\`
-              
+
               Your code should now pass the formatting and basic linting checks. Please review the changes and ensure they look correct.
-              
+
               If there are still failing checks, they may require manual attention.`
             });
 
@@ -166,7 +166,7 @@ jobs:
         with:
           script: |
             const prNumber = ${{ fromJson(steps.pr.outputs.result).number }};
-            
+
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -201,27 +201,27 @@ jobs:
         id: check
         run: |
           NEEDS_FIX=false
-          
+
           # Check black
           if ! black --check githound tests; then
             echo "❌ Black formatting needed"
             NEEDS_FIX=true
           fi
-          
+
           # Check isort
           if ! isort --check-only githound tests; then
             echo "❌ Import sorting needed"
             NEEDS_FIX=true
           fi
-          
+
           # Check ruff
           if ! ruff check githound tests; then
             echo "❌ Ruff fixes needed"
             NEEDS_FIX=true
           fi
-          
+
           echo "needs_autofix=$NEEDS_FIX" >> $GITHUB_OUTPUT
-          
+
           if [ "$NEEDS_FIX" = true ]; then
             echo "🔧 Auto-fix is recommended for this PR"
             exit 1
@@ -239,12 +239,12 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
               body: `🔧 **Auto-fix Available**
-              
+
               This PR has formatting or linting issues that can be automatically fixed.
-              
+
               **Option 1: Automatic Fix**
               Comment \`/autofix\` on this PR to trigger automatic fixes.
-              
+
               **Option 2: Manual Fix**
               Run these commands locally:
               \`\`\`bash
@@ -252,6 +252,6 @@ jobs:
               isort githound tests
               ruff check --fix githound tests
               \`\`\`
-              
+
               The auto-fix will be triggered automatically, or you can run it manually using the workflow dispatch.`
             });

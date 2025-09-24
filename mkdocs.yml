@@ -54,11 +54,11 @@ nav:
     - Export Options: user-guide/export-options.md
     - Web Interface: user-guide/web-interface.md
   - MCP Server:
-    - Overview: mcp-server/overview.md
+    - Overview: mcp-server/README.md
     - Setup: mcp-server/setup.md
     - Tools Reference: mcp-server/tools-reference.md
     - Integration Examples: mcp-server/integration-examples.md
-    - Integration Guide: mcp_integration.md
+    - Configuration: mcp-server/configuration.md
   - API Reference:
     - REST API: api-reference/rest-api.md
     - WebSocket API: api-reference/websocket-api.md
@@ -66,14 +66,6 @@ nav:
   - Architecture:
     - Overview: architecture/overview.md
     - Search Engine: architecture/search-engine.md
-    - Git Handlers: architecture/git-handlers.md
-    - Data Models: architecture/data-models.md
-  - Development:
-    - Contributing: development/contributing.md
-    - Testing: development/testing.md
-    - Testing Guide: TESTING.md
-    - Type Checking: development/type-checking.md
-    - Release Process: development/release-process.md
   - API Documentation:
     - Core Modules: reference/
     - Search Engine: reference/search_engine/

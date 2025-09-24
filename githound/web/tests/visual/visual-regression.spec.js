@@ -18,10 +18,10 @@ test.describe('Visual Regression Tests', () => {
   test.describe('Homepage Visual Tests @visual @homepage', () => {
     test('should match homepage layout', async ({ page }) => {
       await page.goto('/');
-      
+
       // Wait for page to fully load
       await page.waitForLoadState('networkidle');
-      
+
       // Hide dynamic elements that change between test runs
       await page.addStyleTag({
         content: `
@@ -33,13 +33,13 @@ test.describe('Visual Regression Tests', () => {
           }
         `
       });
-      
+
       // Take full page screenshot
       await expect(page).toHaveScreenshot('homepage-full.png', {
         fullPage: true,
         animations: 'disabled'
       });
-      
+
       // Take viewport screenshot
       await expect(page).toHaveScreenshot('homepage-viewport.png', {
         animations: 'disabled'
@@ -49,7 +49,7 @@ test.describe('Visual Regression Tests', () => {
     test('should match navigation layout', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      
+
       const navigation = page.locator('nav[data-testid="desktop-navigation"]');
       await expect(navigation).toHaveScreenshot('navigation-desktop.png');
     });
@@ -58,22 +58,22 @@ test.describe('Visual Regression Tests', () => {
   test.describe('Authentication Visual Tests @visual @auth', () => {
     test('should match login modal layout', async ({ page }) => {
       await page.goto('/');
-      
+
       // Open login modal
       await page.click('[data-testid="login-button"]');
       await page.waitForSelector('[data-testid="login-form"]', { state: 'visible' });
-      
+
       const loginModal = page.locator('#loginModal');
       await expect(loginModal).toHaveScreenshot('login-modal.png');
     });
 
     test('should match registration modal layout', async ({ page }) => {
       await page.goto('/');
-      
+
       // Open registration modal
       await page.click('[data-testid="register-button"]');
       await page.waitForSelector('[data-testid="registration-form"]', { state: 'visible' });
-      
+
       const registerModal = page.locator('#registerModal');
       await expect(registerModal).toHaveScreenshot('registration-modal.png');
     });
@@ -88,10 +88,10 @@ test.describe('Visual Regression Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      
+
       // Hide dynamic username
       await page.addStyleTag({
         content: `
@@ -100,7 +100,7 @@ test.describe('Visual Regression Tests', () => {
           }
         `
       });
-      
+
       const userMenu = page.locator('[data-testid="user-menu"]');
       await expect(userMenu).toHaveScreenshot('user-menu.png');
     });
@@ -117,10 +117,10 @@ test.describe('Visual Regression Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
       await page.waitForLoadState('networkidle');
-      
+
       const searchForm = page.locator('[data-testid="search-form"]');
       await expect(searchForm).toHaveScreenshot('search-form.png');
     });
@@ -134,9 +134,9 @@ test.describe('Visual Regression Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
-      
+
       const searchTabs = page.locator('.nav-tabs');
       await expect(searchTabs).toHaveScreenshot('search-tabs.png');
     });
@@ -150,9 +150,9 @@ test.describe('Visual Regression Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
-      
+
       const resultsContainer = page.locator('[data-testid="results-container"]');
       await expect(resultsContainer).toHaveScreenshot('empty-results.png');
     });
@@ -168,13 +168,13 @@ test.describe('Visual Regression Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await page.goto('/');
-      
+
       // Open export modal (assuming there are results to export)
       await page.click('[data-testid="export-button"]');
       await page.waitForSelector('[data-testid="export-modal"]', { state: 'visible' });
-      
+
       const exportModal = page.locator('#exportModal');
       await expect(exportModal).toHaveScreenshot('export-modal.png');
     });
@@ -183,10 +183,10 @@ test.describe('Visual Regression Tests', () => {
   test.describe('Responsive Visual Tests @visual @responsive', () => {
     test('should match mobile layout', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
-      
+
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      
+
       // Hide dynamic elements
       await page.addStyleTag({
         content: `
@@ -196,7 +196,7 @@ test.describe('Visual Regression Tests', () => {
           }
         `
       });
-      
+
       await expect(page).toHaveScreenshot('mobile-homepage.png', {
         fullPage: true,
         animations: 'disabled'
@@ -205,10 +205,10 @@ test.describe('Visual Regression Tests', () => {
 
     test('should match tablet layout', async ({ page }) => {
       await page.setViewportSize({ width: 768, height: 1024 }); // iPad
-      
+
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      
+
       await page.addStyleTag({
         content: `
           [data-testid="search-id"],
@@ -217,7 +217,7 @@ test.describe('Visual Regression Tests', () => {
           }
         `
       });
-      
+
       await expect(page).toHaveScreenshot('tablet-homepage.png', {
         fullPage: true,
         animations: 'disabled'
@@ -226,13 +226,13 @@ test.describe('Visual Regression Tests', () => {
 
     test('should match mobile navigation menu', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
-      
+
       await page.goto('/');
-      
+
       // Open mobile menu
       await page.click('[data-testid="mobile-menu-button"]');
       await page.waitForSelector('[data-testid="mobile-menu"]', { state: 'visible' });
-      
+
       const mobileMenu = page.locator('[data-testid="mobile-menu"]');
       await expect(mobileMenu).toHaveScreenshot('mobile-menu.png');
     });
@@ -241,17 +241,17 @@ test.describe('Visual Regression Tests', () => {
   test.describe('Error States Visual Tests @visual @errors', () => {
     test('should match form validation errors', async ({ page }) => {
       await page.goto('/');
-      
+
       // Open login modal and trigger validation errors
       await page.click('[data-testid="login-button"]');
       await page.waitForSelector('[data-testid="login-form"]', { state: 'visible' });
-      
+
       // Submit empty form to trigger validation
       await page.click('[data-testid="submit-login"]');
-      
+
       // Wait for validation errors to appear
       await page.waitForTimeout(500);
-      
+
       const loginModal = page.locator('#loginModal');
       await expect(loginModal).toHaveScreenshot('login-validation-errors.png');
     });
@@ -261,14 +261,14 @@ test.describe('Visual Regression Tests', () => {
     test('should match dark mode layout', async ({ page }) => {
       // Enable dark mode (if implemented)
       await page.goto('/');
-      
+
       // Add dark mode class or toggle dark mode
       await page.evaluate(() => {
         document.body.classList.add('dark-mode');
       });
-      
+
       await page.waitForLoadState('networkidle');
-      
+
       await page.addStyleTag({
         content: `
           [data-testid="search-id"],
@@ -277,7 +277,7 @@ test.describe('Visual Regression Tests', () => {
           }
         `
       });
-      
+
       await expect(page).toHaveScreenshot('dark-mode-homepage.png', {
         fullPage: true,
         animations: 'disabled'

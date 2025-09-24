@@ -28,7 +28,7 @@ test.describe('API Error Handling Tests', () => {
 
       await page.goto('/');
       await page.click('[data-testid="login-button"]');
-      
+
       await page.fill('[data-testid="username-input"]', 'testuser');
       await page.fill('[data-testid="password-input"]', 'password123');
       await page.click('[data-testid="submit-login"]');
@@ -36,7 +36,7 @@ test.describe('API Error Handling Tests', () => {
       // Should show error message
       const errorMessage = page.locator('[data-testid="error-message"], [role="alert"]');
       await expect(errorMessage).toBeVisible({ timeout: 5000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText).toMatch(/server error|failed|error/i);
     });
@@ -47,7 +47,7 @@ test.describe('API Error Handling Tests', () => {
         route.fulfill({
           status: 400,
           contentType: 'application/json',
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             error: 'Validation failed',
             details: { username: 'Username already exists' }
           })
@@ -56,7 +56,7 @@ test.describe('API Error Handling Tests', () => {
 
       await page.goto('/');
       await page.click('[data-testid="register-button"]');
-      
+
       await page.fill('[data-testid="register-username"]', 'existinguser');
       await page.fill('[data-testid="register-email"]', 'test@example.com');
       await page.fill('[data-testid="register-password"]', 'password123');
@@ -66,7 +66,7 @@ test.describe('API Error Handling Tests', () => {
       // Should show validation error
       const errorMessage = page.locator('[data-testid="username-error"]');
       await expect(errorMessage).toBeVisible({ timeout: 5000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText).toMatch(/already exists|validation/i);
     });
@@ -96,7 +96,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -130,7 +130,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -138,7 +138,7 @@ test.describe('API Error Handling Tests', () => {
       // Should show timeout error
       const errorMessage = page.locator('[data-testid="error-message"], [role="alert"]');
       await expect(errorMessage).toBeVisible({ timeout: 35000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText).toMatch(/timeout|slow|failed/i);
     });
@@ -163,7 +163,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -171,7 +171,7 @@ test.describe('API Error Handling Tests', () => {
       // Should handle parsing error gracefully
       const errorMessage = page.locator('[data-testid="error-message"], [role="alert"]');
       await expect(errorMessage).toBeVisible({ timeout: 10000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText).toMatch(/error|failed|invalid/i);
     });
@@ -194,7 +194,7 @@ test.describe('API Error Handling Tests', () => {
           headers: {
             'Retry-After': '60'
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             error: 'Rate limit exceeded',
             retry_after: 60
           })
@@ -202,7 +202,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -210,7 +210,7 @@ test.describe('API Error Handling Tests', () => {
       // Should show rate limit error with retry information
       const errorMessage = page.locator('[data-testid="error-message"], [role="alert"]');
       await expect(errorMessage).toBeVisible({ timeout: 5000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText).toMatch(/rate limit|too many|retry/i);
     });
@@ -237,18 +237,18 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await page.goto('/');
-      
+
       // Try to export (assuming there are results)
       await page.click('[data-testid="export-button"]');
       await page.waitForSelector('[data-testid="export-modal"]', { state: 'visible' });
-      
+
       await page.selectOption('[data-testid="export-format"]', 'json');
       await page.click('[data-testid="confirm-export"]');
 
       // Should show export error
       const errorMessage = page.locator('[data-testid="error-message"], [role="alert"]');
       await expect(errorMessage).toBeVisible({ timeout: 10000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText).toMatch(/export.*failed|generation.*error/i);
     });
@@ -271,7 +271,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -310,7 +310,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -341,7 +341,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       await page.click('[data-testid="submit-search"]');
@@ -349,7 +349,7 @@ test.describe('API Error Handling Tests', () => {
       // Should truncate or handle large error message appropriately
       const errorMessage = page.locator('[data-testid="error-message"], [role="alert"]');
       await expect(errorMessage).toBeVisible({ timeout: 5000 });
-      
+
       const errorText = await errorMessage.textContent();
       expect(errorText.length).toBeLessThan(1000); // Should be truncated
     });
@@ -382,7 +382,7 @@ test.describe('API Error Handling Tests', () => {
       });
 
       await searchPage.navigateToSearch();
-      
+
       // Trigger multiple concurrent errors
       const searchPromise = (async () => {
         await page.fill('[data-testid="repo-path-input"]', '/test/repo');

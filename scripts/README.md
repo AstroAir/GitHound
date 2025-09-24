@@ -1,6 +1,7 @@
 # GitHound Utility Scripts
 
-This directory contains convenient utility scripts for GitHound development and operations with full cross-platform support.
+This directory contains convenient utility scripts for GitHound development and operations
+with full cross-platform support.
 
 ## 🚀 Quick Start
 
@@ -48,6 +49,38 @@ python scripts/run.py --help-all
 | `quick-start.py`   | One-command setup and demos          | `python scripts/quick-start.py [command]`   |
 | `benchmark.py`     | Performance benchmarking             | `python scripts/benchmark.py [command]`     |
 | `run_mcp_tests.py` | MCP server testing (existing)        | `python scripts/run_mcp_tests.py [suite]`   |
+
+### Documentation Validation Scripts
+
+| Script                        | Description                              | Usage                                           |
+| ----------------------------- | ---------------------------------------- | ----------------------------------------------- |
+| `validate_all_docs.py`        | **Comprehensive documentation validation** | `python scripts/validate_all_docs.py [options]` |
+| `validate_documentation.py`   | Core validation engine                   | `python scripts/validate_documentation.py [options]` |
+| `validate_links.py`           | Link validation (legacy)                 | `python scripts/validate_links.py`             |
+| `validate_docs_examples.py`   | Code example validation (legacy)         | `python scripts/validate_docs_examples.py`     |
+| `validate_config_examples.py` | Configuration validation (legacy)        | `python scripts/validate_config_examples.py`   |
+| `setup_validation.py`         | Setup validation environment             | `python scripts/setup_validation.py`           |
+
+#### Documentation Validation Quick Start
+
+```bash
+# Setup validation environment
+python scripts/setup_validation.py
+
+# Run comprehensive validation
+python scripts/validate_all_docs.py
+
+# Quick validation (skip external links)
+python scripts/validate_all_docs.py --skip-external
+
+# Validate specific files
+python scripts/validate_documentation.py docs/user-guide/README.md
+
+# Using Makefile targets
+make docs-validate          # Full validation
+make docs-validate-quick     # Quick validation
+make docs-lint              # Markdown linting only
+```
 
 ### Cross-Platform Wrappers
 

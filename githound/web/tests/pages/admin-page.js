@@ -9,7 +9,7 @@ const BasePage = require('./base-page');
 class AdminPage extends BasePage {
   constructor(page) {
     super(page);
-    
+
     // Page elements
     this.elements = {
       // Admin dashboard
@@ -19,13 +19,13 @@ class AdminPage extends BasePage {
       activeUsers: '[data-testid="active-users"]',
       totalSearches: '[data-testid="total-searches"]',
       systemHealth: '[data-testid="system-health"]',
-      
+
       // Navigation
       userManagementTab: '[data-testid="user-management"]',
       systemSettingsTab: '[data-testid="system-settings"]',
       logsTab: '[data-testid="logs-tab"]',
       analyticsTab: '[data-testid="analytics-tab"]',
-      
+
       // User management
       userTable: '[data-testid="user-table"]',
       userRow: '[data-testid="user-row"]',
@@ -34,7 +34,7 @@ class AdminPage extends BasePage {
       deleteUserButton: '[data-testid="delete-user"]',
       activateUserButton: '[data-testid="activate-user"]',
       deactivateUserButton: '[data-testid="deactivate-user"]',
-      
+
       // User form
       userForm: '[data-testid="user-form"]',
       userFormUsername: '[data-testid="user-form-username"]',
@@ -44,13 +44,13 @@ class AdminPage extends BasePage {
       userFormActive: '[data-testid="user-form-active"]',
       saveUserButton: '[data-testid="save-user"]',
       cancelUserButton: '[data-testid="cancel-user"]',
-      
+
       // User search and filter
       userSearchInput: '[data-testid="user-search"]',
       userFilterRole: '[data-testid="user-filter-role"]',
       userFilterStatus: '[data-testid="user-filter-status"]',
       clearUserFilters: '[data-testid="clear-user-filters"]',
-      
+
       // System settings
       settingsForm: '[data-testid="settings-form"]',
       maxSearchResults: '[data-testid="max-search-results"]',
@@ -60,7 +60,7 @@ class AdminPage extends BasePage {
       defaultUserRole: '[data-testid="default-user-role"]',
       saveSettingsButton: '[data-testid="save-settings"]',
       resetSettingsButton: '[data-testid="reset-settings"]',
-      
+
       // Logs
       logsContainer: '[data-testid="logs-container"]',
       logEntry: '[data-testid="log-entry"]',
@@ -70,14 +70,14 @@ class AdminPage extends BasePage {
       refreshLogsButton: '[data-testid="refresh-logs"]',
       clearLogsButton: '[data-testid="clear-logs"]',
       downloadLogsButton: '[data-testid="download-logs"]',
-      
+
       // Analytics
       analyticsChart: '[data-testid="analytics-chart"]',
       searchesChart: '[data-testid="searches-chart"]',
       usersChart: '[data-testid="users-chart"]',
       performanceChart: '[data-testid="performance-chart"]',
       dateRangeSelector: '[data-testid="date-range-selector"]',
-      
+
       // Notifications and alerts
       successMessage: '[data-testid="success-message"]',
       errorMessage: '[data-testid="error-message"]',
@@ -85,7 +85,7 @@ class AdminPage extends BasePage {
       confirmDialog: '[data-testid="confirm-dialog"]',
       confirmYes: '[data-testid="confirm-yes"]',
       confirmNo: '[data-testid="confirm-no"]',
-      
+
       // Bulk actions
       selectAllUsers: '[data-testid="select-all-users"]',
       bulkDeleteUsers: '[data-testid="bulk-delete-users"]',
@@ -108,7 +108,7 @@ class AdminPage extends BasePage {
    */
   async getDashboardStats() {
     await this.waitForElement(this.elements.dashboardStats);
-    
+
     return {
       totalUsers: await this.getTextByTestId('total-users'),
       activeUsers: await this.getTextByTestId('active-users'),
@@ -130,14 +130,14 @@ class AdminPage extends BasePage {
    */
   async getAllUsers() {
     await this.waitForElement(this.elements.userTable);
-    
+
     const userRows = this.page.locator(this.elements.userRow);
     const count = await userRows.count();
     const users = [];
-    
+
     for (let i = 0; i < count; i++) {
       const row = userRows.nth(i);
-      
+
       const user = {
         username: await row.locator('[data-testid="username"]').textContent(),
         email: await row.locator('[data-testid="email"]').textContent(),
@@ -145,10 +145,10 @@ class AdminPage extends BasePage {
         status: await row.locator('[data-testid="status"]').textContent(),
         lastLogin: await row.locator('[data-testid="last-login"]').textContent()
       };
-      
+
       users.push(user);
     }
-    
+
     return users;
   }
 
@@ -191,15 +191,15 @@ class AdminPage extends BasePage {
   async addUser(userData) {
     await this.clickTestId('add-user');
     await this.waitForElement(this.elements.userForm);
-    
+
     await this.fillTestId('user-form-username', userData.username);
     await this.fillTestId('user-form-email', userData.email);
     await this.fillTestId('user-form-password', userData.password);
-    
+
     if (userData.roles) {
       await this.selectOptionByTestId('user-form-roles', userData.roles);
     }
-    
+
     if (userData.active !== undefined) {
       if (userData.active) {
         await this.checkByTestId('user-form-active');
@@ -207,9 +207,9 @@ class AdminPage extends BasePage {
         await this.uncheckByTestId('user-form-active');
       }
     }
-    
+
     await this.clickTestId('save-user');
-    
+
     // Wait for success message or error
     try {
       await this.waitForElement(this.elements.successMessage, 5000);
@@ -226,28 +226,28 @@ class AdminPage extends BasePage {
   async editUser(userIndex, userData) {
     const userRows = this.page.locator(this.elements.userRow);
     const row = userRows.nth(userIndex);
-    
+
     await row.locator(this.elements.editUserButton).click();
     await this.waitForElement(this.elements.userForm);
-    
+
     if (userData.username) {
       await this.fillTestId('user-form-username', userData.username);
     }
-    
+
     if (userData.email) {
       await this.fillTestId('user-form-email', userData.email);
     }
-    
+
     if (userData.password) {
       await this.fillTestId('user-form-password', userData.password);
     }
-    
+
     if (userData.roles) {
       await this.selectOptionByTestId('user-form-roles', userData.roles);
     }
-    
+
     await this.clickTestId('save-user');
-    
+
     try {
       await this.waitForElement(this.elements.successMessage, 5000);
       return { success: true };
@@ -263,13 +263,13 @@ class AdminPage extends BasePage {
   async deleteUser(userIndex) {
     const userRows = this.page.locator(this.elements.userRow);
     const row = userRows.nth(userIndex);
-    
+
     await row.locator(this.elements.deleteUserButton).click();
-    
+
     // Handle confirmation dialog
     await this.waitForElement(this.elements.confirmDialog);
     await this.clickTestId('confirm-yes');
-    
+
     try {
       await this.waitForElement(this.elements.successMessage, 5000);
       return { success: true };
@@ -285,10 +285,10 @@ class AdminPage extends BasePage {
   async toggleUserStatus(userIndex, activate = true) {
     const userRows = this.page.locator(this.elements.userRow);
     const row = userRows.nth(userIndex);
-    
+
     const button = activate ? this.elements.activateUserButton : this.elements.deactivateUserButton;
     await row.locator(button).click();
-    
+
     try {
       await this.waitForElement(this.elements.successMessage, 5000);
       return { success: true };
@@ -311,15 +311,15 @@ class AdminPage extends BasePage {
    */
   async updateSystemSettings(settings) {
     await this.navigateToSystemSettings();
-    
+
     if (settings.maxSearchResults) {
       await this.fillTestId('max-search-results', settings.maxSearchResults.toString());
     }
-    
+
     if (settings.searchTimeout) {
       await this.fillTestId('search-timeout', settings.searchTimeout.toString());
     }
-    
+
     if (settings.enableRegistration !== undefined) {
       if (settings.enableRegistration) {
         await this.checkByTestId('enable-registration');
@@ -327,7 +327,7 @@ class AdminPage extends BasePage {
         await this.uncheckByTestId('enable-registration');
       }
     }
-    
+
     if (settings.requireEmailVerification !== undefined) {
       if (settings.requireEmailVerification) {
         await this.checkByTestId('require-email-verification');
@@ -335,13 +335,13 @@ class AdminPage extends BasePage {
         await this.uncheckByTestId('require-email-verification');
       }
     }
-    
+
     if (settings.defaultUserRole) {
       await this.selectOptionByTestId('default-user-role', settings.defaultUserRole);
     }
-    
+
     await this.clickTestId('save-settings');
-    
+
     try {
       await this.waitForElement(this.elements.successMessage, 5000);
       return { success: true };
@@ -364,23 +364,23 @@ class AdminPage extends BasePage {
    */
   async getRecentLogs(limit = 10) {
     await this.waitForElement(this.elements.logsContainer);
-    
+
     const logEntries = this.page.locator(this.elements.logEntry);
     const count = Math.min(await logEntries.count(), limit);
     const logs = [];
-    
+
     for (let i = 0; i < count; i++) {
       const entry = logEntries.nth(i);
-      
+
       const log = {
         level: await entry.locator(this.elements.logLevel).textContent(),
         message: await entry.locator(this.elements.logMessage).textContent(),
         timestamp: await entry.locator(this.elements.logTimestamp).textContent()
       };
-      
+
       logs.push(log);
     }
-    
+
     return logs;
   }
 
@@ -397,11 +397,11 @@ class AdminPage extends BasePage {
    */
   async clearLogs() {
     await this.clickTestId('clear-logs');
-    
+
     // Handle confirmation
     await this.waitForElement(this.elements.confirmDialog);
     await this.clickTestId('confirm-yes');
-    
+
     await this.waitForElement(this.elements.successMessage);
   }
 

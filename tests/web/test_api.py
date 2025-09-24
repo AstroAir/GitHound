@@ -1,17 +1,23 @@
 """Tests for GitHound web API."""
 
-import pytest
 import asyncio
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
 from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
 
-from fastapi.testclient import TestClient
+import pytest
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 
-from githound.web.api import app, ActiveSearchState
-from githound.web.models import SearchRequest, SearchResponse, SearchResultResponse, ExportRequest, HealthResponse
-from githound.models import SearchResult, SearchMetrics, SearchType, CommitInfo
+from githound.models import CommitInfo, SearchMetrics, SearchResult, SearchType
+from githound.web import app
+from githound.web.models.api_models import (
+    ExportRequest,
+    HealthResponse,
+    SearchRequest,
+    SearchResponse,
+    SearchResultResponse,
+)
 
 
 class TestWebAPI:
@@ -25,7 +31,7 @@ class TestWebAPI:
             "content_pattern": "test",
             "case_sensitive": False,
             "fuzzy_search": True,
-            "max_results": 100
+            "max_results": 100,
         }
 
     def test_health_endpoint(self) -> None:
@@ -41,8 +47,8 @@ class TestWebAPI:
 
     def test_search_endpoint_basic(self) -> None:
         """Test basic search endpoint functionality."""
-        with patch('githound.web.api.get_repository') as mock_get_repo:
-            with patch('githound.web.api.SearchOrchestrator') as mock_orchestrator_class:
+        with patch("githound.web.api.get_repository") as mock_get_repo:
+            with patch("githound.web.api.SearchOrchestrator") as mock_orchestrator_class:
                 mock_repo = Mock()
                 mock_get_repo.return_value = mock_repo
 
@@ -57,13 +63,12 @@ class TestWebAPI:
                         line_number=10,
                         line_content="def test() -> None:",
                         match_type=SearchType.CONTENT,
-                        relevance_score=0.95
+                        relevance_score=0.95,
                     )
 
                 mock_orchestrator.search = mock_search
 
-                response = self.client.post(
-                    "/api/search", json=self.sample_search_request)
+                response = self.client.post("/api/search", json=self.sample_search_request)
 
                 assert response.status_code == 200
                 data = response.json()
@@ -74,8 +79,7 @@ class TestWebAPI:
         """Test search endpoint with invalid repository."""
         # The API starts search asynchronously, so it returns 200 even for invalid repos
         # The error is detected in the background task
-        response = self.client.post(
-            "/api/search", json=self.sample_search_request)
+        response = self.client.post("/api/search", json=self.sample_search_request)
 
         # Fixed: API returns 200 for async search start
         assert response.status_code == 200
@@ -86,8 +90,8 @@ class TestWebAPI:
     def test_search_status_endpoint(self) -> None:
         """Test search status endpoint."""
         # First start a search to get a search ID
-        with patch('githound.web.api.get_repository') as mock_get_repo:
-            with patch('githound.web.api.SearchOrchestrator') as mock_orchestrator_class:
+        with patch("githound.web.api.get_repository") as mock_get_repo:
+            with patch("githound.web.api.SearchOrchestrator") as mock_orchestrator_class:
                 mock_repo = Mock()
                 mock_get_repo.return_value = mock_repo
 
@@ -101,18 +105,16 @@ class TestWebAPI:
                         line_number=10,
                         line_content="def test() -> None:",
                         match_type=SearchType.CONTENT,
-                        relevance_score=0.95
+                        relevance_score=0.95,
                     )
 
                 mock_orchestrator.search = mock_search
 
-                search_response = self.client.post(
-                    "/api/search", json=self.sample_search_request)
+                search_response = self.client.post("/api/search", json=self.sample_search_request)
                 search_id = search_response.json()["search_id"]
 
                 # Now check status
-                status_response = self.client.get(
-                    f"/api/search/{search_id}/status")
+                status_response = self.client.get(f"/api/search/{search_id}/status")
 
                 assert status_response.status_code == 200
                 data = status_response.json()
@@ -138,7 +140,7 @@ class TestWebAPI:
                 line_number=10,
                 matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
                 search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
-                relevance_score=0.95
+                relevance_score=0.95,
             )
         ]
 
@@ -147,23 +149,26 @@ class TestWebAPI:
             results=[SearchResultResponse.from_search_result(mock_results[0])],
             total_count=1,
             search_id=search_id,
-            status="completed"
+            status="completed",
         )
 
-        with patch.dict('githound.web.api.active_searches', {
-            search_id: ActiveSearchState(
-                id=search_id,
-                status="completed",
-                results=mock_results,
-                response=mock_response,  # Added required response field
-                metrics=SearchMetrics(
-                    total_commits_searched=10,
-                    total_files_searched=50,
-                    matches_found=1,
-                    search_duration_ms=1500.0
+        with patch.dict(
+            "githound.web.api.active_searches",
+            {
+                search_id: ActiveSearchState(
+                    id=search_id,
+                    status="completed",
+                    results=mock_results,
+                    response=mock_response,  # Added required response field
+                    metrics=SearchMetrics(
+                        total_commits_searched=10,
+                        total_files_searched=50,
+                        matches_found=1,
+                        search_duration_ms=1500.0,
+                    ),
                 )
-            )
-        }):
+            },
+        ):
             response = self.client.get(f"/api/search/{search_id}/results")
 
             assert response.status_code == 200
@@ -184,14 +189,11 @@ class TestWebAPI:
         """Test cancel search endpoint."""
         search_id = "test_search_123"
 
-        with patch.dict('githound.web.api.active_searches', {
-            search_id: ActiveSearchState(
-                id=search_id,
-                status="running"
-            )
-        }):
-            response = self.client.delete(
-                f"/api/search/{search_id}")  # Fixed: POST -> DELETE
+        with patch.dict(
+            "githound.web.api.active_searches",
+            {search_id: ActiveSearchState(id=search_id, status="running")},
+        ):
+            response = self.client.delete(f"/api/search/{search_id}")  # Fixed: POST -> DELETE
 
             assert response.status_code == 200
             data = response.json()
@@ -200,8 +202,7 @@ class TestWebAPI:
 
     def test_cancel_search_not_found(self) -> None:
         """Test cancel search endpoint with non-existent search ID."""
-        response = self.client.delete(
-            "/api/search/nonexistent")  # Fixed: POST -> DELETE
+        response = self.client.delete("/api/search/nonexistent")  # Fixed: POST -> DELETE
 
         assert response.status_code == 404
         data = response.json()
@@ -217,38 +218,36 @@ class TestWebAPI:
                 line_number=10,
                 matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
                 search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
-                relevance_score=0.95
+                relevance_score=0.95,
             )
         ]
 
-        export_request = {
-            "search_id": search_id,
-            "format": "json",
-            "include_metadata": True
-        }
+        export_request = {"search_id": search_id, "format": "json", "include_metadata": True}
 
         # Create a mock response for export
         mock_response = SearchResponse(
-            results=[],
-            total_count=1,
-            search_id=search_id,
-            status="completed"
+            results=[], total_count=1, search_id=search_id, status="completed"
         )
 
-        with patch.dict('githound.web.api.active_searches', {
-            search_id: ActiveSearchState(
-                id=search_id,
-                status="completed",
-                results=mock_results,
-                response=mock_response  # Added required response field
-            )
-        }):
-            with patch('githound.web.api.get_export_manager') as mock_get_export:
-                import tempfile
+        with patch.dict(
+            "githound.web.api.active_searches",
+            {
+                search_id: ActiveSearchState(
+                    id=search_id,
+                    status="completed",
+                    results=mock_results,
+                    response=mock_response,  # Added required response field
+                )
+            },
+        ):
+            with patch("githound.web.api.get_export_manager") as mock_get_export:
                 import os
+                import tempfile
 
                 # Create a temporary file that actually exists
-                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".json", delete=False
+                ) as temp_file:
                     temp_file.write('{"test": "data"}')
                     temp_file_path = Path(temp_file.name)
 
@@ -263,13 +262,15 @@ class TestWebAPI:
                     def mock_export_to_json(results, export_path, include_metadata) -> None:
                         # Copy our temp file to the expected location
                         import shutil
+
                         export_path.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(temp_file_path, export_path)
 
                     mock_export_manager.export_to_json.side_effect = mock_export_to_json
 
                     response = self.client.post(
-                        f"/api/search/{search_id}/export", json=export_request)
+                        f"/api/search/{search_id}/export", json=export_request
+                    )
 
                     assert response.status_code == 200
                 finally:
@@ -308,14 +309,14 @@ class TestActiveSearchState:
                 line_number=10,
                 matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
                 search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
-                relevance_score=0.95
+                relevance_score=0.95,
             )
         ]
         metrics = SearchMetrics(
             total_commits_searched=10,
             total_files_searched=50,
             matches_found=1,
-            search_duration_ms=1500.0
+            search_duration_ms=1500.0,
         )
 
         state = ActiveSearchState(
@@ -326,7 +327,7 @@ class TestActiveSearchState:
             results_count=1,
             request=request,
             results=results,
-            metrics=metrics
+            metrics=metrics,
         )
 
         assert state.id == search_id

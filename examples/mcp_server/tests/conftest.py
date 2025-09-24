@@ -33,35 +33,35 @@ def event_loop() -> None:
 def temp_git_repo() -> None:
     """
     Create a temporary Git repository for testing.
-    
+
     Returns:
         Path to the temporary Git repository
     """
     import subprocess
-    
+
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_path = Path(temp_dir)
-        
+
         # Initialize git repository
         subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_path, check=True)  # [attr-defined]
         subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_path, check=True)  # [attr-defined]
-        
+
         # Create initial commit
         readme_file = repo_path / "README.md"
         readme_file.write_text("# Test Repository\n\nThis is a test repository for MCP examples.")
-        
+
         subprocess.run(["git", "add", "README.md"], cwd=repo_path, check=True)
         subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=repo_path, check=True)
-        
+
         # Create additional commits
         for i in range(3):
             test_file = repo_path / f"test_{i}.py"
             test_file.write_text(f"# Test file {i}\nprint('Hello from test {i}')\n")
-            
+
             subprocess.run(["git", "add", f"test_{i}.py"], cwd=repo_path, check=True)
             subprocess.run(["git", "commit", "-m", f"Add test file {i}"], cwd=repo_path, check=True)
-        
+
         yield repo_path
 
 
@@ -69,13 +69,13 @@ def temp_git_repo() -> None:
 async def simple_mcp_client() -> AsyncGenerator[FastMCPClient, None]:
     """
     Create a FastMCP client connected to the simple server.
-    
+
     Yields:
         Connected FastMCP client instance
     """
     server_script = Path(__file__).parent.parent / "servers" / "simple_server.py"
     transport = StdioTransport("python", str(server_script))
-    
+
     async with FastMCPClient(transport) as client:
         yield client
 
@@ -84,13 +84,13 @@ async def simple_mcp_client() -> AsyncGenerator[FastMCPClient, None]:
 async def githound_mcp_client() -> AsyncGenerator[FastMCPClient, None]:
     """
     Create a FastMCP client connected to the GitHound server.
-    
+
     Yields:
         Connected FastMCP client instance
     """
     server_script = Path(__file__).parent.parent / "servers" / "githound_server.py"
     transport = StdioTransport("python", str(server_script))
-    
+
     async with FastMCPClient(transport) as client:
         yield client
 
@@ -99,7 +99,7 @@ async def githound_mcp_client() -> AsyncGenerator[FastMCPClient, None]:
 def mock_server_data() -> None:
     """
     Provide mock data for server testing.
-    
+
     Returns:
         Dictionary containing mock server data
     """
@@ -135,7 +135,7 @@ def mock_server_data() -> None:
                 "files_modified": 5
             },
             {
-                "name": "Another Author", 
+                "name": "Another Author",
                 "email": "another@example.com",
                 "commits": 2,
                 "insertions": 30,
@@ -150,7 +150,7 @@ def mock_server_data() -> None:
 def sample_tool_args() -> None:
     """
     Provide sample arguments for tool testing.
-    
+
     Returns:
         Dictionary containing sample tool arguments
     """
@@ -167,13 +167,13 @@ def sample_tool_args() -> None:
 def sample_resource_uris() -> None:
     """
     Provide sample resource URIs for testing.
-    
+
     Returns:
         List of sample resource URIs
     """
     return [
         "simple://server/info",
-        "simple://config/settings", 
+        "simple://config/settings",
         "simple://status/current",
         "githound://repository/./summary",
         "githound://repository/./contributors"
@@ -182,31 +182,31 @@ def sample_resource_uris() -> None:
 
 class MockMCPServer:
     """Mock MCP server for testing client functionality."""
-    
+
     def __init__(self, tools: Optional[Dict[str, Any]] = None, resources: Optional[Dict[str, Any]] = None) -> None:
         self.tools = tools or {}
         self.resources = resources or {}
         self.call_count = 0
         self.last_call = None
-    
+
     async def list_tools(self) -> None:
         """Mock list_tools implementation."""
         return list(self.tools.keys())
-    
+
     async def call_tool(self, name: str, args: Dict[str, Any]) -> None:
         """Mock call_tool implementation."""
         self.call_count += 1
         self.last_call = {"tool": name, "args": args}
-        
+
         if name in self.tools:
             return self.tools[name]
         else:
             raise ValueError(f"Tool {name} not found")
-    
+
     async def list_resources(self) -> None:
         """Mock list_resources implementation."""
         return list(self.resources.keys())
-    
+
     async def read_resource(self, uri: str) -> None:
         """Mock read_resource implementation."""
         if uri in self.resources:
@@ -219,7 +219,7 @@ class MockMCPServer:
 def mock_mcp_server() -> None:
     """
     Create a mock MCP server for testing.
-    
+
     Returns:
         MockMCPServer instance
     """
@@ -228,12 +228,12 @@ def mock_mcp_server() -> None:
         "add_numbers": {"data": {"sum": 30.8, "operation": "addition"}, "content": []},
         "get_server_info": {"data": {"name": "Mock Server", "version": "1.0.0"}, "content": []}
     }
-    
+
     resources = {
         "mock://server/info": [{"text": '{"server": "mock", "version": "1.0.0"}'}],
         "mock://config/settings": [{"text": '{"setting1": "value1", "setting2": "value2"}'}]
     }
-    
+
     return MockMCPServer(tools, resources)
 
 
@@ -241,7 +241,7 @@ def mock_mcp_server() -> None:
 def client_test_config() -> None:
     """
     Provide configuration for client testing.
-    
+
     Returns:
         Dictionary containing test configuration
     """
@@ -260,7 +260,7 @@ def client_test_config() -> None:
 def performance_thresholds() -> None:
     """
     Provide performance thresholds for testing.
-    
+
     Returns:
         Dictionary containing performance thresholds
     """
@@ -295,15 +295,15 @@ def pytest_collection_modifyitems(config, items) -> None:
         # Add integration marker to integration tests
         if "integration" in item.nodeid:
             item.add_marker(pytest.mark.integration)
-        
+
         # Add performance marker to performance tests
         if "performance" in item.nodeid:
             item.add_marker(pytest.mark.performance)
-        
+
         # Add slow marker to tests that might be slow
         if any(keyword in item.nodeid for keyword in ["comprehensive", "full", "end_to_end"]):
             item.add_marker(pytest.mark.slow)
-        
+
         # Add requires_git marker to tests that need git
         if any(keyword in item.nodeid for keyword in ["git", "repository", "commit"]):
             item.add_marker(pytest.mark.requires_git)

@@ -13,15 +13,16 @@ try:
 
     HAS_PANDAS = True
 except ImportError:
-    pd = None  #
+    from ..search_engine._pandas_compat import MockPandas
+
+    pd = MockPandas()  # type: ignore[assignment]
     HAS_PANDAS = False
 
 try:
     import yaml
-
     HAS_YAML = True
 except ImportError:
-    yaml = None  #
+    yaml = None  # type: ignore[assignment]
     HAS_YAML = False
 
 from rich.console import Console
@@ -54,13 +55,11 @@ class ExportManager:
 
             with open(output_file, "w", encoding="utf-8") as f:
                 if pretty:
-                    json.dump(json_data, f, indent=2,
-                              default=self._json_serializer)
+                    json.dump(json_data, f, indent=2, default=self._json_serializer)
                 else:
                     json.dump(json_data, f, default=self._json_serializer)
 
-            self.console.print(
-                f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
+            self.console.print(f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
 
         except Exception as e:
             self.console.print(f"[red]✗ Failed to export to JSON: {e}[/red]")
@@ -96,11 +95,9 @@ class ExportManager:
                         sort_keys=False,
                     )
                 else:
-                    yaml.dump(yaml_data, f, default_flow_style=True,
-                              allow_unicode=True)
+                    yaml.dump(yaml_data, f, default_flow_style=True, allow_unicode=True)
 
-            self.console.print(
-                f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
+            self.console.print(f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
 
         except Exception as e:
             self.console.print(f"[red]✗ Failed to export to YAML: {e}[/red]")
@@ -123,8 +120,7 @@ class ExportManager:
                     row = self._result_to_csv_row(result, include_metadata)
                     writer.writerow(row)
 
-            self.console.print(
-                f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
+            self.console.print(f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
 
         except Exception as e:
             self.console.print(f"[red]✗ Failed to export to CSV: {e}[/red]")
@@ -153,8 +149,7 @@ class ExportManager:
             df = pd.DataFrame(data)
             df.to_excel(output_file, index=False, engine="openpyxl")
 
-            self.console.print(
-                f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
+            self.console.print(f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
 
         except ImportError:
             self.console.print(
@@ -180,8 +175,7 @@ class ExportManager:
                 else:
                     raise ValueError(f"Unknown format style: {format_style}")
 
-            self.console.print(
-                f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
+            self.console.print(f"[green]✓ Exported {len(results)} results to {output_file}[/green]")
 
         except Exception as e:
             self.console.print(f"[red]✗ Failed to export to text: {e}[/red]")
@@ -209,15 +203,12 @@ class ExportManager:
                     # Flush periodically for large datasets
                     if count % 1000 == 0:
                         f.flush()
-                        self.console.print(
-                            f"[cyan]Exported {count} results...[/cyan]")
+                        self.console.print(f"[cyan]Exported {count} results...[/cyan]")
 
-            self.console.print(
-                f"[green]✓ Streamed {count} results to {output_file}[/green]")
+            self.console.print(f"[green]✓ Streamed {count} results to {output_file}[/green]")
 
         except Exception as e:
-            self.console.print(
-                f"[red]✗ Failed to stream export to CSV: {e}[/red]")
+            self.console.print(f"[red]✗ Failed to stream export to CSV: {e}[/red]")
             raise
 
     def export_metrics(
@@ -227,16 +218,19 @@ class ExportManager:
         try:
             if format.lower() == "json":
                 with open(output_file, "w", encoding="utf-8") as f:
-                    json.dump(metrics.dict() if metrics is not None else None, f, indent=2,
-                              default=self._json_serializer)
+                    json.dump(
+                        metrics.dict() if metrics is not None else None,
+                        f,
+                        indent=2,
+                        default=self._json_serializer,
+                    )
             elif format.lower() == "txt":
                 with open(output_file, "w", encoding="utf-8") as f:
                     self._write_metrics_text(metrics, f)
             else:
                 raise ValueError(f"Unsupported metrics format: {format}")
 
-            self.console.print(
-                f"[green]✓ Exported metrics to {output_file}[/green]")
+            self.console.print(f"[green]✓ Exported metrics to {output_file}[/green]")
 
         except Exception as e:
             self.console.print(f"[red]✗ Failed to export metrics: {e}[/red]")
@@ -411,8 +405,7 @@ class ExportManager:
         f.write("GitHound Search Results Summary\n")
         f.write("==============================\n\n")
         f.write(f"Total Results: {len(results)}\n")
-        f.write(
-            f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write(f"Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
         # Group by search type
         by_type: dict[str, list[SearchResult]] = {}
@@ -448,7 +441,7 @@ class ExportManager:
         if metrics.memory_usage_mb:
             f.write(f"Peak Memory Usage: {metrics.memory_usage_mb:.2f} MB\n")
 
-    def _json_serializer(self, obj: Any) -> Any:
+    def _json_serializer(self, obj: Any) -> str:
         """Custom JSON serializer for datetime and other objects."""
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -465,8 +458,7 @@ class ExportManager:
             filtered_results = self._apply_filters(results, options.filters)
 
             # Apply sorting
-            sorted_results = self._apply_sorting(
-                filtered_results, options.sort_by)
+            sorted_results = self._apply_sorting(filtered_results, options.sort_by)
 
             # Apply field selection
             if options.fields or options.exclude_fields:
@@ -483,17 +475,14 @@ class ExportManager:
                     sorted_results, output_file, options.include_metadata, options.pretty_print
                 )
             elif options.format == OutputFormat.CSV:
-                self.export_to_csv(sorted_results, output_file,
-                                   options.include_metadata)
+                self.export_to_csv(sorted_results, output_file, options.include_metadata)
             elif options.format == OutputFormat.TEXT:
                 self.export_to_text(sorted_results, output_file, "detailed")
             else:
-                raise ValueError(
-                    f"Unsupported export format: {options.format}")
+                raise ValueError(f"Unsupported export format: {options.format}")
 
         except Exception as e:
-            self.console.print(
-                f"[red]✗ Failed to export with options: {e}[/red]")
+            self.console.print(f"[red]✗ Failed to export with options: {e}[/red]")
             raise
 
     def _apply_filters(
@@ -584,8 +573,7 @@ class ExportManager:
 
         # This line is unreachable if all enum members are handled.
         # Adding a safeguard for unexpected cases.
-        raise ValueError(
-            f"Unsupported filter operator: {filter_criteria.operator}")
+        raise ValueError(f"Unsupported filter operator: {filter_criteria.operator}")
 
     def _get_field_value(self, result: SearchResult, field_path: str) -> Any:
         """Get a field value from a result using dot notation."""

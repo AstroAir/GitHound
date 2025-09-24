@@ -1,6 +1,7 @@
 # Quick Start Guide
 
-Get up and running with GitHound in just a few minutes! This guide will walk you through the basic usage and key features.
+Get up and running with GitHound in just a few minutes! This guide will walk you through the
+basic usage and key features.
 
 ## Prerequisites
 
@@ -14,7 +15,7 @@ Navigate to any Git repository and run a basic search:
 
 ```bash
 cd /path/to/your/git/repo
-githound search "function" .
+githound search --repo-path . --content "function"
 ```
 
 This searches for the word "function" in all commits in the current repository.
@@ -53,36 +54,37 @@ This shows:
 ### Search by Author
 
 ```bash
-githound search --author "john.doe" .
+githound search --repo-path . --author "john.doe"
 ```
 
 ### Search by Date Range
 
 ```bash
-githound search --date-from "2023-01-01" --date-to "2023-12-31" .
+githound search --repo-path . --date-from "2023-01-01" --date-to "2023-12-31"
 ```
 
 ### Search by File Type
 
 ```bash
-githound search --file-type "py" "class" .
+githound search --repo-path . --content "class" --file-extensions py
 ```
 
 ### Combined Search
 
 ```bash
 githound search \
+  --repo-path . \
   --author "john.doe" \
   --date-from "2023-01-01" \
   --message "bug fix" \
-  --file-type "py" \
-  "function" .
+  --file-extensions py \
+  --content "function"
 ```
 
 ### Fuzzy Search
 
 ```bash
-githound search --fuzzy --fuzzy-threshold 0.8 "functon" .
+githound search --repo-path . --content "functon" --fuzzy-search --fuzzy-threshold 0.8
 ```
 
 ## Export Results
@@ -90,13 +92,13 @@ githound search --fuzzy --fuzzy-threshold 0.8 "functon" .
 ### Export to JSON
 
 ```bash
-githound search "function" . --export results.json --format json
+githound search --repo-path . --content "function" --output results.json --format json
 ```
 
 ### Export to YAML
 
 ```bash
-githound search "function" . --export results.yaml --format yaml
+githound search --repo-path . --content "function" --output results.yaml --format yaml
 ```
 
 ### Export to CSV
@@ -141,13 +143,13 @@ When investigating a bug, you might want to:
 
 ```bash
 # Find recent changes to a specific file
-githound search --file-path "src/buggy_file.py" --date-from "2023-11-01" .
+githound search --repo-path . --file-path-pattern "src/buggy_file.py" --date-from "2023-11-01"
 
 # Check who last modified specific lines
 githound blame . src/buggy_file.py
 
 # Compare recent commits
-githound diff --commit1 HEAD~5 --commit2 HEAD .
+githound diff --repo-path . --commit1 HEAD~5 --commit2 HEAD
 ```
 
 ### 2. Code Review Preparation
@@ -156,11 +158,11 @@ Before a code review:
 
 ```bash
 # Find all changes by a specific author
-githound search --author "developer" --date-from "2023-11-01" .
+githound search --repo-path . --author "developer" --date-from "2023-11-01"
 
 # Export changes for review
-githound search --author "developer" --date-from "2023-11-01" . \
-  --export review.json --format json
+githound search --repo-path . --author "developer" --date-from "2023-11-01" \
+  --output review.json --format json
 ```
 
 ### 3. Refactoring Analysis
@@ -169,13 +171,13 @@ When planning refactoring:
 
 ```bash
 # Find all usages of a function
-githound search "old_function_name" .
+githound search --repo-path . --content "old_function_name"
 
 # Analyze file history
 githound blame . src/legacy_file.py
 
 # Check recent changes to understand impact
-githound search --file-path "src/legacy_file.py" --date-from "2023-01-01" .
+githound search --repo-path . --file-path-pattern "src/legacy_file.py" --date-from "2023-01-01"
 ```
 
 ## Configuration
@@ -288,3 +290,33 @@ Check out our [examples repository](https://github.com/your-org/githound-example
 - Integration examples
 - Use case demonstrations
 - Best practices
+
+## 🚀 What's Next
+
+### Dive Deeper
+
+- **[CLI Usage Guide](../user-guide/cli-usage.md)** - Master all GitHound commands
+- **[Search Capabilities](../user-guide/search-capabilities.md)** - Learn advanced search techniques
+- **[Configuration Guide](configuration.md)** - Customize GitHound for your workflow
+
+### Integration Options
+
+- **[MCP Server](../mcp-server/README.md)** - Integrate with AI tools and assistants
+- **[Python API](../api-reference/python-api.md)** - Use GitHound in your Python applications
+- **[REST API](../api-reference/rest-api.md)** - Build integrations with other tools
+- **[Web Interface](../user-guide/web-interface.md)** - Use the browser-based interface
+
+### Advanced Topics
+
+- **[Architecture Overview](../architecture/overview.md)** - Understand GitHound's design
+- **[Configuration Guide](configuration.md)** - Advanced configuration options
+
+### Need Help
+
+- **[Troubleshooting Guide](../troubleshooting/README.md)** - Solve common issues
+- **[FAQ](../troubleshooting/faq.md)** - Get quick answers
+
+---
+
+**📚 [Back to Documentation Home](../index.md)** | **⬅️ [Installation Guide](installation.md)** |
+**➡️ [Configuration Guide](configuration.md)**

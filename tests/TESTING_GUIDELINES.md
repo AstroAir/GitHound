@@ -81,10 +81,10 @@ def test_search_command_with_content_pattern():
     # Arrange
     runner = CliRunner()
     repo_path = create_test_repo()
-    
+
     # Act
     result = runner.invoke(app, ["search", "--repo-path", str(repo_path), "--content", "function"])
-    
+
     # Assert
     assert result.exit_code == 0
     assert "function" in result.stdout
@@ -121,10 +121,10 @@ def test_analyze_command_calls_git_handler(mock_get_repo, cli_runner, temp_git_r
     # Arrange
     mock_repo = Mock()
     mock_get_repo.return_value = mock_repo
-    
+
     # Act
     result = cli_runner.invoke(app, ["analyze", str(temp_git_repo)])
-    
+
     # Assert
     assert result.exit_code == 0
     mock_get_repo.assert_called_once_with(temp_git_repo)
@@ -138,14 +138,14 @@ def test_analyze_command_calls_git_handler(mock_get_repo, cli_runner, temp_git_r
 def test_cli_command_with_valid_arguments(cli_runner, temp_git_repo):
     """Test CLI command with valid arguments."""
     result = cli_runner.invoke(app, ["command", "--arg", "value"])
-    
+
     assert result.exit_code == 0
     assert "expected output" in result.stdout
 
 def test_cli_command_with_invalid_arguments(cli_runner):
     """Test CLI command with invalid arguments."""
     result = cli_runner.invoke(app, ["command", "--invalid-arg"])
-    
+
     assert result.exit_code != 0
     assert "error" in result.stderr.lower()
 ```
@@ -160,11 +160,11 @@ async def test_search_orchestrator_with_complex_query(search_orchestrator, compl
         author_pattern="Alice",
         file_extensions=["py"]
     )
-    
+
     results = []
     async for result in search_orchestrator.search(complex_git_repo, query):
         results.append(result)
-    
+
     assert len(results) > 0
     assert all(result.file_path.endswith('.py') for result in results)
     assert all('function' in result.content.lower() for result in results)
@@ -180,7 +180,7 @@ async def test_mcp_tool_execution(mcp_client):
         "repo_path": "/test/repo",
         "query": "function"
     })
-    
+
     assert result is not None
     assert "results" in result
     assert isinstance(result["results"], list)
@@ -195,7 +195,7 @@ def test_api_endpoint_with_valid_request(api_client):
         "repo_path": "/test/repo",
         "query": "function"
     })
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -212,7 +212,7 @@ Always test error conditions:
 def test_command_with_nonexistent_repository(cli_runner):
     """Test command behavior with nonexistent repository."""
     result = cli_runner.invoke(app, ["analyze", "/nonexistent/path"])
-    
+
     assert result.exit_code != 0
     assert "not found" in result.stderr.lower() or "not found" in result.stdout.lower()
 
@@ -220,7 +220,7 @@ def test_command_with_permission_denied(cli_runner, mock_permission_error):
     """Test command behavior when permission is denied."""
     with patch("pathlib.Path.exists", side_effect=PermissionError("Permission denied")):
         result = cli_runner.invoke(app, ["analyze", "/restricted/path"])
-        
+
         assert result.exit_code != 0
         assert "permission" in result.stderr.lower()
 ```
@@ -231,7 +231,7 @@ def test_command_with_permission_denied(cli_runner, mock_permission_error):
 def test_search_with_empty_repository(cli_runner, empty_git_repo):
     """Test search behavior with empty repository."""
     result = cli_runner.invoke(app, ["search", "--repo-path", str(empty_git_repo), "--content", "test"])
-    
+
     assert result.exit_code == 0
     assert "No results found" in result.stdout
 
@@ -239,7 +239,7 @@ def test_search_with_very_large_pattern(cli_runner, temp_git_repo):
     """Test search behavior with very large search pattern."""
     large_pattern = "a" * 10000
     result = cli_runner.invoke(app, ["search", "--repo-path", str(temp_git_repo), "--content", large_pattern])
-    
+
     # Should handle gracefully without crashing
     assert result.exit_code in [0, 1]  # Either success or expected failure
 ```
@@ -253,15 +253,15 @@ def test_search_with_very_large_pattern(cli_runner, temp_git_repo):
 def test_search_performance_with_large_repository(large_git_repo):
     """Test search performance with large repository."""
     import time
-    
+
     start_time = time.time()
-    
+
     # Perform operation
     result = perform_search(large_git_repo, "function")
-    
+
     end_time = time.time()
     execution_time = end_time - start_time
-    
+
     # Assert performance requirements
     assert execution_time < 5.0  # Should complete within 5 seconds
     assert len(result) > 0  # Should find results

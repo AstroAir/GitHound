@@ -35,8 +35,8 @@ class TestExportManager:
                     committer_email="john@example.com",  # Added required field
                     message="Add test function",
                     date=datetime(2023, 1, 1, 12, 0, 0),
-                    files_changed=1  # Added required field
-                )
+                    files_changed=1,  # Added required field
+                ),
             ),
             SearchResult(
                 commit_hash="def456",
@@ -54,9 +54,9 @@ class TestExportManager:
                     committer_email="jane@example.com",  # Added required field
                     message="Add test class",
                     date=datetime(2023, 1, 2, 14, 30, 0),
-                    files_changed=1  # Added required field
-                )
-            )
+                    files_changed=1,  # Added required field
+                ),
+            ),
         ]
 
     def test_export_to_json_basic(self) -> None:
@@ -65,14 +65,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_json(
-                self.sample_results,
-                output_file,
-                include_metadata=False,
-                pretty=True
+                self.sample_results, output_file, include_metadata=False, pretty=True
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
             # Verify that json.dump was called (indirectly through the write calls)
             handle = mock_file()
             assert handle.write.called
@@ -83,14 +79,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_json(
-                self.sample_results,
-                output_file,
-                include_metadata=True,
-                pretty=True
+                self.sample_results, output_file, include_metadata=True, pretty=True
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
     def test_export_to_json_compact(self) -> None:
         """Test JSON export without pretty printing."""
@@ -98,14 +90,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_json(
-                self.sample_results,
-                output_file,
-                include_metadata=False,
-                pretty=False
+                self.sample_results, output_file, include_metadata=False, pretty=False
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
     def test_export_to_csv_basic(self) -> None:
         """Test basic CSV export functionality."""
@@ -113,13 +101,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_csv(
-                self.sample_results,
-                output_file,
-                include_metadata=False
+                self.sample_results, output_file, include_metadata=False
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", newline="", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", newline="", encoding="utf-8")
 
     def test_export_to_csv_with_metadata(self) -> None:
         """Test CSV export with metadata."""
@@ -127,51 +112,37 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_csv(
-                self.sample_results,
-                output_file,
-                include_metadata=True
+                self.sample_results, output_file, include_metadata=True
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", newline="", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", newline="", encoding="utf-8")
 
-    @patch('githound.utils.export.HAS_PANDAS', True)
-    @patch('githound.utils.export.pd')
+    @patch("githound.utils.export.HAS_PANDAS", True)
+    @patch("githound.utils.export.pd")
     def test_export_to_excel_with_pandas(self, mock_pd) -> None:
         """Test Excel export when pandas is available."""
         output_file = Path("test_output.xlsx")
         mock_df = Mock()
         mock_pd.DataFrame.return_value = mock_df
 
-        self.export_manager.export_to_excel(
-            self.sample_results,
-            output_file,
-            include_metadata=True
-        )
+        self.export_manager.export_to_excel(self.sample_results, output_file, include_metadata=True)
 
         mock_pd.DataFrame.assert_called_once()
-        mock_df.to_excel.assert_called_once_with(
-            output_file, index=False, engine="openpyxl")
+        mock_df.to_excel.assert_called_once_with(output_file, index=False, engine="openpyxl")
 
-    @patch('githound.utils.export.HAS_PANDAS', False)
+    @patch("githound.utils.export.HAS_PANDAS", False)
     def test_export_to_excel_without_pandas(self) -> None:
         """Test Excel export fallback when pandas is not available."""
         output_file = Path("test_output.xlsx")
 
-        with patch.object(self.export_manager, 'export_to_csv') as mock_csv_export:
+        with patch.object(self.export_manager, "export_to_csv") as mock_csv_export:
             self.export_manager.export_to_excel(
-                self.sample_results,
-                output_file,
-                include_metadata=True
+                self.sample_results, output_file, include_metadata=True
             )
 
             # Should fallback to CSV export
             expected_csv_file = output_file.with_suffix(".csv")
-            mock_csv_export.assert_called_once_with(
-                self.sample_results,
-                expected_csv_file,
-                True
-            )
+            mock_csv_export.assert_called_once_with(self.sample_results, expected_csv_file, True)
 
     def test_export_to_text_simple(self) -> None:
         """Test text export with simple format."""
@@ -179,13 +150,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_text(
-                self.sample_results,
-                output_file,
-                format_style="simple"
+                self.sample_results, output_file, format_style="simple"
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
     def test_export_to_text_detailed(self) -> None:
         """Test text export with detailed format."""
@@ -193,13 +161,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_text(
-                self.sample_results,
-                output_file,
-                format_style="detailed"
+                self.sample_results, output_file, format_style="detailed"
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
     def test_export_to_text_summary(self) -> None:
         """Test text export with summary format."""
@@ -207,13 +172,10 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_text(
-                self.sample_results,
-                output_file,
-                format_style="summary"
+                self.sample_results, output_file, format_style="summary"
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
 
     def test_export_to_text_invalid_format(self) -> None:
         """Test text export with invalid format style."""
@@ -221,9 +183,7 @@ class TestExportManager:
 
         with pytest.raises(ValueError, match="Unknown format style"):
             self.export_manager.export_to_text(
-                self.sample_results,
-                output_file,
-                format_style="invalid"
+                self.sample_results, output_file, format_style="invalid"
             )
 
     def test_stream_export_csv(self) -> None:
@@ -236,97 +196,60 @@ class TestExportManager:
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.stream_export_csv(
-                result_generator(),
-                output_file,
-                include_metadata=True
+                result_generator(), output_file, include_metadata=True
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", newline="", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", newline="", encoding="utf-8")
 
-    @patch('githound.utils.export.HAS_YAML', True)
-    @patch('githound.utils.export.yaml')
+    @patch("githound.utils.export.HAS_YAML", True)
+    @patch("githound.utils.export.yaml")
     def test_export_to_yaml_with_yaml(self, mock_yaml) -> None:
         """Test YAML export when yaml library is available."""
         output_file = Path("test_output.yaml")
 
         with patch("builtins.open", mock_open()) as mock_file:
             self.export_manager.export_to_yaml(
-                self.sample_results,
-                output_file,
-                include_metadata=True,
-                pretty=True
+                self.sample_results, output_file, include_metadata=True, pretty=True
             )
 
-            mock_file.assert_called_once_with(
-                output_file, "w", encoding="utf-8")
+            mock_file.assert_called_once_with(output_file, "w", encoding="utf-8")
             mock_yaml.dump.assert_called_once()
 
-    @patch('githound.utils.export.HAS_YAML', False)
+    @patch("githound.utils.export.HAS_YAML", False)
     def test_export_to_yaml_without_yaml(self) -> None:
         """Test YAML export fallback when yaml library is not available."""
         output_file = Path("test_output.yaml")
 
-        with patch.object(self.export_manager, 'export_to_json') as mock_json_export:
+        with patch.object(self.export_manager, "export_to_json") as mock_json_export:
             self.export_manager.export_to_yaml(
-                self.sample_results,
-                output_file,
-                include_metadata=True,
-                pretty=True
+                self.sample_results, output_file, include_metadata=True, pretty=True
             )
 
             # Should fallback to JSON export
             expected_json_file = output_file.with_suffix(".json")
             mock_json_export.assert_called_once_with(
-                self.sample_results,
-                expected_json_file,
-                True,
-                True
+                self.sample_results, expected_json_file, True, True
             )
 
     def test_export_with_options_json(self) -> None:
         """Test export with options for JSON format."""
         output_file = Path("test_output.json")
-        options = ExportOptions(
-            format=OutputFormat.JSON,
-            include_metadata=True,
-            pretty_print=True
-        )
+        options = ExportOptions(format=OutputFormat.JSON, include_metadata=True, pretty_print=True)
 
-        with patch.object(self.export_manager, 'export_to_json') as mock_export:
-            self.export_manager.export_with_options(
-                self.sample_results,
-                output_file,
-                options
-            )
+        with patch.object(self.export_manager, "export_to_json") as mock_export:
+            self.export_manager.export_with_options(self.sample_results, output_file, options)
 
-            mock_export.assert_called_once_with(
-                self.sample_results,
-                output_file,
-                True,
-                True
-            )
+            mock_export.assert_called_once_with(self.sample_results, output_file, True, True)
 
     def test_export_with_options_csv(self) -> None:
         """Test export with options for CSV format."""
         output_file = Path("test_output.csv")
-        options = ExportOptions(
-            format=OutputFormat.CSV,
-            include_metadata=False
-        )
+        options = ExportOptions(format=OutputFormat.CSV, include_metadata=False)
 
-        with patch.object(self.export_manager, 'export_to_csv') as mock_export:
-            self.export_manager.export_with_options(
-                self.sample_results,
-                output_file,
-                options
-            )
+        with patch.object(self.export_manager, "export_to_csv") as mock_export:
+            self.export_manager.export_with_options(self.sample_results, output_file, options)
 
-            mock_export.assert_called_once_with(
-                self.sample_results,
-                output_file,
-                False
-            )
+            mock_export.assert_called_once_with(self.sample_results, output_file, False)
 
     def test_export_with_options_unsupported_format(self) -> None:
         """Test export with unsupported format."""
@@ -359,16 +282,18 @@ class TestExportManager:
         """Test applying filters to results."""
         filters = [
             # Fixed: use correct field path
-            DataFilter(field="commit_info.author_name",
-                       operator="contains", value="John")
+            DataFilter(field="commit_info.author_name", operator="contains", value="John")
         ]
 
-        filtered_results = self.export_manager._apply_filters(
-            self.sample_results, filters)
+        filtered_results = self.export_manager._apply_filters(self.sample_results, filters)
 
         # Should only return results from John Doe
         assert len(filtered_results) == 1
-        assert filtered_results[0].commit_info.author_name if commit_info is not None else None == "John Doe"
+        assert (
+            filtered_results[0].commit_info.author_name
+            if filtered_results[0].commit_info is not None
+            else None == "John Doe"
+        )
 
     def test_apply_sorting(self) -> None:
         """Test applying sorting to results."""
@@ -377,8 +302,7 @@ class TestExportManager:
             SortCriteria(field="relevance_score", order=SortOrder.DESC)
         ]
 
-        sorted_results = self.export_manager._apply_sorting(
-            self.sample_results, sort_criteria)
+        sorted_results = self.export_manager._apply_sorting(self.sample_results, sort_criteria)
 
         # Should be sorted by relevance score descending
         assert len(sorted_results) == 2
@@ -390,7 +314,4 @@ class TestExportManager:
 
         with patch("builtins.open", side_effect=OSError("Permission denied")):
             with pytest.raises(IOError):
-                self.export_manager.export_to_json(
-                    self.sample_results,
-                    output_file
-                )
+                self.export_manager.export_to_json(self.sample_results, output_file)

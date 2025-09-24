@@ -26,19 +26,15 @@ git --version
 
 ## Installation Methods
 
-### Method 1: Install from PyPI (Recommended)
+**Note**: GitHound is currently in development and not yet published to PyPI.
 
-```bash
-pip install githound
-```
-
-### Method 2: Install from Source
+### Method 1: Install from Source (Current Method)
 
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/your-org/githound.git
-   cd githound
+   git clone https://github.com/AstroAir/GitHound.git
+   cd GitHound
    ```
 
 2. **Create a virtual environment** (recommended):
@@ -59,12 +55,25 @@ pip install githound
    pip install -e .
    ```
 
-### Method 3: Using UV (Fast Package Manager)
+### Method 2: Using UV (Fast Package Manager)
 
 If you have [uv](https://github.com/astral-sh/uv) installed:
 
 ```bash
-uv pip install githound
+# Clone repository first
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
+
+# Install with uv
+uv pip install -e .
+```
+
+### Future: PyPI Installation
+
+Once published, GitHound will be available via:
+
+```bash
+pip install githound
 ```
 
 ## Development Installation
@@ -73,18 +82,41 @@ For development work, install with additional dependencies:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/githound.git
-cd githound
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
 
-# Install with development dependencies
-pip install -e ".[dev,test]"
+# Install with development dependencies (modern syntax)
+pip install -e . --dependency-groups dev,test
+
+# Or install all dependency groups
+pip install -e . --dependency-groups dev,test,docs,build
+
+# Alternative: Legacy syntax (still supported)
+pip install -e ".[dev,test,docs,build]"
 ```
 
 This includes:
 
-- **Testing tools**: pytest, pytest-asyncio, pytest-cov, pytest-mock
-- **Type checking**: mypy, pandas-stubs, types-pyyaml
-- **Development tools**: Additional linting and formatting tools
+**Development Dependencies (`dev`):**
+
+- **Type checking**: mypy, pandas-stubs, types-pyyaml, types-psutil, types-requests
+- **Code quality**: ruff, black, isort, pre-commit
+
+**Testing Dependencies (`test`):**
+
+- **Testing framework**: pytest, pytest-asyncio, pytest-cov, pytest-mock
+- **Performance testing**: pytest-benchmark, pytest-xdist
+- **Web testing**: playwright, pytest-playwright, axe-playwright-python
+- **HTTP testing**: httpx, respx
+
+**Documentation Dependencies (`docs`):**
+
+- **Documentation**: mkdocs, mkdocs-material, mkdocstrings
+- **Documentation plugins**: mkdocs-gen-files, mkdocs-literate-nav
+
+**Build Dependencies (`build`):**
+
+- **Build tools**: build, twine, hatchling
 
 ## Verification
 
@@ -109,7 +141,21 @@ githound --help
 cd /path/to/your/git/repo
 
 # Run a simple search
-githound search "function" .
+githound search --repo-path . --content "function"
+```
+
+### 4. Verify Dependencies
+
+```bash
+# Check core dependencies
+python -c "import githound; print('GitHound:', githound.__version__)"
+python -c "import git; print('GitPython:', git.__version__)"
+python -c "import fastapi; print('FastAPI:', fastapi.__version__)"
+python -c "import fastmcp; print('FastMCP:', fastmcp.__version__)"
+
+# Check optional dependencies (if installed)
+python -c "import redis; print('Redis:', redis.__version__)" 2>/dev/null || echo "Redis not available"
+python -c "import pandas; print('Pandas:', pandas.__version__)" 2>/dev/null || echo "Pandas not available"
 ```
 
 ## Optional Dependencies
@@ -194,7 +240,7 @@ mcp:
 
 #### 1. Python Version Error
 
-```
+```text
 Error: GitHound requires Python 3.11 or higher
 ```
 
@@ -202,7 +248,7 @@ Error: GitHound requires Python 3.11 or higher
 
 #### 2. Git Not Found
 
-```
+```text
 Error: Git command not found
 ```
 
@@ -210,7 +256,7 @@ Error: Git command not found
 
 #### 3. Permission Errors
 
-```
+```text
 Error: Permission denied when installing
 ```
 
@@ -222,7 +268,7 @@ pip install --user githound
 
 #### 4. Import Errors
 
-```
+```text
 ImportError: No module named 'githound'
 ```
 
@@ -233,7 +279,7 @@ ImportError: No module named 'githound'
 If you encounter issues:
 
 1. **Check the logs**: Run with `--verbose` flag for detailed output
-2. **Search existing issues**: Check [GitHub Issues](https://github.com/your-org/githound/issues)
+2. **Search existing issues**: Check [GitHub Issues](https://github.com/AstroAir/GitHound/issues)
 3. **Create a new issue**: Provide system info, error messages, and steps to reproduce
 
 ### System Information
@@ -280,3 +326,33 @@ rm -rf ~/.githound
 # Remove cache files (if using default location)
 rm -rf ~/.cache/githound
 ```
+
+## 🚀 Next Steps
+
+Now that GitHound is installed, here's what to do next:
+
+### Quick Start
+
+- **[Quick Start Guide](quick-start.md)** - Get up and running in 5 minutes
+- **[Configuration Guide](configuration.md)** - Set up GitHound for your environment
+
+### Learn GitHound
+
+- **[CLI Usage](../user-guide/cli-usage.md)** - Master the command-line interface
+- **[Search Capabilities](../user-guide/search-capabilities.md)** - Explore advanced search features
+- **[Web Interface](../user-guide/web-interface.md)** - Use the web-based interface
+
+### Integration Options
+
+- **[MCP Server Setup](../mcp-server/setup.md)** - Set up AI integration
+- **[Python API](../api-reference/python-api.md)** - Use GitHound in your Python projects
+- **[REST API](../api-reference/rest-api.md)** - Integrate with other applications
+
+### Need Help
+
+- **[Troubleshooting Guide](../troubleshooting/README.md)** - Solve common issues
+- **[FAQ](../troubleshooting/faq.md)** - Frequently asked questions
+
+---
+
+**📚 [Back to Documentation Home](../index.md)** | **➡️ [Continue to Quick Start](quick-start.md)**

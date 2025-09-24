@@ -92,13 +92,27 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ### Environment Variables
 
-Key environment variables (see `.env.example` for complete list):
+Key environment variables for Docker deployment (see `.env.example` for complete list and [Environment Variables Reference](../docs/configuration/environment-variables.md) for comprehensive documentation):
 
+**Core Configuration:**
 - `GITHOUND_ENV`: Environment (development/staging/production)
-- `GITHOUND_LOG_LEVEL`: Logging level (debug/info/warning/error)
+- `GITHOUND_LOG_LEVEL`: Logging level (DEBUG/INFO/WARNING/ERROR)
+- `GITHOUND_WEB_PORT`: Web API port (default: 8000)
+- `FASTMCP_SERVER_PORT`: MCP server port (default: 3000)
+
+**Security:**
+- `SECRET_KEY`: Application secret key (required in production)
+- `JWT_SECRET_KEY`: JWT signing key (required for authentication)
+
+**Data Storage:**
 - `REDIS_URL`: Redis connection string
-- `SECRET_KEY`: Application secret key
-- `JWT_SECRET_KEY`: JWT signing key
+- `GITHOUND_DATA_DIR`: Application data directory
+- `GITHOUND_CACHE_DIR`: Cache directory
+
+**Authentication (optional):**
+- `FASTMCP_SERVER_ENABLE_AUTH`: Enable MCP server authentication
+- `FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID`: GitHub OAuth client ID
+- `FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET`: GitHub OAuth client secret
 
 ### Volume Mounts
 
@@ -319,6 +333,35 @@ chmod +x scripts/docker-deploy.sh
 0 2 * * * /path/to/GitHound/scripts/docker-deploy.sh -e production update
 ```
 
+## Current Features and Capabilities
+
+### MCP Server Integration
+- FastMCP 2.0 server with 25+ tools for Git repository analysis
+- Support for stdio, HTTP, and SSE transports
+- Authentication and authorization providers (GitHub OAuth, JWT, Permit.io, Eunomia)
+- Rate limiting and audit logging
+- Real-time streaming capabilities
+
+### Web API Features
+- Comprehensive REST API with OpenAPI documentation
+- WebSocket support for real-time operations
+- JWT-based authentication
+- Redis-backed rate limiting
+- Export capabilities (JSON, YAML, CSV, XML, Excel)
+
+### Search Engine
+- Multi-modal search capabilities (content, commit messages, file paths, authors)
+- Advanced pattern detection and fuzzy search
+- Parallel processing with configurable worker pools
+- Intelligent result ranking and caching
+
+### Security Features
+- Role-based access control
+- Audit logging for all operations
+- Secure container configuration with read-only filesystems
+- Network isolation and resource limits
+- Security headers and CORS configuration
+
 ## Support
 
 For issues and questions:
@@ -327,3 +370,4 @@ For issues and questions:
 - Open an issue on GitHub
 - Check the main GitHound documentation
 - Use the deployment scripts for common operations
+- Review the [Environment Variables Reference](../docs/configuration/environment-variables.md) for configuration options

@@ -18,7 +18,7 @@ const ensureDirectories = () => {
     'test-results/html-report',
     'test-results/artifacts'
   ];
-  
+
   dirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -30,7 +30,7 @@ const ensureDirectories = () => {
 const testReportingConfig = {
   // Base configuration
   outputDir: process.env.TEST_OUTPUT_DIR || 'test-results',
-  
+
   // Screenshot configuration
   screenshots: {
     enabled: process.env.TAKE_SCREENSHOTS !== 'false',
@@ -47,7 +47,7 @@ const testReportingConfig = {
       jpeg: { quality: 90 }
     }
   },
-  
+
   // Video recording configuration
   videos: {
     enabled: process.env.RECORD_VIDEO !== 'false',
@@ -59,7 +59,7 @@ const testReportingConfig = {
     format: 'webm', // webm, mp4
     quality: 'medium' // low, medium, high
   },
-  
+
   // Trace configuration
   traces: {
     enabled: process.env.RECORD_TRACE !== 'false',
@@ -70,7 +70,7 @@ const testReportingConfig = {
     outputDir: 'test-results/traces',
     naming: '{testName}-{projectName}-{timestamp}'
   },
-  
+
   // Coverage configuration
   coverage: {
     enabled: process.env.COLLECT_COVERAGE === 'true',
@@ -89,7 +89,7 @@ const testReportingConfig = {
       '**/*.spec.*'
     ]
   },
-  
+
   // HTML report configuration
   htmlReport: {
     enabled: true,
@@ -100,7 +100,7 @@ const testReportingConfig = {
     attachmentsBaseURL: process.env.HTML_REPORT_ATTACHMENTS_BASE_URL,
     theme: 'light' // light, dark
   },
-  
+
   // JUnit XML report configuration
   junitReport: {
     enabled: true,
@@ -109,14 +109,14 @@ const testReportingConfig = {
     mergeReports: true,
     stripANSIControlSequences: true
   },
-  
+
   // JSON report configuration
   jsonReport: {
     enabled: true,
     outputFile: 'test-results/test-results.json',
     includeAttachments: true
   },
-  
+
   // Custom reporter configuration
   customReport: {
     enabled: true,
@@ -127,13 +127,13 @@ const testReportingConfig = {
     generateSummary: true,
     generateArtifactsHtml: true
   },
-  
+
   // Blob report configuration (for merging reports)
   blobReport: {
     enabled: process.env.CI === 'true',
     outputDir: 'test-results/blob-report'
   },
-  
+
   // Artifact retention
   retention: {
     days: parseInt(process.env.ARTIFACT_RETENTION_DAYS) || 30,
@@ -141,7 +141,7 @@ const testReportingConfig = {
     cleanupOnSuccess: process.env.CLEANUP_ON_SUCCESS === 'true',
     preserveFailures: true
   },
-  
+
   // Performance monitoring
   performance: {
     enabled: true,
@@ -154,7 +154,7 @@ const testReportingConfig = {
       TTFB: 600  // Time to First Byte (ms)
     }
   },
-  
+
   // Accessibility reporting
   accessibility: {
     enabled: true,
@@ -164,7 +164,7 @@ const testReportingConfig = {
     includeIncomplete: true,
     includePasses: false
   },
-  
+
   // Visual regression configuration
   visualRegression: {
     enabled: true,
@@ -176,7 +176,7 @@ const testReportingConfig = {
     fullPage: true,
     omitBackground: false
   },
-  
+
   // Notification configuration
   notifications: {
     enabled: process.env.ENABLE_NOTIFICATIONS === 'true',
@@ -203,21 +203,21 @@ const reportingHelpers = {
       .replace('{timestamp}', timestamp)
       .replace('{browser}', context.browser || 'unknown');
   },
-  
+
   // Clean up old artifacts based on retention policy
   cleanupArtifacts: async () => {
     const { retention } = testReportingConfig;
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - retention.days);
-    
+
     const cleanupDir = async (dirPath) => {
       if (!fs.existsSync(dirPath)) return;
-      
+
       const files = fs.readdirSync(dirPath);
       for (const file of files) {
         const filePath = path.join(dirPath, file);
         const stats = fs.statSync(filePath);
-        
+
         if (stats.mtime < cutoffDate) {
           if (stats.isDirectory()) {
             fs.rmSync(filePath, { recursive: true, force: true });
@@ -227,35 +227,35 @@ const reportingHelpers = {
         }
       }
     };
-    
+
     // Clean up various artifact directories
     await cleanupDir(testReportingConfig.screenshots.outputDir);
     await cleanupDir(testReportingConfig.videos.outputDir);
     await cleanupDir(testReportingConfig.traces.outputDir);
   },
-  
+
   // Calculate total artifact size
   calculateArtifactSize: () => {
     const calculateDirSize = (dirPath) => {
       if (!fs.existsSync(dirPath)) return 0;
-      
+
       let totalSize = 0;
       const files = fs.readdirSync(dirPath);
-      
+
       for (const file of files) {
         const filePath = path.join(dirPath, file);
         const stats = fs.statSync(filePath);
-        
+
         if (stats.isDirectory()) {
           totalSize += calculateDirSize(filePath);
         } else {
           totalSize += stats.size;
         }
       }
-      
+
       return totalSize;
     };
-    
+
     const totalBytes = calculateDirSize(testReportingConfig.outputDir);
     return {
       bytes: totalBytes,
@@ -263,7 +263,7 @@ const reportingHelpers = {
       gb: (totalBytes / (1024 * 1024 * 1024)).toFixed(2)
     };
   },
-  
+
   // Generate artifact summary
   generateArtifactSummary: () => {
     const summary = {
@@ -276,45 +276,45 @@ const reportingHelpers = {
         reports: 0
       }
     };
-    
+
     // Count files in each category
     const countFiles = (dirPath) => {
       if (!fs.existsSync(dirPath)) return 0;
       return fs.readdirSync(dirPath).length;
     };
-    
+
     summary.files.screenshots = countFiles(testReportingConfig.screenshots.outputDir);
     summary.files.videos = countFiles(testReportingConfig.videos.outputDir);
     summary.files.traces = countFiles(testReportingConfig.traces.outputDir);
     summary.files.reports = countFiles(testReportingConfig.htmlReport.outputDir);
-    
+
     return summary;
   },
-  
+
   // Send notification
   sendNotification: async (message, type = 'info') => {
     const { notifications } = testReportingConfig;
-    
+
     if (!notifications.enabled) return;
-    
+
     const payload = {
       message,
       type,
       timestamp: new Date().toISOString(),
       project: 'GitHound Web Frontend Tests'
     };
-    
+
     // Send to configured channels
     if (notifications.channels.slack) {
       // Implement Slack notification
       console.log('Slack notification:', payload);
     }
-    
+
     if (notifications.channels.teams) {
       // Implement Teams notification
       console.log('Teams notification:', payload);
     }
-    
+
     if (notifications.channels.email) {
       // Implement email notification
       console.log('Email notification:', payload);

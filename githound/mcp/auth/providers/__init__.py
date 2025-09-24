@@ -12,6 +12,7 @@ from .oauth_proxy import OAuthProxy
 # Optional authorization providers
 try:
     from .eunomia import EunomiaAuthorizationProvider
+
     EUNOMIA_AVAILABLE = True
 except ImportError:
     EunomiaAuthorizationProvider = None  # type: ignore[misc,assignment]
@@ -19,6 +20,7 @@ except ImportError:
 
 try:
     from .permit import PermitAuthorizationProvider
+
     PERMIT_AVAILABLE = True
 except ImportError:
     PermitAuthorizationProvider = None  # type: ignore[misc,assignment]

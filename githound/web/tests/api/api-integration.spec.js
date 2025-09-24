@@ -24,7 +24,7 @@ test.describe('API Integration Tests', () => {
 
     await loginPage.register(testUser);
     await loginPage.login(testUser.username, testUser.password);
-    
+
     // Get auth token for direct API calls
     authToken = await page.evaluate(() => localStorage.getItem('access_token'));
   });
@@ -46,7 +46,7 @@ test.describe('API Integration Tests', () => {
           },
           body: JSON.stringify(userData)
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -87,7 +87,7 @@ test.describe('API Integration Tests', () => {
             password: credentials.password
           })
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -111,7 +111,7 @@ test.describe('API Integration Tests', () => {
             password: 'wrong_password'
           })
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -148,7 +148,7 @@ test.describe('API Integration Tests', () => {
       }
 
       const responses = await Promise.all(requests);
-      
+
       // Should have some rate limited responses (429)
       const rateLimitedCount = responses.filter(status => status === 429).length;
       expect(rateLimitedCount).toBeGreaterThan(0);
@@ -163,7 +163,7 @@ test.describe('API Integration Tests', () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -195,7 +195,7 @@ test.describe('API Integration Tests', () => {
           },
           body: JSON.stringify(request)
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -223,7 +223,7 @@ test.describe('API Integration Tests', () => {
           },
           body: JSON.stringify(request)
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -265,7 +265,7 @@ test.describe('API Integration Tests', () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -311,7 +311,7 @@ test.describe('API Integration Tests', () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         return {
           status: response.status,
           data: await response.json()
@@ -341,7 +341,7 @@ test.describe('API Integration Tests', () => {
           },
           body: JSON.stringify(request)
         });
-        
+
         return {
           status: response.status,
           data: await response.json()

@@ -4,20 +4,20 @@ from datetime import datetime
 from pathlib import Path
 
 from githound.models import (
-    SearchType,
-    OutputFormat,
-    SearchQuery,
-    SearchResult,
-    SearchMetrics,
-    SearchConfig,
-    FileChangeInfo,
-    CommitInfo,
+    BlameLineInfo,
     BranchInfo,
-    TagInfo,
+    CommitInfo,
+    FileBlameInfo,
+    FileChangeInfo,
+    OutputFormat,
     RemoteInfo,
     RepositoryInfo,
-    BlameLineInfo,
-    FileBlameInfo,
+    SearchConfig,
+    SearchMetrics,
+    SearchQuery,
+    SearchResult,
+    SearchType,
+    TagInfo,
 )
 
 
@@ -52,10 +52,7 @@ class TestSearchQuery:
     def test_search_query_creation(self) -> None:
         """Test creating a SearchQuery with basic parameters."""
         query = SearchQuery(
-            content_pattern="test",
-            author_pattern="john",
-            case_sensitive=True,
-            fuzzy_search=False
+            content_pattern="test", author_pattern="john", case_sensitive=True, fuzzy_search=False
         )
 
         assert query.content_pattern == "test"
@@ -82,10 +79,7 @@ class TestSearchQuery:
         date_from = datetime(2023, 1, 1)
         date_to = datetime(2023, 12, 31)
 
-        query = SearchQuery(
-            date_from=date_from,
-            date_to=date_to
-        )
+        query = SearchQuery(date_from=date_from, date_to=date_to)
 
         assert query.date_from == date_from
         assert query.date_to == date_to
@@ -102,7 +96,7 @@ class TestSearchResult:
             line_number=10,
             matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
-            relevance_score=0.95
+            relevance_score=0.95,
         )
 
         assert result.commit_hash == "abc123"
@@ -126,7 +120,7 @@ class TestSearchResult:
             committer_email="john@example.com",  # Added required field
             message="Test commit",
             date=datetime.now(),
-            files_changed=1  # Added required field
+            files_changed=1,  # Added required field
         )
 
         result = SearchResult(
@@ -135,7 +129,7 @@ class TestSearchResult:
             line_number=10,
             matching_line="def test() -> None:",  # Fixed: line_content -> matching_line
             search_type=SearchType.CONTENT,  # Fixed: match_type -> search_type
-            commit_info=commit_info
+            commit_info=commit_info,
         )
 
         assert result.commit_info == commit_info
@@ -151,7 +145,7 @@ class TestSearchMetrics:
             total_commits_searched=100,
             total_files_searched=500,
             total_results_found=25,  # Fixed: matches_found -> total_results_found
-            search_duration_ms=1500.0
+            search_duration_ms=1500.0,
         )
 
         assert metrics.total_commits_searched == 100
@@ -176,11 +170,7 @@ class TestSearchConfig:
 
     def test_search_config_creation(self) -> None:
         """Test creating SearchConfig."""
-        config = SearchConfig(
-            case_sensitive=True,
-            max_results=100,
-            timeout_seconds=30
-        )
+        config = SearchConfig(case_sensitive=True, max_results=100, timeout_seconds=30)
 
         assert config.case_sensitive is True  # [attr-defined]
         assert config.max_results == 100  # [attr-defined]
@@ -203,10 +193,7 @@ class TestFileChangeInfo:
     def test_file_change_info_creation(self) -> None:
         """Test creating FileChangeInfo."""
         change = FileChangeInfo(
-            file_path="test.py",
-            change_type="modified",
-            lines_added=10,
-            lines_deleted=5
+            file_path="test.py", change_type="modified", lines_added=10, lines_deleted=5
         )
 
         assert change.file_path == "test.py"
@@ -230,7 +217,7 @@ class TestCommitInfo:
             committer_email="john@example.com",  # Added required field
             message="Fix bug in search",
             date=commit_date,
-            files_changed=3  # Added required field
+            files_changed=3,  # Added required field
         )
 
         assert commit.hash == "abc123def456"
@@ -252,7 +239,7 @@ class TestRepositoryInfo:
             is_bare=False,
             head_commit="abc123",
             active_branch="main",
-            total_commits=100
+            total_commits=100,
         )
 
         assert repo.path == "/path/to/repo"
@@ -276,7 +263,7 @@ class TestBlameLineInfo:
             author_name="John Doe",
             author_email="john@example.com",
             commit_date=blame_date,  # Fixed: date -> commit_date
-            commit_message="Test commit"  # Added required field
+            commit_message="Test commit",  # Added required field
         )
 
         assert blame_line.line_number == 10
@@ -299,14 +286,14 @@ class TestFileBlameInfo:
             author_name="John Doe",
             author_email="john@example.com",
             commit_date=datetime.now(),  # Fixed: date -> commit_date
-            commit_message="Test commit"  # Added required field
+            commit_message="Test commit",  # Added required field
         )
 
         file_blame = FileBlameInfo(
             file_path="test.py",
             total_lines=100,
             blame_lines=[blame_line],
-            contributors=["John Doe"]
+            contributors=["John Doe"],
         )
 
         assert file_blame.file_path == "test.py"

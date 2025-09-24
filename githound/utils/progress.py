@@ -53,8 +53,7 @@ class CancellationToken:
     def check_cancelled(self) -> None:
         """Raise an exception if cancellation has been requested."""
         if self.is_cancelled:
-            raise OperationCancelledException(
-                self.reason or "Operation cancelled")
+            raise OperationCancelledException(self.reason or "Operation cancelled")
 
 
 class OperationCancelledException(Exception):
@@ -117,8 +116,7 @@ class ProgressManager:
     def add_task(self, name: str, description: str, total: int | None = None) -> str:
         """Add a new progress task."""
         if not self._progress:
-            raise RuntimeError(
-                "ProgressManager not initialized. Use within 'with' statement.")
+            raise RuntimeError("ProgressManager not initialized. Use within 'with' statement.")
 
         task_id = self._progress.add_task(description, total=total or 100)
         self._tasks[name] = task_id
@@ -203,8 +201,7 @@ class ProgressManager:
             if task_name in self._tasks:
                 total = self._stats[task_name]["total"]
                 completed = int(progress * total)
-                self.update_task(task_name, completed=completed,
-                                 description=description)
+                self.update_task(task_name, completed=completed, description=description)
 
         return callback
 
@@ -214,8 +211,7 @@ class ProgressManager:
             return
 
         # Create summary table
-        table = Table(title="Search Summary", show_header=True,
-                      header_style="bold magenta")
+        table = Table(title="Search Summary", show_header=True, header_style="bold magenta")
         table.add_column("Task", style="cyan")
         table.add_column("Status", style="green")
         table.add_column("Progress", style="yellow")
@@ -223,8 +219,7 @@ class ProgressManager:
 
         for name, stats in self._stats.items():
             task_elapsed = time.time() - stats["started"]
-            progress_pct = (stats["completed"] / stats["total"]
-                            ) * 100 if stats["total"] > 0 else 0
+            progress_pct = (stats["completed"] / stats["total"]) * 100 if stats["total"] > 0 else 0
 
             status = (
                 "❌ Error"
@@ -254,8 +249,7 @@ class ProgressManager:
         elif had_error:
             self.console.print("\n[red]Operation completed with errors.[/red]")
         else:
-            self.console.print(
-                "\n[green]Operation completed successfully![/green]")
+            self.console.print("\n[green]Operation completed successfully![/green]")
 
 
 class SimpleProgressReporter:
@@ -278,8 +272,7 @@ class SimpleProgressReporter:
 
         if progress is not None:
             progress_pct = progress * 100
-            self.console.print(
-                f"[cyan]{message}[/cyan] [yellow]({progress_pct:.1f}%)[/yellow]")
+            self.console.print(f"[cyan]{message}[/cyan] [yellow]({progress_pct:.1f}%)[/yellow]")
         else:
             self.console.print(f"[cyan]{message}[/cyan]")
 

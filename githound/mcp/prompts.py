@@ -2,9 +2,7 @@
 
 
 def investigate_bug(
-    bug_description: str,
-    suspected_files: str = "",
-    time_frame: str = "last 30 days"
+    bug_description: str, suspected_files: str = "", time_frame: str = "last 30 days"
 ) -> str:
     """
     Generate a prompt for investigating a bug using GitHound's analysis capabilities.
@@ -70,11 +68,7 @@ advanced_search:
 """
 
 
-def prepare_code_review(
-    branch_name: str,
-    base_branch: str = "main",
-    focus_areas: str = ""
-) -> str:
+def prepare_code_review(branch_name: str, base_branch: str = "main", focus_areas: str = "") -> str:
     """
     Generate a prompt for preparing a comprehensive code review.
 
@@ -146,9 +140,7 @@ For each modified file:
 
 
 def analyze_performance_regression(
-    performance_issue: str,
-    suspected_timeframe: str = "last 2 weeks",
-    affected_components: str = ""
+    performance_issue: str, suspected_timeframe: str = "last 2 weeks", affected_components: str = ""
 ) -> str:
     """
     Generate a prompt for analyzing performance regressions.

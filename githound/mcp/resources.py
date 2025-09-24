@@ -172,21 +172,20 @@ async def get_repository_summary(repo_path: str, ctx: Context) -> str:
         ]
 
         # Add recent commits if available
-        if metadata.get('recent_commits'):
-            for commit in metadata['recent_commits'][:5]:  # Show last 5 commits
-                summary_lines.append(
-                    f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
+        if metadata.get("recent_commits"):
+            for commit in metadata["recent_commits"][:5]:  # Show last 5 commits
+                summary_lines.append(f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
 
         # Add top contributors
-        if metadata.get('contributors'):
-            summary_lines.extend([
-                "",
-                "Top Contributors:",
-            ])
+        if metadata.get("contributors"):
+            summary_lines.extend(
+                [
+                    "",
+                    "Top Contributors:",
+                ]
+            )
             sorted_contributors = sorted(
-                metadata['contributors'].items(),
-                key=lambda x: x[1]['commits'],
-                reverse=True
+                metadata["contributors"].items(), key=lambda x: x[1]["commits"], reverse=True
             )
             # Show top 5 contributors
             for name, stats in sorted_contributors[:5]:
@@ -210,8 +209,7 @@ async def get_file_history_resource(repo_path: str, file_path: str, ctx: Context
         await ctx.info(f"Retrieving file history for {file_path} in {repo_path}")
 
         repo = get_repository(Path(repo_path))
-        history = get_file_history(
-            repo=repo, file_path=file_path, max_count=50)
+        history = get_file_history(repo=repo, file_path=file_path, max_count=50)
 
         history_lines = [
             f"# File History: {file_path}",
@@ -222,13 +220,15 @@ async def get_file_history_resource(repo_path: str, file_path: str, ctx: Context
         ]
 
         for i, commit_info in enumerate(history, 1):
-            history_lines.extend([
-                f"#### {i}. Commit {commit_info['hash'][:8]}",
-                f"- **Author**: {commit_info['author_name']} <{commit_info['author_email']}>",
-                f"- **Date**: {commit_info['date']}",
-                f"- **Message**: {commit_info['message'][:100]}{'...' if len(commit_info['message']) > 100 else ''}",
-                "",
-            ])
+            history_lines.extend(
+                [
+                    f"#### {i}. Commit {commit_info['hash'][:8]}",
+                    f"- **Author**: {commit_info['author_name']} <{commit_info['author_email']}>",
+                    f"- **Date**: {commit_info['date']}",
+                    f"- **Message**: {commit_info['message'][:100]}{'...' if len(commit_info['message']) > 100 else ''}",
+                    "",
+                ]
+            )
 
         return "\n".join(history_lines)
 
@@ -275,10 +275,12 @@ async def get_commit_details_resource(repo_path: str, commit_hash: str, ctx: Con
         else:
             details_lines.append("- (Initial commit)")
 
-        details_lines.extend([
-            "",
-            f"Generated at: {datetime.now().isoformat()}",
-        ])
+        details_lines.extend(
+            [
+                "",
+                f"Generated at: {datetime.now().isoformat()}",
+            ]
+        )
 
         return "\n".join(details_lines)
 
@@ -315,11 +317,13 @@ async def get_file_blame_resource(repo_path: str, file_path: str, ctx: Context) 
         for contributor in blame_result.contributors:
             blame_lines.append(f"- {contributor}")
 
-        blame_lines.extend([
-            "",
-            "### Line-by-Line Blame (First 50 lines)",
-            "",
-        ])
+        blame_lines.extend(
+            [
+                "",
+                "### Line-by-Line Blame (First 50 lines)",
+                "",
+            ]
+        )
 
         # Show first 50 lines of blame info
         for line in blame_result.blame_info[:50]:
@@ -329,13 +333,14 @@ async def get_file_blame_resource(repo_path: str, file_path: str, ctx: Context) 
 
         if len(blame_result.blame_info) > 50:
             newline = "\n"
-            blame_lines.append(
-                f"{newline}... and {len(blame_result.blame_info) - 50} more lines")
+            blame_lines.append(f"{newline}... and {len(blame_result.blame_info) - 50} more lines")
 
-        blame_lines.extend([
-            "",
-            f"Generated at: {datetime.now().isoformat()}",
-        ])
+        blame_lines.extend(
+            [
+                "",
+                f"Generated at: {datetime.now().isoformat()}",
+            ]
+        )
 
         return "\n".join(blame_lines)
 

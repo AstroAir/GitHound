@@ -44,13 +44,13 @@ logger = logging.getLogger(__name__)
 
 class JSONOutputDemo:
     """Demonstration of JSON output formats and capabilities."""
-    
+
     def __init__(self, repo_path: str) -> None:
         """Initialize with repository path."""
         self.repo_path = Path(repo_path)
         self.repo = None
         self.export_manager = ExportManager()
-    
+
     def load_repository(self) -> bool:
         """Load the repository."""
         try:
@@ -60,18 +60,18 @@ class JSONOutputDemo:
         except Exception as e:
             logger.error(f"✗ Failed to load repository: {e}")
             return False
-    
+
     def demonstrate_repository_metadata_json(self) -> Dict[str, Any]:
         """Demonstrate repository metadata in JSON format."""
         logger.info("\n=== Repository Metadata JSON ===")
-        
+
         if not self.repo:
             return {"error": "Repository not loaded"}
-        
+
         try:
             # Get repository metadata
             metadata = get_repository_metadata(self.repo)
-            
+
             # Create structured JSON output
             json_output = {
                 "schema_version": "1.0",
@@ -82,45 +82,45 @@ class JSONOutputDemo:
                     "metadata": metadata
                 }
             }
-            
+
             # Pretty print JSON
             pretty_json = json.dumps(json_output, indent=2, default=str)
             logger.info("Repository metadata JSON structure:")
             print(pretty_json[:500] + "..." if len(pretty_json) > 500 else pretty_json)
-            
+
             # Save to file
             output_file = self.repo_path.name + "_metadata.json"
             with open(output_file, 'w') as f:
                 json.dump(json_output, f, indent=2, default=str)
-            
+
             logger.info(f"✓ Repository metadata saved to: {output_file}")
-            
+
             # Demonstrate compact JSON
             compact_json = json.dumps(json_output, separators=(',', ':'), default=str)
             logger.info(f"Compact JSON size: {len(compact_json)} characters")
             logger.info(f"Pretty JSON size: {len(pretty_json)} characters")
             logger.info(f"Size difference: {len(pretty_json) - len(compact_json)} characters")
-            
+
             return json_output
-            
+
         except Exception as e:
             logger.error(f"✗ Repository metadata JSON generation failed: {e}")
             return {"error": str(e)}
-    
+
     def demonstrate_commit_history_json(self, max_commits: int = 20) -> Dict[str, Any]:
         """Demonstrate commit history in JSON format."""
         logger.info(f"\n=== Commit History JSON (last {max_commits} commits) ===")
-        
+
         if not self.repo:
             return {"error": "Repository not loaded"}
-        
+
         try:
             # Get commit history
             commits = get_commits_with_filters(
                 repo=self.repo,
                 max_count=max_commits
             )
-            
+
             commit_list: list[Any] = []
             for commit in commits:
                 try:
@@ -130,7 +130,7 @@ class JSONOutputDemo:
                 except Exception as e:
                     logger.warning(f"Failed to process commit {commit.hexsha[:8]}: {e}")
                     continue
-            
+
             # Create structured JSON output
             json_output = {
                 "schema_version": "1.0",
@@ -156,57 +156,57 @@ class JSONOutputDemo:
                     }
                 }
             }
-            
+
             # Save to file with different formatting options
             base_name = self.repo_path.name + "_commits"
-            
+
             # Pretty formatted JSON
             pretty_file = base_name + "_pretty.json"
             with open(pretty_file, 'w') as f:
                 json.dump(json_output, f, indent=2, default=str, ensure_ascii=False)
-            
+
             # Compact JSON
             compact_file = base_name + "_compact.json"
             with open(compact_file, 'w') as f:
                 json.dump(json_output, f, separators=(',', ':'), default=str, ensure_ascii=False)
-            
+
             # Sorted keys JSON (for consistency)
             sorted_file = base_name + "_sorted.json"
             with open(sorted_file, 'w') as f:
                 json.dump(json_output, f, indent=2, sort_keys=True, default=str, ensure_ascii=False)
-            
+
             logger.info(f"✓ Commit history saved in multiple formats:")
             logger.info(f"  Pretty formatted: {pretty_file}")
             logger.info(f"  Compact format: {compact_file}")
             logger.info(f"  Sorted keys: {sorted_file}")
-            
+
             # File size comparison
             pretty_size = Path(pretty_file).stat().st_size
             compact_size = Path(compact_file).stat().st_size
             sorted_size = Path(sorted_file).stat().st_size
-            
+
             logger.info(f"File sizes:")
             logger.info(f"  Pretty: {pretty_size:,} bytes")
             logger.info(f"  Compact: {compact_size:,} bytes ({compact_size/pretty_size:.1%} of pretty)")
             logger.info(f"  Sorted: {sorted_size:,} bytes")
-            
+
             return json_output
-            
+
         except Exception as e:
             logger.error(f"✗ Commit history JSON generation failed: {e}")
             return {"error": str(e)}
-    
+
     def demonstrate_author_statistics_json(self) -> Dict[str, Any]:
         """Demonstrate author statistics in JSON format."""
         logger.info("\n=== Author Statistics JSON ===")
-        
+
         if not self.repo:
             return {"error": "Repository not loaded"}
-        
+
         try:
             # Get author statistics
             author_stats = get_author_statistics(self.repo)
-            
+
             # Transform data for better JSON structure
             authors_list: list[Any] = []
             for author_name, stats in author_stats.items():
@@ -222,21 +222,21 @@ class JSONOutputDemo:
                         "last_commit": stats.get('last_commit', None)
                     }
                 }
-                
+
                 # Calculate additional metrics
                 total_lines = author_data["statistics"]["lines_added"] + author_data["statistics"]["lines_deleted"]
                 author_data["statistics"]["total_lines_changed"] = total_lines
-                
+
                 if author_data["statistics"]["total_commits"] > 0:
                     author_data["statistics"]["avg_lines_per_commit"] = round(
                         total_lines / author_data["statistics"]["total_commits"], 2
                     )
-                
+
                 authors_list.append(author_data)
-            
+
             # Sort by commit count
             authors_list.sort(key=lambda x: x["statistics"]["total_commits"], reverse=True)
-            
+
             # Create structured JSON output
             json_output = {
                 "schema_version": "1.0",
@@ -275,33 +275,33 @@ class JSONOutputDemo:
                     }
                 }
             }
-            
+
             # Save to file
             output_file = self.repo_path.name + "_authors.json"
             with open(output_file, 'w') as f:
                 json.dump(json_output, f, indent=2, default=str, ensure_ascii=False)
-            
+
             logger.info(f"✓ Author statistics saved to: {output_file}")
             logger.info(f"Total authors: {len(authors_list)}")
-            
+
             if authors_list:
                 top_author = authors_list[0]
                 logger.info(f"Most active author: {top_author['name']} ({top_author['statistics']['total_commits']} commits)")
-            
+
             return json_output
-            
+
         except Exception as e:
             logger.error(f"✗ Author statistics JSON generation failed: {e}")
             return {"error": str(e)}
-    
+
     def demonstrate_custom_json_serialization(self) -> Dict[str, Any]:
         """Demonstrate custom JSON serialization techniques."""
         logger.info("\n=== Custom JSON Serialization ===")
-        
+
         # Custom JSON encoder for special data types
         class GitHoundJSONEncoder(json.JSONEncoder):
             """Custom JSON encoder for GitHound data types."""
-            
+
             def default(self, obj) -> None:
                 if isinstance(obj, datetime):
                     return obj.isoformat()
@@ -312,7 +312,7 @@ class JSONOutputDemo:
                 elif hasattr(obj, '__dict__'):  # Generic objects
                     return obj.__dict__
                 return super().default(obj)
-        
+
         # Example data with various types
         sample_data = {
             "timestamp": datetime.now(),
@@ -336,26 +336,26 @@ class JSONOutputDemo:
                 }
             }
         }
-        
+
         # Serialize with custom encoder
         custom_json = json.dumps(sample_data, cls=GitHoundJSONEncoder, indent=2)
-        
+
         logger.info("Custom JSON serialization example:")
         print(custom_json)
-        
+
         # Save example
         output_file = "custom_serialization_example.json"
         with open(output_file, 'w') as f:
             json.dump(sample_data, f, cls=GitHoundJSONEncoder, indent=2)
-        
+
         logger.info(f"✓ Custom serialization example saved to: {output_file}")
-        
+
         return {"custom_serialization": "completed", "output_file": output_file}
-    
+
     def demonstrate_json_schema_validation(self) -> Dict[str, Any]:
         """Demonstrate JSON schema validation."""
         logger.info("\n=== JSON Schema Validation ===")
-        
+
         # Define a schema for repository metadata
         repository_schema = {
             "$schema": "http://json-schema.org/draft-07/schema#",
@@ -393,15 +393,15 @@ class JSONOutputDemo:
                 }
             }
         }
-        
+
         # Save schema
         schema_file = "githound_repository_schema.json"
         with open(schema_file, 'w') as f:
             json.dump(repository_schema, f, indent=2)
-        
+
         logger.info(f"✓ JSON schema saved to: {schema_file}")
         logger.info("Schema defines structure for repository metadata JSON")
-        
+
         # Example of schema usage documentation
         schema_docs = {
             "schema_info": {
@@ -422,13 +422,13 @@ class JSONOutputDemo:
                 "repository.metadata.contributors": "List of contributor names"
             }
         }
-        
+
         docs_file = "schema_documentation.json"
         with open(docs_file, 'w') as f:
             json.dump(schema_docs, f, indent=2)
-        
+
         logger.info(f"✓ Schema documentation saved to: {docs_file}")
-        
+
         return {
             "schema_file": schema_file,
             "documentation_file": docs_file,
@@ -438,52 +438,52 @@ class JSONOutputDemo:
 
 async def main() -> None:
     """Main demonstration function."""
-    
+
     if len(sys.argv) != 2:
         print("Usage: python json_output.py /path/to/repository")
         sys.exit(1)
-    
+
     repo_path = sys.argv[1]
-    
+
     if not Path(repo_path).exists():
         print(f"Error: Repository path does not exist: {repo_path}")
         sys.exit(1)
-    
+
     print("=" * 70)
     print("GitHound - JSON Output Format Examples")
     print("=" * 70)
     print(f"Repository: {repo_path}")
     print()
-    
+
     demo = JSONOutputDemo(repo_path)
-    
+
     try:
         # Load repository
         if not demo.load_repository():
             sys.exit(1)
-        
+
         # Run all demonstrations
         demo.demonstrate_repository_metadata_json()
         demo.demonstrate_commit_history_json(max_commits=10)
         demo.demonstrate_author_statistics_json()
         demo.demonstrate_custom_json_serialization()
         demo.demonstrate_json_schema_validation()
-        
+
         print("\n" + "=" * 70)
         print("JSON output format demonstration completed!")
         print("=" * 70)
         print("\nGenerated files:")
-        
+
         # List generated files
         for file_path in Path.cwd().glob(f"{Path(repo_path).name}_*.json"):
             print(f"  - {file_path.name}")
-        
+
         for file_path in Path.cwd().glob("*schema*.json"):
             print(f"  - {file_path.name}")
-        
+
         for file_path in Path.cwd().glob("custom_*.json"):
             print(f"  - {file_path.name}")
-        
+
     except Exception as e:
         logger.error(f"JSON output demonstration failed: {e}")
         raise

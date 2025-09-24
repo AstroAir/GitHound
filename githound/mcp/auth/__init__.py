@@ -1,4 +1,29 @@
-"""Authentication module for GitHound MCP server."""
+"""Authentication and authorization module for GitHound MCP server.
+
+This module provides comprehensive OAuth 2.0 and JWT authentication support
+for the GitHound MCP server, following FastMCP authentication patterns.
+
+Key Features:
+    - Multiple authentication providers (JWT, OAuth, GitHub, Google)
+    - Optional authorization providers (Eunomia, Permit.io)
+    - Dynamic client registration support
+    - Rate limiting and security features
+    - Environment-based configuration
+    - Extensible provider architecture
+
+Authentication Providers:
+    - JWTVerifier: Validates JWT tokens from external systems
+    - OAuthProxy: Bridges non-DCR OAuth providers with MCP
+    - GitHubProvider: GitHub OAuth integration
+    - GoogleProvider: Google OAuth integration
+
+Authorization Providers (optional):
+    - EunomiaAuthorizationProvider: Policy-based authorization
+    - PermitAuthorizationProvider: Fine-grained RBAC/ABAC authorization
+
+The module automatically detects available optional dependencies and
+exposes only the providers that can be used in the current environment.
+"""
 
 from .providers import (
     EUNOMIA_AVAILABLE,

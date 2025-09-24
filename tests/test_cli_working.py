@@ -115,7 +115,9 @@ class TestCLIErrorHandling:
 
     def test_search_invalid_repo_path(self, cli_runner):
         """Test search command with invalid repo path."""
-        result = cli_runner.invoke(app, ["search", "--repo-path", "/nonexistent", "--content", "test"])
+        result = cli_runner.invoke(
+            app, ["search", "--repo-path", "/nonexistent", "--content", "test"]
+        )
         assert result.exit_code != 0
 
     def test_analyze_invalid_repo_path(self, cli_runner):
@@ -147,10 +149,10 @@ class TestCLIWithMocking:
         """Test basic search command with mocking."""
         # Create a temporary directory to use as repo path
         with tempfile.TemporaryDirectory() as temp_dir:
-            result = cli_runner.invoke(app, [
-                "search", "--repo-path", temp_dir, "--content", "test"
-            ])
-            
+            result = cli_runner.invoke(
+                app, ["search", "--repo-path", temp_dir, "--content", "test"]
+            )
+
             # The command should attempt to call search_and_print
             # (it may fail due to not being a git repo, but that's expected)
             assert result.exit_code in [0, 1]  # Allow both success and expected failure
@@ -160,15 +162,13 @@ class TestCLIWithMocking:
         """Test basic analyze command with mocking."""
         mock_instance = Mock()
         mock_instance.analyze_repository.return_value = Mock(
-            path="test",
-            name="test-repo",
-            total_commits=1
+            path="test", name="test-repo", total_commits=1
         )
         mock_githound.return_value = mock_instance
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             result = cli_runner.invoke(app, ["analyze", temp_dir])
-            
+
             # Should attempt to create GitHound instance
             assert result.exit_code in [0, 1]
 
@@ -177,7 +177,7 @@ class TestCLIWithMocking:
         """Test basic web command with mocking."""
         with tempfile.TemporaryDirectory() as temp_dir:
             result = cli_runner.invoke(app, ["web", temp_dir])
-            
+
             # Should attempt to start web server
             assert result.exit_code in [0, 1]
 
@@ -186,7 +186,7 @@ class TestCLIWithMocking:
         """Test basic MCP server command with mocking."""
         with tempfile.TemporaryDirectory() as temp_dir:
             result = cli_runner.invoke(app, ["mcp-server", temp_dir])
-            
+
             # Should attempt to start MCP server
             assert result.exit_code in [0, 1]
 
@@ -195,10 +195,10 @@ class TestCLIWithMocking:
         """Test basic quickstart command with mocking."""
         # Mock user selecting exit option
         mock_prompt.return_value = 7
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             result = cli_runner.invoke(app, ["quickstart", temp_dir])
-            
+
             # Should show quickstart interface
             assert result.exit_code in [0, 1]
 

@@ -123,43 +123,176 @@ export_templates:
 
 ## Environment Variables
 
-Configure GitHound using environment variables:
+GitHound supports comprehensive configuration through environment variables across all its components.
 
-```bash
-# Repository settings
-export GITHOUND_DEFAULT_REPO="/path/to/repo"
-export GITHOUND_CACHE_DIR="/custom/cache/path"
+### Core Application Settings
 
-# Search settings
-export GITHOUND_MAX_RESULTS=500
-export GITHOUND_FUZZY_THRESHOLD=0.9
+#### Basic Configuration
 
-# Web server settings
-export GITHOUND_WEB_HOST="0.0.0.0"
-export GITHOUND_WEB_PORT=9000
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHOUND_VERSION` | `0.1.0` | Application version identifier |
+| `GITHOUND_ENV` | `development` | Environment mode (development, production, testing) |
+| `GITHOUND_DEBUG` | `false` | Enable debug mode with verbose logging |
+| `GITHOUND_LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
 
-# MCP server settings
-export GITHOUND_MCP_HOST="0.0.0.0"
-export GITHOUND_MCP_PORT=4000
+#### Data Directories
 
-# Logging settings
-export GITHOUND_LOG_LEVEL="DEBUG"
-export GITHOUND_LOG_FILE="/var/log/githound.log"
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHOUND_DATA_DIR` | `./data` | Base directory for application data |
+| `GITHOUND_LOG_DIR` | `./logs` | Directory for log files |
+| `GITHOUND_CACHE_DIR` | `./cache` | Directory for cache files |
+| `GITHOUND_DEFAULT_REPO` | None | Default repository path for operations |
 
-# Performance settings
-export GITHOUND_MAX_WORKERS=8
-export GITHOUND_TIMEOUT=600
-```
+### Web Server Configuration
 
-## MCP Server Configuration
+#### Server Settings
 
-GitHound provides a comprehensive MCP (Model Context Protocol) server that exposes all repository analysis capabilities through a standardized interface. The MCP server supports multiple configuration methods and is compatible with various AI tools and applications.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHOUND_WEB_HOST` | `localhost` | Host address for web server |
+| `GITHOUND_WEB_PORT` | `8000` | Port for web server |
+| `GITHOUND_WEB_WORKERS` | `1` | Number of web server workers |
+| `GITHOUND_WEB_TIMEOUT` | `30` | Request timeout in seconds |
+
+#### Security Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SECRET_KEY` | None | Secret key for session management (required in production) |
+| `JWT_SECRET_KEY` | None | Secret key for JWT token signing |
+| `JWT_ALGORITHM` | `HS256` | Algorithm for JWT token signing |
+| `JWT_EXPIRATION_HOURS` | `24` | JWT token expiration time in hours |
+
+### MCP Server Configuration
+
+#### FastMCP Server Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FASTMCP_SERVER_NAME` | `GitHound MCP Server` | Display name for the MCP server |
+| `FASTMCP_SERVER_VERSION` | `2.0.0` | MCP server version |
+| `FASTMCP_SERVER_TRANSPORT` | `stdio` | Transport type (stdio, http, sse) |
+| `FASTMCP_SERVER_HOST` | `localhost` | Host for HTTP/SSE transports |
+| `FASTMCP_SERVER_PORT` | `3000` | Port for HTTP/SSE transports |
+| `FASTMCP_SERVER_LOG_LEVEL` | `INFO` | MCP server logging level |
+
+#### Authentication Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FASTMCP_SERVER_ENABLE_AUTH` | `false` | Enable authentication for MCP server |
+| `FASTMCP_SERVER_AUTH` | None | Authentication provider class path |
+| `FASTMCP_SERVER_RATE_LIMIT_ENABLED` | `false` | Enable rate limiting |
+
+#### GitHub Authentication
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID` | None | GitHub OAuth client ID |
+| `FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET` | None | GitHub OAuth client secret |
+| `FASTMCP_SERVER_BASE_URL` | `http://localhost:8000` | Base URL for OAuth callbacks |
+
+#### JWT Authentication
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FASTMCP_SERVER_AUTH_JWT_JWKS_URI` | None | JWKS URI for JWT verification |
+| `FASTMCP_SERVER_AUTH_JWT_ISSUER` | None | Expected JWT issuer |
+| `FASTMCP_SERVER_AUTH_JWT_AUDIENCE` | None | Expected JWT audience |
+| `FASTMCP_SERVER_AUTH_JWT_SECRET_KEY` | None | Secret key for JWT verification |
+
+### Redis Configuration
+
+#### Connection Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL for general use |
+| `REDIS_MCP_URL` | `redis://localhost:6379/1` | Redis connection URL for MCP server |
+| `REDIS_MAX_CONNECTIONS` | `10` | Maximum Redis connections in pool |
+| `REDIS_TIMEOUT` | `30` | Redis operation timeout in seconds |
+
+#### Rate Limiting
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RATE_LIMIT_ENABLED` | `true` | Enable Redis-backed rate limiting |
+| `API_RATE_LIMIT` | `100/minute` | General API rate limit |
+| `SEARCH_RATE_LIMIT` | `10/minute` | Search operation rate limit |
+| `AUTH_RATE_LIMIT` | `5/minute` | Authentication endpoint rate limit |
+| `EXPORT_RATE_LIMIT` | `3/minute` | Export operation rate limit |
+
+### Search Engine Configuration
+
+#### Performance Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHOUND_MAX_RESULTS` | `1000` | Maximum search results to return |
+| `GITHOUND_MAX_WORKERS` | `4` | Maximum worker threads for parallel operations |
+| `GITHOUND_TIMEOUT` | `300` | Default operation timeout in seconds |
+| `GITHOUND_FUZZY_THRESHOLD` | `0.8` | Fuzzy search similarity threshold (0.0-1.0) |
+
+#### Cache Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHOUND_CACHE_BACKEND` | `memory` | Cache backend type (memory, redis) |
+| `GITHOUND_CACHE_TTL` | `3600` | Cache time-to-live in seconds |
+| `GITHOUND_CACHE_MAX_SIZE` | `1000` | Maximum cache entries (memory backend) |
+
+## Authentication Configuration
+
+GitHound supports multiple authentication providers for secure access to the MCP server and web API.
 
 ### Quick Setup
 
-For detailed MCP server setup and configuration, see the **[MCP Server Documentation](../mcp-server/README.md)**.
+Set the authentication provider and its configuration:
 
-### Basic MCP.json Configuration
+```bash
+# Choose your provider
+export FASTMCP_SERVER_AUTH="githound.mcp.auth.providers.github.GitHubProvider"
+
+# Configure the provider
+export FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID="your-client-id"
+export FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET="your-client-secret"
+export FASTMCP_SERVER_BASE_URL="http://localhost:8000"
+
+# Enable authentication
+export FASTMCP_SERVER_ENABLE_AUTH="true"
+```
+
+### OAuth Provider Setup
+
+#### GitHub OAuth App
+
+1. Go to GitHub Settings > Developer settings > OAuth Apps
+2. Click "New OAuth App"
+3. Set Authorization callback URL to: `http://your-server.com/oauth/callback`
+4. Copy Client ID and Client Secret
+5. Configure environment variables
+
+#### Google OAuth
+
+1. Go to Google Cloud Console
+2. Create a new project or select existing
+3. Enable Google+ API
+4. Go to Credentials > Create Credentials > OAuth 2.0 Client IDs
+5. Add authorized redirect URI: `http://your-server.com/oauth/callback`
+6. Copy Client ID and Client Secret
+7. Configure environment variables
+
+### Security Considerations
+
+1. **Environment Variables**: Store sensitive credentials in environment variables, not in code
+2. **HTTPS**: Always use HTTPS in production
+3. **Token Validation**: Properly validate all tokens and check expiration
+4. **Rate Limiting**: Implement rate limiting to prevent abuse
+5. **Logging**: Log authentication events for security monitoring
+
+## MCP.json Configuration
 
 GitHound supports the standard MCP.json configuration format:
 
@@ -185,16 +318,7 @@ GitHound supports the standard MCP.json configuration format:
 - **Cursor**: Save as `~/.cursor/mcp.json`
 - **VS Code**: Save as `.vscode/mcp.json` in your workspace
 
-### Complete Documentation
-
-For comprehensive MCP server documentation, including:
-
-- **Setup and Installation** - [Setup Guide](../mcp-server/setup.md)
-- **Configuration Reference** - [Configuration Guide](../mcp-server/configuration.md)
-- **Available Tools** - [Tools Reference](../mcp-server/tools-reference.md)
-- **Integration Examples** - [Integration Examples](../mcp-server/integration-examples.md)
-
-Visit the **[MCP Server Documentation](../mcp-server/README.md)**.
+For detailed MCP server setup and configuration, see the **[MCP Server Documentation](../mcp-server/README.md)**.
 
 ## Command-line Configuration
 
@@ -356,11 +480,12 @@ mcp:
   # Maximum concurrent connections
   max_connections: 100
 
-  # Authentication required
-  auth_required: false
+  # Authentication configuration (use environment variables)
+  # See Environment Variables Reference for auth setup
+  enable_auth: false
 
-  # API key for authentication
-  api_key: "your-api-key"
+  # Rate limiting
+  rate_limit_enabled: false
 
   # Request timeout in seconds
   request_timeout: 60

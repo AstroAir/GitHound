@@ -12,7 +12,18 @@ import warnings
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+# Import Self for proper context manager typing
+try:
+    from typing import Self  # Python 3.11+
+except ImportError:
+    from typing_extensions import Self
+
+# Platform-specific signal imports for type checking
+if TYPE_CHECKING:
+    import signal
+    from types import FrameType
 
 from git import GitCommandError
 
@@ -25,6 +36,7 @@ from .search_engine import (
     SearchOrchestrator,
     create_search_orchestrator,
 )
+from .utils.export import ExportManager
 
 # Suppress NumPy compatibility warnings for better user experience
 warnings.filterwarnings("ignore", message=".*NumPy.*")
@@ -56,18 +68,19 @@ def timeout_context(seconds: int) -> Generator[None, None, None]:
         try:
             import signal
 
-            def timeout_handler(signum, frame) -> None:
+            def timeout_handler(signum: int, frame: "FrameType | None") -> None:
                 raise TimeoutError("Operation timed out")
 
             old_handler = signal.signal(
-                signal.SIGALRM, timeout_handler)  #
-            signal.alarm(seconds)  #
+                signal.SIGALRM, timeout_handler  # type: ignore[attr-defined]
+            )
+            signal.alarm(seconds)  # type: ignore[attr-defined]
 
             try:
                 yield
             finally:
-                signal.alarm(0)  #
-                signal.signal(signal.SIGALRM, old_handler)  #
+                signal.alarm(0)  # type: ignore[attr-defined]
+                signal.signal(signal.SIGALRM, old_handler)  # type: ignore[attr-defined]
         except (AttributeError, ImportError):
             # Fallback: no timeout
             yield
@@ -86,8 +99,7 @@ def with_timeout(timeout_seconds: int) -> Callable[[Callable[..., T]], Callable[
                 with timeout_context(timeout_seconds):
                     return func(*args, **kwargs)
             except TimeoutError:
-                raise GitCommandError(
-                    f"Operation timed out after {timeout_seconds} seconds")
+                raise GitCommandError(f"Operation timed out after {timeout_seconds} seconds")
 
         return wrapper
 
@@ -129,8 +141,7 @@ def with_retry(
                     raise e
 
             # This should never be reached, but just in case
-            raise last_exception or GitCommandError(
-                "Unknown error in retry logic")
+            raise last_exception or GitCommandError("Unknown error in retry logic")
 
         return wrapper
 
@@ -182,7 +193,7 @@ class GitHound:
         self.timeout = timeout
         self.repo = get_repository(repo_path)
         self._search_orchestrator: SearchOrchestrator | None = None
-        self._export_manager: Any | None = None
+        self._export_manager: ExportManager | None = None
         self._cleanup_callbacks: list[Callable[[], None]] = []
 
     @property
@@ -195,7 +206,7 @@ class GitHound:
         return self._search_orchestrator
 
     @property
-    def export_manager(self) -> Any:
+    def export_manager(self) -> ExportManager:
         """Get or create the export manager."""
         if self._export_manager is None:
             try:
@@ -205,8 +216,7 @@ class GitHound:
 
                 self._export_manager = ExportManager(Console())
             except ImportError as e:
-                raise GitCommandError(
-                    f"Export functionality requires additional dependencies: {e}")
+                raise GitCommandError(f"Export functionality requires additional dependencies: {e}")
         return self._export_manager
 
     def analyze_repository(
@@ -214,12 +224,21 @@ class GitHound:
     ) -> dict[str, Any]:
         """Analyze repository and return comprehensive metadata.
 
+        Performs a comprehensive analysis of the Git repository, extracting
+        metadata, statistics, and structural information. This is typically
+        the first operation performed when working with a repository.
+
         Args:
-            include_detailed_stats: Whether to include detailed statistics.
-            timeout: Timeout in seconds (uses instance default if None).
+            include_detailed_stats: Whether to include detailed statistics such as
+                file type distributions, author activity patterns, and commit
+                frequency analysis. Enabling this provides richer data but may
+                take longer for large repositories.
+            timeout: Timeout in seconds for the analysis operation. If None,
+                uses the instance default timeout. For large repositories,
+                consider increasing this value.
 
         Returns:
-            Dictionary containing repository metadata including:
+            Dictionary containing comprehensive repository metadata including:
             - Basic repository information (path, branches, tags, remotes)
             - Commit statistics (total commits, contributors, date range)
             - Repository health metrics
@@ -251,11 +270,16 @@ class GitHound:
         except Exception as e:
             raise GitCommandError(f"Failed to analyze repository: {str(e)}")
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> Self:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any | None,
+    ) -> None:
         """Context manager exit with cleanup."""
         self.cleanup()
 
@@ -289,10 +313,18 @@ class GitHound:
         max_results: int | None = None,
         enable_progress: bool = False,
     ) -> list[SearchResult]:
-        """Perform advanced multi-modal search.
+        """Perform advanced multi-modal search across the repository.
+
+        Executes a comprehensive search using GitHound's multi-modal search engine,
+        which can search across commits, authors, messages, dates, file paths,
+        file types, and content simultaneously. The search engine automatically
+        selects appropriate searchers based on the query criteria and executes
+        them in parallel for optimal performance.
 
         Args:
-            query: SearchQuery object with search criteria.
+            query: SearchQuery object containing search criteria. Can include
+                patterns for commit hashes, authors, messages, dates, file paths,
+                file types, and content. Supports fuzzy matching and regex patterns.
             branch: Branch to search (defaults to current branch).
             max_results: Maximum number of results to return.
             enable_progress: Whether to enable progress reporting.
@@ -338,14 +370,25 @@ class GitHound:
         return asyncio.run(self.search_advanced(query, branch, max_results, enable_progress))
 
     def analyze_blame(self, file_path: str, commit: str | None = None) -> FileBlameResult:
-        """Analyze file blame information.
+        """Analyze file blame information with line-by-line authorship tracking.
+
+        Performs Git blame analysis on the specified file, providing detailed
+        authorship information for each line including author, commit hash,
+        timestamp, and line content. This is useful for understanding code
+        ownership, tracking changes, and identifying contributors.
 
         Args:
-            file_path: Path to the file relative to repository root.
-            commit: Specific commit to blame (defaults to HEAD).
+            file_path: Path to the file relative to repository root. Must be
+                a valid file that exists in the repository at the specified commit.
+            commit: Specific commit hash to blame. If None, uses HEAD (latest commit).
+                Can be any valid Git reference (commit hash, branch name, tag).
 
         Returns:
-            FileBlameResult with line-by-line authorship information.
+            FileBlameResult containing comprehensive blame information including:
+            - Line-by-line authorship data
+            - Author statistics and contribution metrics
+            - Commit information for each line
+            - File metadata and change history
 
         Raises:
             GitCommandError: If blame analysis fails.
@@ -417,14 +460,11 @@ class GitHound:
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
             if options.format == OutputFormat.JSON:
-                self.export_manager.export_to_json(
-                    data, output_path, options.include_metadata)
+                self.export_manager.export_to_json(data, output_path, options.include_metadata)
             elif options.format == OutputFormat.YAML:
-                self.export_manager.export_to_yaml(
-                    data, output_path, options.include_metadata)
+                self.export_manager.export_to_yaml(data, output_path, options.include_metadata)
             elif options.format == OutputFormat.CSV:
-                self.export_manager.export_to_csv(
-                    data, output_path, options.include_metadata)
+                self.export_manager.export_to_csv(data, output_path, options.include_metadata)
             elif options.format == OutputFormat.XML:
                 # XML export not yet implemented in ExportManager, use JSON as fallback
                 from rich.console import Console
@@ -433,8 +473,7 @@ class GitHound:
                     "[yellow]⚠ XML export not yet implemented. Using JSON format.[/yellow]"
                 )
                 self.export_manager.export_to_json(
-                    data, output_path.with_suffix(
-                        ".json"), options.include_metadata
+                    data, output_path.with_suffix(".json"), options.include_metadata
                 )
             else:
                 self.export_manager.export_to_text(
@@ -484,8 +523,7 @@ class GitHound:
 
             return get_author_statistics(self.repo, branch)
         except Exception as e:
-            raise GitCommandError(
-                f"Author statistics retrieval failed: {str(e)}")
+            raise GitCommandError(f"Author statistics retrieval failed: {str(e)}")
 
 
 # Version information
@@ -495,13 +533,20 @@ except ImportError:
     # Fallback for development installations
     try:
         from importlib.metadata import version
+
         __version__ = version("githound")
     except ImportError:
         # Final fallback
         __version__ = "0.1.0-dev"
 
 # Export the main class and key components
-__all__ = ["GitHound", "SearchQuery", "SearchResult",
-           "ExportOptions", "OutputFormat", "__version__"]
+__all__ = [
+    "GitHound",
+    "SearchQuery",
+    "SearchResult",
+    "ExportOptions",
+    "OutputFormat",
+    "__version__",
+]
 
 # Re-export commonly used classes for convenience

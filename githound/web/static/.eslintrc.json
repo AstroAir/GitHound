@@ -17,7 +17,7 @@
     "hljs": "readonly"
   },
   "rules": {
-    "no-unused-vars": ["error", { 
+    "no-unused-vars": ["error", {
       "argsIgnorePattern": "^_",
       "varsIgnorePattern": "^_"
     }],
@@ -48,7 +48,7 @@
     "no-shadow-restricted-names": "error",
     "no-undef": "error",
     "no-undef-init": "error",
-    "no-use-before-define": ["error", { 
+    "no-use-before-define": ["error", {
       "functions": false,
       "classes": true,
       "variables": true
@@ -67,7 +67,7 @@
     "key-spacing": ["error", { "beforeColon": false, "afterColon": true }],
     "keyword-spacing": ["error", { "before": true, "after": true }],
     "linebreak-style": ["error", "unix"],
-    "max-len": ["warn", { 
+    "max-len": ["warn", {
       "code": 100,
       "ignoreUrls": true,
       "ignoreStrings": true,

@@ -56,26 +56,26 @@ check_buildx() {
 # Create or update the multi-arch builder
 setup_builder() {
     local builder_name="githound-multiarch"
-    
+
     log_info "Setting up multi-architecture builder: $builder_name"
-    
+
     # Check if builder already exists
     if docker buildx inspect "$builder_name" &> /dev/null; then
         log_info "Builder '$builder_name' already exists, updating..."
         docker buildx rm "$builder_name" || true
     fi
-    
+
     # Create new builder with multi-arch support
     docker buildx create \
         --name "$builder_name" \
         --driver docker-container \
         --platform linux/amd64,linux/arm64 \
         --use
-    
+
     # Bootstrap the builder
     log_info "Bootstrapping the builder..."
     docker buildx inspect --bootstrap
-    
+
     log_success "Multi-architecture builder '$builder_name' is ready"
 }
 
@@ -88,14 +88,14 @@ list_platforms() {
 # Test multi-arch build capability
 test_build() {
     log_info "Testing multi-architecture build capability..."
-    
+
     # Create a simple test Dockerfile
     cat > /tmp/test-multiarch.Dockerfile << 'EOF'
 FROM alpine:latest
 RUN echo "Architecture: $(uname -m)" > /arch.txt
 CMD cat /arch.txt
 EOF
-    
+
     # Test build for multiple architectures
     if docker buildx build \
         --platform linux/amd64,linux/arm64 \
@@ -103,14 +103,14 @@ EOF
         --tag githound-test:multiarch \
         /tmp; then
         log_success "Multi-architecture build test passed"
-        
+
         # Clean up test image
         docker rmi githound-test:multiarch &> /dev/null || true
     else
         log_error "Multi-architecture build test failed"
         exit 1
     fi
-    
+
     # Clean up test file
     rm -f /tmp/test-multiarch.Dockerfile
 }
@@ -119,13 +119,13 @@ EOF
 main() {
     log_info "GitHound Multi-Architecture Docker Build Setup"
     echo
-    
+
     check_docker
     check_buildx
     setup_builder
     list_platforms
     test_build
-    
+
     echo
     log_success "Multi-architecture build setup completed successfully!"
     echo

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class User(BaseModel):
     """User model."""
+
     user_id: str
     username: str
     email: str
@@ -19,6 +20,7 @@ class User(BaseModel):
 
 class UserCreate(BaseModel):
     """User creation model."""
+
     username: str
     email: str
     password: str
@@ -27,12 +29,14 @@ class UserCreate(BaseModel):
 
 class UserLogin(BaseModel):
     """User login model."""
+
     username: str
     password: str
 
 
 class Token(BaseModel):
     """Token model."""
+
     access_token: str
     token_type: str
     expires_in: int
@@ -42,6 +46,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Token data model."""
+
     user_id: str | None = None
     username: str | None = None
     roles: list[str] = []
@@ -49,6 +54,7 @@ class TokenData(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile model."""
+
     user_id: str
     username: str
     email: str
@@ -61,6 +67,7 @@ class UserProfile(BaseModel):
 
 class PasswordChange(BaseModel):
     """Password change model."""
+
     current_password: str
     new_password: str
     confirm_password: str
@@ -68,11 +75,13 @@ class PasswordChange(BaseModel):
 
 class PasswordReset(BaseModel):
     """Password reset model."""
+
     email: str
 
 
 class PasswordResetConfirm(BaseModel):
     """Password reset confirmation model."""
+
     token: str
     new_password: str
     confirm_password: str
@@ -80,12 +89,14 @@ class PasswordResetConfirm(BaseModel):
 
 class RoleAssignment(BaseModel):
     """Role assignment model."""
+
     user_id: str
     roles: list[str]
 
 
 class Permission(BaseModel):
     """Permission model."""
+
     name: str
     description: str
     resource: str
@@ -94,6 +105,7 @@ class Permission(BaseModel):
 
 class Role(BaseModel):
     """Role model."""
+
     name: str
     description: str
     permissions: list[Permission]

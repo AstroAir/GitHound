@@ -16,7 +16,7 @@ class GitHoundTestReporter {
       generateSummary: options.generateSummary !== false,
       ...options
     };
-    
+
     this.results = {
       startTime: null,
       endTime: null,
@@ -49,13 +49,13 @@ class GitHoundTestReporter {
   onBegin(config, suite) {
     this.results.startTime = new Date();
     this.results.totalTests = suite.allTests().length;
-    
+
     console.log(`\n🐕 GitHound Test Suite Starting`);
     console.log(`📊 Total tests: ${this.results.totalTests}`);
     console.log(`🌐 Browsers: ${config.projects.map(p => p.name).join(', ')}`);
     console.log(`⚡ Workers: ${config.workers}`);
     console.log(`🔄 Retries: ${config.retries}`);
-    
+
     // Ensure output directory exists
     if (!fs.existsSync(this.options.outputDir)) {
       fs.mkdirSync(this.options.outputDir, { recursive: true });
@@ -64,7 +64,7 @@ class GitHoundTestReporter {
 
   onTestBegin(test) {
     test._startTime = Date.now();
-    
+
     // Log test start for verbose mode
     if (process.env.VERBOSE) {
       console.log(`🧪 Starting: ${test.title}`);
@@ -74,7 +74,7 @@ class GitHoundTestReporter {
   onTestEnd(test, result) {
     const testTime = Date.now() - test._startTime;
     this.results.totalTestTime += testTime;
-    
+
     // Categorize test result
     switch (result.status) {
       case 'passed':
@@ -147,10 +147,10 @@ class GitHoundTestReporter {
     }
 
     // Log test completion
-    const status = result.status === 'passed' ? '✅' : 
-                  result.status === 'failed' ? '❌' : 
+    const status = result.status === 'passed' ? '✅' :
+                  result.status === 'failed' ? '❌' :
                   result.status === 'skipped' ? '⏭️' : '⏰';
-    
+
     if (process.env.VERBOSE || result.status === 'failed') {
       console.log(`${status} ${test.title} (${testTime}ms)`);
       if (result.status === 'failed' && result.error) {
@@ -162,7 +162,7 @@ class GitHoundTestReporter {
   onEnd(result) {
     this.results.endTime = new Date();
     this.results.performance.averageTestTime = this.results.totalTestTime / this.results.totalTests;
-    
+
     // Sort slowest tests
     this.results.performance.slowestTests.sort((a, b) => b.duration - a.duration);
     this.results.performance.slowestTests = this.results.performance.slowestTests.slice(0, 10);
@@ -171,7 +171,7 @@ class GitHoundTestReporter {
     this.generateSummaryReport();
     this.generateDetailedReport();
     this.generateArtifactsReport();
-    
+
     // Console summary
     this.printConsoleSummary();
   }
@@ -179,7 +179,7 @@ class GitHoundTestReporter {
   generateSummaryReport() {
     const duration = this.results.endTime - this.results.startTime;
     const successRate = ((this.results.passedTests / this.results.totalTests) * 100).toFixed(2);
-    
+
     const summary = {
       timestamp: this.results.endTime.toISOString(),
       duration: duration,
@@ -215,14 +215,14 @@ class GitHoundTestReporter {
   }
 
   generateArtifactsHtml() {
-    const screenshots = this.results.artifacts.screenshots.map(s => 
+    const screenshots = this.results.artifacts.screenshots.map(s =>
       `<div class="artifact">
         <h4>${s.test}</h4>
         <img src="${path.relative(this.options.outputDir, s.path)}" alt="Screenshot" style="max-width: 300px;">
       </div>`
     ).join('');
 
-    const videos = this.results.artifacts.videos.map(v => 
+    const videos = this.results.artifacts.videos.map(v =>
       `<div class="artifact">
         <h4>${v.test}</h4>
         <video controls style="max-width: 300px;">
@@ -246,20 +246,20 @@ class GitHoundTestReporter {
 </head>
 <body>
     <h1>🐕 GitHound Test Artifacts</h1>
-    
+
     <div class="section">
         <h2>📸 Screenshots (${this.results.artifacts.screenshots.length})</h2>
         ${screenshots}
     </div>
-    
+
     <div class="section">
         <h2>🎥 Videos (${this.results.artifacts.videos.length})</h2>
         ${videos}
     </div>
-    
+
     <div class="section">
         <h2>🔍 Traces (${this.results.artifacts.traces.length})</h2>
-        ${this.results.artifacts.traces.map(t => 
+        ${this.results.artifacts.traces.map(t =>
           `<div class="artifact">
             <h4>${t.test}</h4>
             <a href="${path.relative(this.options.outputDir, t.path)}" target="_blank">View Trace</a>
@@ -273,7 +273,7 @@ class GitHoundTestReporter {
   printConsoleSummary() {
     const duration = this.results.endTime - this.results.startTime;
     const successRate = ((this.results.passedTests / this.results.totalTests) * 100).toFixed(2);
-    
+
     console.log('\n' + '='.repeat(60));
     console.log('🐕 GitHound Test Results Summary');
     console.log('='.repeat(60));
@@ -285,7 +285,7 @@ class GitHoundTestReporter {
     console.log(`🔄 Flaky: ${this.results.flakyTests}`);
     console.log(`📈 Success Rate: ${successRate}%`);
     console.log(`⚡ Average Test Time: ${this.results.performance.averageTestTime.toFixed(2)}ms`);
-    
+
     if (this.results.artifacts.screenshots.length > 0) {
       console.log(`📸 Screenshots: ${this.results.artifacts.screenshots.length}`);
     }

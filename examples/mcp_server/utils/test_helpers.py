@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 class MockGitRepository:
     """Mock Git repository for testing."""
-    
+
     def __init__(self, name: str = "test-repo", commit_count: int = 10) -> None:
         """
         Initialize mock Git repository.
-        
+
         Args:
             name: Repository name
             commit_count: Number of commits to simulate
@@ -39,16 +39,16 @@ class MockGitRepository:
         self.files = ["README.md", "src/main.py", "tests/test_main.py", "setup.py"]
         self.branches = ["main", "develop", "feature/new-feature"]
         self.tags = ["v1.0.0", "v1.1.0", "v2.0.0"]
-    
+
     def generate_commits(self) -> List[Dict[str, Any]]:
         """Generate mock commit data."""
         commits: list[Any] = []
         base_date = datetime.now() - timedelta(days=self.commit_count)
-        
+
         for i in range(self.commit_count):
             author = self.authors[i % len(self.authors)]
             commit_date = base_date + timedelta(days=i)
-            
+
             commits.append({
                 "hash": f"commit_hash_{i:03d}",
                 "author": author["name"],
@@ -59,14 +59,14 @@ class MockGitRepository:
                 "insertions": 10 + (i * 2),
                 "deletions": 2 + i
             })
-        
+
         return commits
-    
+
     def generate_author_stats(self) -> Dict[str, Any]:
         """Generate mock author statistics."""
         commits = self.generate_commits()
         author_stats: dict[str, Any] = {}
-        
+
         for commit in commits:
             author_key = (commit["author"], commit["author_email"])
             if author_key not in author_stats:
@@ -78,13 +78,13 @@ class MockGitRepository:
                     "deletions": 0,
                     "files_modified": set()
                 }
-            
+
             stats = author_stats[author_key]
             stats["commits"] += 1
             stats["insertions"] += commit["insertions"]
             stats["deletions"] += commit["deletions"]
             stats["files_modified"].update(self.files[:commit["files_changed"]])
-        
+
         # Convert sets to counts
         authors: list[Any] = []
         for stats in author_stats.values():
@@ -96,16 +96,16 @@ class MockGitRepository:
                 "deletions": stats["deletions"],
                 "files_modified": len(stats["files_modified"])
             })
-        
+
         return {
             "total_authors": len(authors),
             "authors": authors
         }
-    
+
     def generate_repository_info(self) -> Dict[str, Any]:
         """Generate mock repository information."""
         commits = self.generate_commits()
-        
+
         return {
             "name": self.name,
             "path": f"/tmp/{self.name}",
@@ -121,41 +121,41 @@ class MockGitRepository:
 
 class MockMCPClient:
     """Mock MCP client for testing."""
-    
+
     def __init__(self, mock_data: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize mock MCP client.
-        
+
         Args:
             mock_data: Optional mock data to return
         """
         self.mock_data = mock_data or {}
         self.call_history: List[Tuple[str, Dict[str, Any]]] = []
         self.connected = False
-    
+
     async def __aenter__(self) -> None:
         """Async context manager entry."""
         self.connected = True
         return self
-    
+
     async def __aexit__(self, _exc_type, _exc_val, _exc_tb) -> None:
         """Async context manager exit."""
         self.connected = False
-    
+
     async def list_tools(self) -> List[Dict[str, Any]]:
         """Mock list_tools implementation."""
         self.call_history.append(("list_tools", {}))
-        
+
         return cast(List[Dict[str, Any]], self.mock_data.get("tools", [
             {"name": "echo", "description": "Echo a message"},
             {"name": "add_numbers", "description": "Add two numbers"},
             {"name": "get_server_info", "description": "Get server information"}
         ]))
-    
+
     async def call_tool(self, name: str, args: Dict[str, Any]) -> Any:
         """Mock call_tool implementation."""
         self.call_history.append(("call_tool", {"name": name, "args": args}))
-        
+
         # Return mock data based on tool name
         if name == "echo":
             return MockToolResult({"message": args.get("message", "default")})
@@ -167,20 +167,20 @@ class MockMCPClient:
             return MockToolResult({"name": "Mock Server", "version": "1.0.0"})
         else:
             raise ValueError(f"Unknown tool: {name}")
-    
+
     async def list_resources(self) -> List[Dict[str, Any]]:
         """Mock list_resources implementation."""
         self.call_history.append(("list_resources", {}))
-        
+
         return cast(List[Dict[str, Any]], self.mock_data.get("resources", [
             {"uri": "mock://server/info", "name": "Server Info"},
             {"uri": "mock://config/settings", "name": "Configuration"}
         ]))
-    
+
     async def read_resource(self, uri: str) -> List[Dict[str, Any]]:
         """Mock read_resource implementation."""
         self.call_history.append(("read_resource", {"uri": uri}))
-        
+
         # Return mock content based on URI
         if "info" in uri:
             content = {"server": "mock", "version": "1.0.0", "status": "running"}
@@ -188,18 +188,18 @@ class MockMCPClient:
             content = {"setting1": "value1", "setting2": "value2"}
         else:
             content = {"message": "Mock resource content"}
-        
+
         # Return as list of dicts to match the annotated return type
         return [{"text": json.dumps(content, indent=2)}]
 
 
 class MockToolResult:
     """Mock tool result object."""
-    
+
     def __init__(self, data: Any, content: Optional[List[Any]] = None) -> None:
         """
         Initialize mock tool result.
-        
+
         Args:
             data: Result data
             content: Optional content blocks
@@ -210,11 +210,11 @@ class MockToolResult:
 
 class MockResourceContent:
     """Mock resource content object."""
-    
+
     def __init__(self, text: str) -> None:
         """
         Initialize mock resource content.
-        
+
         Args:
             text: Text content
         """
@@ -223,15 +223,15 @@ class MockResourceContent:
 
 class TestDataGenerator:
     """Generate test data for various scenarios."""
-    
+
     @staticmethod
     def generate_large_commit_history(count: int = 1000) -> List[Dict[str, Any]]:
         """
         Generate large commit history for performance testing.
-        
+
         Args:
             count: Number of commits to generate
-            
+
         Returns:
             List of commit dictionaries
         """
@@ -244,11 +244,11 @@ class TestDataGenerator:
             "Dave Designer <dave@example.com>",
             "Eve Engineer <eve@example.com>"
         ]
-        
+
         for i in range(count):
             author = authors[i % len(authors)]
             commit_date = base_date + timedelta(hours=i * 2)
-            
+
             commits.append({
                 "hash": f"large_commit_{i:06d}",
                 "author": author.split if author is not None else None(" <")[0],
@@ -259,14 +259,14 @@ class TestDataGenerator:
                 "insertions": (i % 50) + 10,
                 "deletions": (i % 20) + 2
             })
-        
+
         return commits
-    
+
     @staticmethod
     def generate_complex_repository_structure() -> Dict[str, Any]:
         """
         Generate complex repository structure for testing.
-        
+
         Returns:
             Dictionary containing complex repository data
         """
@@ -302,23 +302,23 @@ class TestDataGenerator:
 
 class PerformanceTimer:
     """Utility for measuring performance in tests."""
-    
+
     def __init__(self, name: str) -> None:
         """
         Initialize performance timer.
-        
+
         Args:
             name: Name of the operation being timed
         """
         self.name = name
         self.start_time: Optional[float] = None
         self.end_time: Optional[float] = None
-    
+
     def __enter__(self) -> "PerformanceTimer":
         """Context manager entry."""
         self.start_time = asyncio.get_event_loop().time()
         return self
-    
+
     def __exit__(
         self,
         _exc_type: type[BaseException] | None,
@@ -327,18 +327,18 @@ class PerformanceTimer:
     ) -> None:
         """Context manager exit."""
         self.end_time = asyncio.get_event_loop().time()
-    
+
     @property
     def elapsed_time(self) -> float:
         """Get elapsed time in seconds."""
         if self.start_time is None or self.end_time is None:
             return 0.0
         return self.end_time - self.start_time
-    
+
     def assert_within_threshold(self, threshold: float) -> None:
         """
         Assert that elapsed time is within threshold.
-        
+
         Args:
             threshold: Maximum allowed time in seconds
         """
@@ -348,11 +348,11 @@ class PerformanceTimer:
 
 class GitRepositoryBuilder:
     """Builder for creating test Git repositories."""
-    
+
     def __init__(self, temp_dir: Optional[Path] = None) -> None:
         """
         Initialize Git repository builder.
-        
+
         Args:
             temp_dir: Optional temporary directory to use
         """
@@ -360,74 +360,74 @@ class GitRepositoryBuilder:
         self.repo_path: Optional[Path] = None
         self.commits: List[Dict[str, Any]] = []
         self.files: List[str] = []
-    
+
     def create_repository(self, name: str = "test-repo") -> "GitRepositoryBuilder":
         """
         Create a new Git repository.
-        
+
         Args:
             name: Repository name
-            
+
         Returns:
             Self for method chaining
         """
         self.repo_path = self.temp_dir / name
         self.repo_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize Git repository
         subprocess.run(["git", "init"], cwd=self.repo_path, check=True, capture_output=True)
         subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.repo_path, check=True)  # [attr-defined]
         subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.repo_path, check=True)  # [attr-defined]
-        
+
         return self
-    
+
     def add_file(self, file_path: str, content: str) -> "GitRepositoryBuilder":
         """
         Add a file to the repository.
-        
+
         Args:
             file_path: Path to the file within the repository
             content: File content
-            
+
         Returns:
             Self for method chaining
         """
         if not self.repo_path:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
-        
+
         full_path = self.repo_path / file_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_text(content)
-        
+
         self.files.append(file_path)
         return self
-    
+
     def commit(self, message: str, author: Optional[str] = None) -> "GitRepositoryBuilder":
         """
         Create a commit with current changes.
-        
+
         Args:
             message: Commit message
             author: Optional author override
-            
+
         Returns:
             Self for method chaining
         """
         if not self.repo_path:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
-        
+
         # Add all files
         subprocess.run(["git", "add", "."], cwd=self.repo_path, check=True)
-        
+
         # Create commit
         commit_args = ["git", "commit", "-m", message]
         if author:
             commit_args.extend(["--author", author])
-        
+
         subprocess.run(commit_args, cwd=self.repo_path, check=True, capture_output=True)
-        
+
         # Get commit hash
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -437,95 +437,95 @@ class GitRepositoryBuilder:
             text=True
         )
         commit_hash = result.stdout.strip()
-        
+
         self.commits.append({
             "hash": commit_hash,
             "message": message,
             "author": author or "Test User <test@example.com>"
         })
-        
+
         return self
-    
+
     def create_branch(self, branch_name: str) -> "GitRepositoryBuilder":
         """
         Create a new branch.
-        
+
         Args:
             branch_name: Name of the branch to create
-            
+
         Returns:
             Self for method chaining
         """
         if not self.repo_path:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
-        
+
         subprocess.run(["git", "checkout", "-b", branch_name], cwd=self.repo_path, check=True, capture_output=True)
         return self
-    
+
     def checkout_branch(self, branch_name: str) -> "GitRepositoryBuilder":
         """
         Checkout an existing branch.
-        
+
         Args:
             branch_name: Name of the branch to checkout
-            
+
         Returns:
             Self for method chaining
         """
         if not self.repo_path:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
-        
+
         subprocess.run(["git", "checkout", branch_name], cwd=self.repo_path, check=True, capture_output=True)
         return self
-    
+
     def create_tag(self, tag_name: str, message: Optional[str] = None) -> "GitRepositoryBuilder":
         """
         Create a Git tag.
-        
+
         Args:
             tag_name: Name of the tag
             message: Optional tag message
-            
+
         Returns:
             Self for method chaining
         """
         if not self.repo_path:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
-        
+
         tag_args = ["git", "tag"]
         if message:
             tag_args.extend(["-a", tag_name, "-m", message])
         else:
             tag_args.append(tag_name)
-        
+
         subprocess.run(tag_args, cwd=self.repo_path, check=True, capture_output=True)
         return self
-    
+
     def get_path(self) -> Path:
         """
         Get the path to the created repository.
-        
+
         Returns:
             Path to the repository
         """
         if not self.repo_path:
             raise ValueError("Repository not created. Call create_repository() first.")
-        
+
         return self.repo_path
 
 
 def create_sample_repository() -> Path:
     """
     Create a sample Git repository for testing.
-    
+
     Returns:
         Path to the created repository
     """
     builder = GitRepositoryBuilder()
-    
+
     repo_path = (builder
                  .create_repository("sample-repo")
                  .add_file("README.md", "# Sample Repository\n\nThis is a sample repository for testing.")
@@ -541,5 +541,5 @@ def create_sample_repository() -> Path:
                  .checkout_branch("main")
                  .create_tag("v1.0.0", "Version 1.0.0 release")
                  .get_path())
-    
+
     return repo_path

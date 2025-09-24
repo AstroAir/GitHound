@@ -187,7 +187,7 @@ pre {
     --text-primary: #000000;
     --bg-primary: #ffffff;
   }
-  
+
   [data-theme="dark"] {
     --border-color: #ffffff;
     --text-primary: #ffffff;

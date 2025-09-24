@@ -12,8 +12,9 @@ from .models import MCPJsonConfig, ServerConfig
 def _get_auth_provider() -> Any | None:
     """Get auth provider with lazy import to avoid circular imports."""
     try:
-        from .auth import get_auth_provider
-        return get_auth_provider()
+        from .auth.factory import create_auth_provider
+
+        return create_auth_provider("jwt")  # Default to JWT provider
     except Exception:
         return None
 
@@ -65,13 +66,15 @@ def get_server_config_from_environment() -> ServerConfig:
 
     enable_auth = os.getenv("FASTMCP_SERVER_ENABLE_AUTH")
     if enable_auth:
-        config.enable_auth = enable_auth.lower() in (
-            "true", "1", "yes")  # [attr-defined]
+        config.enable_auth = enable_auth.lower() in ("true", "1", "yes")  # [attr-defined]
 
     rate_limit_enabled = os.getenv("FASTMCP_SERVER_RATE_LIMIT_ENABLED")
     if rate_limit_enabled:
         config.rate_limit_enabled = rate_limit_enabled.lower() in (
-            "true", "1", "yes")  # [attr-defined]
+            "true",
+            "1",
+            "yes",
+        )  # [attr-defined]
 
     return config
 
@@ -103,12 +106,16 @@ def get_oauth_discovery_metadata() -> dict[str, Any] | None:
 
     # Add server-specific metadata
     config = get_server_config_from_environment()
-    metadata.update({
-        "server_name": config.name,  # [attr-defined]
-        "server_version": config.version,  # [attr-defined]
-        "mcp_version": "2024-11-05",
-        "supports_dynamic_client_registration": bool(getattr(auth_provider, "supports_dynamic_client_registration", False))
-    })
+    metadata.update(
+        {
+            "server_name": config.name,  # [attr-defined]
+            "server_version": config.version,  # [attr-defined]
+            "mcp_version": "2024-11-05",
+            "supports_dynamic_client_registration": bool(
+                getattr(auth_provider, "supports_dynamic_client_registration", False)
+            ),
+        }
+    )
 
     return cast(dict[str, Any], metadata)
 
@@ -149,28 +156,32 @@ def load_mcp_json_config(config_path: Path) -> MCPJsonConfig | None:
         Parsed MCP.json configuration or None if loading fails  # [attr-defined]
     """
     try:
-        with open(config_path, encoding='utf-8') as f:
+        with open(config_path, encoding="utf-8") as f:
             data = json.load(f)
 
         # Support both pydantic v1 and v2
+        config: MCPJsonConfig
         if hasattr(MCPJsonConfig, "model_validate"):
             config = MCPJsonConfig.model_validate(data)
         else:
             config = MCPJsonConfig.parse_obj(data)
         logging.getLogger(__name__).info(
             # [attr-defined]
-            f"Loaded MCP.json configuration from: {config_path}")
+            f"Loaded MCP.json configuration from: {config_path}"
+        )
         return config
 
     except json.JSONDecodeError as e:
         logging.getLogger(__name__).error(
             # [attr-defined]
-            f"Invalid JSON in MCP config file {config_path}: {e}")
+            f"Invalid JSON in MCP config file {config_path}: {e}"
+        )
         return None
     except Exception as e:
         logging.getLogger(__name__).error(
             # [attr-defined]
-            f"Failed to load MCP config file {config_path}: {e}")
+            f"Failed to load MCP config file {config_path}: {e}"
+        )
         return None
 
 
@@ -223,11 +234,17 @@ def get_server_config_from_mcp_json(mcp_config: MCPJsonConfig) -> ServerConfig |
 
     if "FASTMCP_SERVER_ENABLE_AUTH" in env:
         config.enable_auth = env["FASTMCP_SERVER_ENABLE_AUTH"].lower() in (
-            "true", "1", "yes")  # [attr-defined]
+            "true",
+            "1",
+            "yes",
+        )  # [attr-defined]
 
     if "FASTMCP_SERVER_RATE_LIMIT_ENABLED" in env:
         config.rate_limit_enabled = env["FASTMCP_SERVER_RATE_LIMIT_ENABLED"].lower() in (
-            "true", "1", "yes")  # [attr-defined]
+            "true",
+            "1",
+            "yes",
+        )  # [attr-defined]
 
     return config
 
@@ -256,26 +273,30 @@ def get_server_config() -> ServerConfig:
             mcp_server_config = get_server_config_from_mcp_json(mcp_config)
             if mcp_server_config:
                 # [attr-defined]
-                logger.info(
-                    f"Using GitHound configuration from MCP.json: {config_path}")
+                logger.info(f"Using GitHound configuration from MCP.json: {config_path}")
 
                 # MCP.json configuration takes priority, but preserve environment variables  # [attr-defined]
                 # that are not overridden by MCP.json
                 env_config = config
                 # Support both pydantic v1 and v2
                 mcp_config_dict = (
-                    mcp_server_config.model_dump() if hasattr(
-                        mcp_server_config, "model_dump") else mcp_server_config.dict()
+                    mcp_server_config.model_dump()
+                    if hasattr(mcp_server_config, "model_dump")
+                    else mcp_server_config.dict()
                 )
                 env_config_dict = (
-                    env_config.model_dump() if hasattr(env_config, "model_dump") else env_config.dict()
+                    env_config.model_dump()
+                    if hasattr(env_config, "model_dump")
+                    else env_config.dict()
                 )
 
                 # Merge configurations with MCP.json taking priority  # [attr-defined]
                 merged_config: dict[str, Any] = {}
+                default_server_config = ServerConfig()
                 defaults_dict = (
-                    ServerConfig().model_dump() if hasattr(
-                        ServerConfig(), "model_dump") else ServerConfig().dict()
+                    default_server_config.model_dump()
+                    if hasattr(default_server_config, "model_dump")
+                    else default_server_config.dict()
                 )
                 for key, default_value in defaults_dict.items():
                     if mcp_config_dict[key] != default_value:
@@ -288,12 +309,13 @@ def get_server_config() -> ServerConfig:
                         # Both are default, use default
                         merged_config[key] = default_value
 
+                server_config: ServerConfig
                 if hasattr(ServerConfig, "model_validate"):
-                    return ServerConfig.model_validate(merged_config)
+                    server_config = ServerConfig.model_validate(merged_config)
                 else:
-                    return ServerConfig(**merged_config)
+                    server_config = ServerConfig(**merged_config)
+                return server_config
 
     # [attr-defined]
-    logger.info(
-        "No MCP.json configuration found, using environment variables and defaults")
+    logger.info("No MCP.json configuration found, using environment variables and defaults")
     return config

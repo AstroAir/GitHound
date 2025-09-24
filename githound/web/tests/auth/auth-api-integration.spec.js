@@ -33,7 +33,7 @@ test.describe('Authentication API Integration Tests', () => {
       // Verify API call was made with correct data
       expect(registrationRequest).toBeTruthy();
       expect(registrationRequest.method()).toBe('POST');
-      
+
       const requestBody = JSON.parse(registrationRequest.postData());
       expect(requestBody.username).toBe(userData.username);
       expect(requestBody.email).toBe(userData.email);
@@ -60,7 +60,7 @@ test.describe('Authentication API Integration Tests', () => {
       };
 
       const result = await loginPage.register(userData);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('already exists');
     });
@@ -109,7 +109,7 @@ test.describe('Authentication API Integration Tests', () => {
 
       expect(loginRequest).toBeTruthy();
       expect(loginRequest.method()).toBe('POST');
-      
+
       const requestBody = JSON.parse(loginRequest.postData());
       expect(requestBody.username).toBe(testUser.username);
       expect(requestBody.password).toBe(testUser.password);
@@ -141,7 +141,7 @@ test.describe('Authentication API Integration Tests', () => {
       // Verify tokens are stored
       const accessToken = await page.evaluate(() => localStorage.getItem('access_token'));
       const refreshToken = await page.evaluate(() => localStorage.getItem('refresh_token'));
-      
+
       expect(accessToken).toBe('mock_access_token_12345');
       expect(refreshToken).toBe('mock_refresh_token_67890');
     });
@@ -159,7 +159,7 @@ test.describe('Authentication API Integration Tests', () => {
       });
 
       const result = await loginPage.login(testUser.username, 'wrong_password');
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid');
     });
@@ -282,7 +282,7 @@ test.describe('Authentication API Integration Tests', () => {
       // Verify tokens are cleared
       const accessToken = await page.evaluate(() => localStorage.getItem('access_token'));
       const refreshToken = await page.evaluate(() => localStorage.getItem('refresh_token'));
-      
+
       expect(accessToken).toBeNull();
       expect(refreshToken).toBeNull();
     });
@@ -303,7 +303,7 @@ test.describe('Authentication API Integration Tests', () => {
 
       await loginPage.register(userData);
       const result = await loginPage.login(userData.username, userData.password);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/network|connection|failed/i);
     });
@@ -331,7 +331,7 @@ test.describe('Authentication API Integration Tests', () => {
 
       await loginPage.register(userData);
       const result = await loginPage.login(userData.username, userData.password);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/rate|limit|too many/i);
     });
@@ -355,7 +355,7 @@ test.describe('Authentication API Integration Tests', () => {
       };
 
       const result = await loginPage.register(userData);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/unavailable|maintenance/i);
     });
@@ -378,7 +378,7 @@ test.describe('Authentication API Integration Tests', () => {
 
       await loginPage.register(userData);
       const result = await loginPage.login(userData.username, userData.password);
-      
+
       expect(result.success).toBe(false);
     });
   });
@@ -404,7 +404,7 @@ test.describe('Authentication API Integration Tests', () => {
       expect(requestData).toBeTruthy();
       const parsedData = JSON.parse(requestData);
       expect(parsedData.password).toBe(userData.password); // Should be present in request
-      
+
       // But should not be visible in browser dev tools (this is more of a documentation test)
     });
 

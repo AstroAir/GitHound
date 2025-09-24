@@ -9,7 +9,7 @@ import asyncio
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from fastapi import (
     APIRouter,
@@ -51,99 +51,82 @@ class AdvancedSearchRequest(BaseModel):
     branch: str | None = Field(None, description="Branch to search")
 
     # Multi-modal search criteria
-    content_pattern: str | None = Field(
-        None, description="Content pattern to search for")
+    content_pattern: str | None = Field(None, description="Content pattern to search for")
     commit_hash: str | None = Field(None, description="Specific commit hash")
-    author_pattern: str | None = Field(
-        None, description="Author name or email pattern")
-    message_pattern: str | None = Field(
-        None, description="Commit message pattern")
+    author_pattern: str | None = Field(None, description="Author name or email pattern")
+    message_pattern: str | None = Field(None, description="Commit message pattern")
     date_from: datetime | None = Field(None, description="Start date")
     date_to: datetime | None = Field(None, description="End date")
-    file_path_pattern: str | None = Field(
-        None, description="File path pattern")
-    file_extensions: list[str] | None = Field(
-        None, description="File extensions to search")
+    file_path_pattern: str | None = Field(None, description="File path pattern")
+    file_extensions: list[str] | None = Field(None, description="File extensions to search")
 
     # Search options
     case_sensitive: bool = Field(False, description="Case sensitive search")
     fuzzy_search: bool = Field(False, description="Enable fuzzy matching")
-    fuzzy_threshold: float = Field(
-        0.8, ge=0.0, le=1.0, description="Fuzzy match threshold")
-    include_globs: list[str] | None = Field(
-        None, description="Include file patterns")
-    exclude_globs: list[str] | None = Field(
-        None, description="Exclude file patterns")
+    fuzzy_threshold: float = Field(0.8, ge=0.0, le=1.0, description="Fuzzy match threshold")
+    include_globs: list[str] | None = Field(None, description="Include file patterns")
+    exclude_globs: list[str] | None = Field(None, description="Exclude file patterns")
 
     # Performance and limits
-    max_results: int | None = Field(
-        1000, ge=1, le=10000, description="Maximum number of results")
-    max_file_size: int | None = Field(
-        None, description="Maximum file size in bytes")
-    timeout_seconds: int = Field(
-        300, ge=10, le=3600, description="Search timeout in seconds")
+    max_results: int | None = Field(1000, ge=1, le=10000, description="Maximum number of results")
+    max_file_size: int | None = Field(None, description="Maximum file size in bytes")
+    timeout_seconds: int = Field(300, ge=10, le=3600, description="Search timeout in seconds")
 
     # Result formatting
-    include_context: bool = Field(
-        True, description="Include surrounding context lines")
-    context_lines: int = Field(
-        3, ge=0, le=20, description="Number of context lines")
+    include_context: bool = Field(True, description="Include surrounding context lines")
+    context_lines: int = Field(3, ge=0, le=20, description="Number of context lines")
     include_metadata: bool = Field(True, description="Include commit metadata")
 
     # Historical search options
-    search_history: bool = Field(
-        False, description="Search across entire repository history")
-    max_commits: int | None = Field(
-        None, description="Maximum commits to search in history mode")
+    search_history: bool = Field(False, description="Search across entire repository history")
+    max_commits: int | None = Field(None, description="Maximum commits to search in history mode")
 
 
 class SearchFilters(BaseModel):
     """Additional search filters."""
-    min_commit_size: int | None = Field(
-        None, description="Minimum commit size")
-    max_commit_size: int | None = Field(
-        None, description="Maximum commit size")
-    merge_commits_only: bool = Field(
-        False, description="Search only merge commits")
-    exclude_merge_commits: bool = Field(
-        False, description="Exclude merge commits")
+
+    min_commit_size: int | None = Field(None, description="Minimum commit size")
+    max_commit_size: int | None = Field(None, description="Maximum commit size")
+    merge_commits_only: bool = Field(False, description="Search only merge commits")
+    exclude_merge_commits: bool = Field(False, description="Exclude merge commits")
     binary_files: bool = Field(False, description="Include binary files")
 
 
 # Search Endpoints
+
 
 @router.post("/advanced", response_model=SearchResponse)
 @limiter.limit("10/minute")
 async def advanced_search(
     request: Request,
     search_request: AdvancedSearchRequest,
-    filters: SearchFilters | None = None,
-    background_tasks: BackgroundTasks | None = None,
+    background_tasks: BackgroundTasks,
+    filters: Optional[SearchFilters] = None,
     current_user: dict[str, Any] = Depends(require_user),
-    request_id: str = Depends(get_request_id)
+    request_id: str = Depends(get_request_id),
 ) -> SearchResponse:
     """
     Perform advanced multi-modal search with comprehensive options.
-    
+
     Supports content, author, message, date range, and file pattern searches
     with fuzzy matching and historical search capabilities.
     """
     try:
         await validate_repo_path(search_request.repo_path)
-        
+
         # Create search orchestrator
         orchestrator = create_search_orchestrator()
-        
+
         # Convert to internal search query
         search_query = _convert_to_search_query(search_request, filters)
-        
+
         # Determine if this should be a background search
         is_background = (
-            search_request.search_history or
-            search_request.timeout_seconds > 60 or
-            (search_request.max_commits and search_request.max_commits > 100)
+            search_request.search_history
+            or search_request.timeout_seconds > 60
+            or (search_request.max_commits and search_request.max_commits > 100)
         )
-        
+
         if is_background and background_tasks:
             # Start background search
             search_id = str(uuid.uuid4())
@@ -152,9 +135,9 @@ async def advanced_search(
                 search_id,
                 orchestrator,
                 search_query,
-                search_request.repo_path
+                search_request.repo_path,
             )
-            
+
             return SearchResponse(
                 results=[],
                 total_count=0,
@@ -162,16 +145,14 @@ async def advanced_search(
                 status="started",
                 commits_searched=0,
                 files_searched=0,
-                search_duration_ms=0.0
+                search_duration_ms=0.0,
             )
         else:
             # Perform synchronous search
             results = await _perform_sync_search(
-                orchestrator,
-                search_query,
-                search_request.repo_path
+                orchestrator, search_query, search_request.repo_path
             )
-            
+
             return SearchResponse(
                 results=results.get("results", []),
                 total_count=results.get("total_count", 0),
@@ -179,15 +160,14 @@ async def advanced_search(
                 status="completed",
                 commits_searched=results.get("commits_searched", 0),
                 files_searched=results.get("files_searched", 0),
-                search_duration_ms=results.get("search_duration_ms", 0.0)
+                search_duration_ms=results.get("search_duration_ms", 0.0),
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Search failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Search failed: {str(e)}"
         )
 
 
@@ -197,24 +177,21 @@ async def fuzzy_search(
     request: Request,
     repo_path: str = Query(..., description="Repository path"),
     pattern: str = Query(..., description="Search pattern"),
-    threshold: float = Query(
-        0.8, ge=0.0, le=1.0, description="Similarity threshold"),
-    max_distance: int = Query(
-        2, ge=1, le=10, description="Maximum edit distance"),
-    file_types: list[str] | None = Query(
-        None, description="File types to search"),
+    threshold: float = Query(0.8, ge=0.0, le=1.0, description="Similarity threshold"),
+    max_distance: int = Query(2, ge=1, le=10, description="Maximum edit distance"),
+    file_types: Optional[list[str]] = Query(None, description="File types to search"),
     current_user: dict[str, Any] = Depends(require_user),
-    request_id: str = Depends(get_request_id)
+    request_id: str = Depends(get_request_id),
 ) -> SearchResponse:
     """
     Perform fuzzy search with configurable similarity thresholds.
-    
+
     Uses approximate string matching to find similar content even
     with typos or variations.
     """
     try:
         await validate_repo_path(repo_path)
-        
+
         # Create fuzzy search request
         search_request = AdvancedSearchRequest(
             repo_path=repo_path,
@@ -222,19 +199,15 @@ async def fuzzy_search(
             fuzzy_search=True,
             fuzzy_threshold=threshold,
             file_extensions=file_types,
-            max_results=1000
+            max_results=1000,
         )
-        
+
         # Perform search
         orchestrator = create_search_orchestrator()
         search_query = _convert_to_search_query(search_request, None)
-        
-        results = await _perform_sync_search(
-            orchestrator,
-            search_query,
-            repo_path
-        )
-        
+
+        results = await _perform_sync_search(orchestrator, search_query, repo_path)
+
         return SearchResponse(
             results=results.get("results", []),
             total_count=results.get("total_count", 0),
@@ -242,15 +215,15 @@ async def fuzzy_search(
             status="completed",
             commits_searched=results.get("commits_searched", 0),
             files_searched=results.get("files_searched", 0),
-            search_duration_ms=results.get("search_duration_ms", 0.0)
+            search_duration_ms=results.get("search_duration_ms", 0.0),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Fuzzy search failed: {str(e)}"
+            detail=f"Fuzzy search failed: {str(e)}",
         )
 
 
@@ -258,25 +231,24 @@ async def fuzzy_search(
 @limiter.limit("5/minute")
 async def historical_search(
     request: Request,
+    background_tasks: BackgroundTasks,
     repo_path: str = Query(..., description="Repository path"),
     pattern: str = Query(..., description="Search pattern"),
-    max_commits: int = Query(1000, ge=10, le=10000,
-                             description="Maximum commits to search"),
-    date_from: datetime | None = Query(None, description="Start date"),
-    date_to: datetime | None = Query(None, description="End date"),
-    background_tasks: BackgroundTasks | None = None,
+    max_commits: int = Query(1000, ge=10, le=10000, description="Maximum commits to search"),
+    date_from: Optional[datetime] = Query(None, description="Start date"),
+    date_to: Optional[datetime] = Query(None, description="End date"),
     current_user: dict[str, Any] = Depends(require_user),
-    request_id: str = Depends(get_request_id)
+    request_id: str = Depends(get_request_id),
 ) -> SearchResponse:
     """
     Search across entire repository history timeline.
-    
+
     Searches through historical commits to find when specific
     content was added, modified, or removed.
     """
     try:
         await validate_repo_path(repo_path)
-        
+
         # Create historical search request
         search_request = AdvancedSearchRequest(
             repo_path=repo_path,
@@ -285,23 +257,19 @@ async def historical_search(
             max_commits=max_commits,
             date_from=date_from,
             date_to=date_to,
-            timeout_seconds=600  # Longer timeout for historical searches
+            timeout_seconds=600,  # Longer timeout for historical searches
         )
-        
+
         # Always use background processing for historical searches
         if background_tasks:
             search_id = str(uuid.uuid4())
             orchestrator = create_search_orchestrator()
             search_query = _convert_to_search_query(search_request, None)
-            
+
             background_tasks.add_task(
-                _perform_background_search,
-                search_id,
-                orchestrator,
-                search_query,
-                repo_path
+                _perform_background_search, search_id, orchestrator, search_query, repo_path
             )
-            
+
             return SearchResponse(
                 results=[],
                 total_count=0,
@@ -309,20 +277,16 @@ async def historical_search(
                 status="started",
                 commits_searched=0,
                 files_searched=0,
-                search_duration_ms=0.0
+                search_duration_ms=0.0,
             )
         else:
             # Fallback to sync search with reduced scope
             search_request.max_commits = min(max_commits, 100)
             orchestrator = create_search_orchestrator()
             search_query = _convert_to_search_query(search_request, None)
-            
-            results = await _perform_sync_search(
-                orchestrator,
-                search_query,
-                repo_path
-            )
-            
+
+            results = await _perform_sync_search(orchestrator, search_query, repo_path)
+
             return SearchResponse(
                 results=results.get("results", []),
                 total_count=results.get("total_count", 0),
@@ -330,23 +294,23 @@ async def historical_search(
                 status="completed",
                 commits_searched=results.get("commits_searched", 0),
                 files_searched=results.get("files_searched", 0),
-                search_duration_ms=results.get("search_duration_ms", 0.0)
+                search_duration_ms=results.get("search_duration_ms", 0.0),
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Historical search failed: {str(e)}"
+            detail=f"Historical search failed: {str(e)}",
         )
 
 
 # Helper functions
 
+
 def _convert_to_search_query(
-    request: AdvancedSearchRequest,
-    filters: SearchFilters | None
+    request: AdvancedSearchRequest, filters: Optional[SearchFilters]
 ) -> SearchQuery:
     """Convert search request to internal SearchQuery."""
     return SearchQuery(
@@ -373,13 +337,11 @@ def _convert_to_search_query(
 
 
 async def _perform_sync_search(
-    orchestrator: SearchOrchestrator,
-    search_query: SearchQuery,
-    repo_path: str
+    orchestrator: SearchOrchestrator, search_query: SearchQuery, repo_path: str
 ) -> dict[str, Any]:
     """Perform synchronous search operation."""
     start_time = datetime.now()
-    
+
     try:
         repo = get_repository(Path(repo_path))
 
@@ -393,10 +355,10 @@ async def _perform_sync_search(
         return {
             "search_id": str(uuid.uuid4()),
             "status": "completed",
-            "results": [result.dict() if hasattr(result, 'dict') else result for result in results],
+            "results": [result.dict() if hasattr(result, "dict") else result for result in results],
             "total_count": len(results),
-            "commits_searched": getattr(orchestrator, 'commits_searched', 0),
-            "files_searched": getattr(orchestrator, 'files_searched', 0),
+            "commits_searched": getattr(orchestrator, "commits_searched", 0),
+            "files_searched": getattr(orchestrator, "files_searched", 0),
             "search_duration_ms": search_duration,
         }
     except Exception as e:
@@ -408,15 +370,12 @@ async def _perform_sync_search(
             "commits_searched": 0,
             "files_searched": 0,
             "search_duration_ms": (datetime.now() - start_time).total_seconds() * 1000,
-            "error_message": str(e)
+            "error_message": str(e),
         }
 
 
 async def _perform_background_search(
-    search_id: str,
-    orchestrator: SearchOrchestrator,
-    search_query: SearchQuery,
-    repo_path: str
+    search_id: str, orchestrator: SearchOrchestrator, search_query: SearchQuery, repo_path: str
 ) -> None:
     """Perform background search operation."""
     # This would integrate with the WebSocket system for real-time updates

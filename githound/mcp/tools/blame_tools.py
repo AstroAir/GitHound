@@ -175,8 +175,12 @@ async def get_file_blame(input_data: FileBlameInput, ctx: Context) -> dict[str, 
             "file_path": blame_result.file_path,
             "total_lines": blame_result.total_lines,
             "contributors": blame_result.contributors,
-            "oldest_line_date": blame_result.oldest_line_date.isoformat() if blame_result.oldest_line_date else None,
-            "newest_line_date": blame_result.newest_line_date.isoformat() if blame_result.newest_line_date else None,
+            "oldest_line_date": (
+                blame_result.oldest_line_date.isoformat() if blame_result.oldest_line_date else None
+            ),
+            "newest_line_date": (
+                blame_result.newest_line_date.isoformat() if blame_result.newest_line_date else None
+            ),
             "line_blame": [
                 {
                     "line_number": line.line_number,
@@ -188,7 +192,7 @@ async def get_file_blame(input_data: FileBlameInput, ctx: Context) -> dict[str, 
                     "commit_message": line.commit_message,
                 }
                 for line in blame_result.blame_info
-            ]
+            ],
         }
 
         await ctx.info(f"Blame analysis complete for {input_data.file_path}")
@@ -217,8 +221,7 @@ async def compare_commits_mcp(input_data: CommitComparisonInput, ctx: Context) -
         await ctx.info(f"Comparing commits {input_data.from_commit} and {input_data.to_commit}")
 
         repo = get_repository(Path(input_data.repo_path))
-        diff_result = compare_commits(
-            repo, input_data.from_commit, input_data.to_commit)
+        diff_result = compare_commits(repo, input_data.from_commit, input_data.to_commit)
 
         await ctx.info("Commit comparison complete")
 

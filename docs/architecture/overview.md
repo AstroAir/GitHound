@@ -96,16 +96,20 @@ graph TB
 - **Purpose**: Browser-based interface using FastAPI
 - **Features**: Interactive search, real-time updates, visual diff viewer
 - **Components**:
-  - `api.py`: REST API endpoints
-  - `enhanced_api.py`: Advanced API features
+  - `api.py`: Main FastAPI application
+  - `apis/`: Modular API endpoints (auth, search, analysis, integration)
   - `websocket.py`: Real-time communication
   - `server.py`: Web server management
 
-#### MCP Server (`githound/mcp_server.py`)
+#### MCP Server (`githound/mcp/`)
 
 - **Purpose**: Model Context Protocol server for AI integration
-- **Features**: Structured tool interface, type-safe communication
-- **Integration**: FastMCP framework
+- **Features**: 20+ tools, 7 resources, 3 prompts, type-safe communication
+- **Integration**: FastMCP 2.0 framework
+- **Components**:
+  - `server.py`: Main MCP server implementation
+  - `config.py`: Configuration management
+  - `tools/`: Individual MCP tools
 - **Use Cases**: AI assistants, automated analysis tools
 
 ### 2. Core Engine

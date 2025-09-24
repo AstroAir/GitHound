@@ -48,13 +48,13 @@ def main():
     """Main verification function."""
     print("🔍 GitHound Frontend Refactoring Verification")
     print("=" * 50)
-    
+
     # Get the project root
     project_root = Path(__file__).parent.parent
     static_dir = project_root / "githound" / "web" / "static"
-    
+
     all_checks_passed = True
-    
+
     print("\n📁 Directory Structure:")
     directories = [
         (static_dir / "components", "Components directory"),
@@ -69,11 +69,11 @@ def main():
         (static_dir / "styles" / "components", "Component styles"),
         (static_dir / "utils", "Utilities directory"),
     ]
-    
+
     for dir_path, description in directories:
         if not check_directory_exists(dir_path, description):
             all_checks_passed = False
-    
+
     print("\n📄 Core Component Files:")
     core_files = [
         (static_dir / "components" / "core" / "component.js", "Base Component class"),
@@ -82,11 +82,11 @@ def main():
         (static_dir / "components" / "core" / "state-manager.js", "State Manager"),
         (static_dir / "components" / "core" / "app.js", "Main App Component"),
     ]
-    
+
     for file_path, description in core_files:
         if not check_file_exists(file_path, description):
             all_checks_passed = False
-    
+
     print("\n🧩 Component Files:")
     component_files = [
         (static_dir / "components" / "auth" / "auth-manager.js", "Auth Manager"),
@@ -96,11 +96,11 @@ def main():
         (static_dir / "components" / "websocket" / "websocket-manager.js", "WebSocket Manager"),
         (static_dir / "components" / "utils" / "export-manager.js", "Export Manager"),
     ]
-    
+
     for file_path, description in component_files:
         if not check_file_exists(file_path, description):
             all_checks_passed = False
-    
+
     print("\n🎨 Style Files:")
     style_files = [
         (static_dir / "styles" / "base" / "variables.css", "CSS Variables"),
@@ -110,32 +110,32 @@ def main():
         (static_dir / "styles" / "components" / "connection.css", "Connection Styles"),
         (static_dir / "styles" / "main.css", "Main Stylesheet"),
     ]
-    
+
     for file_path, description in style_files:
         if not check_file_exists(file_path, description):
             all_checks_passed = False
-    
+
     print("\n🔧 Utility Files:")
     utility_files = [
         (static_dir / "utils" / "api.js", "API Utilities"),
         (static_dir / "utils" / "dom.js", "DOM Utilities"),
     ]
-    
+
     for file_path, description in utility_files:
         if not check_file_exists(file_path, description):
             all_checks_passed = False
-    
+
     print("\n🚀 Entry Points:")
     entry_files = [
         (static_dir / "main.js", "New Main Entry Point"),
         (static_dir / "index.html", "HTML File"),
         (static_dir / "app.js", "Legacy App (for fallback)"),
     ]
-    
+
     for file_path, description in entry_files:
         if not check_file_exists(file_path, description):
             all_checks_passed = False
-    
+
     print("\n🔍 Content Verification:")
     content_checks = [
         (static_dir / "main.js", "import GitHoundApp", "Main.js imports GitHoundApp"),
@@ -144,11 +144,11 @@ def main():
         (static_dir / "components" / "auth" / "auth-manager.js", "extends Component", "AuthManager extends Component"),
         (static_dir / "styles" / "base" / "variables.css", "--primary-color", "CSS variables defined"),
     ]
-    
+
     for file_path, text, description in content_checks:
         if not check_file_contains(file_path, text, description):
             all_checks_passed = False
-    
+
     print("\n" + "=" * 50)
     if all_checks_passed:
         print("🎉 All checks passed! Frontend refactoring completed successfully.")

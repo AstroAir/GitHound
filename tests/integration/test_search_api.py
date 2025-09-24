@@ -19,7 +19,7 @@ class TestAdvancedSearch:
         """Test synchronous advanced search."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "search-123",
                 "status": "completed",
@@ -31,7 +31,7 @@ class TestAdvancedSearch:
                         "matching_line": "def test_function() -> None:",
                         "search_type": "content",
                         "relevance_score": 0.95,
-                        "match_context": ["", "def test_function() -> None:", "    return True"]
+                        "match_context": ["", "def test_function() -> None:", "    return True"],
                     }
                 ],
                 "total_count": 1,
@@ -40,7 +40,7 @@ class TestAdvancedSearch:
                 "search_duration_ms": 150.0,
                 "query_info": {"content_pattern": "test_function"},
                 "filters_applied": {},
-                "has_more": False
+                "has_more": False,
             }
 
             response = api_client.post(
@@ -53,8 +53,8 @@ class TestAdvancedSearch:
                     "regex_mode": False,
                     "max_results": 100,
                     "include_context": True,
-                    "context_lines": 3
-                }
+                    "context_lines": 3,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -68,7 +68,7 @@ class TestAdvancedSearch:
         """Test background advanced search."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search") as mock_search:
             response = api_client.post(
                 "/api/v3/search/advanced",
                 headers=admin_auth_headers,
@@ -77,8 +77,8 @@ class TestAdvancedSearch:
                     "content_pattern": "complex_search",
                     "search_history": True,
                     "max_commits": 1000,
-                    "timeout_seconds": 600
-                }
+                    "timeout_seconds": 600,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -92,7 +92,7 @@ class TestAdvancedSearch:
         """Test advanced search with filters."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "search-456",
                 "status": "completed",
@@ -103,7 +103,7 @@ class TestAdvancedSearch:
                 "search_duration_ms": 50.0,
                 "query_info": {},
                 "filters_applied": {"min_commit_size": 100},
-                "has_more": False
+                "has_more": False,
             }
 
             response = api_client.post(
@@ -116,8 +116,8 @@ class TestAdvancedSearch:
                     "date_to": "2024-12-31T23:59:59Z",
                     "file_extensions": ["py", "js"],
                     "fuzzy_search": True,
-                    "fuzzy_threshold": 0.8
-                }
+                    "fuzzy_threshold": 0.8,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -126,16 +126,13 @@ class TestAdvancedSearch:
 
     def test_advanced_search_invalid_repo(self, api_client, admin_auth_headers) -> None:
         """Test advanced search with invalid repository."""
-        with patch('githound.web.search_api.validate_repo_path') as mock_validate:
+        with patch("githound.web.search_api.validate_repo_path") as mock_validate:
             mock_validate.side_effect = Exception("Invalid repository")
 
             response = api_client.post(
                 "/api/v3/search/advanced",
                 headers=admin_auth_headers,
-                json={
-                    "repo_path": "/invalid/path",
-                    "content_pattern": "test"
-                }
+                json={"repo_path": "/invalid/path", "content_pattern": "test"},
             )
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -149,7 +146,7 @@ class TestFuzzySearch:
         """Test successful fuzzy search."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "fuzzy-123",
                 "status": "completed",
@@ -161,7 +158,7 @@ class TestFuzzySearch:
                         "matching_line": "def search_function() -> None:",
                         "search_type": "fuzzy",
                         "relevance_score": 0.85,
-                        "match_context": []
+                        "match_context": [],
                     }
                 ],
                 "total_count": 1,
@@ -170,7 +167,7 @@ class TestFuzzySearch:
                 "search_duration_ms": 200.0,
                 "query_info": {"fuzzy_search": True, "fuzzy_threshold": 0.8},
                 "filters_applied": {},
-                "has_more": False
+                "has_more": False,
             }
 
             response = api_client.get(
@@ -180,8 +177,8 @@ class TestFuzzySearch:
                     "repo_path": repo_path,
                     "pattern": "searhc",  # Typo in "search"
                     "threshold": 0.8,
-                    "max_distance": 2
-                }
+                    "max_distance": 2,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -194,7 +191,7 @@ class TestFuzzySearch:
         """Test fuzzy search with file type filtering."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "fuzzy-456",
                 "status": "completed",
@@ -205,7 +202,7 @@ class TestFuzzySearch:
                 "search_duration_ms": 100.0,
                 "query_info": {},
                 "filters_applied": {},
-                "has_more": False
+                "has_more": False,
             }
 
             response = api_client.get(
@@ -215,8 +212,8 @@ class TestFuzzySearch:
                     "repo_path": repo_path,
                     "pattern": "functoin",  # Typo in "function"
                     "threshold": 0.7,
-                    "file_types": ["py", "js"]
-                }
+                    "file_types": ["py", "js"],
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -232,7 +229,7 @@ class TestHistoricalSearch:
         """Test synchronous historical search."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "historical-123",
                 "status": "completed",
@@ -244,7 +241,7 @@ class TestHistoricalSearch:
                         "matching_line": "deprecated_function()",
                         "search_type": "content",
                         "relevance_score": 0.9,
-                        "match_context": []
+                        "match_context": [],
                     }
                 ],
                 "total_count": 1,
@@ -253,7 +250,7 @@ class TestHistoricalSearch:
                 "search_duration_ms": 5000.0,
                 "query_info": {"search_history": True},
                 "filters_applied": {},
-                "has_more": False
+                "has_more": False,
             }
 
             response = api_client.get(
@@ -263,8 +260,8 @@ class TestHistoricalSearch:
                     "repo_path": repo_path,
                     "pattern": "deprecated",
                     "max_commits": 100,
-                    "date_from": "2023-01-01T00:00:00Z"
-                }
+                    "date_from": "2023-01-01T00:00:00Z",
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -276,15 +273,11 @@ class TestHistoricalSearch:
         """Test background historical search."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search") as mock_search:
             response = api_client.get(
                 "/api/v3/search/historical",
                 headers=admin_auth_headers,
-                params={
-                    "repo_path": repo_path,
-                    "pattern": "large_search",
-                    "max_commits": 5000
-                }
+                params={"repo_path": repo_path, "pattern": "large_search", "max_commits": 5000},
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -301,20 +294,22 @@ class TestSearchManagement:
         """Test getting search status."""
         search_id = "test-search-123"
 
-        with patch('githound.web.search_api.active_searches', {
-            search_id: {
-                "id": search_id,
-                "status": "running",
-                "progress": 0.5,
-                "message": "Searching files...",
-                "results_count": 10,
-                "started_at": "2024-01-01T00:00:00Z",
-                "user_id": "test_admin"
-            }
-        }):
+        with patch(
+            "githound.web.search_api.active_searches",
+            {
+                search_id: {
+                    "id": search_id,
+                    "status": "running",
+                    "progress": 0.5,
+                    "message": "Searching files...",
+                    "results_count": 10,
+                    "started_at": "2024-01-01T00:00:00Z",
+                    "user_id": "test_admin",
+                }
+            },
+        ):
             response = api_client.get(
-                f"/api/v3/search/{search_id}/status",
-                headers=admin_auth_headers
+                f"/api/v3/search/{search_id}/status", headers=admin_auth_headers
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -327,8 +322,7 @@ class TestSearchManagement:
     def test_get_search_status_not_found(self, api_client, admin_auth_headers) -> None:
         """Test getting status for non-existent search."""
         response = api_client.get(
-            "/api/v3/search/nonexistent-search/status",
-            headers=admin_auth_headers
+            "/api/v3/search/nonexistent-search/status", headers=admin_auth_headers
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -337,16 +331,12 @@ class TestSearchManagement:
         """Test getting status for another user's search."""
         search_id = "other-user-search"
 
-        with patch('githound.web.search_api.active_searches', {
-            search_id: {
-                "id": search_id,
-                "status": "completed",
-                "user_id": "other_user"
-            }
-        }):
+        with patch(
+            "githound.web.search_api.active_searches",
+            {search_id: {"id": search_id, "status": "completed", "user_id": "other_user"}},
+        ):
             response = api_client.get(
-                f"/api/v3/search/{search_id}/status",
-                headers=user_auth_headers
+                f"/api/v3/search/{search_id}/status", headers=user_auth_headers
             )
 
             assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -355,27 +345,30 @@ class TestSearchManagement:
         """Test getting search results."""
         search_id = "completed-search-123"
 
-        with patch('githound.web.search_api.active_searches', {
-            search_id: {
-                "id": search_id,
-                "status": "completed",
-                "user_id": "test_admin",
-                "results": [
-                    {"commit_hash": "abc123", "file_path": "file1.py"},
-                    {"commit_hash": "def456", "file_path": "file2.py"},
-                    {"commit_hash": "ghi789", "file_path": "file3.py"}
-                ],
-                "commits_searched": 10,
-                "files_searched": 25,
-                "search_duration_ms": 1500.0,
-                "query_info": {"content_pattern": "test"},
-                "filters_applied": {}
-            }
-        }):
+        with patch(
+            "githound.web.search_api.active_searches",
+            {
+                search_id: {
+                    "id": search_id,
+                    "status": "completed",
+                    "user_id": "test_admin",
+                    "results": [
+                        {"commit_hash": "abc123", "file_path": "file1.py"},
+                        {"commit_hash": "def456", "file_path": "file2.py"},
+                        {"commit_hash": "ghi789", "file_path": "file3.py"},
+                    ],
+                    "commits_searched": 10,
+                    "files_searched": 25,
+                    "search_duration_ms": 1500.0,
+                    "query_info": {"content_pattern": "test"},
+                    "filters_applied": {},
+                }
+            },
+        ):
             response = api_client.get(
                 f"/api/v3/search/{search_id}/results",
                 headers=admin_auth_headers,
-                params={"page": 1, "page_size": 2}
+                params={"page": 1, "page_size": 2},
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -392,16 +385,12 @@ class TestSearchManagement:
         """Test getting results for incomplete search."""
         search_id = "running-search-123"
 
-        with patch('githound.web.search_api.active_searches', {
-            search_id: {
-                "id": search_id,
-                "status": "running",
-                "user_id": "test_admin"
-            }
-        }):
+        with patch(
+            "githound.web.search_api.active_searches",
+            {search_id: {"id": search_id, "status": "running", "user_id": "test_admin"}},
+        ):
             response = api_client.get(
-                f"/api/v3/search/{search_id}/results",
-                headers=admin_auth_headers
+                f"/api/v3/search/{search_id}/results", headers=admin_auth_headers
             )
 
             assert response.status_code == status.HTTP_202_ACCEPTED
@@ -410,17 +399,11 @@ class TestSearchManagement:
         """Test successful search cancellation."""
         search_id = "running-search-456"
 
-        with patch('githound.web.search_api.active_searches', {
-            search_id: {
-                "id": search_id,
-                "status": "running",
-                "user_id": "test_admin"
-            }
-        }) as mock_searches:
-            response = api_client.delete(
-                f"/api/v3/search/{search_id}",
-                headers=admin_auth_headers
-            )
+        with patch(
+            "githound.web.search_api.active_searches",
+            {search_id: {"id": search_id, "status": "running", "user_id": "test_admin"}},
+        ) as mock_searches:
+            response = api_client.delete(f"/api/v3/search/{search_id}", headers=admin_auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -431,17 +414,11 @@ class TestSearchManagement:
         """Test cancelling already completed search."""
         search_id = "completed-search-789"
 
-        with patch('githound.web.search_api.active_searches', {
-            search_id: {
-                "id": search_id,
-                "status": "completed",
-                "user_id": "test_admin"
-            }
-        }):
-            response = api_client.delete(
-                f"/api/v3/search/{search_id}",
-                headers=admin_auth_headers
-            )
+        with patch(
+            "githound.web.search_api.active_searches",
+            {search_id: {"id": search_id, "status": "completed", "user_id": "test_admin"}},
+        ):
+            response = api_client.delete(f"/api/v3/search/{search_id}", headers=admin_auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -450,30 +427,30 @@ class TestSearchManagement:
 
     def test_list_active_searches(self, api_client, admin_auth_headers) -> None:
         """Test listing active searches."""
-        with patch('githound.web.search_api.active_searches', {
-            "search-1": {
-                "id": "search-1",
-                "status": "running",
-                "progress": 0.3,
-                "message": "Searching...",
-                "results_count": 5,
-                "started_at": "2024-01-01T00:00:00Z",
-                "user_id": "test_admin"
+        with patch(
+            "githound.web.search_api.active_searches",
+            {
+                "search-1": {
+                    "id": "search-1",
+                    "status": "running",
+                    "progress": 0.3,
+                    "message": "Searching...",
+                    "results_count": 5,
+                    "started_at": "2024-01-01T00:00:00Z",
+                    "user_id": "test_admin",
+                },
+                "search-2": {
+                    "id": "search-2",
+                    "status": "completed",
+                    "progress": 1.0,
+                    "message": "Completed",
+                    "results_count": 15,
+                    "started_at": "2024-01-01T01:00:00Z",
+                    "user_id": "test_admin",
+                },
             },
-            "search-2": {
-                "id": "search-2",
-                "status": "completed",
-                "progress": 1.0,
-                "message": "Completed",
-                "results_count": 15,
-                "started_at": "2024-01-01T01:00:00Z",
-                "user_id": "test_admin"
-            }
-        }):
-            response = api_client.get(
-                "/api/v3/search/active",
-                headers=admin_auth_headers
-            )
+        ):
+            response = api_client.get("/api/v3/search/active", headers=admin_auth_headers)
 
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
@@ -494,28 +471,28 @@ class TestSearchValidation:
             json={
                 "content_pattern": "test"
                 # Missing repo_path
-            }
+            },
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_fuzzy_search_invalid_threshold(self, api_client, admin_auth_headers, temp_repo) -> None:
+    def test_fuzzy_search_invalid_threshold(
+        self, api_client, admin_auth_headers, temp_repo
+    ) -> None:
         """Test fuzzy search with invalid threshold."""
         repo_path = str(temp_repo.working_dir)
 
         response = api_client.get(
             "/api/v3/search/fuzzy",
             headers=admin_auth_headers,
-            params={
-                "repo_path": repo_path,
-                "pattern": "test",
-                "threshold": 1.5  # Invalid: > 1.0
-            }
+            params={"repo_path": repo_path, "pattern": "test", "threshold": 1.5},  # Invalid: > 1.0
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_advanced_search_invalid_max_results(self, api_client, admin_auth_headers, temp_repo) -> None:
+    def test_advanced_search_invalid_max_results(
+        self, api_client, admin_auth_headers, temp_repo
+    ) -> None:
         """Test advanced search with invalid max_results."""
         repo_path = str(temp_repo.working_dir)
 
@@ -525,8 +502,8 @@ class TestSearchValidation:
             json={
                 "repo_path": repo_path,
                 "content_pattern": "test",
-                "max_results": 50000  # Invalid: > 10000
-            }
+                "max_results": 50000,  # Invalid: > 10000
+            },
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

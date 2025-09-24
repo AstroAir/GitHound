@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import pytest
 from git import Actor, Repo
 
-from githound.models import SearchQuery, SearchResult, CommitInfo
+from githound.models import CommitInfo, SearchQuery, SearchResult
 
 
 @pytest.fixture
@@ -18,20 +18,20 @@ def complex_git_repo() -> Generator[Path, None, None]:
     with tempfile.TemporaryDirectory() as temp_dir:
         repo_path = Path(temp_dir)
         repo = Repo.init(repo_path)
-        
+
         # Configure user for commits
         with repo.config_writer() as config:
             config.set_value("user", "name", "Test User")
             config.set_value("user", "email", "test@example.com")
-        
+
         # Create multiple authors
         authors = [
             Actor("Alice Developer", "alice@example.com"),
             Actor("Bob Developer", "bob@example.com"),
             Actor("Charlie Developer", "charlie@example.com"),
-            Actor("Diana Developer", "diana@example.com")
+            Actor("Diana Developer", "diana@example.com"),
         ]
-        
+
         # Create initial structure
         for i in range(10):
             # Create different types of files
@@ -75,7 +75,7 @@ DEBUG_MODE = {"True" if i % 2 == 0 else "False"}
                 # JavaScript files
                 file_path = repo_path / f"frontend/component_{i}.js"
                 file_path.parent.mkdir(exist_ok=True)
-                content = f'''/**
+                content = f"""/**
  * Component {i} for frontend testing
  */
 
@@ -106,12 +106,12 @@ const COMPONENT_{i}_CONFIG = {{
 }};
 
 export default Component{i};
-'''
+"""
             else:
                 # Configuration files
                 file_path = repo_path / f"config/config_{i}.yaml"
                 file_path.parent.mkdir(exist_ok=True)
-                content = f'''# Configuration file {i}
+                content = f"""# Configuration file {i}
 name: config_{i}
 version: 1.{i}.0
 enabled: {"true" if i % 2 == 0 else "false"}
@@ -129,11 +129,11 @@ features:
 logging:
   level: {"DEBUG" if i % 2 == 0 else "INFO"}
   file: logs/app_{i}.log
-'''
-            
+"""
+
             file_path.write_text(content)
             repo.index.add([str(file_path.relative_to(repo_path))])
-            
+
             # Commit with different authors and messages
             author = authors[i % len(authors)]
             messages = [
@@ -141,19 +141,20 @@ logging:
                 f"Implement feature {i} for better performance",
                 f"Fix bug in component {i} handling",
                 f"Update configuration for module {i}",
-                f"Refactor module {i} for maintainability"
+                f"Refactor module {i} for maintainability",
             ]
             message = messages[i % len(messages)]
-            
+
             repo.index.commit(message, author=author)
-        
+
         # Create branches with additional content
         feature_branch = repo.create_head("feature/search-enhancement")
         feature_branch.checkout()
-        
+
         # Add search-related files
         search_file = repo_path / "src/search.py"
-        search_file.write_text('''"""Advanced search functionality."""
+        search_file.write_text(
+            '''"""Advanced search functionality."""
 
 import re
 from typing import List, Pattern, Optional
@@ -204,15 +205,16 @@ def search_files(directory: str, pattern: str) -> List[str]:
                 except Exception:
                     continue
     return results
-''')
+'''
+        )
         repo.index.add(["src/search.py"])
         repo.index.commit("Add advanced search functionality", author=authors[0])
-        
+
         # Switch back to main and create tags
         repo.heads.master.checkout()
         repo.create_tag("v1.0.0", message="Initial release")
         repo.create_tag("v1.1.0", message="Feature release")
-        
+
         yield repo_path
 
 
@@ -221,46 +223,24 @@ def search_test_queries() -> dict:
     """Provide comprehensive search queries for testing."""
     base_date = datetime.now()
     return {
-        "simple_content": SearchQuery(
-            content_pattern="function",
-            case_sensitive=False
-        ),
-        "regex_content": SearchQuery(
-            content_pattern=r"def\s+\w+\(",
-            case_sensitive=False
-        ),
-        "author_search": SearchQuery(
-            author_pattern="Alice Developer"
-        ),
-        "message_search": SearchQuery(
-            message_pattern="Add.*functionality"
-        ),
-        "date_range": SearchQuery(
-            date_from=base_date - timedelta(days=7),
-            date_to=base_date
-        ),
-        "file_extension": SearchQuery(
-            file_extensions=["py", "js"]
-        ),
-        "file_path": SearchQuery(
-            file_path_pattern="src/*.py"
-        ),
+        "simple_content": SearchQuery(content_pattern="function", case_sensitive=False),
+        "regex_content": SearchQuery(content_pattern=r"def\s+\w+\(", case_sensitive=False),
+        "author_search": SearchQuery(author_pattern="Alice Developer"),
+        "message_search": SearchQuery(message_pattern="Add.*functionality"),
+        "date_range": SearchQuery(date_from=base_date - timedelta(days=7), date_to=base_date),
+        "file_extension": SearchQuery(file_extensions=["py", "js"]),
+        "file_path": SearchQuery(file_path_pattern="src/*.py"),
         "fuzzy_search": SearchQuery(
-            content_pattern="functon",  # Intentional typo
-            fuzzy_search=True,
-            fuzzy_threshold=0.8
+            content_pattern="functon", fuzzy_search=True, fuzzy_threshold=0.8  # Intentional typo
         ),
         "complex_query": SearchQuery(
             content_pattern="class.*:",
             author_pattern="Alice.*",
             file_extensions=["py"],
             case_sensitive=False,
-            fuzzy_search=False
+            fuzzy_search=False,
         ),
-        "case_sensitive": SearchQuery(
-            content_pattern="DEBUG",
-            case_sensitive=True
-        )
+        "case_sensitive": SearchQuery(content_pattern="DEBUG", case_sensitive=True),
     }
 
 
@@ -277,7 +257,7 @@ def mock_search_results() -> List[SearchResult]:
             author_email="alice@example.com",
             message="Add module 0 with core functionality",
             date=datetime.now() - timedelta(days=2),
-            relevance_score=0.95
+            relevance_score=0.95,
         ),
         SearchResult(
             commit_hash="def456ghi789",
@@ -288,7 +268,7 @@ def mock_search_results() -> List[SearchResult]:
             author_email="bob@example.com",
             message="Implement feature 1 for better performance",
             date=datetime.now() - timedelta(days=1),
-            relevance_score=0.87
+            relevance_score=0.87,
         ),
         SearchResult(
             commit_hash="ghi789jkl012",
@@ -299,8 +279,8 @@ def mock_search_results() -> List[SearchResult]:
             author_email="alice@example.com",
             message="Add advanced search functionality",
             date=datetime.now(),
-            relevance_score=0.92
-        )
+            relevance_score=0.92,
+        ),
     ]
 
 
@@ -319,7 +299,7 @@ def mock_commit_info() -> List[CommitInfo]:
             date=datetime.now() - timedelta(days=2),
             files_changed=1,
             insertions=45,
-            deletions=0
+            deletions=0,
         ),
         CommitInfo(
             hash="def456ghi789abc",
@@ -332,8 +312,8 @@ def mock_commit_info() -> List[CommitInfo]:
             date=datetime.now() - timedelta(days=1),
             files_changed=2,
             insertions=32,
-            deletions=5
-        )
+            deletions=5,
+        ),
     ]
 
 
@@ -347,13 +327,21 @@ def search_performance_data():
             r"class\s+\w+\s*\([^)]*\):",
             r"def\s+\w+\s*\([^)]*\)\s*->.*:",
             r"import\s+[\w.]+",
-            r"from\s+[\w.]+\s+import\s+.*"
+            r"from\s+[\w.]+\s+import\s+.*",
         ],
         "stress_test_queries": [
             SearchQuery(content_pattern=pattern, case_sensitive=False)
             for pattern in [
-                "function", "class", "import", "def", "return",
-                "if", "for", "while", "try", "except"
+                "function",
+                "class",
+                "import",
+                "def",
+                "return",
+                "if",
+                "for",
+                "while",
+                "try",
+                "except",
             ]
-        ]
+        ],
     }

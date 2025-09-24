@@ -1,4 +1,5 @@
 from typing import Optional
+
 """Shared test fixtures and configuration for GitHound tests."""
 
 import asyncio
@@ -7,18 +8,18 @@ import tempfile
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 import pytest_asyncio
 from git import Repo
-from unittest.mock import AsyncMock, MagicMock, patch
 
 # Try to import FastMCP components, skip if not available
 try:
-    from fastmcp import FastMCP, Client
+    from fastmcp import Client, FastMCP
     from fastmcp.client.transports import StreamableHttpTransport
-    from fastmcp.exceptions import ToolError, McpError
+    from fastmcp.exceptions import McpError, ToolError
+
     FASTMCP_AVAILABLE = True
 except ImportError:
     # Create mock classes for when FastMCP is not available
@@ -30,9 +31,10 @@ except ImportError:
     FASTMCP_AVAILABLE = False
 
 try:
-    from githound.mcp_server import mcp, get_mcp_server
+    from githound.mcp_server import get_mcp_server, mcp
     MCP_SERVER_AVAILABLE = True
-except ImportError:
+except (ImportError, TypeError, AttributeError):
+    # Handle various import errors including Pydantic compatibility issues
     mcp = None
     get_mcp_server = None
     MCP_SERVER_AVAILABLE = False
@@ -69,8 +71,7 @@ def temp_repo(temp_dir: Path) -> Generator[Repo, None, None]:
 
     # Create initial commit
     test_file = temp_dir / "README.md"
-    test_file.write_text(
-        "# Test Repository\n\nThis is a test repository for GitHound tests.")
+    test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.")
     repo.index.add([str(test_file)])
     repo.index.commit("Initial commit")
 
@@ -105,8 +106,7 @@ def temp_repo_with_commits(temp_dir: Path) -> Generator[tuple, None, None]:
 
     # Create initial commit
     test_file = temp_dir / "README.md"
-    test_file.write_text(
-        "# Test Repository\n\nThis is a test repository for GitHound tests.")
+    test_file.write_text("# Test Repository\n\nThis is a test repository for GitHound tests.")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
 
@@ -187,6 +187,7 @@ async def mcp_server() -> None:
     if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE:
         pytest.skip("FastMCP or MCP server not available")
     from githound.mcp_server import mcp
+
     return mcp
 
 
@@ -304,6 +305,7 @@ def git_error_mock() -> None:
 
 # FastMCP Testing Fixtures following latest documentation patterns
 
+
 @pytest.fixture
 def mock_search_data() -> None:
     """Provide mock search data for testing search functionality."""
@@ -313,19 +315,19 @@ def mock_search_data() -> None:
                 "hash": "abc123",
                 "message": "Add feature X",
                 "author": "Test User",
-                "date": "2024-01-01T00:00:00Z"
+                "date": "2024-01-01T00:00:00Z",
             },
             {
                 "hash": "def456",
                 "message": "Fix bug Y",
                 "author": "Another User",
-                "date": "2024-01-02T00:00:00Z"
-            }
+                "date": "2024-01-02T00:00:00Z",
+            },
         ],
         "files": [
             {"path": "src/main.py", "content": "def main() -> None: pass"},
-            {"path": "README.md", "content": "# Project"}
-        ]
+            {"path": "README.md", "content": "# Project"},
+        ],
     }
 
 
@@ -334,25 +336,27 @@ def auth_headers() -> None:
     """Provide authentication headers for testing."""
     return {
         "bearer": {"Authorization": "Bearer test-token-123"},
-        "oauth": {"Authorization": "Bearer oauth-token-456"}
+        "oauth": {"Authorization": "Bearer oauth-token-456"},
     }
 
 
 @pytest.fixture
 def mock_external_dependencies() -> None:
     """Mock external dependencies for deterministic testing."""
-    with patch('githound.git_handler.get_repository') as mock_get_repo, \
-            patch('githound.search_engine.SearchOrchestrator') as mock_orchestrator, \
-            patch('pathlib.Path.exists') as mock_path_exists:
+    with (
+        patch("githound.git_handler.get_repository") as mock_get_repo,
+        patch("githound.search_engine.SearchOrchestrator") as mock_orchestrator,
+        patch("pathlib.Path.exists") as mock_path_exists,
+    ):
 
         mock_path_exists.return_value = True
         mock_get_repo.return_value = Mock()
         mock_orchestrator.return_value = Mock()
 
         yield {
-            'get_repository': mock_get_repo,
-            'search_orchestrator': mock_orchestrator,
-            'path_exists': mock_path_exists
+            "get_repository": mock_get_repo,
+            "search_orchestrator": mock_orchestrator,
+            "path_exists": mock_path_exists,
         }
 
 
@@ -366,8 +370,8 @@ def performance_test_data() -> None:
             "function.*test.*",
             "class.*[A-Z][a-z]+.*",
             "import.*numpy.*",
-            "def.*async.*"
-        ]
+            "def.*async.*",
+        ],
     }
 
 
@@ -380,17 +384,20 @@ def error_scenarios() -> None:
         "corrupted_git": "/corrupted/.git",
         "network_timeout": "https://timeout.example.com/repo.git",
         "invalid_commit_hash": "invalid_hash_123",
-        "malformed_search_query": {"invalid": "query", "structure": None}
+        "malformed_search_query": {"invalid": "query", "structure": None},
     }
 
 
 # Enhanced API Test Fixtures
 
+
 @pytest.fixture
 def api_client() -> None:
     """FastAPI test client for the enhanced API."""
     from fastapi.testclient import TestClient
+
     from githound.web.enhanced_main_api import app
+
     return TestClient(app)
 
 
@@ -398,7 +405,9 @@ def api_client() -> None:
 async def async_api_client() -> None:
     """Async FastAPI test client for the enhanced API."""
     from httpx import AsyncClient
+
     from githound.web.enhanced_main_api import app
+
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
@@ -407,6 +416,7 @@ async def async_api_client() -> None:
 def auth_manager() -> None:
     """Authentication manager for testing."""
     from githound.web.auth import AuthManager
+
     return AuthManager()
 
 
@@ -414,11 +424,7 @@ def auth_manager() -> None:
 def admin_token(auth_manager) -> None:
     """Generate admin JWT token for testing."""
     token_data = auth_manager.create_access_token(
-        data={
-            "sub": "test_admin",
-            "username": "test_admin",
-            "roles": ["admin", "user"]
-        }
+        data={"sub": "test_admin", "username": "test_admin", "roles": ["admin", "user"]}
     )
     return token_data
 
@@ -427,11 +433,7 @@ def admin_token(auth_manager) -> None:
 def user_token(auth_manager) -> None:
     """Generate user JWT token for testing."""
     token_data = auth_manager.create_access_token(
-        data={
-            "sub": "test_user",
-            "username": "test_user",
-            "roles": ["user"]
-        }
+        data={"sub": "test_user", "username": "test_user", "roles": ["user"]}
     )
     return token_data
 
@@ -440,11 +442,7 @@ def user_token(auth_manager) -> None:
 def readonly_token(auth_manager) -> None:
     """Generate read-only JWT token for testing."""
     token_data = auth_manager.create_access_token(
-        data={
-            "sub": "test_readonly",
-            "username": "test_readonly",
-            "roles": ["read_only"]
-        }
+        data={"sub": "test_readonly", "username": "test_readonly", "roles": ["read_only"]}
     )
     return token_data
 
@@ -472,8 +470,8 @@ def redis_client() -> None:
     """Redis client for testing rate limiting."""
     try:
         import redis
-        client = redis.from_url(
-            "redis://localhost:6379/15", decode_responses=True)
+
+        client = redis.from_url("redis://localhost:6379/15", decode_responses=True)
         client.ping()  # Test connection
         client.flushdb()  # Clear test database
         yield client
@@ -487,6 +485,7 @@ def redis_client() -> None:
 def webhook_manager() -> None:
     """Webhook manager for testing."""
     from githound.web.webhooks import WebhookManager
+
     return WebhookManager()
 
 
@@ -494,6 +493,7 @@ def webhook_manager() -> None:
 def git_operations_manager() -> None:
     """Git operations manager for testing."""
     from githound.web.git_operations import GitOperationsManager
+
     return GitOperationsManager()
 
 
@@ -507,16 +507,16 @@ def complex_git_repo(temp_dir) -> None:
     repo = Repo.init(repo_path)
 
     # Configure user
-    repo.config_writer().set_value(
-        "user", "name", "Test User").release()  # [attr-defined]
-    repo.config_writer().set_value(
-        "user", "email", "test@example.com").release()  # [attr-defined]
+    repo.config_writer().set_value("user", "name", "Test User").release()  # [attr-defined]
+    repo.config_writer().set_value("user", "email", "test@example.com").release()  # [attr-defined]
 
     # Create main branch with multiple commits
     from git import Actor
+
     for i in range(5):
         file_path = repo_path / f"main_file_{i}.py"
-        file_path.write_text(f"""
+        file_path.write_text(
+            f"""
 def function_{i}():
     '''Function {i} implementation'''
     return {i}
@@ -527,7 +527,8 @@ class Class{i}:
 
     def method(self) -> None:
         return self.value * 2
-""")
+"""
+        )
         repo.index.add([f"main_file_{i}.py"])
 
         # Use different authors for some commits
@@ -545,17 +546,20 @@ class Class{i}:
     # Add commits to development branch
     for i in range(3):
         file_path = repo_path / f"dev_file_{i}.js"
-        file_path.write_text(f"""
+        file_path.write_text(
+            f"""
 function devFunction{i}() {{
     console.log('Development function {i}');
     return {i};
 }}
 
 const devConstant{i} = {i * 10};
-""")
+"""
+        )
         repo.index.add([f"dev_file_{i}.js"])
-        repo.index.commit(f"Add dev_file_{i}.js", author=Actor(
-            "Charlie Developer", "charlie@example.com"))
+        repo.index.commit(
+            f"Add dev_file_{i}.js", author=Actor("Charlie Developer", "charlie@example.com")
+        )
 
     # Create feature branch from development
     feature_branch = repo.create_head("feature/new-api", dev_branch)
@@ -563,7 +567,8 @@ const devConstant{i} = {i * 10};
 
     # Add feature commits
     api_file = repo_path / "api.py"
-    api_file.write_text("""
+    api_file.write_text(
+        """
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -575,10 +580,12 @@ def read_root() -> None:
 @app.get("/items/{item_id}")
 def read_item(item_id: int) -> None:
     return {"item_id": item_id}
-""")
+"""
+    )
     repo.index.add(["api.py"])
-    repo.index.commit("Add FastAPI implementation", author=Actor(
-        "Alice Developer", "alice@example.com"))
+    repo.index.commit(
+        "Add FastAPI implementation", author=Actor("Alice Developer", "alice@example.com")
+    )
 
     # Switch back to main and create tags
     repo.heads.master.checkout()
@@ -598,23 +605,20 @@ def large_git_repo(temp_dir) -> None:
     repo = Repo.init(repo_path)
 
     # Configure user
-    repo.config_writer().set_value(
-        "user", "name", "Test User").release()  # [attr-defined]
-    repo.config_writer().set_value(
-        "user", "email", "test@example.com").release()  # [attr-defined]
+    repo.config_writer().set_value("user", "name", "Test User").release()  # [attr-defined]
+    repo.config_writer().set_value("user", "email", "test@example.com").release()  # [attr-defined]
 
     # Create many files and commits
     from git import Actor
+
     for commit_num in range(50):  # 50 commits
         for file_num in range(5):  # 5 files per commit
-            file_path = repo_path / \
-                f"dir_{commit_num % 10}" / f"file_{file_num}.txt"
+            file_path = repo_path / f"dir_{commit_num % 10}" / f"file_{file_num}.txt"
             file_path.parent.mkdir(exist_ok=True)
 
             # Create file with substantial content
             content = f"Commit {commit_num}, File {file_num}\n"
-            content += "\n".join(
-                [f"Line {i}: Some content here" for i in range(20)])
+            content += "\n".join([f"Line {i}: Some content here" for i in range(20)])
             file_path.write_text(content)
 
             repo.index.add([str(file_path.relative_to(repo_path))])
@@ -624,12 +628,11 @@ def large_git_repo(temp_dir) -> None:
             Actor("Alice", "alice@example.com"),
             Actor("Bob", "bob@example.com"),
             Actor("Charlie", "charlie@example.com"),
-            Actor("Diana", "diana@example.com")
+            Actor("Diana", "diana@example.com"),
         ]
         author = authors[commit_num % len(authors)]
 
-        repo.index.commit(
-            f"Commit {commit_num}: Add batch of files", author=author)
+        repo.index.commit(f"Commit {commit_num}: Add batch of files", author=author)
 
     yield repo
 
@@ -641,11 +644,9 @@ def mock_webhook_server() -> None:
     mock_server.received_webhooks = []
 
     def receive_webhook(payload, headers) -> None:
-        mock_server.received_webhooks.append({
-            "payload": payload,
-            "headers": headers,
-            "timestamp": datetime.now()
-        })
+        mock_server.received_webhooks.append(
+            {"payload": payload, "headers": headers, "timestamp": datetime.now()}
+        )
         return {"status": "received"}
 
     mock_server.receive_webhook = receive_webhook
@@ -688,7 +689,9 @@ class TestUtils:
         return last_commit
 
     @staticmethod
-    def assert_api_response(response, expected_status: int = 200, expected_success: bool = True) -> None:
+    def assert_api_response(
+        response, expected_status: int = 200, expected_success: bool = True
+    ) -> None:
         """Assert API response format and status."""
         assert response.status_code == expected_status
 
@@ -713,20 +716,13 @@ def test_utils() -> None:
 def pytest_configure(config) -> None:
     """Configure pytest with custom markers."""
     config.addinivalue_line("markers", "unit: Unit tests")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "integration: Integration tests")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "e2e: End-to-end tests")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "performance: Performance tests")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "security: Security tests")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "slow: Slow running tests")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "redis: Tests requiring Redis")  # [attr-defined]
-    config.addinivalue_line(
-        "markers", "websocket: WebSocket tests")  # [attr-defined]
+    config.addinivalue_line("markers", "integration: Integration tests")  # [attr-defined]
+    config.addinivalue_line("markers", "e2e: End-to-end tests")  # [attr-defined]
+    config.addinivalue_line("markers", "performance: Performance tests")  # [attr-defined]
+    config.addinivalue_line("markers", "security: Security tests")  # [attr-defined]
+    config.addinivalue_line("markers", "slow: Slow running tests")  # [attr-defined]
+    config.addinivalue_line("markers", "redis: Tests requiring Redis")  # [attr-defined]
+    config.addinivalue_line("markers", "websocket: WebSocket tests")  # [attr-defined]
 
 
 def pytest_collection_modifyitems(config, items) -> None:
@@ -745,5 +741,7 @@ def pytest_collection_modifyitems(config, items) -> None:
             item.add_marker(pytest.mark.security)
 
         # Add slow marker for tests that might take longer
-        if any(keyword in item.name.lower() for keyword in ["large", "performance", "load", "stress"]):
+        if any(
+            keyword in item.name.lower() for keyword in ["large", "performance", "load", "stress"]
+        ):
             item.add_marker(pytest.mark.slow)

@@ -9,7 +9,7 @@ const BasePage = require('./base-page');
 class ResultsPage extends BasePage {
   constructor(page) {
     super(page);
-    
+
     // Page elements
     this.elements = {
       // Results container
@@ -17,7 +17,7 @@ class ResultsPage extends BasePage {
       resultCard: '[data-testid="result-card"]',
       noResults: '[data-testid="no-results"]',
       resultsCount: '[data-testid="results-count"]',
-      
+
       // Result card elements
       filePath: '[data-testid="file-path"]',
       lineNumber: '[data-testid="line-number"]',
@@ -26,24 +26,24 @@ class ResultsPage extends BasePage {
       commitMessage: '[data-testid="commit-message"]',
       author: '[data-testid="author"]',
       commitDate: '[data-testid="commit-date"]',
-      
+
       // Result actions
       viewFileButton: '[data-testid="view-file"]',
       copyLinkButton: '[data-testid="copy-link"]',
       viewCommitButton: '[data-testid="view-commit"]',
-      
+
       // Sorting and filtering
       sortDropdown: '[data-testid="sort-dropdown"]',
       sortByRelevance: '[data-testid="sort-relevance"]',
       sortByDate: '[data-testid="sort-date"]',
       sortByFile: '[data-testid="sort-file"]',
-      
+
       // Result filtering
       filterByFileType: '[data-testid="filter-file-type"]',
       filterByAuthor: '[data-testid="filter-author"]',
       filterByDateRange: '[data-testid="filter-date-range"]',
       clearFilters: '[data-testid="clear-filters"]',
-      
+
       // Pagination
       pagination: '[data-testid="pagination"]',
       firstPage: '[data-testid="first-page"]',
@@ -53,21 +53,21 @@ class ResultsPage extends BasePage {
       currentPage: '[data-testid="current-page"]',
       totalPages: '[data-testid="total-pages"]',
       pageSize: '[data-testid="page-size"]',
-      
+
       // Bulk actions
       selectAllCheckbox: '[data-testid="select-all"]',
       resultCheckbox: '[data-testid="result-checkbox"]',
       bulkExport: '[data-testid="bulk-export"]',
       bulkDelete: '[data-testid="bulk-delete"]',
       selectedCount: '[data-testid="selected-count"]',
-      
+
       // Result details modal
       resultModal: '[data-testid="result-modal"]',
       modalClose: '[data-testid="modal-close"]',
       modalContent: '[data-testid="modal-content"]',
       modalFilePath: '[data-testid="modal-file-path"]',
       modalCodeContent: '[data-testid="modal-code-content"]',
-      
+
       // Loading and error states
       loadingSpinner: '[data-testid="loading-spinner"]',
       errorMessage: '[data-testid="error-message"]',
@@ -117,14 +117,14 @@ class ResultsPage extends BasePage {
    */
   async getAllResults() {
     await this.waitForResults();
-    
+
     const resultCards = this.page.locator(this.elements.resultCard);
     const count = await resultCards.count();
     const results = [];
-    
+
     for (let i = 0; i < count; i++) {
       const card = resultCards.nth(i);
-      
+
       const result = {
         filePath: await this.getCardText(card, this.elements.filePath),
         lineNumber: await this.getCardText(card, this.elements.lineNumber),
@@ -134,10 +134,10 @@ class ResultsPage extends BasePage {
         author: await this.getCardText(card, this.elements.author),
         commitDate: await this.getCardText(card, this.elements.commitDate)
       };
-      
+
       results.push(result);
     }
-    
+
     return results;
   }
 
@@ -162,7 +162,7 @@ class ResultsPage extends BasePage {
   async getResult(index) {
     const resultCards = this.page.locator(this.elements.resultCard);
     const card = resultCards.nth(index);
-    
+
     return {
       filePath: await this.getCardText(card, this.elements.filePath),
       lineNumber: await this.getCardText(card, this.elements.lineNumber),
@@ -214,7 +214,7 @@ class ResultsPage extends BasePage {
    */
   async sortResults(sortBy) {
     await this.page.click(this.elements.sortDropdown);
-    
+
     switch (sortBy) {
       case 'relevance':
         await this.page.click(this.elements.sortByRelevance);
@@ -226,7 +226,7 @@ class ResultsPage extends BasePage {
         await this.page.click(this.elements.sortByFile);
         break;
     }
-    
+
     // Wait for results to reload
     await this.waitForResults();
   }
@@ -243,7 +243,7 @@ class ResultsPage extends BasePage {
       // Otherwise use pagination buttons
       const currentPage = await this.getCurrentPage();
       const targetPage = parseInt(pageNumber);
-      
+
       if (targetPage > currentPage) {
         for (let i = currentPage; i < targetPage; i++) {
           await this.goToNextPage();
@@ -254,7 +254,7 @@ class ResultsPage extends BasePage {
         }
       }
     }
-    
+
     await this.waitForResults();
   }
 
@@ -336,7 +336,7 @@ class ResultsPage extends BasePage {
     const resultCards = this.page.locator(this.elements.resultCard);
     const card = resultCards.nth(index);
     const checkbox = card.locator(this.elements.resultCheckbox);
-    
+
     if (await checkbox.isVisible()) {
       await checkbox.check();
     }

@@ -1,15 +1,12 @@
 """Tests for GitHound progress utilities."""
 
-import pytest
-import time
 import threading
-from unittest.mock import Mock, patch, MagicMock
+import time
+from unittest.mock import MagicMock, Mock, patch
 
-from githound.utils.progress import (
-    CancellationToken,
-    ProgressManager,
-    SimpleProgressReporter
-)
+import pytest
+
+from githound.utils.progress import CancellationToken, ProgressManager, SimpleProgressReporter
 
 
 class TestCancellationToken:
@@ -83,8 +80,7 @@ class TestProgressManager:
 
     def test_progress_manager_creation(self) -> None:
         """Test creating a ProgressManager."""
-        manager = ProgressManager(
-            console=self.console, enable_cancellation=True)
+        manager = ProgressManager(console=self.console, enable_cancellation=True)
 
         assert manager.console == self.console
         assert manager.enable_cancellation is True
@@ -92,7 +88,7 @@ class TestProgressManager:
 
     def test_progress_manager_context_manager(self) -> None:
         """Test ProgressManager as context manager."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -106,7 +102,7 @@ class TestProgressManager:
 
     def test_progress_manager_add_task(self) -> None:
         """Test adding a task to ProgressManager."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -119,12 +115,11 @@ class TestProgressManager:
                 assert task_name == "test_task"
                 assert "test_task" in manager._tasks
                 assert "test_task" in manager._stats
-                mock_progress.add_task.assert_called_once_with(
-                    "Testing...", total=100)
+                mock_progress.add_task.assert_called_once_with("Testing...", total=100)
 
     def test_progress_manager_update_task(self) -> None:
         """Test updating a task in ProgressManager."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -133,14 +128,13 @@ class TestProgressManager:
 
             with ProgressManager(console=self.console) as manager:
                 manager.add_task("test_task", "Testing...", 100)
-                manager.update_task("test_task", completed=50,
-                                    description="Half done")
+                manager.update_task("test_task", completed=50, description="Half done")
 
                 mock_progress.update.assert_called()
 
     def test_progress_manager_advance_task(self) -> None:
         """Test advancing a task in ProgressManager."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -155,7 +149,7 @@ class TestProgressManager:
 
     def test_progress_manager_complete_task(self) -> None:
         """Test completing a task in ProgressManager."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -170,7 +164,7 @@ class TestProgressManager:
 
     def test_progress_manager_get_stats(self) -> None:
         """Test getting task statistics."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -188,7 +182,7 @@ class TestProgressManager:
 
     def test_progress_manager_get_all_stats(self) -> None:
         """Test getting all task statistics."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -213,7 +207,7 @@ class TestProgressManager:
 
     def test_progress_manager_cancellation(self) -> None:
         """Test cancellation functionality."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
             mock_progress = Mock()
             mock_progress.__enter__ = Mock(return_value=mock_progress)
             mock_progress.__exit__ = Mock(return_value=None)
@@ -227,8 +221,8 @@ class TestProgressManager:
 
     def test_progress_manager_signal_handling(self) -> None:
         """Test signal handling for cancellation."""
-        with patch('githound.utils.progress.Progress') as mock_progress_class:
-            with patch('signal.signal') as mock_signal:
+        with patch("githound.utils.progress.Progress") as mock_progress_class:
+            with patch("signal.signal") as mock_signal:
                 mock_progress = Mock()
                 mock_progress.__enter__ = Mock(return_value=mock_progress)
                 mock_progress.__exit__ = Mock(return_value=None)
@@ -260,8 +254,7 @@ class TestSimpleProgressReporter:
 
         reporter.report("Processing files...")
 
-        self.console.print.assert_called_once_with(
-            "[cyan]Processing files...[/cyan]")
+        self.console.print.assert_called_once_with("[cyan]Processing files...[/cyan]")
 
     def test_simple_progress_reporter_report_with_progress(self) -> None:
         """Test reporting progress with percentage."""
@@ -286,7 +279,7 @@ class TestSimpleProgressReporter:
         assert self.console.print.call_count == 1
 
         # After waiting, call should go through
-        with patch('time.time', return_value=time.time() + 1.0):
+        with patch("time.time", return_value=time.time() + 1.0):
             reporter.report("Third message")
             assert self.console.print.call_count == 2
 
@@ -324,7 +317,7 @@ class TestSimpleProgressReporter:
 
     def test_simple_progress_reporter_default_console(self) -> None:
         """Test SimpleProgressReporter with default console."""
-        with patch('githound.utils.progress.Console') as mock_console_class:
+        with patch("githound.utils.progress.Console") as mock_console_class:
             mock_console = Mock()
             mock_console_class.return_value = mock_console
 

@@ -37,12 +37,12 @@ logger = logging.getLogger(__name__)
 async def create_prompt_server() -> FastMCP:
     """
     Create a mock MCP server with various prompt examples.
-    
+
     Returns:
         FastMCP server instance with prompt examples
     """
     server = FastMCP("Prompt Examples Server")
-    
+
     @server.prompt
     def code_review(language: str = "python", style: str = "detailed") -> str:
         """Generate a code review prompt for the specified programming language."""
@@ -58,7 +58,7 @@ Focus on:
 
 Provide specific suggestions for improvement.
 """
-    
+
     @server.prompt
     def meeting_summary(meeting_type: str = "standup", participants: int = 5) -> str:
         """Generate a meeting summary template."""
@@ -70,18 +70,18 @@ Date: {{date}}
 Duration: {{duration}}
 
 ## Key Discussion Points
-- 
+-
 
 ## Decisions Made
-- 
+-
 
 ## Action Items
-- [ ] 
+- [ ]
 
 ## Next Steps
-- 
+-
 """
-    
+
     @server.prompt
     def creative_writing(genre: str = "sci-fi", tone: str = "optimistic") -> str:
         """Generate a creative writing prompt."""
@@ -95,9 +95,9 @@ Duration: {{duration}}
                 "dark": "Write about a world where magic is dying, and the last wizard must make an impossible choice."
             }
         }
-        
+
         return prompts.get(genre, {}).get(tone, "Write a compelling story that explores the human condition.")
-    
+
     @server.prompt
     def data_analysis(dataset_type: str = "sales", analysis_type: str = "trend") -> str:
         """Generate a data analysis prompt."""
@@ -113,28 +113,28 @@ Please provide:
 
 Format the response with clear sections and actionable insights.
 """
-    
+
     return server
 
 
 async def demonstrate_prompt_discovery() -> Dict[str, Any]:
     """
     Demonstrate discovering available prompts on an MCP server.
-    
+
     Returns:
         Dict containing prompt discovery results
     """
     logger.info("Discovering available prompts...")
-    
+
     # Create server with prompts
     server = await create_prompt_server()
     transport = FastMCPTransport(server)
-    
+
     try:
         async with Client(transport) as client:
             # List all available prompts
             prompts = await client.list_prompts()
-            
+
             prompt_details: list[Any] = []
             for prompt in prompts:
                 prompt_info = {
@@ -142,7 +142,7 @@ async def demonstrate_prompt_discovery() -> Dict[str, Any]:
                     "description": prompt.description,
                     "arguments": []
                 }
-                
+
                 # Extract argument information if available
                 if hasattr(prompt, 'arguments') and prompt.arguments:
                     for arg in prompt.arguments:
@@ -152,17 +152,17 @@ async def demonstrate_prompt_discovery() -> Dict[str, Any]:
                             "required": arg.required,
                             "type": getattr(arg, 'type', 'string')
                         })
-                
+
                 prompt_details.append(prompt_info)
-            
+
             logger.info(f"✓ Discovered {len(prompts)} prompts")
-            
+
             return {
                 "status": "success",
                 "prompt_count": len(prompts),
                 "prompts": prompt_details
             }
-            
+
     except Exception as e:
         logger.error(f"Prompt discovery failed: {e}")
         return {"status": "failed", "error": str(e)}
@@ -171,20 +171,20 @@ async def demonstrate_prompt_discovery() -> Dict[str, Any]:
 async def demonstrate_prompt_execution() -> Dict[str, Any]:
     """
     Demonstrate executing prompts with various arguments.
-    
+
     Returns:
         Dict containing prompt execution results
     """
     logger.info("Executing prompts with different arguments...")
-    
+
     server = await create_prompt_server()
     transport = FastMCPTransport(server)
-    
+
     execution_results: list[Any] = []
-    
+
     try:
         async with Client(transport) as client:
-            
+
             # Test cases for prompt execution
             test_cases = [
                 {
@@ -193,7 +193,7 @@ async def demonstrate_prompt_execution() -> Dict[str, Any]:
                     "description": "JavaScript code review prompt"
                 },
                 {
-                    "prompt": "meeting_summary", 
+                    "prompt": "meeting_summary",
                     "arguments": {"meeting_type": "retrospective", "participants": 8},
                     "description": "Retrospective meeting summary"
                 },
@@ -208,16 +208,16 @@ async def demonstrate_prompt_execution() -> Dict[str, Any]:
                     "description": "Customer segmentation analysis"
                 }
             ]
-            
+
             for test_case in test_cases:
                 try:
                     logger.info(f"Executing prompt: {test_case['prompt']}")
-                    
+
                     result = await client.get_prompt(
                         test_case["prompt"],
                         test_case["arguments"]
                     )
-                    
+
                     execution_results.append({
                         "prompt": test_case["prompt"],
                         "arguments": test_case["arguments"],
@@ -226,9 +226,9 @@ async def demonstrate_prompt_execution() -> Dict[str, Any]:
                         "content_length": len(result.messages[0].content.text) if result.messages else 0,
                         "preview": result.messages[0].content.text[:100] + "..." if result.messages else ""
                     })
-                    
+
                     logger.info(f"✓ {test_case['prompt']} executed successfully")
-                    
+
                 except Exception as e:
                     logger.error(f"Failed to execute {test_case['prompt']}: {e}")
                     execution_results.append({
@@ -238,13 +238,13 @@ async def demonstrate_prompt_execution() -> Dict[str, Any]:
                         "status": "failed",
                         "error": str(e)
                     })
-            
+
             return {
                 "status": "success",
                 "executions": execution_results,
                 "successful_executions": len([r for r in execution_results if r["status"] == "success"])
             }
-            
+
     except Exception as e:
         logger.error(f"Prompt execution demonstration failed: {e}")
         return {"status": "failed", "error": str(e)}
@@ -253,20 +253,20 @@ async def demonstrate_prompt_execution() -> Dict[str, Any]:
 async def demonstrate_prompt_error_handling() -> Dict[str, Any]:
     """
     Demonstrate error handling for prompt operations.
-    
+
     Returns:
         Dict containing error handling results
     """
     logger.info("Demonstrating prompt error handling...")
-    
+
     server = await create_prompt_server()
     transport = FastMCPTransport(server)
-    
+
     error_scenarios: list[Any] = []
-    
+
     try:
         async with Client(transport) as client:
-            
+
             # Test error scenarios
             test_scenarios = [
                 {
@@ -288,23 +288,23 @@ async def demonstrate_prompt_error_handling() -> Dict[str, Any]:
                     "expected_error": "Missing required argument"
                 }
             ]
-            
+
             for scenario in test_scenarios:
                 try:
                     logger.info(f"Testing error scenario: {scenario['name']}")
-                    
+
                     result = await client.get_prompt(
                         scenario["prompt"],
                         scenario["arguments"]
                     )
-                    
+
                     # If we get here, the error wasn't caught
                     error_scenarios.append({
                         "scenario": scenario["name"],
                         "status": "unexpected_success",
                         "message": "Expected error but operation succeeded"
                     })
-                    
+
                 except (PromptError, McpError) as e:
                     logger.info(f"✓ Caught expected error for {scenario['name']}: {e}")
                     error_scenarios.append({
@@ -313,7 +313,7 @@ async def demonstrate_prompt_error_handling() -> Dict[str, Any]:
                         "error_type": type(e).__name__,
                         "error_message": str(e)
                     })
-                    
+
                 except Exception as e:
                     logger.warning(f"Unexpected error type for {scenario['name']}: {e}")
                     error_scenarios.append({
@@ -322,13 +322,13 @@ async def demonstrate_prompt_error_handling() -> Dict[str, Any]:
                         "error_type": type(e).__name__,
                         "error_message": str(e)
                     })
-            
+
             return {
                 "status": "success",
                 "error_scenarios": error_scenarios,
                 "expected_errors_caught": len([s for s in error_scenarios if s["status"] == "expected_error"])
             }
-            
+
     except Exception as e:
         logger.error(f"Error handling demonstration failed: {e}")
         return {"status": "failed", "error": str(e)}
@@ -337,38 +337,38 @@ async def demonstrate_prompt_error_handling() -> Dict[str, Any]:
 async def main() -> Dict[str, Any]:
     """
     Main function demonstrating FastMCP prompt operations.
-    
+
     Returns:
         Dict containing all demonstration results
     """
     print("=" * 60)
     print("FastMCP Client - Prompt Operations Examples")
     print("=" * 60)
-    
+
     results: dict[str, Any] = {}
-    
+
     try:
         # 1. Prompt discovery
         logger.info("\n1. Prompt Discovery")
         discovery_result = await demonstrate_prompt_discovery()
         results["discovery"] = discovery_result
-        
+
         # 2. Prompt execution
         logger.info("\n2. Prompt Execution")
         execution_result = await demonstrate_prompt_execution()
         results["execution"] = execution_result
-        
+
         # 3. Error handling
         logger.info("\n3. Error Handling")
         error_handling_result = await demonstrate_prompt_error_handling()
         results["error_handling"] = error_handling_result
-        
+
         print("\n" + "=" * 60)
         print("Prompt operations examples completed!")
         print("=" * 60)
-        
+
         return results
-        
+
     except Exception as e:
         logger.error(f"Main execution failed: {e}")
         return {"status": "failed", "error": str(e)}

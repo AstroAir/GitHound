@@ -154,7 +154,7 @@ try:
     commit = repo.commit("invalid-hash")
 except GitCommandError as e:
     response = {
-        "status": "error", 
+        "status": "error",
         "error_code": "INVALID_COMMIT",
         "message": "Invalid commit hash",
         "details": {
@@ -172,7 +172,7 @@ try:
 except PermissionError as e:
     response = {
         "status": "error",
-        "error_code": "ACCESS_DENIED", 
+        "error_code": "ACCESS_DENIED",
         "message": "Permission denied",
         "details": {
             "path": "/restricted/repo",
@@ -254,7 +254,7 @@ def setup_error_logging():
             logging.StreamHandler()
         ]
     )
-    
+
     # Set specific loggers
     logging.getLogger('githound.git_handler').setLevel(logging.DEBUG)
     logging.getLogger('githound.mcp_server').setLevel(logging.INFO)
@@ -286,14 +286,14 @@ class CircuitBreaker:
         self.failure_count = 0
         self.last_failure_time = None
         self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
-    
+
     def call(self, func, *args, **kwargs):
         if self.state == "OPEN":
             if time.time() - self.last_failure_time > self.timeout:
                 self.state = "HALF_OPEN"
             else:
                 raise Exception("Circuit breaker is OPEN")
-        
+
         try:
             result = func(*args, **kwargs)
             self.reset()

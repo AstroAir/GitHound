@@ -1,8 +1,9 @@
 """Tests for OAuth authentication providers (GitHub, Google, OAuth Proxy)."""
 
-import pytest
-from unittest.mock import patch, AsyncMock, Mock
 from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from githound.mcp.auth.providers.base import AuthResult
 
@@ -17,7 +18,7 @@ class TestGitHubProvider:
         provider = GitHubProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         assert provider.client_id == "test-client-id"
@@ -31,7 +32,7 @@ class TestGitHubProvider:
         provider = GitHubProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         metadata = provider.get_oauth_metadata()
@@ -50,10 +51,7 @@ class TestGitHubProvider:
         """Test GitHub Dynamic Client Registration support."""
         from githound.mcp.auth.providers.github import GitHubProvider
 
-        provider = GitHubProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GitHubProvider(client_id="test-client-id", client_secret="test-client-secret")
 
         assert provider.supports_dynamic_client_registration() is True
 
@@ -62,16 +60,13 @@ class TestGitHubProvider:
         """Test successful GitHub authentication flow."""
         from githound.mcp.auth.providers.github import GitHubProvider
 
-        provider = GitHubProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GitHubProvider(client_id="test-client-id", client_secret="test-client-secret")
 
         # Mock successful token exchange
         mock_token_response = {
             "access_token": "gho_test_token",
             "token_type": "bearer",
-            "scope": "user:email"
+            "scope": "user:email",
         }
 
         # Mock successful user info
@@ -80,10 +75,10 @@ class TestGitHubProvider:
             "name": "Test User",
             "email": "test@example.com",
             "id": 12345,
-            "avatar_url": "https://github.com/images/error/testuser_happy.gif"
+            "avatar_url": "https://github.com/images/error/testuser_happy.gif",
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_instance = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_instance
 
@@ -113,12 +108,9 @@ class TestGitHubProvider:
         """Test GitHub authentication with token exchange failure."""
         from githound.mcp.auth.providers.github import GitHubProvider
 
-        provider = GitHubProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GitHubProvider(client_id="test-client-id", client_secret="test-client-secret")
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_instance = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_instance
 
@@ -142,22 +134,22 @@ class TestGitHubProvider:
         provider = GitHubProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         client_metadata = {
             "client_name": "Test GitHound Client",
-            "redirect_uris": ["http://localhost:3000/callback"]
+            "redirect_uris": ["http://localhost:3000/callback"],
         }
 
         mock_registration_response = {
             "client_id": "new-client-id",
             "client_secret": "new-client-secret",
             "client_id_issued_at": 1234567890,
-            "client_secret_expires_at": 0
+            "client_secret_expires_at": 0,
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_instance = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_instance
 
@@ -182,7 +174,7 @@ class TestGoogleProvider:
         provider = GoogleProvider(
             client_id="test-client-id.apps.googleusercontent.com",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         assert provider.client_id == "test-client-id.apps.googleusercontent.com"
@@ -196,7 +188,7 @@ class TestGoogleProvider:
         provider = GoogleProvider(
             client_id="test-client-id.apps.googleusercontent.com",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         metadata = provider.get_oauth_metadata()
@@ -219,7 +211,7 @@ class TestGoogleProvider:
 
         provider = GoogleProvider(
             client_id="test-client-id.apps.googleusercontent.com",
-            client_secret="test-client-secret"
+            client_secret="test-client-secret",
         )
 
         # Mock successful token exchange
@@ -227,7 +219,7 @@ class TestGoogleProvider:
             "access_token": "ya29.test_token",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.test.signature"
+            "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.test.signature",
         }
 
         # Mock successful user info
@@ -236,10 +228,10 @@ class TestGoogleProvider:
             "name": "Test User",
             "email": "test@gmail.com",
             "picture": "https://lh3.googleusercontent.com/test",
-            "email_verified": True
+            "email_verified": True,
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_instance = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_instance
 
@@ -278,7 +270,7 @@ class TestOAuthProxy:
             base_url="http://localhost:8000",
             authorization_endpoint="https://auth.example.com/oauth/authorize",
             token_endpoint="https://auth.example.com/oauth/token",
-            userinfo_endpoint="https://auth.example.com/oauth/userinfo"
+            userinfo_endpoint="https://auth.example.com/oauth/userinfo",
         )
 
         assert proxy.client_id == "test-client-id"
@@ -297,7 +289,7 @@ class TestOAuthProxy:
             base_url="http://localhost:8000",
             authorization_endpoint="https://auth.example.com/oauth/authorize",
             token_endpoint="https://auth.example.com/oauth/token",
-            userinfo_endpoint="https://auth.example.com/oauth/userinfo"
+            userinfo_endpoint="https://auth.example.com/oauth/userinfo",
         )
 
         metadata = proxy.get_oauth_metadata()
@@ -319,23 +311,23 @@ class TestOAuthProxy:
             base_url="http://localhost:8000",
             authorization_endpoint="https://auth.example.com/oauth/authorize",
             token_endpoint="https://auth.example.com/oauth/token",
-            userinfo_endpoint="https://auth.example.com/oauth/userinfo"
+            userinfo_endpoint="https://auth.example.com/oauth/userinfo",
         )
 
         client_metadata = {
             "client_name": "Test Client",
             "redirect_uris": ["http://localhost:3000/callback"],
-            "scope": "read write"
+            "scope": "read write",
         }
 
         mock_response = {
             "client_id": "generated-client-id",
             "client_secret": "generated-client-secret",
             "client_id_issued_at": 1234567890,
-            "client_secret_expires_at": 0
+            "client_secret_expires_at": 0,
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_instance = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_instance
 
@@ -359,7 +351,7 @@ class TestOAuthProxy:
             client_secret="test-client-secret",
             authorization_endpoint="https://auth.example.com/oauth/authorize",
             token_endpoint="https://auth.example.com/oauth/token",
-            userinfo_endpoint="https://auth.example.com/oauth/userinfo"
+            userinfo_endpoint="https://auth.example.com/oauth/userinfo",
         )
 
         # Mock successful token exchange
@@ -367,7 +359,7 @@ class TestOAuthProxy:
             "access_token": "test-access-token",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "scope": "read write"
+            "scope": "read write",
         }
 
         # Mock successful user info
@@ -375,10 +367,10 @@ class TestOAuthProxy:
             "sub": "user123",
             "username": "testuser",
             "email": "test@example.com",
-            "name": "Test User"
+            "name": "Test User",
         }
 
-        with patch('aiohttp.ClientSession') as mock_session:
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_instance = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_instance
 

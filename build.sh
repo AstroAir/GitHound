@@ -87,15 +87,15 @@ check_virtual_env() {
 run_command() {
     local cmd="$1"
     local description="$2"
-    
+
     if [[ -n "$description" ]]; then
         log_info "$description"
     fi
-    
+
     if [[ "$VERBOSE" == "1" ]]; then
         echo -e "${CYAN}Executing: $cmd${NC}"
     fi
-    
+
     eval "$cmd"
 }
 
@@ -169,7 +169,7 @@ run_benchmarks() {
 
 clean_build_artifacts() {
     log_info "Cleaning build artifacts..."
-    
+
     # Remove build directories
     for dir in "$BUILD_DIR" "$DIST_DIR" "*.egg-info" ".pytest_cache" "htmlcov" ".mypy_cache" ".ruff_cache"; do
         if [[ -d "$dir" ]] || [[ -f "$dir" ]]; then
@@ -179,13 +179,13 @@ clean_build_artifacts() {
             fi
         fi
     done
-    
+
     # Remove __pycache__ directories
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-    
+
     # Remove .pyc files
     find . -type f -name "*.pyc" -delete 2>/dev/null || true
-    
+
     # Remove .coverage file
     [[ -f ".coverage" ]] && rm ".coverage"
 }

@@ -1,0 +1,187 @@
+name: 📚 Documentation Maintenance
+description: Report documentation issues or request maintenance tasks
+title: "[DOCS] "
+labels: ["documentation", "maintenance"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping maintain GitHound documentation quality!
+
+        Use this template to report documentation issues, request updates, or suggest improvements.
+
+  - type: dropdown
+    id: maintenance_type
+    attributes:
+      label: Maintenance Type
+      description: What type of documentation maintenance is needed?
+      options:
+        - Content Update
+        - Link Fix
+        - Code Example Fix
+        - Style/Formatting Issue
+        - Missing Documentation
+        - Outdated Information
+        - Navigation/Organization
+        - Template Issue
+        - Validation Error
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this maintenance task?
+      options:
+        - Low - Nice to have improvement
+        - Medium - Should be addressed soon
+        - High - Affects user experience
+        - Critical - Blocks users or contains errors
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the documentation issue or maintenance need
+      placeholder: |
+        Please provide a clear description of:
+        - What documentation is affected
+        - What the issue is
+        - What needs to be changed or updated
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Where is the affected documentation located?
+      placeholder: |
+        Examples:
+        - docs/user-guide/installation.md
+        - README.md
+        - docs/api-reference/rest-api.md
+        - Multiple files (list them)
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_content
+    attributes:
+      label: Current Content (if applicable)
+      description: Copy the current content that needs to be changed
+      render: markdown
+      placeholder: |
+        ```markdown
+        Current content that needs updating...
+        ```
+
+  - type: textarea
+    id: proposed_content
+    attributes:
+      label: Proposed Content (if applicable)
+      description: Suggest the updated content
+      render: markdown
+      placeholder: |
+        ```markdown
+        Proposed updated content...
+        ```
+
+  - type: textarea
+    id: validation_errors
+    attributes:
+      label: Validation Errors (if applicable)
+      description: Include any validation script errors or warnings
+      render: shell
+      placeholder: |
+        ```
+        Error output from validation scripts...
+        ```
+
+  - type: checkboxes
+    id: affected_areas
+    attributes:
+      label: Affected Areas
+      description: Which areas of documentation are affected?
+      options:
+        - label: User Guides
+        - label: API Reference
+        - label: Installation Instructions
+        - label: Configuration Documentation
+        - label: Troubleshooting Guides
+        - label: Code Examples
+        - label: README files
+        - label: Development Documentation
+        - label: Templates
+        - label: Navigation/Cross-references
+
+  - type: textarea
+    id: user_impact
+    attributes:
+      label: User Impact
+      description: How does this issue affect users?
+      placeholder: |
+        Describe how this documentation issue impacts users:
+        - Does it prevent users from completing tasks?
+        - Does it cause confusion?
+        - Does it provide incorrect information?
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information that might be helpful
+      placeholder: |
+        - Related issues or pull requests
+        - Screenshots (if applicable)
+        - User feedback or reports
+        - Version information
+        - Browser/environment details (if relevant)
+
+  - type: checkboxes
+    id: maintenance_checklist
+    attributes:
+      label: Maintenance Checklist
+      description: For maintainers - check off completed tasks
+      options:
+        - label: Issue triaged and prioritized
+        - label: Affected documentation identified
+        - label: Validation scripts run
+        - label: Content updated
+        - label: Links verified
+        - label: Code examples tested
+        - label: Style guide compliance checked
+        - label: Cross-references updated
+        - label: Changes reviewed
+        - label: Documentation rebuilt and tested
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 🔧 For Maintainers
+
+        ### Validation Commands
+        ```bash
+        # Run comprehensive validation
+        make docs-validate
+
+        # Quick validation
+        make docs-validate-quick
+
+        # Specific validations
+        python scripts/validate_links.py
+        python scripts/validate_docs_examples.py
+        ```
+
+        ### Related Documentation
+        - [Documentation Maintenance Guide](docs/development/documentation-maintenance.md)
+        - [Documentation Style Guide](docs/development/documentation-style-guide.md)
+        - [Validation Scripts](scripts/README.md)
+
+        Thank you for maintaining GitHound documentation quality! 🚀

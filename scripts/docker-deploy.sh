@@ -72,30 +72,30 @@ EOF
 # Function to check prerequisites
 check_prerequisites() {
     print_info "Checking prerequisites..."
-    
+
     if ! command -v docker &> /dev/null; then
         print_error "Docker is not installed or not in PATH"
         exit 1
     fi
-    
+
     if ! command -v docker-compose &> /dev/null; then
         print_error "Docker Compose is not installed or not in PATH"
         exit 1
     fi
-    
+
     # Check Docker daemon
     if ! docker info &> /dev/null; then
         print_error "Docker daemon is not running"
         exit 1
     fi
-    
+
     print_success "Prerequisites check passed"
 }
 
 # Function to setup environment
 setup_environment() {
     print_info "Setting up environment: $ENVIRONMENT"
-    
+
     case $ENVIRONMENT in
         development)
             COMPOSE_FILES="-f docker-compose.yml -f docker-compose.override.yml"
@@ -111,13 +111,13 @@ setup_environment() {
             exit 1
             ;;
     esac
-    
+
     # Set build arguments
     BUILD_ARGS="--build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
     if command -v git &> /dev/null && git rev-parse --git-dir > /dev/null 2>&1; then
         BUILD_ARGS="$BUILD_ARGS --build-arg VCS_REF=$(git rev-parse --short HEAD)"
     fi
-    
+
     # Check if .env file exists
     if [[ ! -f .env ]]; then
         print_warning ".env file not found, copying from .env.example"
@@ -134,20 +134,20 @@ setup_environment() {
 # Function to deploy services
 deploy_services() {
     print_info "Deploying GitHound services..."
-    
+
     if [[ "$FORCE_BUILD" == "true" ]]; then
         print_info "Force building images..."
         docker-compose $COMPOSE_FILES build --no-cache $BUILD_ARGS
     else
         docker-compose $COMPOSE_FILES build $BUILD_ARGS
     fi
-    
+
     if [[ "$DETACHED" == "true" ]]; then
         docker-compose $COMPOSE_FILES up -d
     else
         docker-compose $COMPOSE_FILES up
     fi
-    
+
     print_success "Deployment completed"
 }
 
@@ -175,7 +175,7 @@ show_logs() {
 show_status() {
     print_info "Service status:"
     docker-compose $COMPOSE_FILES ps
-    
+
     print_info "Health checks:"
     docker-compose $COMPOSE_FILES exec -T githound-web curl -f http://localhost:8000/health || print_warning "Web service health check failed"
     docker-compose $COMPOSE_FILES exec -T githound-mcp curl -f http://localhost:3000/health || print_warning "MCP service health check failed"
@@ -255,10 +255,10 @@ main() {
     print_info "GitHound Docker Deployment Script"
     print_info "Environment: $ENVIRONMENT"
     print_info "Action: $ACTION"
-    
+
     check_prerequisites
     setup_environment
-    
+
     case $ACTION in
         deploy)
             deploy_services

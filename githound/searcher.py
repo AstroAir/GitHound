@@ -29,8 +29,7 @@ def search_blob_content(
         rg_args.append("-i")
 
     try:
-        process = subprocess.run(
-            rg_args, input=content, capture_output=True, check=True, text=True)
+        process = subprocess.run(rg_args, input=content, capture_output=True, check=True, text=True)
     except subprocess.CalledProcessError as e:
         # ripgrep exit code 1 means no matches found, which is not an error
         if e.returncode == 1:

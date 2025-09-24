@@ -79,15 +79,15 @@ function Test-VirtualEnv {
 
 function Invoke-Command {
     param([string]$Cmd, [string]$Description)
-    
+
     if ($Description) {
         Write-ColorOutput $Description "Blue"
     }
-    
+
     if ($VerboseOutput) {
         Write-ColorOutput "Executing: $Cmd" "Cyan"
     }
-    
+
     Invoke-Expression $Cmd
     if ($LASTEXITCODE -ne 0) {
         Write-ColorOutput "Command failed with exit code $LASTEXITCODE" "Red"
@@ -165,7 +165,7 @@ function Run-Benchmarks {
 
 function Clean-BuildArtifacts {
     Write-ColorOutput "Cleaning build artifacts..." "Blue"
-    
+
     $DirsToRemove = @($BuildDir, $DistDir, "*.egg-info", ".pytest_cache", "htmlcov", ".mypy_cache", ".ruff_cache")
     foreach ($Dir in $DirsToRemove) {
         if (Test-Path $Dir) {
@@ -175,7 +175,7 @@ function Clean-BuildArtifacts {
             }
         }
     }
-    
+
     # Remove __pycache__ directories
     Get-ChildItem -Recurse -Directory -Name "__pycache__" | ForEach-Object {
         Remove-Item -Recurse -Force $_
@@ -183,12 +183,12 @@ function Clean-BuildArtifacts {
             Write-ColorOutput "Removed: $_" "Cyan"
         }
     }
-    
+
     # Remove .pyc files
     Get-ChildItem -Recurse -File -Name "*.pyc" | ForEach-Object {
         Remove-Item -Force $_
     }
-    
+
     # Remove .coverage file
     if (Test-Path ".coverage") {
         Remove-Item ".coverage"

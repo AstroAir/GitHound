@@ -20,7 +20,7 @@ class CoverageReporter {
       generateHtml: options.generateHtml !== false,
       ...options
     };
-    
+
     this.coverage = {
       files: new Map(),
       summary: {
@@ -39,21 +39,21 @@ class CoverageReporter {
       // Collect JavaScript coverage from the page
       const jsCoverage = await page.coverage.stopJSCoverage();
       const cssCoverage = await page.coverage.stopCSSCoverage();
-      
+
       // Process JavaScript coverage
       for (const entry of jsCoverage) {
         if (this.shouldIncludeFile(entry.url)) {
           this.processCoverageEntry(entry, 'javascript');
         }
       }
-      
+
       // Process CSS coverage
       for (const entry of cssCoverage) {
         if (this.shouldIncludeFile(entry.url)) {
           this.processCoverageEntry(entry, 'css');
         }
       }
-      
+
       // Collect runtime coverage data
       const runtimeCoverage = await page.evaluate(() => {
         if (window.__coverage__) {
@@ -61,11 +61,11 @@ class CoverageReporter {
         }
         return null;
       });
-      
+
       if (runtimeCoverage) {
         this.processRuntimeCoverage(runtimeCoverage);
       }
-      
+
     } catch (error) {
       console.warn('Failed to collect coverage:', error.message);
     }
@@ -73,17 +73,17 @@ class CoverageReporter {
 
   shouldIncludeFile(url) {
     // Include only our application files
-    return url.includes('/static/') || 
-           url.includes('app.js') || 
+    return url.includes('/static/') ||
+           url.includes('app.js') ||
            url.includes('githound') ||
-           (!url.includes('node_modules') && 
-            !url.includes('playwright') && 
+           (!url.includes('node_modules') &&
+            !url.includes('playwright') &&
             !url.includes('test'));
   }
 
   processCoverageEntry(entry, type) {
     const fileName = this.getFileName(entry.url);
-    
+
     if (!this.coverage.files.has(fileName)) {
       this.coverage.files.set(fileName, {
         url: entry.url,
@@ -97,9 +97,9 @@ class CoverageReporter {
         uncoveredRanges: []
       });
     }
-    
+
     const fileData = this.coverage.files.get(fileName);
-    
+
     if (entry.ranges) {
       fileData.ranges = entry.ranges;
       this.calculateLineCoverage(fileData);
@@ -109,7 +109,7 @@ class CoverageReporter {
   processRuntimeCoverage(runtimeCoverage) {
     for (const [filePath, fileCoverage] of Object.entries(runtimeCoverage)) {
       const fileName = this.getFileName(filePath);
-      
+
       if (!this.coverage.files.has(fileName)) {
         this.coverage.files.set(fileName, {
           url: filePath,
@@ -121,37 +121,37 @@ class CoverageReporter {
           uncoveredRanges: []
         });
       }
-      
+
       const fileData = this.coverage.files.get(fileName);
-      
+
       // Process statements
       if (fileCoverage.s) {
         fileData.statements.total = Object.keys(fileCoverage.s).length;
         fileData.statements.covered = Object.values(fileCoverage.s).filter(count => count > 0).length;
       }
-      
+
       // Process branches
       if (fileCoverage.b) {
         fileData.branches.total = Object.values(fileCoverage.b).flat().length;
         fileData.branches.covered = Object.values(fileCoverage.b).flat().filter(count => count > 0).length;
       }
-      
+
       // Process functions
       if (fileCoverage.f) {
         fileData.functions.total = Object.keys(fileCoverage.f).length;
         fileData.functions.covered = Object.values(fileCoverage.f).filter(count => count > 0).length;
       }
-      
+
       // Process lines
       if (fileCoverage.l) {
         fileData.lines.total = Object.keys(fileCoverage.l).length;
         fileData.lines.covered = Object.values(fileCoverage.l).filter(count => count > 0).length;
-        
+
         // Track uncovered lines
         const uncoveredLines = Object.entries(fileCoverage.l)
           .filter(([line, count]) => count === 0)
           .map(([line]) => parseInt(line));
-        
+
         if (uncoveredLines.length > 0) {
           this.coverage.uncoveredLines.push({
             file: fileName,
@@ -164,31 +164,31 @@ class CoverageReporter {
 
   calculateLineCoverage(fileData) {
     if (!fileData.text || !fileData.ranges) return;
-    
+
     const lines = fileData.text.split('\n');
     const coveredLines = new Set();
-    
+
     // Mark covered lines based on ranges
     for (const range of fileData.ranges) {
       const startLine = this.getLineNumber(fileData.text, range.start);
       const endLine = this.getLineNumber(fileData.text, range.end);
-      
+
       for (let line = startLine; line <= endLine; line++) {
         if (lines[line - 1] && lines[line - 1].trim()) {
           coveredLines.add(line);
         }
       }
     }
-    
+
     // Count total executable lines (non-empty, non-comment)
     const executableLines = lines
       .map((line, index) => ({ line: line.trim(), number: index + 1 }))
       .filter(({ line }) => line && !line.startsWith('//') && !line.startsWith('/*'))
       .map(({ number }) => number);
-    
+
     fileData.lines.total = executableLines.length;
     fileData.lines.covered = executableLines.filter(line => coveredLines.has(line)).length;
-    
+
     // Track uncovered lines
     const uncoveredLines = executableLines.filter(line => !coveredLines.has(line));
     if (uncoveredLines.length > 0) {
@@ -209,7 +209,7 @@ class CoverageReporter {
     let totalBranches = 0, coveredBranches = 0;
     let totalFunctions = 0, coveredFunctions = 0;
     let totalLines = 0, coveredLines = 0;
-    
+
     for (const fileData of this.coverage.files.values()) {
       totalStatements += fileData.statements.total;
       coveredStatements += fileData.statements.covered;
@@ -220,7 +220,7 @@ class CoverageReporter {
       totalLines += fileData.lines.total;
       coveredLines += fileData.lines.covered;
     }
-    
+
     this.coverage.summary = {
       statements: {
         total: totalStatements,
@@ -247,23 +247,23 @@ class CoverageReporter {
 
   generateReports() {
     this.calculateSummary();
-    
+
     // Ensure output directory exists
     if (!fs.existsSync(this.options.outputDir)) {
       fs.mkdirSync(this.options.outputDir, { recursive: true });
     }
-    
+
     // Generate JSON report
     this.generateJsonReport();
-    
+
     // Generate HTML report
     if (this.options.generateHtml) {
       this.generateHtmlReport();
     }
-    
+
     // Generate console summary
     this.printConsoleSummary();
-    
+
     // Check thresholds
     this.checkThresholds();
   }
@@ -278,7 +278,7 @@ class CoverageReporter {
       uncoveredLines: this.coverage.uncoveredLines,
       timestamp: this.coverage.timestamp
     };
-    
+
     const reportPath = path.join(this.options.outputDir, 'coverage.json');
     fs.writeFileSync(reportPath, JSON.stringify(reportData, null, 2));
   }
@@ -305,21 +305,21 @@ class CoverageReporter {
 <body>
     <h1>🐕 GitHound Coverage Report</h1>
     <p>Generated: ${this.coverage.timestamp}</p>
-    
+
     <div class="summary">
         <h2>Summary</h2>
         ${this.generateSummaryHtml()}
     </div>
-    
+
     <div class="file-list">
         <h2>File Coverage</h2>
         ${this.generateFileListHtml()}
     </div>
-    
+
     ${this.options.includeUncovered ? this.generateUncoveredHtml() : ''}
 </body>
 </html>`;
-    
+
     const reportPath = path.join(this.options.outputDir, 'coverage.html');
     fs.writeFileSync(reportPath, html);
   }
@@ -330,7 +330,7 @@ class CoverageReporter {
       if (percentage >= 60) return 'warning';
       return 'danger';
     };
-    
+
     return `
         <div class="metric">
             <div>Statements</div>
@@ -366,9 +366,9 @@ class CoverageReporter {
   generateFileListHtml() {
     return Array.from(this.coverage.files.entries())
       .map(([name, data]) => {
-        const linePercentage = data.lines.total > 0 ? 
+        const linePercentage = data.lines.total > 0 ?
           (data.lines.covered / data.lines.total * 100).toFixed(2) : 0;
-        
+
         return `
             <div class="file-item">
                 <h4>${name}</h4>
@@ -383,7 +383,7 @@ class CoverageReporter {
     if (this.coverage.uncoveredLines.length === 0) {
       return '<div class="uncovered"><h2>🎉 All lines covered!</h2></div>';
     }
-    
+
     return `
         <div class="uncovered">
             <h2>Uncovered Lines</h2>
@@ -406,23 +406,23 @@ class CoverageReporter {
 
   checkThresholds() {
     const failures = [];
-    
+
     if (this.coverage.summary.statements.percentage < this.options.threshold.statements) {
       failures.push(`Statements coverage ${this.coverage.summary.statements.percentage}% below threshold ${this.options.threshold.statements}%`);
     }
-    
+
     if (this.coverage.summary.branches.percentage < this.options.threshold.branches) {
       failures.push(`Branches coverage ${this.coverage.summary.branches.percentage}% below threshold ${this.options.threshold.branches}%`);
     }
-    
+
     if (this.coverage.summary.functions.percentage < this.options.threshold.functions) {
       failures.push(`Functions coverage ${this.coverage.summary.functions.percentage}% below threshold ${this.options.threshold.functions}%`);
     }
-    
+
     if (this.coverage.summary.lines.percentage < this.options.threshold.lines) {
       failures.push(`Lines coverage ${this.coverage.summary.lines.percentage}% below threshold ${this.options.threshold.lines}%`);
     }
-    
+
     if (failures.length > 0) {
       console.log('\n❌ Coverage thresholds not met:');
       failures.forEach(failure => console.log(`  • ${failure}`));

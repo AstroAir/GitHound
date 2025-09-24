@@ -1,16 +1,16 @@
 """Tests for GitHound file-based searchers."""
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
+import pytest
 from git import Repo
 
 from githound.models import SearchQuery
 from githound.search_engine import (
+    ContentSearcher,
     FilePathSearcher,
     FileTypeSearcher,
-    ContentSearcher,
     SearchContext,
 )
 
@@ -33,11 +33,9 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int(
-            (datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {
-            "insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -237,13 +235,11 @@ class TestContentSearcher:
         searcher = ContentSearcher()
 
         # Test case sensitive search
-        query_sensitive = SearchQuery(
-            content_pattern="Test", case_sensitive=True)
+        query_sensitive = SearchQuery(content_pattern="Test", case_sensitive=True)
         assert await searcher.can_handle(query_sensitive) is True
 
         # Test case insensitive search
-        query_insensitive = SearchQuery(
-            content_pattern="test", case_sensitive=False)
+        query_insensitive = SearchQuery(content_pattern="test", case_sensitive=False)
         assert await searcher.can_handle(query_insensitive) is True
 
     @pytest.mark.asyncio
@@ -265,10 +261,7 @@ class TestContentSearcher:
         searcher = ContentSearcher()
 
         # Test with include globs
-        query_include = SearchQuery(
-            content_pattern="test",
-            include_globs=["*.py", "*.js"]
-        )
+        query_include = SearchQuery(content_pattern="test", include_globs=["*.py", "*.js"])
         context_include = SearchContext(
             repo=mock_repo, query=query_include, branch="main", cache={}
         )
@@ -279,10 +272,7 @@ class TestContentSearcher:
         assert isinstance(results, list)
 
         # Test with exclude globs
-        query_exclude = SearchQuery(
-            content_pattern="test",
-            exclude_globs=["*.pyc", "*.log"]
-        )
+        query_exclude = SearchQuery(content_pattern="test", exclude_globs=["*.pyc", "*.log"])
         context_exclude = SearchContext(
             repo=mock_repo, query=query_exclude, branch="main", cache={}
         )
@@ -297,10 +287,7 @@ class TestContentSearcher:
         """Test ContentSearcher with file size limits."""
         searcher = ContentSearcher()
 
-        query_with_limit = SearchQuery(
-            content_pattern="test",
-            max_file_size=1000000  # 1MB limit
-        )
+        query_with_limit = SearchQuery(content_pattern="test", max_file_size=1000000)  # 1MB limit
         context_with_limit = SearchContext(
             repo=mock_repo, query=query_with_limit, branch="main", cache={}
         )

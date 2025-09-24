@@ -108,7 +108,9 @@ async def list_remotes(input_data: RepositoryManagementInput, ctx: Context) -> d
         return {"status": "error", "error": f"Unexpected error: {str(e)}"}
 
 
-async def validate_repository(input_data: RepositoryManagementInput, ctx: Context) -> dict[str, Any]:
+async def validate_repository(
+    input_data: RepositoryManagementInput, ctx: Context
+) -> dict[str, Any]:
     """
     Validate repository integrity and check for issues.
 
@@ -133,8 +135,7 @@ async def validate_repository(input_data: RepositoryManagementInput, ctx: Contex
 
         # Check for common issues
         if repo.is_dirty():
-            validation_results["warnings"].append(
-                "Working tree has uncommitted changes")
+            validation_results["warnings"].append("Working tree has uncommitted changes")
 
         if not validation_results["has_commits"]:
             validation_results["warnings"].append("Repository has no commits")
@@ -152,12 +153,12 @@ async def validate_repository(input_data: RepositoryManagementInput, ctx: Contex
         return {
             "status": "error",
             "error": str(e),
-            "validation_results": {"is_valid_repo": False, "issues": [str(e)]}
+            "validation_results": {"is_valid_repo": False, "issues": [str(e)]},
         }
     except Exception as e:
         await ctx.error(f"Unexpected error during validation: {str(e)}")
         return {
             "status": "error",
             "error": f"Unexpected error: {str(e)}",
-            "validation_results": {"is_valid_repo": False, "issues": [str(e)]}
+            "validation_results": {"is_valid_repo": False, "issues": [str(e)]},
         }

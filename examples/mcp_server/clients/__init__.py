@@ -8,6 +8,6 @@ and prompt management.
 
 __all__ = [
     "BasicClient",
-    "GitHoundClient", 
+    "GitHoundClient",
     "MultiServerClient",
 ]

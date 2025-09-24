@@ -52,7 +52,7 @@ export class DebugPanel extends Component {
           <button class="debug-btn debug-close" data-action="close">×</button>
         </div>
       </div>
-      
+
       <div class="debug-panel-tabs">
         <button class="debug-tab active" data-tab="components">Components</button>
         <button class="debug-tab" data-tab="state">State</button>
@@ -60,20 +60,20 @@ export class DebugPanel extends Component {
         <button class="debug-tab" data-tab="performance">Performance</button>
         <button class="debug-tab" data-tab="console">Console</button>
       </div>
-      
+
       <div class="debug-panel-content">
         <div class="debug-tab-content active" data-content="components">
           <div class="component-tree"></div>
           <div class="component-details"></div>
         </div>
-        
+
         <div class="debug-tab-content" data-content="state">
           <div class="state-viewer">
             <div class="current-state"></div>
             <div class="state-history"></div>
           </div>
         </div>
-        
+
         <div class="debug-tab-content" data-content="events">
           <div class="event-filter">
             <input type="text" placeholder="Filter events..." class="event-filter-input">
@@ -81,12 +81,12 @@ export class DebugPanel extends Component {
           </div>
           <div class="event-list"></div>
         </div>
-        
+
         <div class="debug-tab-content" data-content="performance">
           <div class="performance-metrics"></div>
           <div class="performance-charts"></div>
         </div>
-        
+
         <div class="debug-tab-content" data-content="console">
           <div class="console-output"></div>
           <div class="console-input">
@@ -240,7 +240,7 @@ export class DebugPanel extends Component {
       <h4>Registered Components (${components.length})</h4>
       <div class="component-list">
         ${components.map(comp => `
-          <div class="component-item ${comp.initialized ? 'initialized' : 'not-initialized'}" 
+          <div class="component-item ${comp.initialized ? 'initialized' : 'not-initialized'}"
                data-component="${comp.name}">
             <span class="component-name">${comp.name}</span>
             <span class="component-status">${comp.initialized ? '✓' : '○'}</span>

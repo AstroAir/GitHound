@@ -1,9 +1,9 @@
 """Tests for GitHound fuzzy searcher."""
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
+import pytest
 from git import Repo
 
 from githound.models import SearchQuery
@@ -31,11 +31,9 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int(
-            (datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {
-            "insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -88,8 +86,7 @@ class TestFuzzySearcher:
         searcher = FuzzySearcher()
 
         # Create query with fuzzy search disabled
-        query_no_fuzzy = SearchQuery(
-            content_pattern="test", fuzzy_search=False)
+        query_no_fuzzy = SearchQuery(content_pattern="test", fuzzy_search=False)
         assert await searcher.can_handle(query_no_fuzzy) is False
 
     @pytest.mark.asyncio
@@ -98,8 +95,7 @@ class TestFuzzySearcher:
         searcher = FuzzySearcher()
 
         # Create query with fuzzy search enabled but no content pattern
-        query_no_content = SearchQuery(
-            author_pattern="test", fuzzy_search=True)
+        query_no_content = SearchQuery(author_pattern="test", fuzzy_search=True)
         # FuzzySearcher might still handle queries without content pattern
         result = await searcher.can_handle(query_no_content)
         assert isinstance(result, bool)
@@ -135,9 +131,7 @@ class TestFuzzySearcher:
 
         # Test with high threshold (strict matching)
         query_high_threshold = SearchQuery(
-            content_pattern="test",
-            fuzzy_search=True,
-            fuzzy_threshold=0.9
+            content_pattern="test", fuzzy_search=True, fuzzy_threshold=0.9
         )
         context_high = SearchContext(
             repo=mock_repo, query=query_high_threshold, branch="main", cache={}
@@ -152,9 +146,7 @@ class TestFuzzySearcher:
 
         # Test with low threshold (loose matching)
         query_low_threshold = SearchQuery(
-            content_pattern="test",
-            fuzzy_search=True,
-            fuzzy_threshold=0.5
+            content_pattern="test", fuzzy_search=True, fuzzy_threshold=0.5
         )
         context_low = SearchContext(
             repo=mock_repo, query=query_low_threshold, branch="main", cache={}
@@ -174,9 +166,7 @@ class TestFuzzySearcher:
 
         # Test with multi-word pattern
         query_multi_word = SearchQuery(
-            content_pattern="test function",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8
+            content_pattern="test function", fuzzy_search=True, fuzzy_threshold=0.8
         )
         context_multi = SearchContext(
             repo=mock_repo, query=query_multi_word, branch="main", cache={}
@@ -189,9 +179,7 @@ class TestFuzzySearcher:
 
         # Test with special characters
         query_special = SearchQuery(
-            content_pattern="test_function()",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8
+            content_pattern="test_function()", fuzzy_search=True, fuzzy_threshold=0.8
         )
         context_special = SearchContext(
             repo=mock_repo, query=query_special, branch="main", cache={}
@@ -209,10 +197,7 @@ class TestFuzzySearcher:
 
         # Test case sensitive fuzzy search
         query_sensitive = SearchQuery(
-            content_pattern="Test",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8,
-            case_sensitive=True
+            content_pattern="Test", fuzzy_search=True, fuzzy_threshold=0.8, case_sensitive=True
         )
         context_sensitive = SearchContext(
             repo=mock_repo, query=query_sensitive, branch="main", cache={}
@@ -225,10 +210,7 @@ class TestFuzzySearcher:
 
         # Test case insensitive fuzzy search
         query_insensitive = SearchQuery(
-            content_pattern="test",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8,
-            case_sensitive=False
+            content_pattern="test", fuzzy_search=True, fuzzy_threshold=0.8, case_sensitive=False
         )
         context_insensitive = SearchContext(
             repo=mock_repo, query=query_insensitive, branch="main", cache={}
@@ -246,10 +228,7 @@ class TestFuzzySearcher:
 
         # Test with include globs
         query_include = SearchQuery(
-            content_pattern="test",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8,
-            include_globs=["*.py"]
+            content_pattern="test", fuzzy_search=True, fuzzy_threshold=0.8, include_globs=["*.py"]
         )
         context_include = SearchContext(
             repo=mock_repo, query=query_include, branch="main", cache={}
@@ -265,7 +244,7 @@ class TestFuzzySearcher:
             content_pattern="test",
             fuzzy_search=True,
             fuzzy_threshold=0.8,
-            exclude_globs=["*.pyc", "*.log"]
+            exclude_globs=["*.pyc", "*.log"],
         )
         context_exclude = SearchContext(
             repo=mock_repo, query=query_exclude, branch="main", cache={}
@@ -282,23 +261,13 @@ class TestFuzzySearcher:
         searcher = FuzzySearcher()
 
         # Test with empty pattern
-        query_empty = SearchQuery(
-            content_pattern="",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8
-        )
+        query_empty = SearchQuery(content_pattern="", fuzzy_search=True, fuzzy_threshold=0.8)
         result = await searcher.can_handle(query_empty)
         assert isinstance(result, bool)
 
         # Test with very short pattern
-        query_short = SearchQuery(
-            content_pattern="a",
-            fuzzy_search=True,
-            fuzzy_threshold=0.8
-        )
-        context_short = SearchContext(
-            repo=mock_repo, query=query_short, branch="main", cache={}
-        )
+        query_short = SearchQuery(content_pattern="a", fuzzy_search=True, fuzzy_threshold=0.8)
+        context_short = SearchContext(repo=mock_repo, query=query_short, branch="main", cache={})
 
         results: list[Any] = []
         async for result in searcher.search(context_short):
@@ -307,15 +276,11 @@ class TestFuzzySearcher:
 
         # Test with threshold at boundaries
         query_min_threshold = SearchQuery(
-            content_pattern="test",
-            fuzzy_search=True,
-            fuzzy_threshold=0.0
+            content_pattern="test", fuzzy_search=True, fuzzy_threshold=0.0
         )
         assert await searcher.can_handle(query_min_threshold) is True
 
         query_max_threshold = SearchQuery(
-            content_pattern="test",
-            fuzzy_search=True,
-            fuzzy_threshold=1.0
+            content_pattern="test", fuzzy_search=True, fuzzy_threshold=1.0
         )
         assert await searcher.can_handle(query_max_threshold) is True

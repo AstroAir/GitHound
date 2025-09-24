@@ -113,7 +113,7 @@ Test passes sometimes, fails other times
    ```javascript
    // Instead of fixed timeout
    await page.waitForTimeout(1000);
-   
+
    // Use condition-based waits
    await page.waitForFunction(() => document.querySelector('[data-testid="results"]').children.length > 0);
    ```
@@ -153,7 +153,7 @@ Error: Protocol error (Runtime.callFunctionOn): Object reference chain is too lo
    projects: [
      {
        name: 'firefox',
-       use: { 
+       use: {
          ...devices['Desktop Firefox'],
          timeout: 45000  // Longer timeout for Firefox
        }
@@ -201,7 +201,7 @@ Expected load time < 2000ms, got 3500ms
    // Navigate to page once before measuring
    await page.goto('/');
    await page.waitForLoadState('networkidle');
-   
+
    // Now measure performance
    const startTime = Date.now();
    await page.goto('/');
@@ -421,7 +421,7 @@ page.on('response', response => {
    ```javascript
    // Fast
    page.locator('[data-testid="button"]')
-   
+
    // Slow
    page.locator('div > ul > li:nth-child(3) > button')
    ```

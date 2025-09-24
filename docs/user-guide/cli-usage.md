@@ -1,6 +1,7 @@
 # CLI Usage Guide
 
-GitHound provides a powerful command-line interface for Git repository analysis. This guide covers all CLI commands and options.
+GitHound provides a powerful command-line interface for Git repository analysis. This guide covers
+all CLI commands and options.
 
 ## Basic Command Structure
 
@@ -23,31 +24,39 @@ githound [GLOBAL_OPTIONS] COMMAND [COMMAND_OPTIONS] [ARGUMENTS]
 Search for patterns across Git history:
 
 ```bash
-githound search [OPTIONS] PATTERN REPOSITORY_PATH
+githound search [OPTIONS]
 ```
 
 #### Basic Examples
 
 ```bash
 # Search for "function" in current repository
-githound search "function" .
+githound search --repo-path . --content "function"
 
 # Search with case sensitivity
-githound search --case-sensitive "Function" .
+githound search --repo-path . --content "Function" --case-sensitive
 
 # Search in specific file types
-githound search --file-type "py" "class" .
+githound search --repo-path . --content "class" --file-extensions py
 ```
 
 #### Search Options
 
+- `--repo-path PATH`: Repository path (required)
+- `--content PATTERN`: Content search pattern
 - `--author PATTERN`: Filter by author name/email
 - `--message PATTERN`: Filter by commit message
 - `--date-from DATE`: Start date (YYYY-MM-DD or relative like "7 days ago")
 - `--date-to DATE`: End date
-- `--file-path PATTERN`: Filter by file path pattern
-- `--file-type EXTENSION`: Filter by file extension
+- `--file-path-pattern PATTERN`: Filter by file path pattern
+- `--file-extensions EXT [EXT ...]`: Filter by file extensions
 - `--branch BRANCH`: Search specific branch
+- `--case-sensitive`: Enable case-sensitive search
+- `--fuzzy-search`: Enable fuzzy matching
+- `--fuzzy-threshold FLOAT`: Fuzzy matching threshold (0.0-1.0)
+- `--max-results INT`: Maximum results to return
+- `--include-globs PATTERN [PATTERN ...]`: Include file patterns
+- `--exclude-globs PATTERN [PATTERN ...]`: Exclude file patterns
 - `--max-results N`: Limit number of results
 - `--fuzzy`: Enable fuzzy search
 - `--fuzzy-threshold FLOAT`: Fuzzy search threshold (0.0-1.0)
@@ -114,34 +123,33 @@ githound blame . src/main.py --export blame.json
 
 ### Diff Command
 
-Compare commits, branches, or files:
+Compare commits or branches:
 
 ```bash
-githound diff [OPTIONS] REPOSITORY_PATH
+githound diff REPOSITORY_PATH FROM_REF TO_REF [OPTIONS]
 ```
 
 #### Examples
 
 ```bash
 # Compare two commits
-githound diff . --commit1 abc123 --commit2 def456
+githound diff . abc123 def456
 
 # Compare branches
-githound diff . --branch1 main --branch2 feature
+githound diff . main feature --branches
 
 # Compare specific file between commits
-githound diff . --commit1 abc123 --commit2 def456 --file src/main.py
+githound diff . abc123 def456 --file src/main.py
 ```
 
 #### Diff Options
 
-- `--commit1 HASH`: First commit hash
-- `--commit2 HASH`: Second commit hash
-- `--branch1 NAME`: First branch name
-- `--branch2 NAME`: Second branch name
-- `--file PATH`: Compare specific file
-- `--export FILE`: Export results to file
-- `--format FORMAT`: Output format
+- `FROM_REF`: Source commit/branch reference (required)
+- `TO_REF`: Target commit/branch reference (required)
+- `--file, -f`: File patterns to filter diff
+- `--format, -F`: Output format (text, json, csv)
+- `--output, -o`: Output file path
+- `--branches`: Compare as branches instead of commits
 
 ### Web Command
 
@@ -188,16 +196,30 @@ githound mcp-server
 # Start on specific port
 githound mcp-server --port 4000
 
-# Start with authentication
-githound mcp-server --auth --api-key your-key
+# Start MCP server
+githound mcp-server --host localhost --port 3000
 ```
 
 #### MCP Server Options
 
 - `--host HOST`: Server host (default: localhost)
 - `--port PORT`: Server port (default: 3000)
-- `--auth`: Enable authentication
-- `--api-key KEY`: API key for authentication
+
+### Authentication Configuration
+
+Authentication is configured via environment variables:
+
+```bash
+# Enable authentication
+export FASTMCP_SERVER_ENABLE_AUTH=true
+
+# GitHub OAuth
+export FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID=your_client_id
+export FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET=your_secret
+
+# JWT authentication
+export FASTMCP_SERVER_AUTH_JWT_SECRET_KEY=your_secret
+```
 
 ## Output Formats
 
@@ -206,7 +228,7 @@ GitHound supports multiple output formats:
 ### JSON Format
 
 ```bash
-githound search "function" . --format json
+githound search --repo-path . --content "function" --format json
 ```
 
 Structured JSON output with full metadata.
@@ -214,7 +236,7 @@ Structured JSON output with full metadata.
 ### YAML Format
 
 ```bash
-githound search "function" . --format yaml
+githound search --repo-path . --content "function" --format yaml
 ```
 
 Human-readable YAML format.
@@ -222,7 +244,7 @@ Human-readable YAML format.
 ### CSV Format
 
 ```bash
-githound search "function" . --format csv
+githound search --repo-path . --content "function" --format csv
 ```
 
 Tabular CSV format for analysis tools.
@@ -230,7 +252,7 @@ Tabular CSV format for analysis tools.
 ### Text Format
 
 ```bash
-githound search "function" . --format text
+githound search --repo-path . --content "function" --format text
 ```
 
 Human-readable text format (default for terminal).
@@ -288,10 +310,10 @@ githound analyze . --format json | \
 
 ```bash
 # Use custom config file
-githound --config /path/to/config.yaml search "pattern" .
+githound --config /path/to/config.yaml search --repo-path . --content "pattern"
 
 # Override config with environment variables
-GITHOUND_MAX_RESULTS=500 githound search "pattern" .
+GITHOUND_MAX_RESULTS=500 githound search --repo-path . --content "pattern"
 ```
 
 ### Project-specific Settings
@@ -348,7 +370,7 @@ githound search "pattern" . --max-results 1000 --export chunk1.json
 
 1. **Repository not found**
 
-   ```
+   ```text
    Error: Repository not found at path: /invalid/path
    ```
 
@@ -356,7 +378,7 @@ githound search "pattern" . --max-results 1000 --export chunk1.json
 
 2. **Invalid date format**
 
-   ```
+   ```text
    Error: Invalid date format. Use YYYY-MM-DD or relative dates like "7 days ago"
    ```
 
@@ -364,7 +386,7 @@ githound search "pattern" . --max-results 1000 --export chunk1.json
 
 3. **Permission denied**
 
-   ```
+   ```text
    Error: Permission denied accessing repository
    ```
 
@@ -451,3 +473,33 @@ githound --version --verbose
 - Online documentation: [GitHound Docs](https://githound.readthedocs.io)
 - GitHub repository: [GitHound GitHub](https://github.com/your-org/githound)
 - Issue tracker: [GitHub Issues](https://github.com/your-org/githound/issues)
+
+## 🚀 Related Guides
+
+### User Guides
+
+- **[Search Capabilities](search-capabilities.md)** - Advanced search features and patterns
+- **[Export Options](export-options.md)** - Data export formats and configuration
+- **[Web Interface](web-interface.md)** - Browser-based GitHound interface
+
+### API Integration
+
+- **[Python API](../api-reference/python-api.md)** - Use GitHound in Python applications
+- **[REST API](../api-reference/rest-api.md)** - HTTP API for external integrations
+- **[MCP Server](../mcp-server/README.md)** - AI tool integration
+
+### Configuration
+
+- **[Configuration Guide](../getting-started/configuration.md)** - Environment setup
+- **[Configuration Guide](../getting-started/configuration.md)** - Complete configuration reference
+
+### Need Help
+
+- **[Troubleshooting Guide](../troubleshooting/README.md)** - Solve common CLI issues
+- **[FAQ](../troubleshooting/faq.md)** - Frequently asked questions
+
+---
+
+**📚 [Back to Documentation Home](../index.md)** |
+**⬅️ [Quick Start](../getting-started/quick-start.md)** |
+**➡️ [Search Capabilities](search-capabilities.md)**

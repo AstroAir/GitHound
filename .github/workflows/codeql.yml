@@ -87,7 +87,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -151,7 +151,7 @@ jobs:
         python -c "
         import json
         import sys
-        
+
         # Create SARIF format for dependency vulnerabilities
         sarif = {
             'version': '2.1.0',
@@ -165,12 +165,12 @@ jobs:
                 'results': []
             }]
         }
-        
+
         # Process safety report
         try:
             with open('safety-report.json', 'r') as f:
                 safety_data = json.load(f)
-            
+
             for vuln in safety_data:
                 sarif['runs'][0]['results'].append({
                     'ruleId': f'safety-{vuln.get(\"id\", \"unknown\")}',
@@ -185,12 +185,12 @@ jobs:
                 })
         except (FileNotFoundError, json.JSONDecodeError):
             pass
-        
+
         # Process pip-audit report
         try:
             with open('pip-audit-report.json', 'r') as f:
                 audit_data = json.load(f)
-            
+
             for vuln in audit_data.get('vulnerabilities', []):
                 sarif['runs'][0]['results'].append({
                     'ruleId': f'pip-audit-{vuln.get(\"id\", \"unknown\")}',
@@ -205,7 +205,7 @@ jobs:
                 })
         except (FileNotFoundError, json.JSONDecodeError):
             pass
-        
+
         with open('dependency-scan.sarif', 'w') as f:
             json.dump(sarif, f, indent=2)
         "

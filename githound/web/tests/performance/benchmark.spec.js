@@ -95,7 +95,7 @@ test.describe('Performance Benchmarks', () => {
       const fidStart = Date.now();
       await page.click('[data-testid="login-button"]');
       const fidEnd = Date.now();
-      
+
       const fid = fidEnd - fidStart;
       expect(fid).toBeLessThan(100); // Good FID < 100ms
     });
@@ -112,7 +112,7 @@ test.describe('Performance Benchmarks', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Measure search form interaction time
@@ -120,18 +120,18 @@ test.describe('Performance Benchmarks', () => {
       await page.fill('[data-testid="repo-path-input"]', '/test/repo');
       await page.fill('[data-testid="search-query-input"]', 'function');
       const formEndTime = Date.now();
-      
+
       const formInteractionTime = formEndTime - formStartTime;
       expect(formInteractionTime).toBeLessThan(500); // Form should be responsive
 
       // Measure search submission time
       const searchStartTime = Date.now();
       await page.click('[data-testid="submit-search"]');
-      
+
       // Wait for search to start (not complete)
       await page.waitForSelector('[data-testid="progress-message"]', { state: 'visible' });
       const searchInitTime = Date.now() - searchStartTime;
-      
+
       expect(searchInitTime).toBeLessThan(1000); // Search should start quickly
     });
 
@@ -144,20 +144,20 @@ test.describe('Performance Benchmarks', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Simulate search with many results
       await page.fill('[data-testid="repo-path-input"]', '/large/repo');
       await page.fill('[data-testid="search-query-input"]', 'common_term');
-      
+
       const renderStartTime = Date.now();
       await page.click('[data-testid="submit-search"]');
-      
+
       // Wait for results to appear
       await page.waitForSelector('[data-testid="results-container"]', { state: 'visible' });
       const renderTime = Date.now() - renderStartTime;
-      
+
       expect(renderTime).toBeLessThan(3000); // Results should render quickly
     });
   });
@@ -186,12 +186,12 @@ test.describe('Performance Benchmarks', () => {
 
         await loginPage.register(testUser);
         await loginPage.login(testUser.username, testUser.password);
-        
+
         // Navigate through multiple pages
         await page.goto('/search');
         await page.goto('/profile');
         await page.goto('/');
-        
+
         // Get final memory usage
         const finalMemory = await page.evaluate(() => {
           return {
@@ -204,7 +204,7 @@ test.describe('Performance Benchmarks', () => {
         // Memory usage should not increase dramatically
         const memoryIncrease = finalMemory.used - initialMemory.used;
         const memoryIncreasePercent = (memoryIncrease / initialMemory.used) * 100;
-        
+
         expect(memoryIncreasePercent).toBeLessThan(50); // Memory should not increase by more than 50%
       }
     });
@@ -213,7 +213,7 @@ test.describe('Performance Benchmarks', () => {
   test.describe('Network Performance Benchmarks @performance @network', () => {
     test('should minimize network requests', async ({ page }) => {
       const requests = [];
-      
+
       page.on('request', request => {
         requests.push({
           url: request.url(),
@@ -240,7 +240,7 @@ test.describe('Performance Benchmarks', () => {
 
     test('should have efficient resource loading', async ({ page }) => {
       const resourceTimings = [];
-      
+
       page.on('response', async response => {
         const timing = await response.timing();
         resourceTimings.push({
@@ -266,13 +266,13 @@ test.describe('Performance Benchmarks', () => {
   test.describe('Rendering Performance Benchmarks @performance @rendering', () => {
     test('should have smooth animations and transitions', async ({ page }) => {
       await page.goto('/');
-      
+
       // Measure frame rate during animations
       const frameRate = await page.evaluate(() => {
         return new Promise((resolve) => {
           let frames = 0;
           const startTime = performance.now();
-          
+
           function countFrames() {
             frames++;
             if (performance.now() - startTime < 1000) {
@@ -281,7 +281,7 @@ test.describe('Performance Benchmarks', () => {
               resolve(frames);
             }
           }
-          
+
           requestAnimationFrame(countFrames);
         });
       });
@@ -299,12 +299,12 @@ test.describe('Performance Benchmarks', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Measure DOM manipulation time
       const domStartTime = Date.now();
-      
+
       // Simulate adding many search results
       await page.evaluate(() => {
         const container = document.querySelector('[data-testid="results-container"]');
@@ -315,10 +315,10 @@ test.describe('Performance Benchmarks', () => {
           container.appendChild(div);
         }
       });
-      
+
       const domEndTime = Date.now();
       const domManipulationTime = domEndTime - domStartTime;
-      
+
       expect(domManipulationTime).toBeLessThan(1000); // DOM updates should be fast
     });
   });

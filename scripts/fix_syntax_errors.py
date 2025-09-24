@@ -14,7 +14,7 @@ from typing import List, Tuple
 def fix_syntax_errors(file_path: Path) -> Tuple[bool, List[str]]:
     """
     Fix syntax errors in a Python file.
-    
+
     Returns:
         Tuple of (was_modified, list_of_changes)
     """
@@ -23,17 +23,17 @@ def fix_syntax_errors(file_path: Path) -> Tuple[bool, List[str]]:
             content = f.read()
     except Exception as e:
         return False, [f"Error reading file: {e}"]
-    
+
     original_content = content
     changes = []
-    
+
     # Fix 1: Replace '= =' with '=='
     pattern1 = r'(\w+(?:\.\w+)*)\s*=\s*=\s*'
     matches = re.findall(pattern1, content)
     if matches:
         content = re.sub(pattern1, r'\1 == ', content)
         changes.append(f"Fixed {len(matches)} '= =' syntax errors")
-    
+
     # Fix 2: Fix common indentation issues (basic)
     lines = content.split('\n')
     fixed_lines = []
@@ -44,14 +44,14 @@ def fix_syntax_errors(file_path: Path) -> Tuple[bool, List[str]]:
             if i == 0 or not any('\t' in l for l in lines[:i]):
                 changes.append("Fixed tab/space indentation issues")
         fixed_lines.append(line)
-    
+
     content = '\n'.join(fixed_lines)
-    
+
     # Fix 3: Fix common typos in docstrings
     if content.startswith('ji"""'):
         content = content.replace('ji"""', '"""', 1)
         changes.append("Fixed docstring typo 'ji\"\"\"' -> '\"\"\"'")
-    
+
     # Fix 4: Fix unmatched indentation (basic detection)
     lines = content.split('\n')
     for i, line in enumerate(lines):
@@ -62,7 +62,7 @@ def fix_syntax_errors(file_path: Path) -> Tuple[bool, List[str]]:
                 if next_line.strip() and not next_line.startswith('    '):
                     # This might be an indentation error, but we'll be conservative
                     pass
-    
+
     # Write back if modified
     if content != original_content:
         try:
@@ -71,7 +71,7 @@ def fix_syntax_errors(file_path: Path) -> Tuple[bool, List[str]]:
             return True, changes
         except Exception as e:
             return False, [f"Error writing file: {e}"]
-    
+
     return False, []
 
 
@@ -81,23 +81,23 @@ def main():
         test_dir = Path(sys.argv[1])
     else:
         test_dir = Path('tests')
-    
+
     if not test_dir.exists():
         print(f"Error: Directory {test_dir} does not exist")
         return 1
-    
+
     print(f"Fixing syntax errors in {test_dir}...")
-    
+
     total_files = 0
     modified_files = 0
     total_changes = 0
-    
+
     # Find all Python test files
     for py_file in test_dir.rglob('*.py'):
         if py_file.name.startswith('test_') or py_file.parent.name == 'tests':
             total_files += 1
             was_modified, changes = fix_syntax_errors(py_file)
-            
+
             if was_modified:
                 modified_files += 1
                 total_changes += len(changes)
@@ -105,12 +105,12 @@ def main():
             else:
                 if changes:  # Had errors but couldn't fix
                     print(f"✗ Could not fix {py_file}: {', '.join(changes)}")
-    
+
     print(f"\nSummary:")
     print(f"  Total files processed: {total_files}")
     print(f"  Files modified: {modified_files}")
     print(f"  Total changes made: {total_changes}")
-    
+
     return 0
 
 

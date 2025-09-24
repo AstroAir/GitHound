@@ -9,27 +9,27 @@ const BasePage = require('./base-page');
 class ExportPage extends BasePage {
   constructor(page) {
     super(page);
-    
+
     // Page elements
     this.elements = {
       // Export trigger elements
       exportButton: '[data-testid="export-button"]',
       exportModal: '[data-testid="export-modal"]',
       exportForm: '[data-testid="export-form"]',
-      
+
       // Format selection
       formatDropdown: '[data-testid="export-format"]',
       jsonFormat: '[data-testid="format-json"]',
       csvFormat: '[data-testid="format-csv"]',
       yamlFormat: '[data-testid="format-yaml"]',
       xmlFormat: '[data-testid="format-xml"]',
-      
+
       // Export options
       includeMetadata: '[data-testid="include-metadata"]',
       includeCommitInfo: '[data-testid="include-commit-info"]',
       includeFileContent: '[data-testid="include-file-content"]',
       compressOutput: '[data-testid="compress-output"]',
-      
+
       // Field selection
       fieldSelection: '[data-testid="field-selection"]',
       selectAllFields: '[data-testid="select-all-fields"]',
@@ -40,40 +40,40 @@ class ExportPage extends BasePage {
       commitHashField: '[data-testid="field-commit-hash"]',
       commitDateField: '[data-testid="field-commit-date"]',
       commitMessageField: '[data-testid="field-commit-message"]',
-      
+
       // File naming
       filenameInput: '[data-testid="export-filename"]',
       generateFilename: '[data-testid="generate-filename"]',
-      
+
       // Export actions
       confirmExport: '[data-testid="confirm-export"]',
       cancelExport: '[data-testid="cancel-export"]',
       previewExport: '[data-testid="preview-export"]',
-      
+
       // Progress and status
       exportProgress: '[data-testid="export-progress"]',
       progressBar: '[data-testid="progress-bar"]',
       progressText: '[data-testid="progress-text"]',
       exportStatus: '[data-testid="export-status"]',
-      
+
       // Results and download
       exportComplete: '[data-testid="export-complete"]',
       downloadButton: '[data-testid="download-button"]',
       downloadLink: '[data-testid="download-link"]',
       fileSize: '[data-testid="file-size"]',
       exportSummary: '[data-testid="export-summary"]',
-      
+
       // Error handling
       exportError: '[data-testid="export-error"]',
       errorMessage: '[data-testid="error-message"]',
       retryExport: '[data-testid="retry-export"]',
-      
+
       // Export history
       exportHistory: '[data-testid="export-history"]',
       historyItem: '[data-testid="history-item"]',
       deleteHistoryItem: '[data-testid="delete-history-item"]',
       downloadHistoryItem: '[data-testid="download-history-item"]',
-      
+
       // Preview modal
       previewModal: '[data-testid="preview-modal"]',
       previewContent: '[data-testid="preview-content"]',
@@ -103,15 +103,15 @@ class ExportPage extends BasePage {
     if (options.includeMetadata) {
       await this.page.check(this.elements.includeMetadata);
     }
-    
+
     if (options.includeCommitInfo) {
       await this.page.check(this.elements.includeCommitInfo);
     }
-    
+
     if (options.includeFileContent) {
       await this.page.check(this.elements.includeFileContent);
     }
-    
+
     if (options.compressOutput) {
       await this.page.check(this.elements.compressOutput);
     }
@@ -125,7 +125,7 @@ class ExportPage extends BasePage {
       await this.page.check(this.elements.selectAllFields);
       return;
     }
-    
+
     const fieldMap = {
       'filePath': this.elements.filePathField,
       'lineNumber': this.elements.lineNumberField,
@@ -135,7 +135,7 @@ class ExportPage extends BasePage {
       'commitDate': this.elements.commitDateField,
       'commitMessage': this.elements.commitMessageField
     };
-    
+
     for (const field of fields) {
       if (fieldMap[field]) {
         await this.page.check(fieldMap[field]);
@@ -291,42 +291,42 @@ class ExportPage extends BasePage {
       exportOptions = {},
       preview = false
     } = options;
-    
+
     // Open export modal
     await this.openExportModal();
-    
+
     // Configure export
     await this.selectFormat(format);
     await this.selectFields(fields);
     await this.configureExportOptions(exportOptions);
-    
+
     if (filename) {
       await this.setFilename(filename);
     } else {
       await this.generateFilename();
     }
-    
+
     // Preview if requested
     if (preview) {
       await this.previewExport();
       const previewContent = await this.getPreviewContent();
       await this.closePreview();
-      
+
       if (!previewContent) {
         throw new Error('Preview content is empty');
       }
     }
-    
+
     // Start export
     await this.startExport();
-    
+
     // Wait for completion
     const result = await this.waitForExportComplete();
-    
+
     if (result.success) {
       const summary = await this.getExportSummary();
       const fileSize = await this.getFileSize();
-      
+
       return {
         success: true,
         summary,
@@ -345,12 +345,12 @@ class ExportPage extends BasePage {
       const historyItems = this.page.locator(this.elements.historyItem);
       const count = await historyItems.count();
       const history = [];
-      
+
       for (let i = 0; i < count; i++) {
         const item = await historyItems.nth(i).textContent();
         history.push(item);
       }
-      
+
       return history;
     }
     return [];
@@ -362,7 +362,7 @@ class ExportPage extends BasePage {
   async downloadFromHistory(index) {
     const historyItems = this.page.locator(this.elements.historyItem);
     const item = historyItems.nth(index);
-    
+
     const downloadPromise = this.page.waitForDownload();
     await item.locator(this.elements.downloadHistoryItem).click();
     const download = await downloadPromise;
@@ -406,10 +406,10 @@ class ExportPage extends BasePage {
     const path = await download.path();
     const fs = require('fs');
     const content = fs.readFileSync(path, 'utf8');
-    
+
     let isValid = false;
     let parsedContent = null;
-    
+
     try {
       switch (expectedFormat) {
         case 'json':
@@ -429,7 +429,7 @@ class ExportPage extends BasePage {
     } catch (error) {
       isValid = false;
     }
-    
+
     return {
       isValid,
       content: content.substring(0, 500), // First 500 chars for inspection

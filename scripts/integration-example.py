@@ -297,12 +297,12 @@ def main(ctx: typer.Context) -> None:
 
         print_section("Integration Philosophy")
         console.print("""
-The new utility scripts are designed to [bold]complement[/bold], not replace, 
+The new utility scripts are designed to [bold]complement[/bold], not replace,
 the existing build infrastructure:
 
 [cyan]• Existing build scripts[/cyan] (build.sh, build.ps1, Makefile)
   → Handle compilation, testing, packaging, and CI/CD tasks
-  
+
 [cyan]• New utility scripts[/cyan] (dev-env.py, services.py, etc.)
   → Handle development workflow, services, monitoring, and utilities
 

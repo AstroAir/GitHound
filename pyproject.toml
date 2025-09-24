@@ -44,44 +44,69 @@ dependencies = [
 githound = "githound.cli:app"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
+# Enhanced strict typing configuration
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+strict_equality = true
+
+# Warning configuration
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = false
-no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
-strict_equality = true
+
+# Output configuration
 show_error_codes = true
 show_column_numbers = true
-ignore_missing_imports = true
+show_traceback = true
+pretty = true
+
+# Import handling - more specific than global ignore
+ignore_missing_imports = false
+follow_imports = "normal"
+
+# Plugin configuration
 plugins = ["pydantic.mypy"]
-exclude = ["build/", "githound.egg-info/", "examples/", "tests/", "scripts/"]
 
-# Per-module options (currently none needed)
-# Incremental stricter typing per-module
+# Exclude patterns - tests are included for type checking per CI requirements
+exclude = [
+    "build/",
+    "githound.egg-info/",
+    "examples/",
+    "scripts/",
+    "venv/",
+    ".venv/",
+    "__pycache__/"
+]
+
+# Module-specific overrides for external dependencies without type stubs
 [[tool.mypy.overrides]]
 module = [
-    "githound.search_engine.*",
+    "ripgrepy.*",
+    "diskcache.*",
+    "git.*",
+    "GitPython.*"
 ]
-disallow_untyped_defs = true
+ignore_missing_imports = true
 
+# All GitHound modules use strict typing (verified to pass)
 [[tool.mypy.overrides]]
 module = [
-    "githound.web.*",
+    "githound.*",
 ]
 disallow_untyped_defs = true
-
-[[tool.mypy.overrides]]
-module = [
-    "githound.cli",
-]
-disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+strict_optional = true
+warn_return_any = true
 
 
 

@@ -134,6 +134,8 @@ Represents the complete MCP.json structure with:
 
 ## Environment Variables
 
+Configure the MCP server using environment variables. For a comprehensive list of all available environment variables across all GitHound components, see the [Configuration Guide](../getting-started/configuration.md).
+
 ### Server Configuration
 
 - `FASTMCP_SERVER_NAME` - Server display name (default: "GitHound MCP Server")
@@ -155,7 +157,7 @@ Represents the complete MCP.json structure with:
 - `PERMIT_MCP_API_KEY` - Your Permit.io API key
 - `PERMIT_MCP_PROJECT_ID` - Project ID
 - `PERMIT_MCP_ENVIRONMENT_ID` - Environment ID
-- `PERMIT_MCP_PDP_URL` - PDP URL (default: "http://localhost:7766")
+- `PERMIT_MCP_PDP_URL` - PDP URL (default: `http://localhost:7766`)
 
 #### Eunomia Provider
 
@@ -204,6 +206,33 @@ Configuration file: `~/.cursor/mcp.json`
       "env": {
         "PYTHONPATH": "/path/to/githound",
         "FASTMCP_SERVER_NAME": "GitHound MCP Server for Cursor"
+      }
+    }
+  }
+}
+```
+
+### FastMCP Compatible
+
+For FastMCP-compatible clients using `uv` package manager:
+
+```json
+{
+  "mcpServers": {
+    "GitHound MCP Server": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "fastmcp",
+        "fastmcp",
+        "run",
+        "/absolute/path/to/githound/mcp_server.py"
+      ],
+      "env": {
+        "FASTMCP_SERVER_NAME": "GitHound MCP Server",
+        "FASTMCP_SERVER_VERSION": "2.0.0",
+        "FASTMCP_SERVER_LOG_LEVEL": "INFO"
       }
     }
   }

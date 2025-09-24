@@ -33,7 +33,7 @@ test.describe('Form Accessibility Tests', () => {
 
       // Check form structure
       const formInputs = await page.locator('[data-testid="registration-form"] input').all();
-      
+
       for (const input of formInputs) {
         // Each input should have a proper label
         const hasLabel = await a11yHelper.hasProperLabel(input);
@@ -46,17 +46,17 @@ test.describe('Form Accessibility Tests', () => {
         // Required fields should be marked
         const isRequired = await input.getAttribute('required') !== null;
         const hasAriaRequired = await input.getAttribute('aria-required') === 'true';
-        
+
         if (isRequired || hasAriaRequired) {
           // Should indicate required status to screen readers
           const ariaLabel = await input.getAttribute('aria-label');
           const labelText = await a11yHelper.getLabelText(input);
-          
-          const hasRequiredIndicator = 
+
+          const hasRequiredIndicator =
             (ariaLabel && ariaLabel.includes('required')) ||
             (labelText && labelText.includes('*')) ||
             hasAriaRequired;
-            
+
           expect(hasRequiredIndicator).toBe(true);
         }
       }
@@ -76,14 +76,14 @@ test.describe('Form Accessibility Tests', () => {
 
       // Check validation message accessibility
       const validationMessages = await page.locator('[role="alert"], [aria-live="polite"], [aria-invalid="true"] + *').all();
-      
+
       expect(validationMessages.length).toBeGreaterThan(0);
 
       for (const message of validationMessages) {
         // Validation messages should be announced to screen readers
         const role = await message.getAttribute('role');
         const ariaLive = await message.getAttribute('aria-live');
-        
+
         expect(role === 'alert' || ariaLive === 'polite' || ariaLive === 'assertive').toBe(true);
 
         // Should have meaningful text
@@ -110,22 +110,22 @@ test.describe('Form Accessibility Tests', () => {
 
       // Test tab order through form
       const tabOrder = await a11yHelper.getTabOrder('[data-testid="registration-form"]');
-      
+
       expect(tabOrder.length).toBeGreaterThan(0);
 
       // Should be able to complete form using only keyboard
       await page.keyboard.press('Tab'); // Focus first input
       await page.keyboard.type('testuser123');
-      
+
       await page.keyboard.press('Tab'); // Move to email
       await page.keyboard.type('testuser123@example.com');
-      
+
       await page.keyboard.press('Tab'); // Move to password
       await page.keyboard.type('SecurePassword123!');
-      
+
       await page.keyboard.press('Tab'); // Move to confirm password
       await page.keyboard.type('SecurePassword123!');
-      
+
       await page.keyboard.press('Tab'); // Move to submit button
       await page.keyboard.press('Enter'); // Submit form
 
@@ -139,7 +139,7 @@ test.describe('Form Accessibility Tests', () => {
 
       // Check for form instructions and help text
       const helpTexts = await page.locator('[data-testid*="help"], [aria-describedby], [role="note"]').all();
-      
+
       for (const helpText of helpTexts) {
         const textContent = await helpText.textContent();
         expect(textContent?.trim().length).toBeGreaterThan(0);
@@ -195,14 +195,14 @@ test.describe('Form Accessibility Tests', () => {
       // Error should be announced to screen readers
       const errorMessage = page.locator('[role="alert"], [data-testid="error-message"]').first();
       const errorText = await errorMessage.textContent();
-      
+
       expect(errorText?.trim().length).toBeGreaterThan(0);
       expect(errorText).not.toContain('undefined');
 
       // Error should be associated with the form
       const role = await errorMessage.getAttribute('role');
       const ariaLive = await errorMessage.getAttribute('aria-live');
-      
+
       expect(role === 'alert' || ariaLive === 'polite' || ariaLive === 'assertive').toBe(true);
     });
 
@@ -267,7 +267,7 @@ test.describe('Form Accessibility Tests', () => {
       // Should have placeholder or description
       const placeholder = await searchInput.getAttribute('placeholder');
       const ariaDescribedBy = await searchInput.getAttribute('aria-describedby');
-      
+
       expect(placeholder || ariaDescribedBy).toBeTruthy();
     });
 
@@ -294,7 +294,7 @@ test.describe('Form Accessibility Tests', () => {
 
       // Check all form controls
       const formControls = await page.locator('[data-testid="advanced-search-form"] input, [data-testid="advanced-search-form"] select, [data-testid="advanced-search-form"] textarea').all();
-      
+
       for (const control of formControls) {
         const hasLabel = await a11yHelper.hasProperLabel(control);
         expect(hasLabel).toBe(true);
@@ -302,7 +302,7 @@ test.describe('Form Accessibility Tests', () => {
 
       // Check fieldsets and legends
       const fieldsets = await page.locator('[data-testid="advanced-search-form"] fieldset').all();
-      
+
       for (const fieldset of fieldsets) {
         const legend = await fieldset.locator('legend').count();
         expect(legend).toBeGreaterThan(0);
@@ -322,15 +322,15 @@ test.describe('Form Accessibility Tests', () => {
       await searchPage.navigateToSearch();
 
       const searchInput = page.locator('[data-testid="search-input"]');
-      
+
       // Type to trigger suggestions
       await searchInput.fill('func');
-      
+
       // Wait for suggestions to appear
       await page.waitForSelector('[data-testid="search-suggestions"], [role="listbox"]', { timeout: 5000 });
 
       const suggestionsContainer = page.locator('[data-testid="search-suggestions"], [role="listbox"]').first();
-      
+
       if (await suggestionsContainer.count() > 0) {
         // Suggestions should have proper ARIA attributes
         const role = await suggestionsContainer.getAttribute('role');
@@ -340,13 +340,13 @@ test.describe('Form Accessibility Tests', () => {
         const ariaExpanded = await searchInput.getAttribute('aria-expanded');
         const ariaOwns = await searchInput.getAttribute('aria-owns');
         const ariaControls = await searchInput.getAttribute('aria-controls');
-        
+
         expect(ariaExpanded).toBe('true');
         expect(ariaOwns || ariaControls).toBeTruthy();
 
         // Individual suggestions should be accessible
         const suggestions = await suggestionsContainer.locator('[role="option"]').all();
-        
+
         for (const suggestion of suggestions.slice(0, 3)) {
           const role = await suggestion.getAttribute('role');
           expect(role).toBe('option');
@@ -378,7 +378,7 @@ test.describe('Form Accessibility Tests', () => {
       await page.waitForSelector('[role="alert"], [aria-live="polite"]', { timeout: 5000 });
 
       const validationMessage = page.locator('[role="alert"], [aria-live="polite"]').first();
-      
+
       if (await validationMessage.count() > 0) {
         // Validation message should be announced
         const messageText = await validationMessage.textContent();
@@ -388,7 +388,7 @@ test.describe('Form Accessibility Tests', () => {
         const searchInput = page.locator('[data-testid="search-input"]');
         const ariaInvalid = await searchInput.getAttribute('aria-invalid');
         const ariaDescribedBy = await searchInput.getAttribute('aria-describedby');
-        
+
         expect(ariaInvalid === 'true' || ariaDescribedBy).toBeTruthy();
       }
     });
@@ -408,22 +408,22 @@ test.describe('Form Accessibility Tests', () => {
       await page.waitForSelector('[role="alert"]', { timeout: 5000 });
 
       const errorMessages = await page.locator('[role="alert"], [aria-live="polite"]').all();
-      
+
       for (const errorMessage of errorMessages) {
         const messageText = await errorMessage.textContent();
-        
+
         // Error messages should be specific and actionable
         expect(messageText?.trim().length).toBeGreaterThan(0);
         expect(messageText).not.toContain('Error');
         expect(messageText).not.toContain('Invalid');
-        
+
         // Should provide guidance on how to fix the error
-        const hasGuidance = messageText?.includes('must') || 
-                           messageText?.includes('should') || 
+        const hasGuidance = messageText?.includes('must') ||
+                           messageText?.includes('should') ||
                            messageText?.includes('required') ||
                            messageText?.includes('at least') ||
                            messageText?.includes('format');
-        
+
         expect(hasGuidance).toBe(true);
       }
     });
@@ -443,7 +443,7 @@ test.describe('Form Accessibility Tests', () => {
       // Valid data should be preserved
       const usernameValue = await page.inputValue('[data-testid="username-input"]');
       const passwordValue = await page.inputValue('[data-testid="password-input"]');
-      
+
       expect(usernameValue).toBe('validuser123');
       expect(passwordValue).toBe('ValidPassword123!');
 
@@ -463,7 +463,7 @@ test.describe('Form Accessibility Tests', () => {
       await page.waitForSelector('[role="alert"]', { timeout: 5000 });
 
       const emailInput = page.locator('[data-testid="email-input"]');
-      
+
       // Should be marked as invalid
       let ariaInvalid = await emailInput.getAttribute('aria-invalid');
       expect(ariaInvalid).toBe('true');
@@ -487,7 +487,7 @@ test.describe('Form Accessibility Tests', () => {
           return text?.toLowerCase().includes('email');
         })
       );
-      
+
       expect(hasEmailError.some(Boolean)).toBe(false);
     });
   });

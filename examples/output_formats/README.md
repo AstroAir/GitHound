@@ -19,7 +19,7 @@ This directory contains examples demonstrating GitHound's various output formats
 - Nested data representation
 - API-compatible format
 
-### YAML Format  
+### YAML Format
 - Human-readable configuration
 - Configuration file export
 - Hierarchical data structure
@@ -97,7 +97,7 @@ python examples/output_formats/csv_export.py
         "email": "alice@example.com"
       },
       "committer": {
-        "name": "Alice Developer", 
+        "name": "Alice Developer",
         "email": "alice@example.com"
       },
       "date": "2023-11-15T14:30:00Z",
@@ -137,14 +137,14 @@ repository:
     total_tags: 8
     size_mb: 45.2
     created_at: "2022-01-15T10:30:00Z"
-  
+
   contributors:
     - name: Alice Developer
       email: alice@example.com
       commits: 450
       first_commit: "2022-01-15T10:30:00Z"
       last_commit: "2023-11-15T14:30:00Z"
-  
+
   branches:
     - name: main
       commits: 1200
@@ -160,12 +160,12 @@ analysis_config:
     - "*.py"
     - "*.js"
     - "*.md"
-  
+
   exclude_patterns:
     - "node_modules/"
     - "__pycache__/"
     - "*.pyc"
-  
+
   filters:
     date_range:
       from: "2023-01-01"

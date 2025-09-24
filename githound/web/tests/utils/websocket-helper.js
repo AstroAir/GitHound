@@ -20,7 +20,7 @@ class WebSocketTestHelper {
   async createConnection(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const connectionId = options.id || `conn_${Date.now()}`;
-    
+
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(url, options.protocols);
       const timeout = setTimeout(() => {
@@ -90,7 +90,7 @@ class WebSocketTestHelper {
     }
 
     const waitTimeout = timeout || this.messageTimeout;
-    
+
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`Timeout waiting for message type: ${messageType}`));
@@ -119,7 +119,7 @@ class WebSocketTestHelper {
   async testSearchProgress(connectionId, searchRequest) {
     const progressMessages = [];
     const ws = this.connections.get(connectionId);
-    
+
     if (!ws) {
       throw new Error(`WebSocket connection not found: ${connectionId}`);
     }
@@ -154,7 +154,7 @@ class WebSocketTestHelper {
       };
 
       ws.on('message', messageHandler);
-      
+
       // Start the search
       ws.send(JSON.stringify({
         type: 'start_search',
@@ -229,7 +229,7 @@ class WebSocketTestHelper {
    * Close all connections
    */
   async closeAllConnections() {
-    const promises = Array.from(this.connections.keys()).map(id => 
+    const promises = Array.from(this.connections.keys()).map(id =>
       this.closeConnection(id)
     );
     await Promise.all(promises);

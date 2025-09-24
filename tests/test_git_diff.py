@@ -45,8 +45,7 @@ def temp_repo() -> None:
 
     # Create third commit with new file
     new_file = Path(temp_dir) / "utils.py"
-    new_file.write_text(
-        "def utility_function() -> None:\n    return 'utility'\n")
+    new_file.write_text("def utility_function() -> None:\n    return 'utility'\n")
     repo.index.add([str(new_file)])
     third_commit = repo.index.commit("Add utility file")
 
@@ -63,8 +62,7 @@ class TestCompareCommits:
         """Test successful commit comparison."""
         repo, temp_dir, initial_commit, second_commit, third_commit = temp_repo
 
-        comparison = compare_commits(
-            repo, initial_commit.hexsha, third_commit.hexsha)
+        comparison = compare_commits(repo, initial_commit.hexsha, third_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
         assert comparison.from_commit == initial_commit.hexsha
@@ -81,8 +79,7 @@ class TestCompareCommits:
         """Test commit comparison in reverse order."""
         repo, temp_dir, initial_commit, second_commit, third_commit = temp_repo
 
-        comparison = compare_commits(
-            repo, third_commit.hexsha, initial_commit.hexsha)
+        comparison = compare_commits(repo, third_commit.hexsha, initial_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
         assert comparison.from_commit == third_commit.hexsha
@@ -96,8 +93,7 @@ class TestCompareCommits:
         """Test comparing commit with itself."""
         repo, temp_dir, initial_commit, second_commit, third_commit = temp_repo
 
-        comparison = compare_commits(
-            repo, second_commit.hexsha, second_commit.hexsha)
+        comparison = compare_commits(repo, second_commit.hexsha, second_commit.hexsha)
 
         assert isinstance(comparison, CommitDiffResult)
         assert comparison.total_additions == 0
@@ -125,8 +121,7 @@ class TestCompareBranches:
 
         # Add commit to feature branch
         feature_file = Path(temp_dir) / "feature.py"
-        feature_file.write_text(
-            "def feature() -> None:\n    return 'feature'\n")
+        feature_file.write_text("def feature() -> None:\n    return 'feature'\n")
         repo.index.add([str(feature_file)])
         feature_commit = repo.index.commit("Add feature")
 

@@ -302,11 +302,11 @@
     width: calc(100vw - 2 * var(--notification-spacing));
     max-width: none;
   }
-  
+
   .notification-content {
     padding: var(--spacing-sm);
   }
-  
+
   .notification-title,
   .notification-message {
     font-size: 0.8rem;
@@ -318,7 +318,7 @@
   .notification {
     animation: none !important;
   }
-  
+
   .notification-progress-bar {
     transition: none;
   }

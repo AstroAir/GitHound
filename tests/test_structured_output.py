@@ -145,11 +145,9 @@ class TestSchemas:
             include_metadata=True,
             pretty_print=True,
             filters=[
-                DataFilter(field="commit_hash",
-                           operator=FilterOperator.CONTAINS, value="abc123")
+                DataFilter(field="commit_hash", operator=FilterOperator.CONTAINS, value="abc123")
             ],
-            sort_by=[SortCriteria(field="relevance_score",
-                                  order=SortOrder.DESC)],
+            sort_by=[SortCriteria(field="relevance_score", order=SortOrder.DESC)],
         )
 
         assert options.format == OutputFormat.JSON
@@ -280,16 +278,14 @@ class TestExportManager:
                     field="relevance_score", operator=FilterOperator.GREATER_THAN, value=0.85
                 )
             ],
-            sort_by=[SortCriteria(field="relevance_score",
-                                  order=SortOrder.DESC)],
+            sort_by=[SortCriteria(field="relevance_score", order=SortOrder.DESC)],
         )
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_file = Path(f.name)
 
         try:
-            export_manager.export_with_options(
-                sample_search_results, output_file, options)
+            export_manager.export_with_options(sample_search_results, output_file, options)
 
             # Verify file was created and contains filtered results
             assert output_file.exists()
@@ -316,8 +312,7 @@ class TestExportManager:
             field="matching_line", operator=FilterOperator.CONTAINS, value="function"
         )
 
-        filtered_results = export_manager._apply_filters(
-            sample_search_results, [contains_filter])
+        filtered_results = export_manager._apply_filters(sample_search_results, [contains_filter])
         assert len(filtered_results) == 1
         assert (
             filtered_results[0].matching_line is not None
@@ -329,8 +324,7 @@ class TestExportManager:
             field="relevance_score", operator=FilterOperator.GREATER_THAN, value=0.85
         )
 
-        filtered_results = export_manager._apply_filters(
-            sample_search_results, [gt_filter])
+        filtered_results = export_manager._apply_filters(sample_search_results, [gt_filter])
         assert len(filtered_results) == 1
         assert filtered_results[0].relevance_score > 0.85
 
@@ -339,23 +333,18 @@ class TestExportManager:
         export_manager = ExportManager()
 
         # Test descending sort by relevance_score
-        sort_criteria = [SortCriteria(
-            field="relevance_score", order=SortOrder.DESC)]
+        sort_criteria = [SortCriteria(field="relevance_score", order=SortOrder.DESC)]
 
-        sorted_results = export_manager._apply_sorting(
-            sample_search_results, sort_criteria)
+        sorted_results = export_manager._apply_sorting(sample_search_results, sort_criteria)
         assert len(sorted_results) == 2
         assert sorted_results[0].relevance_score >= sorted_results[1].relevance_score
 
         # Test ascending sort by line_number
-        sort_criteria = [SortCriteria(
-            field="line_number", order=SortOrder.ASC)]
+        sort_criteria = [SortCriteria(field="line_number", order=SortOrder.ASC)]
 
-        sorted_results = export_manager._apply_sorting(
-            sample_search_results, sort_criteria)
+        sorted_results = export_manager._apply_sorting(sample_search_results, sort_criteria)
         assert len(sorted_results) == 2
-        assert (sorted_results[0].line_number or 0) <= (
-            sorted_results[1].line_number or 0)
+        assert (sorted_results[0].line_number or 0) <= (sorted_results[1].line_number or 0)
 
     def test_field_value_extraction(self, sample_search_results) -> None:
         """Test field value extraction with dot notation."""
@@ -364,16 +353,13 @@ class TestExportManager:
         result = sample_search_results[0]
 
         # Test simple field
-        assert export_manager._get_field_value(
-            result, "commit_hash") == "abc123def456"
+        assert export_manager._get_field_value(result, "commit_hash") == "abc123def456"
 
         # Test nested field
-        assert export_manager._get_field_value(
-            result, "commit_info.author_name") == "Test Author"
+        assert export_manager._get_field_value(result, "commit_info.author_name") == "Test Author"
 
         # Test non-existent field
-        assert export_manager._get_field_value(
-            result, "non_existent_field") is None
+        assert export_manager._get_field_value(result, "non_existent_field") is None
 
 
 class TestDataValidation:

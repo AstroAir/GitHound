@@ -34,11 +34,11 @@ def create_auth_provider(provider_type: str, **config: Any) -> AuthProvider | No
         Configured authentication provider or None if creation fails
     """
     try:
-        if provider_type.lower() == 'jwt':
+        if provider_type.lower() == "jwt":
             return JWTVerifier(**config)
-        elif provider_type.lower() == 'github':
+        elif provider_type.lower() == "github":
             return GitHubProvider(**config)
-        elif provider_type.lower() == 'google':
+        elif provider_type.lower() == "google":
             return GoogleProvider(**config)
         else:
             logger.error(f"Unknown provider type: {provider_type}")
@@ -50,9 +50,7 @@ def create_auth_provider(provider_type: str, **config: Any) -> AuthProvider | No
 
 
 def create_authorization_provider(
-    base_provider: AuthProvider,
-    auth_type: str,
-    **config: Any
+    base_provider: AuthProvider, auth_type: str, **config: Any
 ) -> AuthProvider:
     """
     Wrap a base authentication provider with authorization capabilities.
@@ -66,17 +64,15 @@ def create_authorization_provider(
         Authorization-wrapped provider or the original provider if wrapping fails
     """
     try:
-        if auth_type.lower() == 'eunomia':
+        if auth_type.lower() == "eunomia":
             if not EUNOMIA_AVAILABLE:
-                logger.warning(
-                    "Eunomia authorization requested but eunomia-mcp not available")
+                logger.warning("Eunomia authorization requested but eunomia-mcp not available")
                 return base_provider
             return EunomiaAuthorizationProvider(base_provider, **config)
 
-        elif auth_type.lower() == 'permit':
+        elif auth_type.lower() == "permit":
             if not PERMIT_AVAILABLE:
-                logger.warning(
-                    "Permit.io authorization requested but permit-fastmcp not available")
+                logger.warning("Permit.io authorization requested but permit-fastmcp not available")
                 return base_provider
             return PermitAuthorizationProvider(base_provider, **config)
 
@@ -85,8 +81,7 @@ def create_authorization_provider(
             return base_provider
 
     except Exception as e:
-        logger.error(
-            f"Failed to create {auth_type} authorization provider: {e}")
+        logger.error(f"Failed to create {auth_type} authorization provider: {e}")
         return base_provider
 
 
@@ -131,8 +126,7 @@ def create_provider_from_config(config: dict[str, Any]) -> AuthProvider | None:
         authorization_config = config.get("authorization")  # [attr-defined]
         if authorization_config:
             auth_type = authorization_config.get("type")  # [attr-defined]
-            auth_params = authorization_config.get(
-                "config", {})  # [attr-defined]
+            auth_params = authorization_config.get("config", {})  # [attr-defined]
 
             if auth_type:
                 base_provider = create_authorization_provider(
@@ -164,8 +158,7 @@ def create_provider_from_environment() -> AuthProvider | None:
         # Get authentication provider type
         auth_type = os.getenv("GITHOUND_AUTH_TYPE")
         if not auth_type:
-            logger.info(
-                "No GITHOUND_AUTH_TYPE specified, authentication disabled")
+            logger.info("No GITHOUND_AUTH_TYPE specified, authentication disabled")
             return None
 
         # Collect authentication configuration from environment
@@ -173,7 +166,7 @@ def create_provider_from_environment() -> AuthProvider | None:
         auth_prefix = "GITHOUND_AUTH_"
         for key, value in os.environ.items():
             if key.startswith(auth_prefix) and key != "GITHOUND_AUTH_TYPE":
-                config_key = key[len(auth_prefix):].lower()
+                config_key = key[len(auth_prefix) :].lower()
                 auth_config[config_key] = value
 
         # Create base provider
@@ -189,7 +182,7 @@ def create_provider_from_environment() -> AuthProvider | None:
             auth_prefix = "GITHOUND_AUTHORIZATION_"
             for key, value in os.environ.items():
                 if key.startswith(auth_prefix) and key != "GITHOUND_AUTHORIZATION_TYPE":
-                    config_key = key[len(auth_prefix):].lower()
+                    config_key = key[len(auth_prefix) :].lower()
                     authorization_config[config_key] = value
 
             # Wrap with authorization provider
@@ -216,33 +209,33 @@ def get_available_providers() -> dict[str, dict[str, Any]]:
             "jwt": {
                 "name": "JWT Verifier",
                 "description": "Validates JWT tokens issued by external systems",
-                "available": True
+                "available": True,
             },
             "github": {
                 "name": "GitHub OAuth",
                 "description": "GitHub OAuth 2.0 authentication",
-                "available": True
+                "available": True,
             },
             "google": {
                 "name": "Google OAuth",
                 "description": "Google OAuth 2.0 authentication",
-                "available": True
-            }
+                "available": True,
+            },
         },
         "authorization": {
             "eunomia": {
                 "name": "Eunomia Authorization",
                 "description": "Policy-based authorization with embedded server",
                 "available": EUNOMIA_AVAILABLE,
-                "package": "eunomia-mcp"
+                "package": "eunomia-mcp",
             },
             "permit": {
                 "name": "Permit.io Authorization",
                 "description": "Fine-grained authorization with RBAC, ABAC, and REBAC",
                 "available": PERMIT_AVAILABLE,
-                "package": "permit-fastmcp"
-            }
-        }
+                "package": "permit-fastmcp",
+            },
+        },
     }
 
     return providers

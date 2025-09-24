@@ -100,15 +100,16 @@ class TestGitHandler:
         second_commit = repo.index.commit("Second commit by Test User")
 
         # Test author filter
-        commits = list(get_commits_with_filters(
-            repo, author_pattern="Test User"))
+        commits = list(get_commits_with_filters(repo, author_pattern="Test User"))
         assert len(commits) >= 2
 
         # Test message filter
-        commits = list(get_commits_with_filters(
-            repo, message_pattern="Initial"))
+        commits = list(get_commits_with_filters(repo, message_pattern="Initial"))
         assert len(commits) >= 1
-        assert any(commit.hexsha if commit is not None else None == initial_commit.hexsha for commit in commits)
+        assert any(
+            commit.hexsha if commit is not None else None == initial_commit.hexsha
+            for commit in commits
+        )
 
         # Test max count
         commits = list(get_commits_with_filters(repo, max_count=1))
@@ -211,8 +212,7 @@ class TestGitDiff:
         repo.index.add([str(test_file)])
         second_commit = repo.index.commit("Modified test.txt")
 
-        diff_result = compare_commits(
-            repo, initial_commit.hexsha, second_commit.hexsha)
+        diff_result = compare_commits(repo, initial_commit.hexsha, second_commit.hexsha)
 
         assert diff_result.from_commit == initial_commit.hexsha
         assert diff_result.to_commit == second_commit.hexsha
@@ -298,8 +298,7 @@ class TestEdgeCases:
         repo.index.add([str(binary_file)])
         binary_commit = repo.index.commit("Added binary file")
 
-        diff_result = compare_commits(
-            repo, initial_commit.hexsha, binary_commit.hexsha)
+        diff_result = compare_commits(repo, initial_commit.hexsha, binary_commit.hexsha)
 
         # Find the binary file diff
         binary_diff = next(

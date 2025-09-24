@@ -23,7 +23,7 @@ class TestRateLimiting:
         # Make requests rapidly to trigger rate limiting
         responses: list[Any] = []
 
-        with patch('githound.web.rate_limiting.get_limiter') as mock_limiter:
+        with patch("githound.web.rate_limiting.get_limiter") as mock_limiter:
             # Mock rate limiter to allow first few requests, then deny
             mock_limiter_instance = Mock()
             mock_limiter_instance.limit.side_effect = [
@@ -31,16 +31,13 @@ class TestRateLimiting:
                 lambda func: func,  # Allow second request
                 lambda func: func,  # Allow third request
                 # Then start rate limiting
-                lambda func: self._rate_limit_exceeded_response
+                lambda func: self._rate_limit_exceeded_response,
             ] * 10
             mock_limiter.return_value = mock_limiter_instance
 
             # Make multiple rapid requests
             for i in range(10):
-                response = api_client.get(
-                    "/api/v3/health",
-                    headers=admin_auth_headers
-                )
+                response = api_client.get("/api/v3/health", headers=admin_auth_headers)
                 responses.append(response)
 
         # Check that some requests were rate limited
@@ -53,10 +50,13 @@ class TestRateLimiting:
     def _rate_limit_exceeded_response(self, func) -> None:
         """Mock function that raises rate limit exception."""
         from slowapi.errors import RateLimitExceeded
+
         raise RateLimitExceeded("Rate limit exceeded")
 
     @pytest.mark.redis
-    def test_redis_rate_limiting_performance(self, api_client, admin_auth_headers, redis_client) -> None:
+    def test_redis_rate_limiting_performance(
+        self, api_client, admin_auth_headers, redis_client
+    ) -> None:
         """Test Redis-based rate limiting performance."""
         if not redis_client:
             pytest.skip("Redis not available")
@@ -65,10 +65,7 @@ class TestRateLimiting:
 
         # Make many requests to test Redis performance
         for i in range(50):
-            response = api_client.get(
-                "/api/v3/health",
-                headers=admin_auth_headers
-            )
+            response = api_client.get("/api/v3/health", headers=admin_auth_headers)
             # Don't assert status here as we're testing performance
 
         end_time = time.time()
@@ -83,16 +80,14 @@ class TestRateLimiting:
 
     def test_concurrent_rate_limiting(self, api_client, admin_auth_headers) -> None:
         """Test rate limiting with concurrent requests."""
+
         def make_request(request_id) -> None:
             """Make a single request and return result."""
-            response = api_client.get(
-                "/api/v3/health",
-                headers=admin_auth_headers
-            )
+            response = api_client.get("/api/v3/health", headers=admin_auth_headers)
             return {
                 "request_id": request_id,
                 "status_code": response.status_code,
-                "response_time": time.time()
+                "response_time": time.time(),
             }
 
         # Make concurrent requests
@@ -113,34 +108,35 @@ class TestRateLimiting:
 class TestConcurrentOperations:
     """Test concurrent API operations."""
 
-    def test_concurrent_repository_operations(self, api_client, admin_auth_headers, temp_dir) -> None:
+    def test_concurrent_repository_operations(
+        self, api_client, admin_auth_headers, temp_dir
+    ) -> None:
         """Test concurrent repository operations."""
+
         def create_repository(repo_id) -> None:
             """Create a repository and return result."""
             repo_path = str(temp_dir / f"concurrent_repo_{repo_id}")
 
-            with patch('githound.web.git_operations.GitOperationsManager.init_repository') as mock_init:
-                mock_init.return_value = {
-                    "path": repo_path,
-                    "status": "created"
-                }
+            with patch(
+                "githound.web.git_operations.GitOperationsManager.init_repository"
+            ) as mock_init:
+                mock_init.return_value = {"path": repo_path, "status": "created"}
 
                 response = api_client.post(
                     "/api/v3/repository/init",
                     headers=admin_auth_headers,
-                    json={"path": repo_path, "bare": False}
+                    json={"path": repo_path, "bare": False},
                 )
 
                 return {
                     "repo_id": repo_id,
                     "status_code": response.status_code,
-                    "success": response.status_code == 200
+                    "success": response.status_code == 200,
                 }
 
         # Create multiple repositories concurrently
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [executor.submit(create_repository, i)
-                       for i in range(10)]
+            futures = [executor.submit(create_repository, i) for i in range(10)]
             results = [future.result() for future in as_completed(futures)]
 
         # All operations should succeed
@@ -153,7 +149,7 @@ class TestConcurrentOperations:
 
         def perform_search(search_id) -> None:
             """Perform a search and return result."""
-            with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+            with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
                 mock_search.return_value = {
                     "search_id": f"concurrent-search-{search_id}",
                     "status": "completed",
@@ -164,7 +160,7 @@ class TestConcurrentOperations:
                     "search_duration_ms": 100.0,
                     "query_info": {},
                     "filters_applied": {},
-                    "has_more": False
+                    "has_more": False,
                 }
 
                 response = api_client.post(
@@ -173,14 +169,14 @@ class TestConcurrentOperations:
                     json={
                         "repo_path": repo_path,
                         "content_pattern": f"search_pattern_{search_id}",
-                        "max_results": 50
-                    }
+                        "max_results": 50,
+                    },
                 )
 
                 return {
                     "search_id": search_id,
                     "status_code": response.status_code,
-                    "success": response.status_code == 200
+                    "success": response.status_code == 200,
                 }
 
         # Perform multiple searches concurrently
@@ -192,32 +188,33 @@ class TestConcurrentOperations:
         success_count = sum(1 for r in results if r["success"])
         assert success_count == 8, f"Expected 8 successful searches, got {success_count}"
 
-    def test_concurrent_analysis_operations(self, api_client, admin_auth_headers, temp_repo) -> None:
+    def test_concurrent_analysis_operations(
+        self, api_client, admin_auth_headers, temp_repo
+    ) -> None:
         """Test concurrent analysis operations."""
         repo_path = str(temp_repo.working_dir)
 
         def perform_analysis(analysis_type) -> None:
             """Perform analysis and return result."""
             if analysis_type == "blame":
-                with patch('githound.web.analysis_api.get_file_blame') as mock_blame:
-                    mock_blame.return_value = Mock(
-                        dict=lambda: {"file_path": "test.py"})
+                with patch("githound.web.analysis_api.get_file_blame") as mock_blame:
+                    mock_blame.return_value = Mock(dict=lambda: {"file_path": "test.py"})
 
                     response = api_client.post(
                         "/api/v3/analysis/blame",
                         headers=admin_auth_headers,
                         params={"repo_path": repo_path},
-                        json={"file_path": "test.py"}
+                        json={"file_path": "test.py"},
                     )
 
             elif analysis_type == "stats":
-                with patch('githound.web.analysis_api.get_repository_metadata') as mock_metadata:
+                with patch("githound.web.analysis_api.get_repository_metadata") as mock_metadata:
                     mock_metadata.return_value = {"total_commits": 10}
 
                     response = api_client.get(
                         "/api/v3/analysis/repository-stats",
                         headers=admin_auth_headers,
-                        params={"repo_path": repo_path}
+                        params={"repo_path": repo_path},
                     )
 
             else:
@@ -226,15 +223,14 @@ class TestConcurrentOperations:
             return {
                 "analysis_type": analysis_type,
                 "status_code": response.status_code,
-                "success": response.status_code == 200
+                "success": response.status_code == 200,
             }
 
         # Perform different types of analysis concurrently
         analysis_types = ["blame", "stats", "blame", "stats", "blame"]
 
         with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = [executor.submit(perform_analysis, atype)
-                       for atype in analysis_types]
+            futures = [executor.submit(perform_analysis, atype) for atype in analysis_types]
             results = [future.result() for future in as_completed(futures)]
 
         # All analyses should succeed
@@ -251,7 +247,9 @@ class TestLargeRepositoryHandling:
         """Test getting status of large repository."""
         repo_path = str(large_git_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.get_repository_status') as mock_status:
+        with patch(
+            "githound.web.git_operations.GitOperationsManager.get_repository_status"
+        ) as mock_status:
             # Simulate large repository status
             mock_status.return_value = {
                 "is_dirty": False,
@@ -261,15 +259,14 @@ class TestLargeRepositoryHandling:
                 "current_branch": "master",
                 "head_commit": "large123",
                 "total_commits": 1000,  # Large number of commits
-                "stash_count": 0
+                "stash_count": 0,
             }
 
             start_time = time.time()
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.get(
-                f"/api/v3/repository/{encoded_path}/status",
-                headers=admin_auth_headers
+                f"/api/v3/repository/{encoded_path}/status", headers=admin_auth_headers
             )
 
             end_time = time.time()
@@ -285,7 +282,7 @@ class TestLargeRepositoryHandling:
         """Test searching large repository."""
         repo_path = str(large_git_repo.working_dir)
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             # Simulate search in large repository
             mock_search.return_value = {
                 "search_id": "large-repo-search",
@@ -297,7 +294,7 @@ class TestLargeRepositoryHandling:
                 "search_duration_ms": 3000.0,  # 3 seconds
                 "query_info": {},
                 "filters_applied": {},
-                "has_more": False
+                "has_more": False,
             }
 
             start_time = time.time()
@@ -308,8 +305,8 @@ class TestLargeRepositoryHandling:
                 json={
                     "repo_path": repo_path,
                     "content_pattern": "common_pattern",
-                    "max_results": 100
-                }
+                    "max_results": 100,
+                },
             )
 
             end_time = time.time()
@@ -323,11 +320,13 @@ class TestLargeRepositoryHandling:
             # API response should be fast even if search takes time
             assert response_time < 1.0, f"Large repo search API took {response_time:.2f}s"
 
-    def test_large_repository_analysis(self, api_client, admin_auth_headers, large_git_repo) -> None:
+    def test_large_repository_analysis(
+        self, api_client, admin_auth_headers, large_git_repo
+    ) -> None:
         """Test analysis of large repository."""
         repo_path = str(large_git_repo.working_dir)
 
-        with patch('githound.web.analysis_api.get_repository_metadata') as mock_metadata:
+        with patch("githound.web.analysis_api.get_repository_metadata") as mock_metadata:
             # Simulate large repository metadata
             mock_metadata.return_value = {
                 "total_commits": 1000,
@@ -335,20 +334,21 @@ class TestLargeRepositoryHandling:
                 "contributors": [f"user_{i}" for i in range(50)],
                 # 20 branches
                 "branches": [f"branch_{i}" for i in range(20)],
-                "tags": [f"v{i}.0.0" for i in range(10)],          # 10 tags
+                "tags": [f"v{i}.0.0" for i in range(10)],  # 10 tags
                 "first_commit_date": "2020-01-01T00:00:00Z",
-                "last_commit_date": "2024-01-01T00:00:00Z"
+                "last_commit_date": "2024-01-01T00:00:00Z",
             }
 
-            with patch('githound.web.analysis_api.get_author_statistics') as mock_author_stats:
+            with patch("githound.web.analysis_api.get_author_statistics") as mock_author_stats:
                 # Simulate author statistics for large repo
                 mock_author_stats.return_value = {
                     f"user_{i}": {
                         "total_commits": 20,
                         "total_files": 30,
                         "lines_added": 500,
-                        "lines_deleted": 100
-                    } for i in range(50)
+                        "lines_deleted": 100,
+                    }
+                    for i in range(50)
                 }
 
                 start_time = time.time()
@@ -359,8 +359,8 @@ class TestLargeRepositoryHandling:
                     params={
                         "repo_path": repo_path,
                         "include_author_stats": True,
-                        "include_file_stats": True
-                    }
+                        "include_file_stats": True,
+                    },
                 )
 
                 end_time = time.time()
@@ -380,7 +380,9 @@ class TestLargeRepositoryHandling:
 class TestMemoryAndResourceUsage:
     """Test memory and resource usage under load."""
 
-    def test_memory_usage_with_large_responses(self, api_client, admin_auth_headers, temp_repo) -> None:
+    def test_memory_usage_with_large_responses(
+        self, api_client, admin_auth_headers, temp_repo
+    ) -> None:
         """Test memory usage with large API responses."""
         repo_path = str(temp_repo.working_dir)
 
@@ -394,12 +396,12 @@ class TestMemoryAndResourceUsage:
                 "matching_line": f"line content {i}" * 10,
                 "search_type": "content",
                 "relevance_score": 0.9,
-                "match_context": [f"context line {j}" for j in range(5)]
+                "match_context": [f"context line {j}" for j in range(5)],
             }
             for i in range(1000)  # 1000 results
         ]
 
-        with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "large-response-test",
                 "status": "completed",
@@ -410,7 +412,7 @@ class TestMemoryAndResourceUsage:
                 "search_duration_ms": 2000.0,
                 "query_info": {},
                 "filters_applied": {},
-                "has_more": False
+                "has_more": False,
             }
 
             start_time = time.time()
@@ -418,11 +420,7 @@ class TestMemoryAndResourceUsage:
             response = api_client.post(
                 "/api/v3/search/advanced",
                 headers=admin_auth_headers,
-                json={
-                    "repo_path": repo_path,
-                    "content_pattern": "test",
-                    "max_results": 1000
-                }
+                json={"repo_path": repo_path, "content_pattern": "test", "max_results": 1000},
             )
 
             end_time = time.time()
@@ -441,7 +439,7 @@ class TestMemoryAndResourceUsage:
 
         def large_operation(op_id) -> None:
             """Perform a large operation."""
-            with patch('githound.web.search_api.perform_advanced_search_sync') as mock_search:
+            with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
                 # Each operation returns substantial data
                 mock_search.return_value = {
                     "search_id": f"large-op-{op_id}",
@@ -453,7 +451,7 @@ class TestMemoryAndResourceUsage:
                     "search_duration_ms": 1000.0,
                     "query_info": {},
                     "filters_applied": {},
-                    "has_more": False
+                    "has_more": False,
                 }
 
                 response = api_client.post(
@@ -462,15 +460,15 @@ class TestMemoryAndResourceUsage:
                     json={
                         "repo_path": repo_path,
                         "content_pattern": f"pattern_{op_id}",
-                        "max_results": 200
-                    }
+                        "max_results": 200,
+                    },
                 )
 
                 return {
                     "op_id": op_id,
                     "status_code": response.status_code,
                     "result_count": len(response.json().get("results", [])),
-                    "success": response.status_code == 200
+                    "success": response.status_code == 200,
                 }
 
         # Run multiple large operations concurrently
@@ -492,4 +490,6 @@ class TestMemoryAndResourceUsage:
 
         # Each operation should return expected amount of data
         for result in results:
-            assert result["result_count"] == 200, f"Operation {result['op_id']} returned {result['result_count']} results"
+            assert (
+                result["result_count"] == 200
+            ), f"Operation {result['op_id']} returned {result['result_count']} results"

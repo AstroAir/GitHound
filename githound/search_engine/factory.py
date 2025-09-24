@@ -4,27 +4,27 @@ import logging
 from typing import Any, Optional
 
 from ..models import SearchEngineConfig, SearchQuery, SearchType
+from .analytics import SearchAnalytics, get_global_analytics
 from .base import BaseSearcher
-from .orchestrator import SearchOrchestrator
-from .registry import SearcherRegistry, SearcherMetadata, get_global_registry
+from .branch_searcher import BranchSearcher
+from .cache import CacheBackend, MemoryCache, RedisCache, SearchCache
 
 # Import all searchers
 from .commit_searcher import AuthorSearcher, CommitHashSearcher, DateRangeSearcher, MessageSearcher
+from .diff_searcher import DiffSearcher
 from .file_searcher import ContentSearcher, FilePathSearcher, FileTypeSearcher
 from .fuzzy_searcher import FuzzySearcher
-from .searcher import AdvancedSearcher
-from .branch_searcher import BranchSearcher
-from .diff_searcher import DiffSearcher
 from .history_searcher import HistorySearcher
+from .orchestrator import SearchOrchestrator
 from .pattern_searcher import CodePatternSearcher
-from .statistical_searcher import StatisticalSearcher
-from .tag_searcher import TagSearcher
 
 # Import utilities
 from .ranking_engine import RankingEngine
+from .registry import SearcherMetadata, SearcherRegistry, get_global_registry
 from .result_processor import ResultProcessor
-from .cache import SearchCache, MemoryCache, RedisCache
-from .analytics import SearchAnalytics, get_global_analytics
+from .searcher import AdvancedSearcher
+from .statistical_searcher import StatisticalSearcher
+from .tag_searcher import TagSearcher
 
 logger = logging.getLogger(__name__)
 
@@ -46,14 +46,18 @@ class SearchEngineFactory:
                 logger.warning(f"  - {issue}")
 
     def create_orchestrator(
-        self, 
+        self,
         enable_advanced: Optional[bool] = None,
         enable_caching: Optional[bool] = None,
-        enable_ranking: Optional[bool] = None
+        enable_ranking: Optional[bool] = None,
     ) -> SearchOrchestrator:
         """Create a fully configured search orchestrator."""
         # Override config with parameters if provided
-        use_advanced = enable_advanced if enable_advanced is not None else self.config.enable_advanced_searchers
+        use_advanced = (
+            enable_advanced
+            if enable_advanced is not None
+            else self.config.enable_advanced_searchers
+        )
         use_caching = enable_caching if enable_caching is not None else self.config.enable_caching
         use_ranking = enable_ranking if enable_ranking is not None else self.config.enable_ranking
 
@@ -142,31 +146,26 @@ class SearchEngineFactory:
     def _create_cache(self) -> SearchCache:
         """Create cache backend based on configuration."""
         cache_config = self.config.get_cache_config()
-        
+
+        backend: CacheBackend
         if cache_config["backend"] == "redis":
             try:
                 backend = RedisCache(
-                    url=cache_config["redis_url"],
-                    default_ttl=cache_config["ttl_seconds"]
+                    url=cache_config["redis_url"], default_ttl=cache_config["ttl_seconds"]
                 )
                 logger.info("Using Redis cache backend")
             except Exception as e:
                 logger.warning(f"Failed to create Redis cache, falling back to memory: {e}")
                 backend = MemoryCache(
-                    max_size=cache_config["max_size"],
-                    default_ttl=cache_config["ttl_seconds"]
+                    max_size=cache_config["max_size"], default_ttl=cache_config["ttl_seconds"]
                 )
         else:
             backend = MemoryCache(
-                max_size=cache_config["max_size"],
-                default_ttl=cache_config["ttl_seconds"]
+                max_size=cache_config["max_size"], default_ttl=cache_config["ttl_seconds"]
             )
             logger.info("Using memory cache backend")
 
-        return SearchCache(
-            backend=backend,
-            default_ttl=cache_config["ttl_seconds"]
-        )
+        return SearchCache(backend=backend, default_ttl=cache_config["ttl_seconds"])
 
     def _create_ranking_engine(self) -> RankingEngine:
         """Create ranking engine with configured weights."""
@@ -201,7 +200,7 @@ class SearchEngineFactory:
         """Create analytics instance with configuration."""
         analytics = SearchAnalytics(
             retention_days=self.config.metrics_retention_days,
-            enable_persistence=self.config.enable_analytics
+            enable_persistence=self.config.enable_analytics,
         )
         logger.debug("Created analytics instance")
         return analytics
@@ -210,10 +209,10 @@ class SearchEngineFactory:
         """Create an orchestrator optimized for a specific query."""
         # Determine if advanced searchers are needed
         needs_advanced = query.has_advanced_analysis() or query.is_complex_query()
-        
+
         # Create orchestrator with appropriate configuration
         orchestrator = self.create_orchestrator(enable_advanced=needs_advanced)
-        
+
         logger.info(f"Created query-optimized orchestrator (advanced: {needs_advanced})")
         return orchestrator
 
@@ -229,7 +228,6 @@ class SearchEngineFactory:
             "file_type": FileTypeSearcher,
             "content": ContentSearcher,
             "fuzzy": FuzzySearcher,
-            
             # Advanced searchers
             "advanced": AdvancedSearcher,
             "branch": BranchSearcher,
@@ -287,8 +285,7 @@ def get_default_factory() -> SearchEngineFactory:
 
 
 def create_search_orchestrator(
-    config: Optional[SearchEngineConfig] = None,
-    enable_advanced: Optional[bool] = None
+    config: Optional[SearchEngineConfig] = None, enable_advanced: Optional[bool] = None
 ) -> SearchOrchestrator:
     """Convenience function to create a search orchestrator."""
     if config:
@@ -313,8 +310,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["commit_search"],
             priority=10,
             performance_cost=1,
-            memory_usage=1
-        )
+            memory_usage=1,
+        ),
     )
 
     registry.register_searcher(
@@ -326,8 +323,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["author_search"],
             priority=20,
             performance_cost=2,
-            memory_usage=1
-        )
+            memory_usage=1,
+        ),
     )
 
     registry.register_searcher(
@@ -339,8 +336,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["message_search"],
             priority=30,
             performance_cost=2,
-            memory_usage=1
-        )
+            memory_usage=1,
+        ),
     )
 
     registry.register_searcher(
@@ -352,8 +349,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["date_search"],
             priority=40,
             performance_cost=2,
-            memory_usage=1
-        )
+            memory_usage=1,
+        ),
     )
 
     registry.register_searcher(
@@ -365,8 +362,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["file_search"],
             priority=50,
             performance_cost=2,
-            memory_usage=1
-        )
+            memory_usage=1,
+        ),
     )
 
     registry.register_searcher(
@@ -378,8 +375,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["file_search"],
             priority=60,
             performance_cost=1,
-            memory_usage=1
-        )
+            memory_usage=1,
+        ),
     )
 
     registry.register_searcher(
@@ -391,8 +388,8 @@ def initialize_default_registry() -> SearcherRegistry:
             capabilities=["content_search"],
             priority=70,
             performance_cost=4,
-            memory_usage=3
-        )
+            memory_usage=3,
+        ),
     )
 
     registry.register_searcher(
@@ -405,8 +402,8 @@ def initialize_default_registry() -> SearcherRegistry:
             priority=80,
             performance_cost=3,
             memory_usage=2,
-            dependencies=["rapidfuzz"]
-        )
+            dependencies=["rapidfuzz"],
+        ),
     )
 
     # Register advanced searchers
@@ -416,12 +413,18 @@ def initialize_default_registry() -> SearcherRegistry:
             name="advanced",
             description="Multi-criteria advanced search",
             search_types=[SearchType.COMBINED],
-            capabilities=["content_search", "author_search", "message_search", "file_search", "date_search"],
+            capabilities=[
+                "content_search",
+                "author_search",
+                "message_search",
+                "file_search",
+                "date_search",
+            ],
             priority=100,
             requires_advanced=True,
             performance_cost=4,
-            memory_usage=3
-        )
+            memory_usage=3,
+        ),
     )
 
     registry.register_searcher(
@@ -434,8 +437,8 @@ def initialize_default_registry() -> SearcherRegistry:
             priority=110,
             requires_advanced=True,
             performance_cost=3,
-            memory_usage=2
-        )
+            memory_usage=2,
+        ),
     )
 
     registry.register_searcher(
@@ -448,8 +451,8 @@ def initialize_default_registry() -> SearcherRegistry:
             priority=120,
             requires_advanced=True,
             performance_cost=4,
-            memory_usage=3
-        )
+            memory_usage=3,
+        ),
     )
 
     registry.register_searcher(
@@ -462,8 +465,8 @@ def initialize_default_registry() -> SearcherRegistry:
             priority=130,
             requires_advanced=True,
             performance_cost=4,
-            memory_usage=3
-        )
+            memory_usage=3,
+        ),
     )
 
     registry.register_searcher(
@@ -471,13 +474,17 @@ def initialize_default_registry() -> SearcherRegistry:
         SearcherMetadata(
             name="pattern",
             description="Code pattern and quality analysis",
-            search_types=[SearchType.PATTERN_DETECTION, SearchType.CODE_QUALITY, SearchType.SECURITY_ANALYSIS],
+            search_types=[
+                SearchType.PATTERN_DETECTION,
+                SearchType.CODE_QUALITY,
+                SearchType.SECURITY_ANALYSIS,
+            ],
             capabilities=["pattern_analysis", "code_quality", "security_analysis"],
             priority=140,
             requires_advanced=True,
             performance_cost=5,
-            memory_usage=4
-        )
+            memory_usage=4,
+        ),
     )
 
     registry.register_searcher(
@@ -491,8 +498,8 @@ def initialize_default_registry() -> SearcherRegistry:
             requires_advanced=True,
             performance_cost=4,
             memory_usage=3,
-            dependencies=["pandas", "numpy"]
-        )
+            dependencies=["pandas", "numpy"],
+        ),
     )
 
     registry.register_searcher(
@@ -505,8 +512,8 @@ def initialize_default_registry() -> SearcherRegistry:
             priority=160,
             requires_advanced=True,
             performance_cost=2,
-            memory_usage=2
-        )
+            memory_usage=2,
+        ),
     )
 
     logger.info(f"Initialized registry with {len(registry._searchers)} searchers")

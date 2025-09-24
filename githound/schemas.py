@@ -47,10 +47,8 @@ class DataFilter(BaseModel):
 
     field: str = Field(..., description="Field name to filter on")
     operator: FilterOperator = Field(..., description="Filter operator")
-    value: str | int | float | bool | list[Any] = Field(
-        ..., description="Filter value")
-    case_sensitive: bool = Field(
-        True, description="Whether string comparisons are case sensitive")
+    value: str | int | float | bool | list[Any] = Field(..., description="Filter value")
+    case_sensitive: bool = Field(True, description="Whether string comparisons are case sensitive")
 
 
 class SortCriteria(BaseModel):
@@ -68,28 +66,20 @@ class PaginationInfo(BaseModel):
     total_items: int = Field(..., description="Total number of items")
     total_pages: int = Field(..., description="Total number of pages")
     has_next: bool = Field(..., description="Whether there is a next page")
-    has_previous: bool = Field(...,
-                               description="Whether there is a previous page")
+    has_previous: bool = Field(..., description="Whether there is a previous page")
 
 
 class ExportOptions(BaseModel):
     """Options for data export."""
 
-    format: OutputFormat = Field(
-        OutputFormat.JSON, description="Output format")
-    include_metadata: bool = Field(
-        True, description="Include metadata in output")
+    format: OutputFormat = Field(OutputFormat.JSON, description="Output format")
+    include_metadata: bool = Field(True, description="Include metadata in output")
     pretty_print: bool = Field(True, description="Pretty print output")
-    filters: list[DataFilter] = Field(
-        default_factory=list, description="Data filters")
-    sort_by: list[SortCriteria] = Field(
-        default_factory=list, description="Sort criteria")
-    pagination: PaginationInfo | None = Field(
-        None, description="Pagination info")
-    fields: list[str] | None = Field(
-        None, description="Specific fields to include")
-    exclude_fields: list[str] | None = Field(
-        None, description="Fields to exclude")
+    filters: list[DataFilter] = Field(default_factory=list, description="Data filters")
+    sort_by: list[SortCriteria] = Field(default_factory=list, description="Sort criteria")
+    pagination: PaginationInfo | None = Field(None, description="Pagination info")
+    fields: list[str] | None = Field(None, description="Specific fields to include")
+    exclude_fields: list[str] | None = Field(None, description="Fields to exclude")
 
 
 # Git-specific schemas
@@ -100,16 +90,11 @@ class AuthorSchema(BaseModel):
 
     name: str = Field(..., description="Author name")
     email: str = Field(..., description="Author email")
-    commits_count: int | None = Field(
-        None, description="Number of commits by this author")
-    lines_authored: int | None = Field(
-        None, description="Number of lines authored")
-    first_commit_date: datetime | None = Field(
-        None, description="Date of first commit")
-    last_commit_date: datetime | None = Field(
-        None, description="Date of last commit")
-    files_touched: int | None = Field(
-        None, description="Number of files touched")
+    commits_count: int | None = Field(None, description="Number of commits by this author")
+    lines_authored: int | None = Field(None, description="Number of lines authored")
+    first_commit_date: datetime | None = Field(None, description="Date of first commit")
+    last_commit_date: datetime | None = Field(None, description="Date of last commit")
+    files_touched: int | None = Field(None, description="Number of files touched")
 
 
 class BranchSchema(BaseModel):
@@ -117,18 +102,12 @@ class BranchSchema(BaseModel):
 
     name: str = Field(..., description="Branch name")
     commit_hash: str = Field(..., description="Current commit hash")
-    is_remote: bool = Field(
-        False, description="Whether this is a remote branch")
-    remote_name: str | None = Field(
-        None, description="Remote name if remote branch")
-    ahead_count: int | None = Field(
-        None, description="Commits ahead of base branch")
-    behind_count: int | None = Field(
-        None, description="Commits behind base branch")
-    last_commit_date: datetime | None = Field(
-        None, description="Date of last commit")
-    last_commit_author: str | None = Field(
-        None, description="Author of last commit")
+    is_remote: bool = Field(False, description="Whether this is a remote branch")
+    remote_name: str | None = Field(None, description="Remote name if remote branch")
+    ahead_count: int | None = Field(None, description="Commits ahead of base branch")
+    behind_count: int | None = Field(None, description="Commits behind base branch")
+    last_commit_date: datetime | None = Field(None, description="Date of last commit")
+    last_commit_author: str | None = Field(None, description="Author of last commit")
 
 
 class TagSchema(BaseModel):
@@ -139,8 +118,7 @@ class TagSchema(BaseModel):
     message: str | None = Field(None, description="Tag message")
     tagger: str | None = Field(None, description="Tagger name and email")
     tag_date: datetime | None = Field(None, description="Tag creation date")
-    is_annotated: bool = Field(
-        False, description="Whether this is an annotated tag")
+    is_annotated: bool = Field(False, description="Whether this is an annotated tag")
 
 
 class FileChangeSchema(BaseModel):
@@ -151,8 +129,7 @@ class FileChangeSchema(BaseModel):
     lines_added: int = Field(0, description="Number of lines added")
     lines_deleted: int = Field(0, description="Number of lines deleted")
     is_binary: bool = Field(False, description="Whether the file is binary")
-    old_file_path: str | None = Field(
-        None, description="Old file path for renames")
+    old_file_path: str | None = Field(None, description="Old file path for renames")
 
 
 class CommitSchema(BaseModel):
@@ -164,17 +141,13 @@ class CommitSchema(BaseModel):
     committer: AuthorSchema = Field(..., description="Commit committer")
     message: str = Field(..., description="Commit message")
     date: datetime = Field(..., description="Commit date")
-    parent_hashes: list[str] = Field(
-        default_factory=list, description="Parent commit hashes")
+    parent_hashes: list[str] = Field(default_factory=list, description="Parent commit hashes")
     files_changed: list[FileChangeSchema] = Field(
         default_factory=list, description="Files changed in this commit"
     )
-    stats: dict[str, int] = Field(
-        default_factory=dict, description="Commit statistics")
-    branches: list[str] = Field(
-        default_factory=list, description="Branches containing this commit")
-    tags: list[str] = Field(default_factory=list,
-                            description="Tags pointing to this commit")
+    stats: dict[str, int] = Field(default_factory=dict, description="Commit statistics")
+    branches: list[str] = Field(default_factory=list, description="Branches containing this commit")
+    tags: list[str] = Field(default_factory=list, description="Tags pointing to this commit")
 
 
 class BlameLineSchema(BaseModel):
@@ -182,8 +155,7 @@ class BlameLineSchema(BaseModel):
 
     line_number: int = Field(..., description="Line number (1-based)")
     content: str = Field(..., description="Line content")
-    commit_hash: str = Field(...,
-                             description="Commit hash that last modified this line")
+    commit_hash: str = Field(..., description="Commit hash that last modified this line")
     author: AuthorSchema = Field(..., description="Author of the line")
     commit_date: datetime = Field(..., description="Date of the commit")
     commit_message: str = Field(..., description="Commit message")
@@ -194,25 +166,18 @@ class FileBlameSchema(BaseModel):
 
     file_path: str = Field(..., description="Path to the file")
     total_lines: int = Field(..., description="Total number of lines")
-    lines: list[BlameLineSchema] = Field(...,
-                                         description="Blame information for each line")
-    contributors: list[AuthorSchema] = Field(...,
-                                             description="All contributors to this file")
-    oldest_line_date: datetime | None = Field(
-        None, description="Date of the oldest line")
-    newest_line_date: datetime | None = Field(
-        None, description="Date of the newest line")
-    file_age_days: int | None = Field(
-        None, description="Age of the file in days")
+    lines: list[BlameLineSchema] = Field(..., description="Blame information for each line")
+    contributors: list[AuthorSchema] = Field(..., description="All contributors to this file")
+    oldest_line_date: datetime | None = Field(None, description="Date of the oldest line")
+    newest_line_date: datetime | None = Field(None, description="Date of the newest line")
+    file_age_days: int | None = Field(None, description="Age of the file in days")
 
 
 class DiffLineSchema(BaseModel):
     """Schema for diff line information."""
 
-    line_number_old: int | None = Field(
-        None, description="Line number in old file")
-    line_number_new: int | None = Field(
-        None, description="Line number in new file")
+    line_number_old: int | None = Field(None, description="Line number in old file")
+    line_number_new: int | None = Field(None, description="Line number in new file")
     content: str = Field(..., description="Line content")
     change_type: str = Field(..., description="Type of change (+/-/ )")
 
@@ -221,16 +186,13 @@ class FileDiffSchema(BaseModel):
     """Schema for file diff information."""
 
     file_path: str = Field(..., description="Path to the file")
-    old_file_path: str | None = Field(
-        None, description="Old file path for renames")
+    old_file_path: str | None = Field(None, description="Old file path for renames")
     change_type: str = Field(..., description="Type of change")
     lines_added: int = Field(0, description="Number of lines added")
     lines_deleted: int = Field(0, description="Number of lines deleted")
     is_binary: bool = Field(False, description="Whether the file is binary")
-    diff_lines: list[DiffLineSchema] = Field(
-        default_factory=list, description="Line-by-line diff")
-    similarity_index: float | None = Field(
-        None, description="Similarity index for renames")
+    diff_lines: list[DiffLineSchema] = Field(default_factory=list, description="Line-by-line diff")
+    similarity_index: float | None = Field(None, description="Similarity index for renames")
 
 
 class CommitDiffSchema(BaseModel):
@@ -241,8 +203,7 @@ class CommitDiffSchema(BaseModel):
     files_changed: int = Field(..., description="Number of files changed")
     total_additions: int = Field(..., description="Total lines added")
     total_deletions: int = Field(..., description="Total lines deleted")
-    file_diffs: list[FileDiffSchema] = Field(...,
-                                             description="File-by-file diff information")
+    file_diffs: list[FileDiffSchema] = Field(..., description="File-by-file diff information")
     commit_range_info: dict[str, Any] | None = Field(
         None, description="Additional commit range information"
     )
@@ -255,23 +216,16 @@ class RepositorySchema(BaseModel):
     name: str = Field(..., description="Repository name")
     is_bare: bool = Field(..., description="Whether repository is bare")
     head_commit: str | None = Field(None, description="Current HEAD commit")
-    active_branch: str | None = Field(
-        None, description="Currently active branch")
+    active_branch: str | None = Field(None, description="Currently active branch")
     branches: list[BranchSchema] = Field(..., description="All branches")
     tags: list[TagSchema] = Field(..., description="All tags")
-    remotes: list[dict[str, str]
-                  ] = Field(..., description="Remote repositories")
+    remotes: list[dict[str, str]] = Field(..., description="Remote repositories")
     total_commits: int = Field(..., description="Total number of commits")
-    contributors: list[AuthorSchema] = Field(...,
-                                             description="All contributors")
-    first_commit_date: datetime | None = Field(
-        None, description="Date of first commit")
-    last_commit_date: datetime | None = Field(
-        None, description="Date of last commit")
-    repository_age_days: int | None = Field(
-        None, description="Age of repository in days")
-    size_info: dict[str, Any] | None = Field(
-        None, description="Repository size information")
+    contributors: list[AuthorSchema] = Field(..., description="All contributors")
+    first_commit_date: datetime | None = Field(None, description="Date of first commit")
+    last_commit_date: datetime | None = Field(None, description="Date of last commit")
+    repository_age_days: int | None = Field(None, description="Age of repository in days")
+    size_info: dict[str, Any] | None = Field(None, description="Repository size information")
 
 
 class SearchResultSchema(BaseModel):
@@ -280,36 +234,26 @@ class SearchResultSchema(BaseModel):
     commit: CommitSchema = Field(..., description="Commit information")
     file_path: str = Field(..., description="File path where match was found")
     line_number: int | None = Field(None, description="Line number of match")
-    matching_line: str | None = Field(
-        None, description="The matching line content")
-    context_lines: list[str] | None = Field(
-        None, description="Context lines around the match")
-    search_type: str = Field(...,
-                             description="Type of search that found this result")
-    relevance_score: float = Field(
-        0.0, description="Relevance score (0.0-1.0)")
-    match_metadata: dict[str, Any] | None = Field(
-        None, description="Additional match metadata")
+    matching_line: str | None = Field(None, description="The matching line content")
+    context_lines: list[str] | None = Field(None, description="Context lines around the match")
+    search_type: str = Field(..., description="Type of search that found this result")
+    relevance_score: float = Field(0.0, description="Relevance score (0.0-1.0)")
+    match_metadata: dict[str, Any] | None = Field(None, description="Additional match metadata")
 
 
 class SearchResultsCollectionSchema(BaseModel):
     """Schema for a collection of search results."""
 
     query: str = Field(..., description="Search query")
-    results: list[SearchResultSchema] = Field(...,
-                                              description="Search results")
+    results: list[SearchResultSchema] = Field(..., description="Search results")
     total_results: int = Field(..., description="Total number of results")
-    search_time_ms: float = Field(...,
-                                  description="Search time in milliseconds")
-    filters_applied: list[DataFilter] = Field(
-        default_factory=list, description="Filters applied")
+    search_time_ms: float = Field(..., description="Search time in milliseconds")
+    filters_applied: list[DataFilter] = Field(default_factory=list, description="Filters applied")
     sort_criteria: list[SortCriteria] = Field(
         default_factory=list, description="Sort criteria applied"
     )
-    pagination: PaginationInfo | None = Field(
-        None, description="Pagination information")
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Additional search metadata")
+    pagination: PaginationInfo | None = Field(None, description="Pagination information")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional search metadata")
 
 
 # Configuration for all schemas

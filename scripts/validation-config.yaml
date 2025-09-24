@@ -1,0 +1,201 @@
+# GitHound Documentation Validation Configuration
+
+# External link validation settings
+skip_external_links: false
+external_timeout: 10
+
+# File scanning settings
+allowed_extensions:
+  - ".md"
+  - ".rst"
+  - ".txt"
+
+doc_directories:
+  - "docs"
+  - "."
+  - "examples"
+
+# Required sections for different document types
+required_sections:
+  "README.md":
+    - "Installation"
+    - "Usage"
+    - "Documentation"
+    - "Contributing"
+    - "License"
+
+  "user-guide":
+    - "Overview"
+    - "Prerequisites"
+    - "Getting Started"
+    - "Examples"
+    - "Troubleshooting"
+
+  "api-reference":
+    - "Overview"
+    - "Authentication"
+    - "Endpoints"
+    - "Error Handling"
+    - "Examples"
+
+  "installation":
+    - "Prerequisites"
+    - "Installation Steps"
+    - "Verification"
+    - "Troubleshooting"
+
+  "configuration":
+    - "Overview"
+    - "Configuration Options"
+    - "Examples"
+    - "Validation"
+
+  "troubleshooting":
+    - "Common Issues"
+    - "Error Messages"
+    - "Diagnostic Steps"
+    - "Getting Help"
+
+# Style validation rules
+style_rules:
+  # Line length limits
+  max_line_length: 100
+
+  # Code block requirements
+  require_code_language: true
+
+  # Heading structure requirements
+  require_heading_hierarchy: true
+
+  # Cross-reference requirements
+  require_cross_references: true
+
+  # Emoji usage in headings
+  allow_emoji_in_headings: true
+
+  # Link text requirements
+  require_descriptive_link_text: true
+
+# Code validation settings
+code_validation:
+  # Python code validation
+  python:
+    check_syntax: true
+    check_imports: true
+    check_githound_api: true
+    allowed_imports:
+      - "githound"
+      - "pathlib"
+      - "asyncio"
+      - "json"
+      - "yaml"
+      - "requests"
+      - "pandas"
+      - "numpy"
+
+  # Bash command validation
+  bash:
+    check_githound_commands: true
+    validate_options: true
+    check_file_paths: true
+
+  # YAML validation
+  yaml:
+    check_syntax: true
+    validate_schema: false  # Set to true if you have schemas
+
+  # JSON validation
+  json:
+    check_syntax: true
+    validate_schema: false  # Set to true if you have schemas
+
+# Link validation settings
+link_validation:
+  # Internal link checking
+  check_internal_links: true
+  check_anchor_links: true
+  check_relative_paths: true
+
+  # External link checking
+  check_external_links: true
+  external_timeout: 10
+  retry_failed_links: 1
+
+  # Allowed external domains (optional whitelist)
+  allowed_domains: []
+
+  # Skip external links matching these patterns
+  skip_external_patterns:
+    - "localhost"
+    - "127.0.0.1"
+    - "example.com"
+    - "placeholder.com"
+
+# Content validation settings
+content_validation:
+  # Check for placeholder content
+  check_placeholders: true
+  placeholder_patterns:
+    - "\\[.*\\]"  # [placeholder text]
+    - "TODO"
+    - "FIXME"
+    - "XXX"
+    - "your-.*"  # your-username, your-repo, etc.
+
+  # Check for outdated information
+  check_dates: true
+  warn_old_dates: true
+  date_threshold_months: 12
+
+  # Check for broken references
+  check_file_references: true
+  check_image_references: true
+
+# Exclusions
+exclude_files:
+  - "CHANGELOG.md"
+  - "docs/gen_ref_pages.py"
+  - "node_modules/**"
+  - ".git/**"
+  - "__pycache__/**"
+  - "*.pyc"
+
+exclude_patterns:
+  - "^#.*"  # Comments
+  - "^<!--.*-->"  # HTML comments
+
+# Output settings
+output:
+  verbose: true
+  show_progress: true
+  group_by_file: true
+  show_statistics: true
+
+  # Error reporting
+  fail_on_warnings: false
+  fail_on_errors: true
+
+  # Output formats
+  formats:
+    - "console"
+    # - "json"
+    # - "junit"
+
+# Integration settings
+integration:
+  # Pre-commit hook settings
+  pre_commit:
+    enabled: true
+    fix_auto_fixable: true
+
+  # CI/CD settings
+  ci_cd:
+    enabled: true
+    cache_external_links: true
+    parallel_validation: true
+
+# Performance settings
+performance:
+  max_workers: 4
+  cache_results: true
+  cache_duration_hours: 24

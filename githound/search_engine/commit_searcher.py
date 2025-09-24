@@ -11,9 +11,11 @@ except ImportError:
     # Use mock for testing when rapidfuzz is not available
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz
+
+    fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -35,8 +37,7 @@ class CommitHashSearcher(CacheableSearcher):
         if not commit_hash:
             return
 
-        self._report_progress(
-            context, f"Searching for commit {commit_hash[:8]}...", 0.0)
+        self._report_progress(context, f"Searching for commit {commit_hash[:8]}...", 0.0)
 
         try:
             # Try to find the commit
@@ -71,8 +72,7 @@ class CommitHashSearcher(CacheableSearcher):
                 search_time_ms=None,
             )
 
-            self._update_metrics(total_commits_searched=1,
-                                 total_results_found=1)
+            self._update_metrics(total_commits_searched=1, total_results_found=1)
             self._report_progress(context, "Found commit", 1.0)
 
             yield result
@@ -109,8 +109,7 @@ class AuthorSearcher(CacheableSearcher):
             return
 
         search_start_time = time.time()
-        self._report_progress(
-            context, f"Searching for author '{author_pattern}'...", 0.0)
+        self._report_progress(context, f"Searching for author '{author_pattern}'...", 0.0)
 
         # Get branch to search
         branch = context.branch or context.repo.active_branch.name
@@ -142,10 +141,20 @@ class AuthorSearcher(CacheableSearcher):
 
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
-                    name_score = fuzz.ratio(
-                        author_pattern.lower() if author_pattern is not None else "", author_name.lower()) / 100.0
-                    email_score = fuzz.ratio(
-                        author_pattern.lower() if author_pattern is not None else "", author_email.lower()) / 100.0
+                    name_score = (
+                        fuzz.ratio(
+                            author_pattern.lower() if author_pattern is not None else "",
+                            author_name.lower(),
+                        )
+                        / 100.0
+                    )
+                    email_score = (
+                        fuzz.ratio(
+                            author_pattern.lower() if author_pattern is not None else "",
+                            author_email.lower(),
+                        )
+                        / 100.0
+                    )
 
                     if name_score >= context.query.fuzzy_threshold:
                         match_score = name_score
@@ -158,8 +167,7 @@ class AuthorSearcher(CacheableSearcher):
                     if regex_pattern:
                         if regex_pattern.search(author_name) or regex_pattern.search(author_email):
                             match_score = 1.0
-                            match_field = "name" if regex_pattern.search(
-                                author_name) else "email"
+                            match_field = "name" if regex_pattern.search(author_name) else "email"
                     else:
                         # Simple string matching
                         search_term = (
@@ -229,8 +237,7 @@ class AuthorSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(
-                context, f"Error searching authors: {e}", 1.0)
+            self._report_progress(context, f"Error searching authors: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -254,12 +261,15 @@ class MessageSearcher(CacheableSearcher):
         return query.message_pattern is not None
 
     async def estimate_work(self, context: SearchContext) -> int:
-        """Estimate work based on repository size."""
+        """Estimate work based on repository size and commit count."""
         try:
+            # Use specified branch or fall back to active branch
             branch = context.branch or context.repo.active_branch.name
+            # Sample up to 1000 commits to estimate total work without full traversal
             commits = list(context.repo.iter_commits(branch, max_count=1000))
-            return min(len(commits), 1000)
-        except:
+            return min(len(commits), 1000)  # Cap at 1000 for performance reasons
+        except Exception:
+            # Fallback estimate if branch access fails (e.g., empty repo, detached HEAD)
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -269,8 +279,7 @@ class MessageSearcher(CacheableSearcher):
             return
 
         search_start_time = time.time()
-        self._report_progress(
-            context, f"Searching commit messages for '{message_pattern}'...", 0.0)
+        self._report_progress(context, f"Searching commit messages for '{message_pattern}'...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -295,8 +304,13 @@ class MessageSearcher(CacheableSearcher):
 
                 if context.query.fuzzy_search:
                     # Use fuzzy matching
-                    score = fuzz.partial_ratio(
-                        message_pattern.lower() if message_pattern is not None else "", message.lower()) / 100.0
+                    score = (
+                        fuzz.partial_ratio(
+                            message_pattern.lower() if message_pattern is not None else "",
+                            message.lower(),
+                        )
+                        / 100.0
+                    )
                     if score >= context.query.fuzzy_threshold:
                         match_score = score
                 else:
@@ -338,8 +352,7 @@ class MessageSearcher(CacheableSearcher):
                         search_type=SearchType.MESSAGE,
                         relevance_score=match_score,
                         commit_info=commit_info,
-                        match_context={
-                            "search_term": message_pattern, "matched_message": message},
+                        match_context={"search_term": message_pattern, "matched_message": message},
                         search_time_ms=self._calculate_search_time_ms(search_start_time),
                     )
 
@@ -355,8 +368,7 @@ class MessageSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(
-                context, f"Error searching messages: {e}", 1.0)
+            self._report_progress(context, f"Error searching messages: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -388,8 +400,7 @@ class DateRangeSearcher(CacheableSearcher):
             if context.query.date_from or context.query.date_to:
                 # Rough estimate: assume 10 commits per day
                 if context.query.date_from and context.query.date_to:
-                    days = (context.query.date_to -
-                            context.query.date_from).days
+                    days = (context.query.date_to - context.query.date_from).days
                     return min(days * 10, 1000)
 
             commits = list(context.repo.iter_commits(branch, max_count=1000))
@@ -406,8 +417,7 @@ class DateRangeSearcher(CacheableSearcher):
             return
 
         search_start_time = time.time()
-        self._report_progress(
-            context, "Searching commits by date range...", 0.0)
+        self._report_progress(context, "Searching commits by date range...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -471,8 +481,7 @@ class DateRangeSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(
-                context, f"Error searching by date: {e}", 1.0)
+            self._report_progress(context, f"Error searching by date: {e}", 1.0)
 
         finally:
             self._update_metrics(

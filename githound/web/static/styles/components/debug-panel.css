@@ -423,16 +423,16 @@
     width: auto;
     height: 400px;
   }
-  
+
   .debug-panel-tabs {
     overflow-x: auto;
   }
-  
+
   .debug-tab {
     white-space: nowrap;
     min-width: 80px;
   }
-  
+
   .metrics-grid {
     grid-template-columns: 1fr;
   }

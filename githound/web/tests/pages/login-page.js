@@ -9,7 +9,7 @@ const BasePage = require('./base-page');
 class LoginPage extends BasePage {
   constructor(page) {
     super(page);
-    
+
     // Page elements
     this.elements = {
       // Login form elements
@@ -19,7 +19,7 @@ class LoginPage extends BasePage {
       submitLoginButton: '[data-testid="submit-login"]',
       loginError: '[data-testid="login-error"]',
       loginForm: '[data-testid="login-form"]',
-      
+
       // Registration form elements
       registerButton: '[data-testid="register-button"]',
       registerUsername: '[data-testid="register-username"]',
@@ -29,19 +29,19 @@ class LoginPage extends BasePage {
       submitRegistrationButton: '[data-testid="submit-registration"]',
       registrationSuccess: '[data-testid="registration-success"]',
       registrationError: '[data-testid="registration-error"]',
-      
+
       // User menu elements
       userMenu: '[data-testid="user-menu"]',
       usernameDisplay: '[data-testid="username-display"]',
       logoutButton: '[data-testid="logout-button"]',
       profileLink: '[data-testid="profile-link"]',
-      
+
       // Validation error elements
       usernameError: '[data-testid="username-error"]',
       passwordError: '[data-testid="password-error"]',
       emailError: '[data-testid="email-error"]',
       passwordMismatchError: '[data-testid="password-mismatch-error"]',
-      
+
       // Password change elements
       changePasswordTab: '[data-testid="change-password-tab"]',
       currentPassword: '[data-testid="current-password"]',
@@ -49,7 +49,7 @@ class LoginPage extends BasePage {
       confirmNewPassword: '[data-testid="confirm-new-password"]',
       submitPasswordChange: '[data-testid="submit-password-change"]',
       passwordChangeSuccess: '[data-testid="password-change-success"]',
-      
+
       // Admin elements
       adminPanelLink: '[data-testid="admin-panel-link"]',
       adminDashboard: '[data-testid="admin-dashboard"]',
@@ -96,7 +96,7 @@ class LoginPage extends BasePage {
     await this.openLoginForm();
     await this.fillLoginCredentials(username, password);
     await this.submitLogin();
-    
+
     // Wait for either success (user menu) or error
     try {
       await this.waitForElement(this.elements.userMenu, 10000);
@@ -178,7 +178,7 @@ class LoginPage extends BasePage {
     await this.navigateToRegistration();
     await this.fillRegistrationForm(userData);
     await this.submitRegistration();
-    
+
     // Wait for either success or error
     try {
       await this.waitForElement(this.elements.registrationSuccess, 10000);
@@ -205,23 +205,23 @@ class LoginPage extends BasePage {
    */
   async getValidationErrors() {
     const errors = {};
-    
+
     if (await this.page.isVisible(this.elements.usernameError)) {
       errors.username = await this.page.textContent(this.elements.usernameError);
     }
-    
+
     if (await this.page.isVisible(this.elements.passwordError)) {
       errors.password = await this.page.textContent(this.elements.passwordError);
     }
-    
+
     if (await this.page.isVisible(this.elements.emailError)) {
       errors.email = await this.page.textContent(this.elements.emailError);
     }
-    
+
     if (await this.page.isVisible(this.elements.passwordMismatchError)) {
       errors.passwordMismatch = await this.page.textContent(this.elements.passwordMismatchError);
     }
-    
+
     return errors;
   }
 
@@ -241,13 +241,13 @@ class LoginPage extends BasePage {
   async changePassword(currentPassword, newPassword) {
     await this.navigateToProfile();
     await this.page.click(this.elements.changePasswordTab);
-    
+
     await this.page.fill(this.elements.currentPassword, currentPassword);
     await this.page.fill(this.elements.newPassword, newPassword);
     await this.page.fill(this.elements.confirmNewPassword, newPassword);
-    
+
     await this.page.click(this.elements.submitPasswordChange);
-    
+
     // Wait for success message
     try {
       await this.waitForElement(this.elements.passwordChangeSuccess, 10000);
@@ -285,10 +285,10 @@ class LoginPage extends BasePage {
   async verifyLoginFormValidation() {
     await this.navigateToLogin();
     await this.openLoginForm();
-    
+
     // Try to submit empty form
     await this.submitLogin();
-    
+
     const errors = await this.getValidationErrors();
     return {
       hasUsernameError: !!errors.username,
@@ -302,10 +302,10 @@ class LoginPage extends BasePage {
    */
   async verifyRegistrationFormValidation() {
     await this.navigateToRegistration();
-    
+
     // Try to submit empty form
     await this.submitRegistration();
-    
+
     const errors = await this.getValidationErrors();
     return {
       hasUsernameError: !!errors.username,
@@ -320,15 +320,15 @@ class LoginPage extends BasePage {
    */
   async testPasswordMismatchValidation(userData) {
     await this.navigateToRegistration();
-    
+
     const mismatchData = {
       ...userData,
       confirmPassword: 'different_password'
     };
-    
+
     await this.fillRegistrationForm(mismatchData);
     await this.submitRegistration();
-    
+
     const errors = await this.getValidationErrors();
     return {
       hasPasswordMismatchError: !!errors.passwordMismatch,
@@ -345,16 +345,16 @@ class LoginPage extends BasePage {
       const username = await this.getLoggedInUsername();
       await this.reload();
       await this.waitForPageLoad();
-      
+
       const stillLoggedIn = await this.isLoggedIn();
       const usernameAfterReload = await this.getLoggedInUsername();
-      
+
       return {
         persistedSession: stillLoggedIn,
         usernameMatches: username === usernameAfterReload
       };
     }
-    
+
     return { persistedSession: false, usernameMatches: false };
   }
 }

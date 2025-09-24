@@ -35,17 +35,17 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
         await loginPage.register(testUser);
         await loginPage.login(testUser.username, testUser.password);
-        
+
         await searchPage.navigateToSearch();
 
         // Check if content utilizes available space efficiently
         const mainContainer = page.locator('[data-testid="main-container"]');
         const containerBox = await mainContainer.boundingBox();
-        
+
         if (containerBox) {
           // Content should not be too narrow on large screens
           expect(containerBox.width).toBeGreaterThan(screenSize.width * 0.6);
-          
+
           // But also shouldn't stretch too wide (readability)
           expect(containerBox.width).toBeLessThan(screenSize.width * 0.95);
         }
@@ -61,7 +61,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
         const resultsContainer = page.locator('[data-testid="search-results"]');
         const resultsBox = await resultsContainer.boundingBox();
-        
+
         if (resultsBox) {
           // Results should use available width efficiently
           expect(resultsBox.width).toBeGreaterThan(screenSize.width * 0.5);
@@ -70,14 +70,14 @@ test.describe('Screen Size Responsiveness Tests', () => {
         // Check for multi-column layout on ultra-wide screens
         if (screenSize.width >= 2560) {
           const resultCards = await page.locator('[data-testid="result-card"]').all();
-          
+
           if (resultCards.length >= 2) {
             const firstCardBox = await resultCards[0].boundingBox();
             const secondCardBox = await resultCards[1].boundingBox();
-            
+
             // On ultra-wide, cards might be side-by-side
             const isSideBySide = Math.abs(firstCardBox.y - secondCardBox.y) < 50;
-            
+
             if (isSideBySide) {
               expect(secondCardBox.x).toBeGreaterThan(firstCardBox.x + firstCardBox.width - 50);
             }
@@ -101,7 +101,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Perform search
@@ -161,7 +161,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
         await loginPage.register(testUser);
         await loginPage.login(testUser.username, testUser.password);
-        
+
         await searchPage.navigateToSearch();
 
         // Check if content fits within viewport
@@ -195,7 +195,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
         // Results should be readable
         const resultCards = await page.locator('[data-testid="result-card"]').all();
-        
+
         for (const card of resultCards.slice(0, 3)) {
           const cardBox = await card.boundingBox();
           if (cardBox) {
@@ -223,7 +223,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Check if header is compact
@@ -239,7 +239,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
       // Check if search form is accessible without scrolling
       const searchForm = page.locator('[data-testid="search-form"]');
       const searchFormBox = await searchForm.boundingBox();
-      
+
       if (searchFormBox) {
         expect(searchFormBox.y + searchFormBox.height).toBeLessThan(600);
       }
@@ -256,7 +256,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
       // Results should be visible without excessive scrolling
       const firstResult = page.locator('[data-testid="result-card"]').first();
       const firstResultBox = await firstResult.boundingBox();
-      
+
       if (firstResultBox) {
         expect(firstResultBox.y).toBeLessThan(600);
       }
@@ -288,16 +288,16 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
         await loginPage.register(testUser);
         await loginPage.login(testUser.username, testUser.password);
-        
+
         await searchPage.navigateToSearch();
 
         // Check layout adaptation based on aspect ratio
         const mainContainer = page.locator('[data-testid="main-container"]');
         const containerBox = await mainContainer.boundingBox();
-        
+
         if (containerBox) {
           const aspectRatio = ratio.width / ratio.height;
-          
+
           if (aspectRatio > 2) {
             // Ultra-wide: should use horizontal space efficiently
             expect(containerBox.width).toBeGreaterThan(ratio.width * 0.7);
@@ -317,13 +317,13 @@ test.describe('Screen Size Responsiveness Tests', () => {
         await searchPage.waitForResults();
 
         const resultCards = await page.locator('[data-testid="result-card"]').all();
-        
+
         if (resultCards.length >= 2) {
           const firstCardBox = await resultCards[0].boundingBox();
           const secondCardBox = await resultCards[1].boundingBox();
-          
+
           const aspectRatio = ratio.width / ratio.height;
-          
+
           if (aspectRatio > 2.5) {
             // Ultra-wide: cards might be side-by-side
             const isSideBySide = Math.abs(firstCardBox.y - secondCardBox.y) < 50;
@@ -360,12 +360,12 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
         await loginPage.register(testUser);
         await loginPage.login(testUser.username, testUser.password);
-        
+
         await searchPage.navigateToSearch();
 
         // Test with different amounts of content
         const queries = ['a', 'function', 'import export class'];
-        
+
         for (const query of queries) {
           await searchPage.performAdvancedSearch({
             query: query,
@@ -378,11 +378,11 @@ test.describe('Screen Size Responsiveness Tests', () => {
           // Check if layout adapts to content amount
           const resultsContainer = page.locator('[data-testid="search-results"]');
           const resultsBox = await resultsContainer.boundingBox();
-          
+
           if (resultsBox) {
             // Results should not overflow viewport
             expect(resultsBox.width).toBeLessThanOrEqual(size.width);
-            
+
             // Results should be readable
             expect(resultsBox.width).toBeGreaterThan(Math.min(300, size.width * 0.5));
           }
@@ -407,7 +407,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Start search and check loading state
@@ -416,10 +416,10 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
       // Check loading indicator
       const loadingIndicator = page.locator('[data-testid="loading-spinner"], [data-testid="loading-message"]');
-      
+
       if (await loadingIndicator.count() > 0) {
         await expect(loadingIndicator).toBeVisible();
-        
+
         const loadingBox = await loadingIndicator.boundingBox();
         if (loadingBox) {
           // Loading indicator should be appropriately sized for mobile
@@ -450,12 +450,12 @@ test.describe('Screen Size Responsiveness Tests', () => {
 
       await loginPage.register(testUser);
       await loginPage.login(testUser.username, testUser.password);
-      
+
       await searchPage.navigateToSearch();
 
       // Test responsive behavior during form interactions
       await searchPage.openAdvancedSearch();
-      
+
       const advancedForm = page.locator('[data-testid="advanced-search-form"]');
       if (await advancedForm.count() > 0) {
         const formBox = await advancedForm.boundingBox();
@@ -479,7 +479,7 @@ test.describe('Screen Size Responsiveness Tests', () => {
       const firstResult = page.locator('[data-testid="result-card"]').first();
       if (await firstResult.count() > 0) {
         await firstResult.hover();
-        
+
         // Any hover effects should not break layout
         const resultBox = await firstResult.boundingBox();
         if (resultBox) {

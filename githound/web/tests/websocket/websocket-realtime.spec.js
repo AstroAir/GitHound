@@ -32,10 +32,10 @@ test.describe('WebSocket Real-time Tests', () => {
   test.describe('WebSocket Connection Management @websocket @connection', () => {
     test('should establish WebSocket connection successfully', async () => {
       const connection = await wsHelper.connect();
-      
+
       expect(connection.isConnected).toBe(true);
       expect(connection.connectionId).toBeTruthy();
-      
+
       await wsHelper.disconnect();
     });
 
@@ -49,7 +49,7 @@ test.describe('WebSocket Real-time Tests', () => {
       });
 
       const result = await wsHelper.connect();
-      
+
       expect(result.isConnected).toBe(false);
       expect(result.error).toContain('Connection failed');
     });
@@ -60,7 +60,7 @@ test.describe('WebSocket Real-time Tests', () => {
 
       // Simulate connection loss
       await wsHelper.simulateConnectionLoss();
-      
+
       // Wait for automatic reconnection
       const reconnected = await wsHelper.waitForReconnection(10000);
       expect(reconnected).toBe(true);
@@ -96,7 +96,7 @@ test.describe('WebSocket Real-time Tests', () => {
 
       // Navigate to different page
       await page.goto('/profile');
-      
+
       // Connection should still be active
       const isStillConnected = await wsHelper.isConnected();
       expect(isStillConnected).toBe(true);
@@ -109,10 +109,10 @@ test.describe('WebSocket Real-time Tests', () => {
     test('should receive progress updates during search', async () => {
       const connection = await wsHelper.connect();
       const searchId = `search_${Date.now()}`;
-      
+
       // Subscribe to search updates
       await wsHelper.subscribeToSearch(searchId);
-      
+
       // Start a search
       await searchPage.performAdvancedSearch({
         query: 'function',
@@ -122,9 +122,9 @@ test.describe('WebSocket Real-time Tests', () => {
 
       // Wait for progress updates
       const progressUpdates = await wsHelper.waitForProgressUpdates(30000);
-      
+
       expect(progressUpdates.length).toBeGreaterThan(0);
-      
+
       // Verify progress update structure
       const firstUpdate = progressUpdates[0];
       expect(firstUpdate.type).toBe('progress');
@@ -140,9 +140,9 @@ test.describe('WebSocket Real-time Tests', () => {
     test('should receive real-time search results', async () => {
       const connection = await wsHelper.connect();
       const searchId = `search_${Date.now()}`;
-      
+
       await wsHelper.subscribeToSearch(searchId);
-      
+
       // Start search
       await searchPage.performAdvancedSearch({
         query: 'test',
@@ -152,9 +152,9 @@ test.describe('WebSocket Real-time Tests', () => {
 
       // Wait for result updates
       const resultUpdates = await wsHelper.waitForResultUpdates(30000);
-      
+
       expect(resultUpdates.length).toBeGreaterThan(0);
-      
+
       // Verify result structure
       const firstResult = resultUpdates[0];
       expect(firstResult.type).toBe('result');
@@ -170,9 +170,9 @@ test.describe('WebSocket Real-time Tests', () => {
     test('should receive search completion notification', async () => {
       const connection = await wsHelper.connect();
       const searchId = `search_${Date.now()}`;
-      
+
       await wsHelper.subscribeToSearch(searchId);
-      
+
       // Start search
       await searchPage.performAdvancedSearch({
         query: 'import',
@@ -182,7 +182,7 @@ test.describe('WebSocket Real-time Tests', () => {
 
       // Wait for completion
       const completion = await wsHelper.waitForSearchCompletion(60000);
-      
+
       expect(completion).toBeTruthy();
       expect(completion.type).toBe('completed');
       expect(completion.data.search_id).toBeTruthy();
@@ -196,9 +196,9 @@ test.describe('WebSocket Real-time Tests', () => {
     test('should handle search errors via WebSocket', async () => {
       const connection = await wsHelper.connect();
       const searchId = `search_${Date.now()}`;
-      
+
       await wsHelper.subscribeToSearch(searchId);
-      
+
       // Trigger a search that will cause an error
       await searchPage.performAdvancedSearch({
         query: '',  // Empty query should cause error
@@ -208,7 +208,7 @@ test.describe('WebSocket Real-time Tests', () => {
 
       // Wait for error notification
       const errorUpdate = await wsHelper.waitForErrorUpdate(10000);
-      
+
       expect(errorUpdate).toBeTruthy();
       expect(errorUpdate.type).toBe('error');
       expect(errorUpdate.data.search_id).toBeTruthy();
@@ -222,10 +222,10 @@ test.describe('WebSocket Real-time Tests', () => {
   test.describe('WebSocket Message Handling @websocket @messages', () => {
     test('should handle ping/pong messages correctly', async () => {
       const connection = await wsHelper.connect();
-      
+
       // Send ping
       const pingResult = await wsHelper.sendPing();
-      
+
       expect(pingResult.success).toBe(true);
       expect(pingResult.pongReceived).toBe(true);
       expect(pingResult.roundTripTime).toBeGreaterThan(0);
@@ -237,19 +237,19 @@ test.describe('WebSocket Real-time Tests', () => {
     test('should handle subscription/unsubscription correctly', async () => {
       const connection = await wsHelper.connect();
       const searchId = `search_${Date.now()}`;
-      
+
       // Subscribe to search
       const subscribeResult = await wsHelper.subscribeToSearch(searchId);
       expect(subscribeResult.success).toBe(true);
-      
+
       // Verify subscription is active
       const isSubscribed = await wsHelper.isSubscribedToSearch(searchId);
       expect(isSubscribed).toBe(true);
-      
+
       // Unsubscribe from search
       const unsubscribeResult = await wsHelper.unsubscribeFromSearch(searchId);
       expect(unsubscribeResult.success).toBe(true);
-      
+
       // Verify subscription is removed
       const isStillSubscribed = await wsHelper.isSubscribedToSearch(searchId);
       expect(isStillSubscribed).toBe(false);
@@ -259,21 +259,21 @@ test.describe('WebSocket Real-time Tests', () => {
 
     test('should handle malformed messages gracefully', async () => {
       const connection = await wsHelper.connect();
-      
+
       // Send malformed JSON
       const malformedResult = await wsHelper.sendRawMessage('invalid json');
       expect(malformedResult.error).toBeTruthy();
-      
+
       // Connection should still be active
       const isConnected = await wsHelper.isConnected();
       expect(isConnected).toBe(true);
-      
+
       // Send message with unknown type
       const unknownTypeResult = await wsHelper.sendMessage({
         type: 'unknown_type',
         data: { test: 'data' }
       });
-      
+
       // Should handle gracefully without disconnecting
       const isStillConnected = await wsHelper.isConnected();
       expect(isStillConnected).toBe(true);
@@ -283,7 +283,7 @@ test.describe('WebSocket Real-time Tests', () => {
 
     test('should handle large message payloads', async () => {
       const connection = await wsHelper.connect();
-      
+
       // Create a large message
       const largeData = {
         type: 'test',
@@ -291,12 +291,12 @@ test.describe('WebSocket Real-time Tests', () => {
           large_field: 'x'.repeat(100000) // 100KB of data
         }
       };
-      
+
       const result = await wsHelper.sendMessage(largeData);
-      
+
       // Should handle large messages appropriately
       expect(result.success || result.error).toBeTruthy();
-      
+
       // Connection should remain stable
       const isConnected = await wsHelper.isConnected();
       expect(isConnected).toBe(true);
@@ -309,13 +309,13 @@ test.describe('WebSocket Real-time Tests', () => {
     test('should handle high-frequency updates efficiently', async () => {
       const connection = await wsHelper.connect();
       const searchId = `perf_search_${Date.now()}`;
-      
+
       await wsHelper.subscribeToSearch(searchId);
-      
+
       // Simulate high-frequency updates
       const updateCount = 100;
       const startTime = Date.now();
-      
+
       for (let i = 0; i < updateCount; i++) {
         await wsHelper.simulateProgressUpdate(searchId, {
           progress: (i / updateCount) * 100,
@@ -323,13 +323,13 @@ test.describe('WebSocket Real-time Tests', () => {
           results_count: i
         });
       }
-      
+
       const endTime = Date.now();
       const totalTime = endTime - startTime;
-      
+
       // Should handle updates efficiently (under 10 seconds for 100 updates)
       expect(totalTime).toBeLessThan(10000);
-      
+
       // Verify all updates were received
       const receivedUpdates = await wsHelper.getReceivedUpdates();
       expect(receivedUpdates.length).toBe(updateCount);
@@ -339,21 +339,21 @@ test.describe('WebSocket Real-time Tests', () => {
 
     test('should maintain connection stability under load', async () => {
       const connection = await wsHelper.connect();
-      
+
       // Send multiple concurrent messages
       const messagePromises = [];
       for (let i = 0; i < 50; i++) {
         messagePromises.push(wsHelper.sendPing());
       }
-      
+
       const results = await Promise.all(messagePromises);
-      
+
       // All pings should succeed
       results.forEach(result => {
         expect(result.success).toBe(true);
         expect(result.pongReceived).toBe(true);
       });
-      
+
       // Connection should remain stable
       const isConnected = await wsHelper.isConnected();
       expect(isConnected).toBe(true);
@@ -368,10 +368,10 @@ test.describe('WebSocket Real-time Tests', () => {
       });
 
       const connection = await wsHelper.connect();
-      
+
       // Wait longer than timeout
       await page.waitForTimeout(2000);
-      
+
       // Should handle timeout gracefully
       const connectionStatus = await wsHelper.getConnectionStatus();
       expect(connectionStatus.hasTimeout || connectionStatus.isReconnecting).toBe(true);

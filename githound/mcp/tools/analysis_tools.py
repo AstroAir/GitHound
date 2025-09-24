@@ -107,11 +107,9 @@ async def get_filtered_commits(input_data: CommitFilterInput, ctx: Context) -> d
         date_from = None
         date_to = None
         if input_data.date_from:
-            date_from = datetime.fromisoformat(
-                input_data.date_from.replace("Z", "+00:00"))
+            date_from = datetime.fromisoformat(input_data.date_from.replace("Z", "+00:00"))
         if input_data.date_to:
-            date_to = datetime.fromisoformat(
-                input_data.date_to.replace("Z", "+00:00"))
+            date_to = datetime.fromisoformat(input_data.date_to.replace("Z", "+00:00"))
 
         commits = get_commits_with_filters(
             repo=repo,
@@ -127,8 +125,7 @@ async def get_filtered_commits(input_data: CommitFilterInput, ctx: Context) -> d
         commit_list: list[Any] = []
         for commit in commits:
             commit_info = extract_commit_metadata(commit)
-            commit_list.append(commit_info.dict()
-                               if commit_info is not None else {})
+            commit_list.append(commit_info.dict() if commit_info is not None else {})
 
         await ctx.info(f"Retrieved {len(commit_list)} commits matching filter criteria")
 
@@ -195,12 +192,14 @@ async def get_commit_history(input_data: CommitHistoryInput, ctx: Context) -> di
         await ctx.info(f"Retrieving commit history from {input_data.repo_path}")
 
         repo = get_repository(Path(input_data.repo_path))
-        commit_objects = list(get_commits_with_filters(
-            repo,
-            max_count=input_data.max_count,
-            author_pattern=getattr(input_data, 'author', None),
-            branch=getattr(input_data, 'branch', None)
-        ))
+        commit_objects = list(
+            get_commits_with_filters(
+                repo,
+                max_count=input_data.max_count,
+                author_pattern=getattr(input_data, "author", None),
+                branch=getattr(input_data, "branch", None),
+            )
+        )
 
         # Convert commit objects to dictionaries
         commits: list[Any] = []

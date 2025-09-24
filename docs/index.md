@@ -1,12 +1,15 @@
 # GitHound Documentation
 
-Welcome to GitHound, a comprehensive Git repository analysis tool that provides advanced search capabilities, detailed metadata extraction, blame analysis, diff comparison, and multiple integration options.
+Welcome to GitHound, a comprehensive Git repository analysis tool that provides advanced search
+capabilities, detailed metadata extraction, blame analysis, diff comparison, and multiple
+integration options.
 
 ## 🚀 Key Features
 
 ### Advanced Git Analysis
 
-- **Multi-modal Search**: Search by content, commit hash, author, message, date range, file path, and file type
+- **Multi-modal Search**: Search by content, commit hash, author, message, date range, file path,
+  and file type
 - **Fuzzy Search**: Find approximate matches with configurable similarity thresholds
 - **Git Blame Analysis**: Line-by-line authorship tracking with detailed history
 - **Diff Analysis**: Compare commits, branches, and files with detailed change analysis
@@ -79,31 +82,62 @@ graph TB
     Utils --> Progress[Progress Tracking]
 ```
 
-## 📚 Quick Navigation
+## 📚 Documentation Navigation
 
-### Getting Started
+### 🚀 Getting Started
 
-- [Installation Guide](getting-started/installation.md) - Install GitHound and dependencies
-- [Quick Start](getting-started/quick-start.md) - Get up and running in minutes
-- [Configuration](getting-started/configuration.md) - Configure GitHound for your needs
+Start here if you're new to GitHound:
 
-### User Guides
+- [Installation Guide](getting-started/installation.md) - Complete setup instructions for all platforms
+- [Quick Start](getting-started/quick-start.md) - Get up and running in 5 minutes
+- [Configuration](getting-started/configuration.md) - Basic configuration and environment setup
 
-- [CLI Usage](user-guide/cli-usage.md) - Command-line interface reference
-- [Search Capabilities](user-guide/search-capabilities.md) - Advanced search features
-- [Web Interface](user-guide/web-interface.md) - Web-based analysis tools
+### 📖 User Guides
 
-### Integration
+Learn how to use GitHound effectively:
 
-- [MCP Server](mcp-server/overview.md) - AI integration via Model Context Protocol
-- [REST API](api-reference/rest-api.md) - HTTP API for external integrations
-- [Python API](api-reference/python-api.md) - Direct Python integration
+- [CLI Usage](user-guide/cli-usage.md) - Complete command-line interface guide
+- [Search Capabilities](user-guide/search-capabilities.md) - Advanced search features and patterns
+- [Export Options](user-guide/export-options.md) - Data export formats and options
+- [Web Interface](user-guide/web-interface.md) - Web-based interface and features
 
-### Development
+### 🔌 API Reference
 
-- [Architecture](architecture/overview.md) - System design and components
-- [Contributing](development/contributing.md) - How to contribute to GitHound
-- [Type Checking](development/type-checking.md) - MyPy configuration and best practices
+Complete API documentation for developers:
+
+- [Python API](api-reference/python-api.md) - Complete Python library documentation
+- [REST API](api-reference/rest-api.md) - HTTP API endpoints and examples
+- [WebSocket API](api-reference/websocket-api.md) - Real-time API documentation
+- [OpenAPI Specification](api-reference/openapi.md) - Interactive API documentation
+
+### 🤖 Integration Guides
+
+Connect GitHound with other tools and services:
+
+- [MCP Server Overview](mcp-server/README.md) - Model Context Protocol integration
+- [MCP Setup Guide](mcp-server/setup.md) - Installation and configuration
+- [MCP Tools Reference](mcp-server/tools-reference.md) - Available tools and resources
+- [Integration Examples](mcp-server/integration-examples.md) - Real-world usage examples
+
+### 🔐 Security & Authentication
+
+Configure secure access and authentication:
+
+- [Configuration Guide](getting-started/configuration.md) - Configuration methods and security practices
+
+### 🏗️ Architecture & Development
+
+Understand GitHound's design and contribute to development:
+
+- [Architecture Overview](architecture/overview.md) - System design and components
+- [Search Engine](architecture/search-engine.md) - Search system architecture
+
+### 🛠️ Troubleshooting & Support
+
+Get help when things go wrong:
+
+- [Troubleshooting Guide](troubleshooting/README.md) - Common issues and solutions
+- [FAQ](troubleshooting/faq.md) - Frequently asked questions
 
 ## 🔧 Technology Stack
 
@@ -133,8 +167,10 @@ GitHound is designed for performance and can handle large repositories efficient
 
 ## 📄 License
 
-GitHound is released under the MIT License. See the [LICENSE](https://github.com/your-org/githound/blob/main/LICENSE) file for details.
+GitHound is released under the MIT License. See the
+[LICENSE](https://github.com/your-org/githound/blob/main/LICENSE) file for details.
 
 ---
 
-Ready to get started? Check out our [Installation Guide](getting-started/installation.md) or jump into the [Quick Start](getting-started/quick-start.md) tutorial!
+Ready to get started? Check out our [Installation Guide](getting-started/installation.md) or jump
+into the [Quick Start](getting-started/quick-start.md) tutorial!

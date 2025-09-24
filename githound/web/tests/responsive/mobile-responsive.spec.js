@@ -27,7 +27,7 @@ test.describe('Mobile Responsive Tests', () => {
           ...device
         });
         const page = await context.newPage();
-        
+
         searchPage = new SearchPage(page);
         loginPage = new LoginPage(page);
 
@@ -72,14 +72,14 @@ test.describe('Mobile Responsive Tests', () => {
 
         // Test touch interactions
         const searchInput = page.locator('[data-testid="search-input"]');
-        
+
         // Tap to focus
         await searchInput.tap();
         await expect(searchInput).toBeFocused();
 
         // Type on mobile keyboard
         await searchInput.fill('function');
-        
+
         // Test touch scroll
         await page.evaluate(() => {
           window.scrollTo(0, 100);
@@ -115,11 +115,11 @@ test.describe('Mobile Responsive Tests', () => {
         // On mobile, results should stack vertically
         if (device.viewport.width < 768) {
           const resultCards = await page.locator('[data-testid="result-card"]').all();
-          
+
           if (resultCards.length >= 2) {
             const firstCardBox = await resultCards[0].boundingBox();
             const secondCardBox = await resultCards[1].boundingBox();
-            
+
             // Second card should be below first card (stacked vertically)
             expect(secondCardBox.y).toBeGreaterThan(firstCardBox.y + firstCardBox.height - 10);
           }
@@ -132,11 +132,11 @@ test.describe('Mobile Responsive Tests', () => {
         if (device.viewport.width < 768) {
           // Test mobile menu
           const mobileMenuToggle = page.locator('[data-testid="mobile-menu-toggle"]');
-          
+
           if (await mobileMenuToggle.count() > 0) {
             // Open mobile menu
             await mobileMenuToggle.tap();
-            
+
             const mobileMenu = page.locator('[data-testid="mobile-menu"]');
             await expect(mobileMenu).toBeVisible();
 
@@ -153,22 +153,22 @@ test.describe('Mobile Responsive Tests', () => {
 
       test(`should optimize performance on ${device.name}`, async ({ page }) => {
         const startTime = Date.now();
-        
+
         await searchPage.navigateToSearch();
         await page.waitForLoadState('networkidle');
-        
+
         const loadTime = Date.now() - startTime;
-        
+
         // Mobile should load within reasonable time
         expect(loadTime).toBeLessThan(5000); // 5 seconds for mobile
 
         // Check if images are optimized for mobile
         const images = await page.locator('img').all();
-        
+
         for (const img of images.slice(0, 5)) {
           const src = await img.getAttribute('src');
           const naturalWidth = await img.evaluate(el => el.naturalWidth);
-          
+
           // Images should not be excessively large for mobile
           if (device.viewport.width < 768) {
             expect(naturalWidth).toBeLessThan(device.viewport.width * 2);
@@ -205,13 +205,13 @@ test.describe('Mobile Responsive Tests', () => {
 
         await loginPageInstance.register(testUser);
         await loginPageInstance.login(testUser.username, testUser.password);
-        
+
         await searchPageInstance.navigateToSearch();
 
         // Check layout adaptation
         const container = page.locator('[data-testid="main-container"]');
         const containerBox = await container.boundingBox();
-        
+
         if (containerBox) {
           // Container should not exceed viewport width
           expect(containerBox.width).toBeLessThanOrEqual(breakpoint.width);
@@ -235,7 +235,7 @@ test.describe('Mobile Responsive Tests', () => {
         // Check search form layout
         const searchForm = page.locator('[data-testid="search-form"]');
         const searchFormBox = await searchForm.boundingBox();
-        
+
         if (searchFormBox) {
           expect(searchFormBox.width).toBeLessThanOrEqual(breakpoint.width);
         }
@@ -258,12 +258,12 @@ test.describe('Mobile Responsive Tests', () => {
 
       await loginPageInstance.register(testUser);
       await loginPageInstance.login(testUser.username, testUser.password);
-      
+
       await searchPageInstance.navigateToSearch();
 
       // Check if viewport meta tag allows zooming
       const viewportMeta = await page.locator('meta[name="viewport"]').getAttribute('content');
-      
+
       // Should not prevent zooming (accessibility requirement)
       expect(viewportMeta).not.toContain('user-scalable=no');
       expect(viewportMeta).not.toContain('maximum-scale=1');
@@ -283,7 +283,7 @@ test.describe('Mobile Responsive Tests', () => {
 
       await loginPageInstance.register(testUser);
       await loginPageInstance.login(testUser.username, testUser.password);
-      
+
       await searchPageInstance.navigateToSearch();
 
       // Perform search to get results with pagination
@@ -297,15 +297,15 @@ test.describe('Mobile Responsive Tests', () => {
 
       // Test swipe navigation if pagination exists
       const pagination = page.locator('[data-testid="pagination"]');
-      
+
       if (await pagination.count() > 0) {
         // Simulate swipe left (next page)
         await page.touchscreen.tap(200, 400);
         await page.touchscreen.tap(100, 400);
-        
+
         // Should navigate to next page or show some response
         await page.waitForTimeout(1000);
-        
+
         // Verify page responded to gesture
         const currentUrl = page.url();
         expect(currentUrl).toBeTruthy();
@@ -326,15 +326,15 @@ test.describe('Mobile Responsive Tests', () => {
 
       await loginPageInstance.register(testUser);
       await loginPageInstance.login(testUser.username, testUser.password);
-      
+
       await searchPageInstance.navigateToSearch();
 
       // Check touch target sizes (minimum 44x44px for accessibility)
       const touchTargets = await page.locator('button, a, input[type="checkbox"], input[type="radio"], select').all();
-      
+
       for (const target of touchTargets.slice(0, 10)) {
         const box = await target.boundingBox();
-        
+
         if (box) {
           // Touch targets should be at least 44x44px
           expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
@@ -356,7 +356,7 @@ test.describe('Mobile Responsive Tests', () => {
 
       await loginPageInstance.register(testUser);
       await loginPageInstance.login(testUser.username, testUser.password);
-      
+
       await searchPageInstance.navigateToSearch();
 
       // Perform search to get results
@@ -370,7 +370,7 @@ test.describe('Mobile Responsive Tests', () => {
 
       // Test long press on result items
       const resultCard = page.locator('[data-testid="result-card"]').first();
-      
+
       if (await resultCard.count() > 0) {
         // Simulate long press
         await resultCard.hover();
@@ -380,7 +380,7 @@ test.describe('Mobile Responsive Tests', () => {
 
         // Should show context menu or additional options
         const contextMenu = page.locator('[data-testid="context-menu"], [role="menu"]');
-        
+
         if (await contextMenu.count() > 0) {
           await expect(contextMenu).toBeVisible();
         }
@@ -404,7 +404,7 @@ test.describe('Mobile Responsive Tests', () => {
 
       await loginPageInstance.register(testUser);
       await loginPageInstance.login(testUser.username, testUser.password);
-      
+
       await searchPageInstance.navigateToSearch();
 
       // Perform search
@@ -418,14 +418,14 @@ test.describe('Mobile Responsive Tests', () => {
 
       // Check layout in portrait
       const portraitLayout = await page.locator('[data-testid="search-results"]').boundingBox();
-      
+
       // Change to landscape
       await page.setViewportSize({ width: 667, height: 375 });
       await page.waitForTimeout(500); // Allow layout to adjust
 
       // Check layout in landscape
       const landscapeLayout = await page.locator('[data-testid="search-results"]').boundingBox();
-      
+
       // Layout should adapt to new orientation
       expect(landscapeLayout.width).toBeGreaterThan(portraitLayout.width);
       expect(landscapeLayout.height).toBeLessThan(portraitLayout.height);
@@ -449,12 +449,12 @@ test.describe('Mobile Responsive Tests', () => {
 
       await loginPageInstance.register(testUser);
       await loginPageInstance.login(testUser.username, testUser.password);
-      
+
       await searchPageInstance.navigateToSearch();
 
       // Start search in portrait
       await page.fill('[data-testid="search-input"]', 'function');
-      
+
       // Change to landscape mid-search
       await page.setViewportSize({ width: 667, height: 375 });
       await page.waitForTimeout(500);

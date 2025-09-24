@@ -7,8 +7,8 @@ search orchestrators across the application.
 
 from ...search_engine import (
     SearchOrchestrator,
-    create_search_orchestrator as factory_create_orchestrator,
 )
+from ...search_engine import create_search_orchestrator as factory_create_orchestrator
 
 
 def create_search_orchestrator() -> SearchOrchestrator:
@@ -28,10 +28,10 @@ def create_search_orchestrator() -> SearchOrchestrator:
 def create_enhanced_search_orchestrator() -> SearchOrchestrator:
     """
     Create an enhanced search orchestrator with optimized configuration.
-    
+
     This is an alias for create_search_orchestrator() to maintain
     backward compatibility with existing code.
-    
+
     Returns:
         SearchOrchestrator: Fully configured orchestrator
     """

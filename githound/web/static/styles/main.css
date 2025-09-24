@@ -165,12 +165,12 @@
   .modal {
     display: none !important;
   }
-  
+
   body {
     background: white !important;
     color: black !important;
   }
-  
+
   .main-content {
     padding: 0;
   }
@@ -181,7 +181,7 @@
   .loading::after {
     border-width: 3px;
   }
-  
+
   .error-message,
   .success-message,
   .warning-message,
@@ -196,7 +196,7 @@
   .loading::after {
     animation: none;
   }
-  
+
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;

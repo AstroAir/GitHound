@@ -89,8 +89,7 @@ class TestFileBlame:
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
         # Get blame for the initial commit
-        blame_info = get_file_blame(
-            repo, "test.py", commit=initial_commit.hexsha)
+        blame_info = get_file_blame(repo, "test.py", commit=initial_commit.hexsha)
 
         assert isinstance(blame_info, FileBlameResult)
         assert blame_info.total_lines == 2  # Initial commit had only 2 lines
@@ -278,8 +277,7 @@ class TestAuthorStatistics:
             first_date = author_stats["first_commit_date"]
             last_date = author_stats["last_commit_date"]
 
-            assert isinstance(first_date, (datetime, str)
-                              ) or first_date is None
+            assert isinstance(first_date, (datetime, str)) or first_date is None
             assert isinstance(last_date, (datetime, str)) or last_date is None
 
     def test_author_statistics_with_branch_filter(self, temp_repo) -> None:
@@ -292,8 +290,7 @@ class TestAuthorStatistics:
 
         # Add commit to new branch
         test_file = Path(temp_dir) / "test.py"
-        test_file.write_text(
-            "def hello() -> None:\n    print('Hello, Feature!')\n")
+        test_file.write_text("def hello() -> None:\n    print('Hello, Feature!')\n")
         repo.index.add([str(test_file)])
         feature_commit = repo.index.commit("Feature commit")
 

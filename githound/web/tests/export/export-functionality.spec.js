@@ -25,7 +25,7 @@ test.describe('Export Functionality Tests', () => {
 
     await loginPage.register(testUser);
     await loginPage.login(testUser.username, testUser.password);
-    
+
     // Perform a search to have results to export
     await searchPage.navigateToSearch();
     await searchPage.performAdvancedSearch({
@@ -33,7 +33,7 @@ test.describe('Export Functionality Tests', () => {
       fileTypes: ['js', 'py'],
       searchType: 'exact'
     });
-    
+
     // Wait for search results
     await searchPage.waitForResults();
   });
@@ -51,11 +51,11 @@ test.describe('Export Functionality Tests', () => {
 
       expect(exportResult.success).toBe(true);
       expect(exportResult.fileSize).toBeTruthy();
-      
+
       // Download and validate the file
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'json');
-      
+
       expect(validation.isValid).toBe(true);
       expect(validation.parsedContent).toBeTruthy();
       expect(Array.isArray(validation.parsedContent) || typeof validation.parsedContent === 'object').toBe(true);
@@ -63,7 +63,7 @@ test.describe('Export Functionality Tests', () => {
 
     test('should export with custom field selection in JSON', async () => {
       const selectedFields = ['filePath', 'lineNumber', 'content', 'author'];
-      
+
       const exportResult = await exportPage.performExport({
         format: 'json',
         fields: selectedFields,
@@ -73,19 +73,19 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'json');
-      
+
       expect(validation.isValid).toBe(true);
-      
+
       // Verify only selected fields are included
       if (Array.isArray(validation.parsedContent) && validation.parsedContent.length > 0) {
         const firstResult = validation.parsedContent[0];
         selectedFields.forEach(field => {
           expect(firstResult).toHaveProperty(field);
         });
-        
+
         // Should not have excluded fields
         expect(firstResult).not.toHaveProperty('commitHash');
         expect(firstResult).not.toHaveProperty('commitMessage');
@@ -99,9 +99,9 @@ test.describe('Export Functionality Tests', () => {
         fileTypes: ['js', 'py', 'ts'],
         searchType: 'exact'
       });
-      
+
       await searchPage.waitForResults();
-      
+
       const exportResult = await exportPage.performExport({
         format: 'json',
         fields: ['all'],
@@ -113,10 +113,10 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'json');
-      
+
       expect(validation.isValid).toBe(true);
       expect(validation.fileSize).toBeGreaterThan(1000); // Should be substantial
     });
@@ -140,11 +140,11 @@ test.describe('Export Functionality Tests', () => {
 
       expect(uncompressedResult.success).toBe(true);
       expect(compressedResult.success).toBe(true);
-      
+
       // Compressed file should be smaller (this is a simplified check)
       const uncompressedSize = parseInt(uncompressedResult.fileSize.replace(/[^\d]/g, ''));
       const compressedSize = parseInt(compressedResult.fileSize.replace(/[^\d]/g, ''));
-      
+
       expect(compressedSize).toBeLessThan(uncompressedSize);
     });
   });
@@ -160,14 +160,14 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'csv');
-      
+
       expect(validation.isValid).toBe(true);
       expect(validation.content).toContain(','); // Should have CSV delimiters
       expect(validation.content).toContain('\n'); // Should have line breaks
-      
+
       // Should have header row
       const lines = validation.content.split('\n');
       expect(lines[0]).toContain('filePath');
@@ -181,9 +181,9 @@ test.describe('Export Functionality Tests', () => {
         fileTypes: ['js'],
         searchType: 'exact'
       });
-      
+
       await searchPage.waitForResults();
-      
+
       const exportResult = await exportPage.performExport({
         format: 'csv',
         fields: ['filePath', 'content'],
@@ -193,12 +193,12 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'csv');
-      
+
       expect(validation.isValid).toBe(true);
-      
+
       // CSV should properly escape quotes and commas
       const lines = validation.content.split('\n');
       lines.forEach(line => {
@@ -221,10 +221,10 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'csv');
-      
+
       expect(validation.isValid).toBe(true);
       expect(validation.content).toContain(';'); // Should use semicolon delimiter
     });
@@ -242,10 +242,10 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'yaml');
-      
+
       expect(validation.isValid).toBe(true);
       expect(validation.content).toContain(':'); // YAML key-value separator
       expect(validation.content).toContain('-'); // YAML list indicator
@@ -261,22 +261,22 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'yaml');
-      
+
       expect(validation.isValid).toBe(true);
-      
+
       // YAML should be properly formatted
       const lines = validation.content.split('\n');
       let hasProperIndentation = false;
-      
+
       lines.forEach(line => {
         if (line.startsWith('  ') || line.startsWith('- ')) {
           hasProperIndentation = true;
         }
       });
-      
+
       expect(hasProperIndentation).toBe(true);
     });
   });
@@ -292,10 +292,10 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'xml');
-      
+
       expect(validation.isValid).toBe(true);
       expect(validation.content).toContain('<'); // XML opening tags
       expect(validation.content).toContain('>'); // XML closing tags
@@ -312,12 +312,12 @@ test.describe('Export Functionality Tests', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      
+
       const download = await exportPage.downloadFile();
       const validation = await exportPage.validateExportContent(download, 'xml');
-      
+
       expect(validation.isValid).toBe(true);
-      
+
       // XML should properly escape special characters
       expect(validation.content).not.toContain('&<'); // Should be escaped as &amp;&lt;
       expect(validation.content).not.toContain('>"'); // Should be escaped properly

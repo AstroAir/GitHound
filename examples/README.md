@@ -5,7 +5,7 @@ This directory contains comprehensive examples demonstrating all GitHound functi
 ## Directory Structure
 
 - `mcp_server/` - MCP server usage examples and client interactions
-- `rest_api/` - REST API endpoint examples with sample requests/responses  
+- `rest_api/` - REST API endpoint examples with sample requests/responses
 - `git_operations/` - Git repository analysis and metadata extraction examples
 - `output_formats/` - JSON/YAML output format examples and export options
 - `error_handling/` - Error handling scenarios and edge cases
@@ -38,7 +38,7 @@ For MCP server examples, you'll also need the MCP client tools.
 - Client-server communication patterns
 - Advanced MCP features and integrations
 
-### 2. REST API Examples  
+### 2. REST API Examples
 - Authentication and authorization
 - All endpoint demonstrations
 - Error handling and validation

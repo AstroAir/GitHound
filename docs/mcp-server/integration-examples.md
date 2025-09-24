@@ -61,6 +61,99 @@ Create `.vscode/mcp.json` in your workspace:
 }
 ```
 
+### GitHub Copilot Integration
+
+For GitHub Copilot Chat extensions that support MCP:
+
+```json
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound",
+        "FASTMCP_SERVER_NAME": "GitHound for GitHub Copilot",
+        "FASTMCP_SERVER_LOG_LEVEL": "INFO"
+      },
+      "description": "Git repository analysis and search capabilities"
+    }
+  }
+}
+```
+
+### OpenAI GPT Integration
+
+For custom GPT applications using MCP protocol:
+
+```json
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server", "--transport", "http", "--port", "3000"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound",
+        "FASTMCP_SERVER_NAME": "GitHound for OpenAI GPT",
+        "FASTMCP_SERVER_HOST": "0.0.0.0",
+        "FASTMCP_SERVER_PORT": "3000",
+        "FASTMCP_SERVER_TRANSPORT": "http"
+      },
+      "description": "HTTP-based GitHound MCP server for OpenAI integration"
+    }
+  }
+}
+```
+
+### Anthropic Claude API Integration
+
+For applications using Claude API with MCP support:
+
+```json
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server", "--transport", "sse"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound",
+        "FASTMCP_SERVER_NAME": "GitHound for Claude API",
+        "FASTMCP_SERVER_TRANSPORT": "sse",
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
+        "FASTMCP_SERVER_AUTH": "githound.mcp.auth.providers.jwt.JWTVerifier"
+      },
+      "description": "Server-Sent Events GitHound MCP server with authentication"
+    }
+  }
+}
+```
+
+### Custom AI Application Integration
+
+For custom AI applications with specific requirements:
+
+```json
+{
+  "mcpServers": {
+    "githound-custom": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/githound",
+        "FASTMCP_SERVER_NAME": "GitHound Custom Integration",
+        "FASTMCP_SERVER_LOG_LEVEL": "DEBUG",
+        "FASTMCP_SERVER_RATE_LIMIT_ENABLED": "true",
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
+        "FASTMCP_SERVER_AUTH": "githound.mcp.auth.providers.github.GitHubProvider",
+        "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID": "your-github-client-id",
+        "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET": "your-github-client-secret"
+      },
+      "description": "Custom GitHound integration with GitHub authentication"
+    }
+  }
+}
+```
+
 ## Common Usage Patterns
 
 ### Repository Analysis Workflow
@@ -497,5 +590,113 @@ execution_time = time.time() - start_time
 if execution_time > 10:  # 10 seconds threshold
     log_slow_operation("analyze_repository", execution_time)
 ```
+
+## Platform-Specific Workflows
+
+### Claude Desktop Workflows
+
+#### Code Review Assistant
+
+```markdown
+# Claude Desktop Prompt Example
+
+I'm reviewing a pull request. Can you help me analyze the changes?
+
+1. First, analyze the repository structure:
+   - Use `analyze_repository` to understand the codebase
+   - Use `list_branches` to see all branches
+
+2. Compare the feature branch with main:
+   - Use `compare_branches_diff` to see all changes
+   - Use `get_commit_history` to understand the development timeline
+
+3. For each changed file:
+   - Use `analyze_file_blame` to understand authorship
+   - Use `get_file_history_mcp` to see change patterns
+
+4. Look for potential issues:
+   - Use `advanced_search` to find similar patterns
+   - Use `detect_patterns` to identify anti-patterns
+```
+
+### Cursor Workflows
+
+#### Feature Development
+
+```markdown
+# Cursor Integration Example
+
+When developing a new feature in Cursor:
+
+1. **Context Gathering**:
+   ```
+
+   @githound analyze_repository repo_path="/current/project"
+   @githound list_branches include_remote=true
+
+   ```
+
+2. **Pattern Research**:
+   ```
+
+   @githound advanced_search repo_path="/current/project" content_pattern="similar_feature" file_extensions=["py", "js"]
+
+   ```
+
+3. **Impact Analysis**:
+   ```
+
+   @githound compare_branches_diff repo_path="/current/project" branch1="main" branch2="feature/new-auth"
+
+   ```
+```
+
+### GitHub Copilot Workflows
+
+#### Code Documentation
+
+```markdown
+# GitHub Copilot Chat Example
+
+/githound analyze_repository repo_path="." include_stats=true
+
+Based on the repository analysis, help me:
+1. Generate comprehensive README documentation
+2. Identify undocumented functions and classes
+3. Suggest code organization improvements
+4. Create API documentation templates
+```
+
+## Best Practices by Platform
+
+### Claude Desktop
+
+- Use descriptive prompts that leverage GitHound's analysis capabilities
+- Combine multiple tools for comprehensive analysis
+- Use the built-in prompts for common workflows
+
+### Cursor
+
+- Integrate GitHound commands into your development workflow
+- Use context-aware queries based on current file/project
+- Leverage real-time analysis during coding
+
+### VS Code
+
+- Create custom tasks and commands for frequent operations
+- Use workspace-specific configurations
+- Integrate with debugging and testing workflows
+
+### GitHub Copilot
+
+- Use GitHound for context gathering before code generation
+- Combine repository analysis with code suggestions
+- Leverage historical patterns for better recommendations
+
+### Custom Applications
+
+- Implement proper error handling and retry logic
+- Use authentication for production deployments
+- Monitor performance and implement caching strategies
 
 These examples demonstrate how to effectively integrate GitHound MCP server with various AI tools and applications, providing comprehensive Git repository analysis capabilities through the standardized MCP protocol.

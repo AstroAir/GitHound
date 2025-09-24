@@ -22,13 +22,13 @@ test.describe('Authentication Flow Tests', () => {
       };
 
       const result = await loginPage.register(userData);
-      
+
       expect(result.success).toBe(true);
     });
 
     test('should show validation errors for empty registration form', async () => {
       const result = await loginPage.verifyRegistrationFormValidation();
-      
+
       expect(result.hasUsernameError).toBe(true);
       expect(result.hasEmailError).toBe(true);
       expect(result.hasPasswordError).toBe(true);
@@ -42,7 +42,7 @@ test.describe('Authentication Flow Tests', () => {
       };
 
       const result = await loginPage.testPasswordMismatchValidation(userData);
-      
+
       expect(result.hasPasswordMismatchError).toBe(true);
       expect(result.error).toContain('password');
     });
@@ -64,7 +64,7 @@ test.describe('Authentication Flow Tests', () => {
       };
 
       const result = await loginPage.register(duplicateData);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('already exists');
     });
@@ -77,7 +77,7 @@ test.describe('Authentication Flow Tests', () => {
       };
 
       const result = await loginPage.register(userData);
-      
+
       expect(result.success).toBe(false);
     });
 
@@ -118,33 +118,33 @@ test.describe('Authentication Flow Tests', () => {
 
     test('should successfully login with valid credentials', async () => {
       const result = await loginPage.login(testUser.username, testUser.password);
-      
+
       expect(result.success).toBe(true);
-      
+
       const isLoggedIn = await loginPage.isLoggedIn();
       expect(isLoggedIn).toBe(true);
-      
+
       const username = await loginPage.getLoggedInUsername();
       expect(username).toContain(testUser.username);
     });
 
     test('should reject invalid username', async () => {
       const result = await loginPage.login('nonexistent_user', testUser.password);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid username or password');
     });
 
     test('should reject invalid password', async () => {
       const result = await loginPage.login(testUser.username, 'wrong_password');
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid username or password');
     });
 
     test('should show validation errors for empty login form', async () => {
       const result = await loginPage.verifyLoginFormValidation();
-      
+
       expect(result.hasUsernameError).toBe(true);
       expect(result.hasPasswordError).toBe(true);
     });
@@ -152,7 +152,7 @@ test.describe('Authentication Flow Tests', () => {
     test('should handle case-sensitive username correctly', async () => {
       const upperCaseUsername = testUser.username.toUpperCase();
       const result = await loginPage.login(upperCaseUsername, testUser.password);
-      
+
       // Assuming usernames are case-sensitive
       expect(result.success).toBe(false);
     });
@@ -160,7 +160,7 @@ test.describe('Authentication Flow Tests', () => {
     test('should trim whitespace from username', async () => {
       const usernameWithSpaces = `  ${testUser.username}  `;
       const result = await loginPage.login(usernameWithSpaces, testUser.password);
-      
+
       // Should succeed if whitespace is properly trimmed
       expect(result.success).toBe(true);
     });
@@ -182,14 +182,14 @@ test.describe('Authentication Flow Tests', () => {
 
     test('should successfully logout user', async () => {
       await loginPage.logout();
-      
+
       const isLoggedIn = await loginPage.isLoggedIn();
       expect(isLoggedIn).toBe(false);
     });
 
     test('should redirect to login page after logout', async () => {
       await loginPage.logout();
-      
+
       // Should be able to see login button again
       await loginPage.waitForElement(loginPage.elements.loginButton);
     });
@@ -211,7 +211,7 @@ test.describe('Authentication Flow Tests', () => {
 
     test('should persist session across page reloads', async () => {
       const result = await loginPage.testSessionPersistence();
-      
+
       expect(result.persistedSession).toBe(true);
       expect(result.usernameMatches).toBe(true);
     });
@@ -224,7 +224,7 @@ test.describe('Authentication Flow Tests', () => {
       });
 
       await page.reload();
-      
+
       // Should be redirected to login
       const isLoggedIn = await loginPage.isLoggedIn();
       expect(isLoggedIn).toBe(false);
@@ -233,10 +233,10 @@ test.describe('Authentication Flow Tests', () => {
     test('should refresh token automatically', async ({ page }) => {
       // Get initial token
       const initialToken = await page.evaluate(() => localStorage.getItem('access_token'));
-      
+
       // Wait for potential token refresh (simulate time passing)
       await page.waitForTimeout(2000);
-      
+
       // Make an API request that might trigger token refresh
       const response = await page.evaluate(async () => {
         return fetch('/api/v1/auth/profile', {
@@ -267,9 +267,9 @@ test.describe('Authentication Flow Tests', () => {
     test('should successfully change password', async () => {
       const newPassword = 'NewPassword123!';
       const result = await loginPage.changePassword(testUser.password, newPassword);
-      
+
       expect(result.success).toBe(true);
-      
+
       // Verify can login with new password
       await loginPage.logout();
       const loginResult = await loginPage.login(testUser.username, newPassword);
@@ -278,14 +278,14 @@ test.describe('Authentication Flow Tests', () => {
 
     test('should reject incorrect current password', async () => {
       const result = await loginPage.changePassword('wrong_password', 'NewPassword123!');
-      
+
       expect(result.success).toBe(false);
     });
 
     test('should enforce password strength on change', async () => {
       const weakPassword = '123';
       const result = await loginPage.changePassword(testUser.password, weakPassword);
-      
+
       expect(result.success).toBe(false);
     });
   });
@@ -302,7 +302,7 @@ test.describe('Authentication Flow Tests', () => {
       // Note: This would require backend support for role assignment
       await loginPage.register(adminUser);
       await loginPage.login(adminUser.username, adminUser.password);
-      
+
       const hasAdminAccess = await loginPage.hasAdminAccess();
       expect(hasAdminAccess).toBe(true);
     });
@@ -316,7 +316,7 @@ test.describe('Authentication Flow Tests', () => {
 
       await loginPage.register(regularUser);
       await loginPage.login(regularUser.username, regularUser.password);
-      
+
       const hasAdminAccess = await loginPage.hasAdminAccess();
       expect(hasAdminAccess).toBe(false);
     });

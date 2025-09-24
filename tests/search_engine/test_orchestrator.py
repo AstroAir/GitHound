@@ -1,17 +1,17 @@
 """Tests for GitHound search orchestrator."""
 
-import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
+import pytest
 from git import Repo
 
 from githound.models import SearchQuery, SearchResult, SearchType
 from githound.search_engine import (
+    AuthorSearcher,
     BaseSearcher,
     CommitHashSearcher,
-    AuthorSearcher,
     ContentSearcher,
     SearchContext,
     SearchOrchestrator,
@@ -54,11 +54,9 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int(
-            (datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {
-            "insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo

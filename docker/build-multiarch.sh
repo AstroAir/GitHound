@@ -40,19 +40,19 @@ log_error() {
 # Function to check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
-    
+
     # Check if Docker is installed
     if ! command -v docker &> /dev/null; then
         log_error "Docker is not installed or not in PATH"
         exit 1
     fi
-    
+
     # Check if buildx is available
     if ! docker buildx version &> /dev/null; then
         log_error "Docker Buildx is not available"
         exit 1
     fi
-    
+
     # Check if builder exists, create if not
     if ! docker buildx inspect multiarch-builder &> /dev/null; then
         log_info "Creating multiarch builder..."
@@ -62,14 +62,14 @@ check_prerequisites() {
         log_info "Using existing multiarch builder..."
         docker buildx use multiarch-builder
     fi
-    
+
     log_success "Prerequisites check completed"
 }
 
 # Function to get build metadata
 get_build_metadata() {
     BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-    
+
     if command -v git &> /dev/null && git rev-parse --git-dir > /dev/null 2>&1; then
         VCS_REF=$(git rev-parse --short HEAD)
         # Get version from git tag if available
@@ -79,7 +79,7 @@ get_build_metadata() {
     else
         VCS_REF="unknown"
     fi
-    
+
     log_info "Build metadata:"
     log_info "  Version: ${VERSION}"
     log_info "  VCS Ref: ${VCS_REF}"
@@ -90,30 +90,30 @@ get_build_metadata() {
 build_multiarch() {
     local target="${1:-production}"
     local tag_suffix="${2:-}"
-    
+
     log_info "Building multi-architecture image for target: ${target}"
     log_info "Platforms: ${PLATFORMS}"
-    
+
     # Prepare build arguments
     BUILD_ARGS=(
         "--build-arg" "BUILD_DATE=${BUILD_DATE}"
         "--build-arg" "VCS_REF=${VCS_REF}"
         "--build-arg" "GITHOUND_VERSION=${VERSION}"
     )
-    
+
     # Prepare cache arguments
     if [[ -n "${CACHE_FROM}" ]]; then
         BUILD_ARGS+=("--cache-from" "${CACHE_FROM}")
     fi
-    
+
     if [[ -n "${CACHE_TO}" ]]; then
         BUILD_ARGS+=("--cache-to" "${CACHE_TO}")
     fi
-    
+
     # Prepare tags
     FULL_TAG="${REGISTRY}/${IMAGE_NAME}:${VERSION}${tag_suffix}"
     LATEST_TAG="${REGISTRY}/${IMAGE_NAME}:latest${tag_suffix}"
-    
+
     # Build command
     BUILD_CMD=(
         "docker" "buildx" "build"
@@ -125,7 +125,7 @@ build_multiarch() {
         "--file" "Dockerfile"
         "."
     )
-    
+
     # Add push flag if requested
     if [[ "${PUSH}" == "true" ]]; then
         BUILD_CMD+=("--push")
@@ -134,10 +134,10 @@ build_multiarch() {
         BUILD_CMD+=("--load")
         log_warning "Images will be loaded locally (single platform only)"
     fi
-    
+
     log_info "Executing build command..."
     "${BUILD_CMD[@]}"
-    
+
     log_success "Multi-architecture build completed for target: ${target}"
 }
 
@@ -232,10 +232,10 @@ TARGET="${TARGET:-production}"
 # Main execution
 main() {
     log_info "Starting multi-architecture build for GitHound"
-    
+
     check_prerequisites
     get_build_metadata
-    
+
     case "${TARGET}" in
         production)
             build_multiarch "production"
@@ -253,7 +253,7 @@ main() {
             exit 1
             ;;
     esac
-    
+
     log_success "Multi-architecture build process completed!"
 }
 

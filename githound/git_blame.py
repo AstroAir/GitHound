@@ -12,8 +12,7 @@ class BlameInfo(BaseModel):
 
     line_number: int = Field(..., description="Line number (1-based)")
     content: str = Field(..., description="Line content")
-    commit_hash: str = Field(...,
-                             description="Commit hash that last modified this line")
+    commit_hash: str = Field(..., description="Commit hash that last modified this line")
     author_name: str = Field(..., description="Author name")
     author_email: str = Field(..., description="Author email")
     commit_date: datetime = Field(..., description="Date of the commit")
@@ -25,14 +24,10 @@ class FileBlameResult(BaseModel):
 
     file_path: str = Field(..., description="Path to the file")
     total_lines: int = Field(..., description="Total number of lines")
-    blame_info: list[BlameInfo] = Field(...,
-                                        description="Blame information for each line")
-    contributors: list[str] = Field(...,
-                                    description="List of unique contributors")
-    oldest_line_date: datetime | None = Field(
-        None, description="Date of the oldest line")
-    newest_line_date: datetime | None = Field(
-        None, description="Date of the newest line")
+    blame_info: list[BlameInfo] = Field(..., description="Blame information for each line")
+    contributors: list[str] = Field(..., description="List of unique contributors")
+    oldest_line_date: datetime | None = Field(None, description="Date of the oldest line")
+    newest_line_date: datetime | None = Field(None, description="Date of the newest line")
 
 
 def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> FileBlameResult:
@@ -74,15 +69,14 @@ def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> Fil
                     commit_hash=commit_info.hexsha,  # type: ignore
                     author_name=commit_info.author.name,  # type: ignore
                     author_email=commit_info.author.email,  # type: ignore
-                    commit_date=datetime.fromtimestamp(
-                        commit_info.committed_date),  # type: ignore
-                    commit_message=str(
-                        commit_info.message).strip(),  # type: ignore
+                    commit_date=datetime.fromtimestamp(commit_info.committed_date),  # type: ignore
+                    commit_message=str(commit_info.message).strip(),  # type: ignore
                 )
 
                 blame_info.append(blame_entry)
                 contributors.add(
-                    f"{commit_info.author.name} <{commit_info.author.email}>")  # type: ignore
+                    f"{commit_info.author.name} <{commit_info.author.email}>"  # type: ignore
+                )
                 dates.append(blame_entry.commit_date)
                 line_number += 1
 
@@ -96,8 +90,7 @@ def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> Fil
         )
 
     except Exception as e:
-        raise GitCommandError(
-            f"Failed to get blame for '{file_path}': {str(e)}")
+        raise GitCommandError(f"Failed to get blame for '{file_path}': {str(e)}")
 
 
 def get_line_history(
@@ -155,8 +148,7 @@ def get_line_history(
                 continue
 
     except GitCommandError as e:
-        raise GitCommandError(
-            f"Error getting line history for '{file_path}:{line_number}': {e}")
+        raise GitCommandError(f"Error getting line history for '{file_path}:{line_number}': {e}")
 
     return history
 

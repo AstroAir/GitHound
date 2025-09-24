@@ -589,6 +589,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
+      - name: Validate documentation
+        run: |
+          # Run comprehensive documentation validation
+          python scripts/validate_all_docs.py --skip-external --comprehensive-only
+
       - name: Build documentation
         run: |
           cd docs && mkdocs build --strict

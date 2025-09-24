@@ -133,15 +133,10 @@ class TokenVerifier(AuthProvider):
         user = User(
             username=token_info.username,
             role=token_info.roles[0] if token_info.roles else "user",
-            permissions=token_info.permissions or []
+            permissions=token_info.permissions or [],
         )
 
-        return AuthResult(
-            success=True,
-            user=user,
-            token=token,
-            expires_in=token_info.expires_at
-        )
+        return AuthResult(success=True, user=user, token=token, expires_in=token_info.expires_at)
 
 
 class RemoteAuthProvider(TokenVerifier):
@@ -163,7 +158,7 @@ class RemoteAuthProvider(TokenVerifier):
             "grant_types_supported": ["authorization_code", "refresh_token"],
             "scopes_supported": ["openid", "profile", "email"],
             "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
-            "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register"
+            "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register",
         }
 
     def supports_dynamic_client_registration(self) -> bool:

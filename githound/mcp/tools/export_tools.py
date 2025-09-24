@@ -29,8 +29,7 @@ async def export_repository_data(input_data: ExportInput, ctx: Context) -> dict[
 
         # Create export manager and options
         export_manager = ExportManager()
-        pagination_info = PaginationInfo(
-            **input_data.pagination) if input_data.pagination else None
+        pagination_info = PaginationInfo(**input_data.pagination) if input_data.pagination else None
 
         export_options = ExportOptions(
             format=OutputFormat(input_data.format.lower()),
@@ -53,8 +52,7 @@ async def export_repository_data(input_data: ExportInput, ctx: Context) -> dict[
             import yaml
 
             with open(output_path, "w", encoding="utf-8") as f:
-                yaml.dump(metadata, f, default_flow_style=False,
-                          allow_unicode=True)
+                yaml.dump(metadata, f, default_flow_style=False, allow_unicode=True)
         else:
             return {"status": "error", "error": f"Unsupported export format: {input_data.format}"}
 

@@ -16,7 +16,7 @@ class WebSocketMessage(BaseModel):
     """WebSocket message envelope."""
 
     type: str
-    data: dict
+    data: dict[str, Any]
     timestamp: datetime = datetime.now()
 
 
@@ -112,8 +112,14 @@ class StatusMessage(TypedDict):
 
 # Union type for all message types
 WebSocketMessageType = (
-    ConnectedMessage | ProgressMessage | ResultMessage | CompletedMessage |
-    ErrorMessage | PongMessage | PingMessage | StatusMessage
+    ConnectedMessage
+    | ProgressMessage
+    | ResultMessage
+    | CompletedMessage
+    | ErrorMessage
+    | PongMessage
+    | PingMessage
+    | StatusMessage
 )
 
 
@@ -134,18 +140,18 @@ class ConnectionManager:
         """Remove a WebSocket connection."""
         if connection_id in self.active_connections:
             del self.active_connections[connection_id]
-            
+
             # Remove from search connections
             for search_id, conn_ids in self.search_connections.items():
                 conn_ids.discard(connection_id)
-            
+
             # Clean up empty search connections
             self.search_connections = {
-                search_id: conn_ids 
-                for search_id, conn_ids in self.search_connections.items() 
+                search_id: conn_ids
+                for search_id, conn_ids in self.search_connections.items()
                 if conn_ids
             }
-            
+
             logger.info(f"WebSocket connection closed: {connection_id}")
 
     def subscribe_to_search(self, connection_id: str, search_id: str) -> None:
@@ -163,7 +169,9 @@ class ConnectionManager:
                 del self.search_connections[search_id]
         logger.info(f"Connection {connection_id} unsubscribed from search {search_id}")
 
-    async def send_personal_message(self, message: WebSocketMessageType, connection_id: str) -> None:
+    async def send_personal_message(
+        self, message: WebSocketMessageType, connection_id: str
+    ) -> None:
         """Send a message to a specific connection."""
         if connection_id in self.active_connections:
             websocket = self.active_connections[connection_id]
@@ -189,11 +197,7 @@ class ConnectionManager:
             await self.send_personal_message(message, connection_id)
 
     async def send_progress_update(
-        self,
-        search_id: str,
-        progress: float,
-        message: str,
-        results_count: int = 0
+        self, search_id: str, progress: float, message: str, results_count: int = 0
     ) -> None:
         """Send a progress update for a search."""
         progress_message: ProgressMessage = {
@@ -203,33 +207,25 @@ class ConnectionManager:
                 "progress": progress,
                 "message": message,
                 "results_count": results_count,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
         await self.send_search_update(progress_message, search_id)
 
-    async def send_search_result(
-        self,
-        search_id: str,
-        result: dict[str, Any]
-    ) -> None:
+    async def send_search_result(self, search_id: str, result: dict[str, Any]) -> None:
         """Send a new search result."""
         result_message: ResultMessage = {
             "type": "result",
             "data": {
                 "search_id": search_id,
                 "result": result,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
         await self.send_search_update(result_message, search_id)
 
     async def send_search_completed(
-        self,
-        search_id: str,
-        status: str,
-        total_results: int,
-        error_message: str | None = None
+        self, search_id: str, status: str, total_results: int, error_message: str | None = None
     ) -> None:
         """Send search completion notification."""
         completed_message: CompletedMessage = {
@@ -239,33 +235,25 @@ class ConnectionManager:
                 "status": status,
                 "total_results": total_results,
                 "error_message": error_message,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
         await self.send_search_update(completed_message, search_id)
 
-    async def send_search_error(
-        self,
-        search_id: str,
-        error: str
-    ) -> None:
+    async def send_search_error(self, search_id: str, error: str) -> None:
         """Send search error notification."""
         error_message: ErrorMessage = {
             "type": "error",
             "data": {
                 "search_id": search_id,
                 "error": error,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
         await self.send_search_update(error_message, search_id)
 
     async def send_status_update(
-        self,
-        search_id: str,
-        status: str,
-        progress: float,
-        message: str
+        self, search_id: str, status: str, progress: float, message: str
     ) -> None:
         """Send status update for a search."""
         status_message: StatusMessage = {
@@ -275,8 +263,8 @@ class ConnectionManager:
                 "status": status,
                 "progress": progress,
                 "message": message,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
         await self.send_search_update(status_message, search_id)
 
@@ -284,9 +272,7 @@ class ConnectionManager:
         """Handle ping message and send pong response."""
         pong_message: PongMessage = {
             "type": "pong",
-            "data": {
-                "timestamp": datetime.now().isoformat()
-            }
+            "data": {"timestamp": datetime.now().isoformat()},
         }
         await self.send_personal_message(pong_message, connection_id)
 
@@ -310,16 +296,16 @@ connection_manager = ConnectionManager()
 async def websocket_endpoint(websocket: WebSocket, connection_id: str) -> None:
     """WebSocket endpoint for real-time updates."""
     await connection_manager.connect(websocket, connection_id)
-    
+
     try:
         while True:
             # Wait for messages from client
             data = await websocket.receive_text()
-            
+
             try:
                 message = json.loads(data)
                 message_type = message.get("type")
-                
+
                 if message_type == "ping":
                     await connection_manager.handle_ping(connection_id)
                 elif message_type == "subscribe":
@@ -332,12 +318,12 @@ async def websocket_endpoint(websocket: WebSocket, connection_id: str) -> None:
                         connection_manager.unsubscribe_from_search(connection_id, search_id)
                 else:
                     logger.warning(f"Unknown message type: {message_type}")
-                    
+
             except json.JSONDecodeError:
                 logger.error(f"Invalid JSON received from {connection_id}")
             except Exception as e:
                 logger.error(f"Error processing message from {connection_id}: {e}")
-                
+
     except WebSocketDisconnect:
         connection_manager.disconnect(connection_id)
     except Exception as e:

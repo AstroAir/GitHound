@@ -29,12 +29,9 @@ async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str
 
             import uvicorn
 
-            from ...web.api import app
+            from ...web.api import app  # type: ignore[import-not-found]
         except ImportError as e:
-            return {
-                "status": "error",
-                "error": f"Web server dependencies not available: {str(e)}"
-            }
+            return {"status": "error", "error": f"Web server dependencies not available: {str(e)}"}
 
         # Validate repository
         repo = get_repository(Path(input_data.repo_path))
@@ -44,12 +41,7 @@ async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str
 
         # Start server in background thread
         def run_server() -> None:
-            uvicorn.run(
-                web_app,
-                host=input_data.host,
-                port=input_data.port,
-                log_level="info"
-            )
+            uvicorn.run(web_app, host=input_data.host, port=input_data.port, log_level="info")
 
         server_thread = threading.Thread(target=run_server, daemon=True)
         server_thread.start()
@@ -65,6 +57,7 @@ async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str
         if input_data.auto_open:
             try:
                 import webbrowser
+
                 webbrowser.open(server_url)
                 await ctx.info("Browser opened automatically")
             except Exception as e:

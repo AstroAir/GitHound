@@ -192,7 +192,7 @@ Visual tests are configured to:
 ```yaml
 - name: Run Visual Tests
   run: npx playwright test --grep "@visual"
-  
+
 - name: Upload Visual Test Results
   uses: actions/upload-artifact@v3
   if: always()

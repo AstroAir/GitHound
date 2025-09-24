@@ -1,6 +1,7 @@
 # Python API Reference
 
-GitHound provides a comprehensive Python API for programmatic access to all Git repository analysis capabilities. This guide covers the complete API with examples and best practices.
+GitHound provides a comprehensive Python API for programmatic access to all Git repository analysis
+capabilities. This guide covers the complete API with examples and best practices.
 
 ## Table of Contents
 
@@ -18,15 +19,21 @@ GitHound provides a comprehensive Python API for programmatic access to all Git 
 
 ## Installation
 
+**Note**: GitHound is currently in development and not yet published to PyPI.
+
+Install from source:
+
 ```bash
-pip install githound
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
+pip install -e .
 ```
 
 For development installation:
 
 ```bash
-git clone https://github.com/your-org/githound.git
-cd githound
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
 pip install -e ".[dev]"
 ```
 
@@ -56,7 +63,8 @@ print(f"File has {blame_info.total_lines} lines")
 
 ## GitHound Class
 
-The `GitHound` class is the main entry point for all GitHound functionality. It provides a unified interface for repository analysis, search operations, and data export.
+The `GitHound` class is the main entry point for all GitHound functionality. It provides a unified
+interface for repository analysis, search operations, and data export.
 
 ### Constructor
 
@@ -101,7 +109,8 @@ def search_orchestrator(self) -> SearchOrchestrator:
     """Get or create the search orchestrator with all searchers registered."""
 ```
 
-The search orchestrator coordinates multiple search strategies and is automatically configured with all available searchers:
+The search orchestrator coordinates multiple search strategies and is automatically configured with
+all available searchers:
 
 - `CommitHashSearcher` - Search by commit hash
 - `AuthorSearcher` - Search by author name/email
@@ -262,7 +271,8 @@ class SearchResult(BaseModel):
 
 ## Repository Analysis
 
-GitHound provides comprehensive repository analysis capabilities to understand repository structure, statistics, and health.
+GitHound provides comprehensive repository analysis capabilities to understand repository structure,
+statistics, and health.
 
 ### Repository Metadata
 
@@ -442,7 +452,8 @@ feature_history = gh.get_file_history("src/main.py", branch="feature/new-auth")
 
 ## Diff and Comparison
 
-GitHound provides powerful diff and comparison capabilities for analyzing changes between commits, branches, and files.
+GitHound provides powerful diff and comparison capabilities for analyzing changes between commits,
+branches, and files.
 
 ### Commit Comparison
 
@@ -978,4 +989,41 @@ with GitHound(Path("/path/to/repo")) as gh:
     commit_df.to_csv("commit_analysis.csv", index=False)
 ```
 
-This comprehensive Python API reference covers all major GitHound functionality with practical examples and best practices. For more specific use cases or advanced features, refer to the individual module documentation or the GitHound source code.
+This comprehensive Python API reference covers all major GitHound functionality with practical examples
+and best practices. For more specific use cases or advanced features, refer to the individual module
+documentation or the GitHound source code.
+
+## 🚀 Related Documentation
+
+### API References
+
+- **[REST API](rest-api.md)** - HTTP API for external integrations
+- **[WebSocket API](websocket-api.md)** - Real-time API documentation
+- **[OpenAPI Specification](openapi.md)** - Interactive API documentation
+
+### Integration Guides
+
+- **[MCP Server](../mcp-server/README.md)** - Model Context Protocol integration
+- **[CLI Usage](../user-guide/cli-usage.md)** - Command-line interface
+
+### Getting Started
+
+- **[Installation Guide](../getting-started/installation.md)** - Install GitHound
+- **[Quick Start](../getting-started/quick-start.md)** - Basic usage examples
+- **[Configuration](../getting-started/configuration.md)** - Environment setup
+
+### Advanced Topics
+
+- **[Architecture Overview](../architecture/overview.md)** - System design
+- **[Configuration Guide](../getting-started/configuration.md)** - Environment setup and configuration
+
+### Need Help
+
+- **[Troubleshooting Guide](../troubleshooting/README.md)** - Solve common issues
+- **[FAQ](../troubleshooting/faq.md)** - Frequently asked questions
+
+---
+
+**📚 [Back to Documentation Home](../index.md)** |
+**⬅️ [CLI Usage](../user-guide/cli-usage.md)** |
+**➡️ [REST API](rest-api.md)**

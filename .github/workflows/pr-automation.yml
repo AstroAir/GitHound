@@ -74,7 +74,7 @@ jobs:
               issue_number: context.issue.number,
             });
 
-            const sizeLabels = currentLabels.filter(label => 
+            const sizeLabels = currentLabels.filter(label =>
               label.name.startsWith('size/')
             );
 
@@ -109,7 +109,7 @@ jobs:
           script: |
             const title = context.payload.pull_request.title.toLowerCase();
             const body = context.payload.pull_request.body || '';
-            
+
             const breakingKeywords = [
               'breaking change',
               'breaking:',
@@ -117,12 +117,12 @@ jobs:
               'breaking-change',
               '💥'
             ];
-            
-            const hasBreakingChange = breakingKeywords.some(keyword => 
-              title.includes(keyword.toLowerCase()) || 
+
+            const hasBreakingChange = breakingKeywords.some(keyword =>
+              title.includes(keyword.toLowerCase()) ||
               body.toLowerCase().includes(keyword.toLowerCase())
             );
-            
+
             if (hasBreakingChange) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -142,7 +142,7 @@ jobs:
               pull_number: context.issue.number,
             });
 
-            const securityFiles = files.filter(file => 
+            const securityFiles = files.filter(file =>
               file.filename.includes('security') ||
               file.filename.includes('.github/workflows') ||
               file.filename.includes('dependabot') ||
@@ -165,12 +165,12 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |
             👋 Welcome to GitHound! Thank you for your first contribution!
-            
+
             A few things to note:
             - Please make sure all CI checks pass
             - If you need help, feel free to ask questions in the comments
             - Our maintainers will review your PR as soon as possible
-            
+
             Thanks for helping make GitHound better! 🚀
 
       - name: Request review for large PRs
@@ -184,18 +184,18 @@ jobs:
               pull_number: context.issue.number,
               reviewers: ['AstroAir'],
             });
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
               body: `⚠️ This is a large PR with significant changes. Please consider:
-              
+
               - Breaking it into smaller, focused PRs if possible
               - Providing detailed testing instructions
               - Adding comprehensive tests for new functionality
               - Updating documentation as needed
-              
+
               A maintainer will review this carefully.`
             });
 
@@ -212,14 +212,14 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           commentOnDirty: |
             This pull request has merge conflicts that need to be resolved.
-            
+
             Please resolve the conflicts and push the changes to continue.
-            
+
             You can resolve conflicts by:
             1. Pulling the latest changes from the target branch
             2. Resolving conflicts in your local environment
             3. Pushing the resolved changes
-            
+
             Or use GitHub's web interface to resolve simple conflicts.
           commentOnClean: |
             ✅ Merge conflicts have been resolved. Thank you!

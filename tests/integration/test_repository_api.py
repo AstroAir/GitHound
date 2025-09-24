@@ -5,11 +5,11 @@ Tests all repository operations including initialization, cloning, status,
 branch management, commit operations, tag management, and remote operations.
 """
 
-import pytest
 import json
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
+import pytest
 from fastapi import status
 
 
@@ -21,22 +21,19 @@ class TestRepositoryInitialization:
         """Test successful repository initialization."""
         repo_path = str(temp_dir / "new_repo")
 
-        with patch('githound.web.git_operations.GitOperationsManager.init_repository') as mock_init:
+        with patch("githound.web.git_operations.GitOperationsManager.init_repository") as mock_init:
             mock_init.return_value = {
                 "path": repo_path,
                 "bare": False,
                 "status": "created",
                 "git_dir": f"{repo_path}/.git",
-                "working_dir": repo_path
+                "working_dir": repo_path,
             }
 
             response = api_client.post(
                 "/api/v3/repository/init",
                 headers=admin_auth_headers,
-                json={
-                    "path": repo_path,
-                    "bare": False
-                }
+                json={"path": repo_path, "bare": False},
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -51,33 +48,34 @@ class TestRepositoryInitialization:
         repo_path = str(temp_dir / "new_repo")
 
         response = api_client.post(
-            "/api/v3/repository/init",
-            json={"path": repo_path, "bare": False}
+            "/api/v3/repository/init", json={"path": repo_path, "bare": False}
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_init_repository_insufficient_permissions(self, api_client, readonly_auth_headers, temp_dir) -> None:
+    def test_init_repository_insufficient_permissions(
+        self, api_client, readonly_auth_headers, temp_dir
+    ) -> None:
         """Test repository initialization with insufficient permissions."""
         repo_path = str(temp_dir / "new_repo")
 
         response = api_client.post(
             "/api/v3/repository/init",
             headers=readonly_auth_headers,
-            json={"path": repo_path, "bare": False}
+            json={"path": repo_path, "bare": False},
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_init_repository_invalid_path(self, api_client, admin_auth_headers) -> None:
         """Test repository initialization with invalid path."""
-        with patch('githound.web.git_operations.GitOperationsManager.init_repository') as mock_init:
+        with patch("githound.web.git_operations.GitOperationsManager.init_repository") as mock_init:
             mock_init.side_effect = Exception("Invalid path")
 
             response = api_client.post(
                 "/api/v3/repository/init",
                 headers=admin_auth_headers,
-                json={"path": "/invalid/path", "bare": False}
+                json={"path": "/invalid/path", "bare": False},
             )
 
             assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -92,7 +90,7 @@ class TestRepositoryCloning:
         clone_path = str(temp_dir / "cloned_repo")
         test_url = "https://github.com/test/repo.git"
 
-        with patch('githound.web.comprehensive_api.perform_clone_operation') as mock_clone:
+        with patch("githound.web.comprehensive_api.perform_clone_operation") as mock_clone:
             response = api_client.post(
                 "/api/v3/repository/clone",
                 headers=admin_auth_headers,
@@ -101,8 +99,8 @@ class TestRepositoryCloning:
                     "path": clone_path,
                     "branch": "main",
                     "depth": None,
-                    "recursive": False
-                }
+                    "recursive": False,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -125,8 +123,8 @@ class TestRepositoryCloning:
                 "path": clone_path,
                 "branch": "develop",
                 "depth": 1,
-                "recursive": True
-            }
+                "recursive": True,
+            },
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -142,7 +140,9 @@ class TestRepositoryStatus:
         """Test successful repository status retrieval."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.get_repository_status') as mock_status:
+        with patch(
+            "githound.web.git_operations.GitOperationsManager.get_repository_status"
+        ) as mock_status:
             mock_status.return_value = {
                 "is_dirty": False,
                 "untracked_files": [],
@@ -153,14 +153,13 @@ class TestRepositoryStatus:
                 "ahead_behind": None,
                 "head_commit": "abc123",
                 "total_commits": 1,
-                "stash_count": 0
+                "stash_count": 0,
             }
 
             # URL encode the path
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.get(
-                f"/api/v3/repository/{encoded_path}/status",
-                headers=admin_auth_headers
+                f"/api/v3/repository/{encoded_path}/status", headers=admin_auth_headers
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -171,12 +170,11 @@ class TestRepositoryStatus:
 
     def test_get_repository_status_invalid_repo(self, api_client, admin_auth_headers) -> None:
         """Test repository status with invalid repository."""
-        with patch('githound.web.comprehensive_api.validate_repo_path') as mock_validate:
+        with patch("githound.web.comprehensive_api.validate_repo_path") as mock_validate:
             mock_validate.side_effect = Exception("Invalid repository")
 
             response = api_client.get(
-                "/api/v3/repository/invalid%2Fpath/status",
-                headers=admin_auth_headers
+                "/api/v3/repository/invalid%2Fpath/status", headers=admin_auth_headers
             )
 
             assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -190,7 +188,7 @@ class TestBranchOperations:
         """Test successful branch listing."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.list_branches') as mock_list:
+        with patch("githound.web.git_operations.GitOperationsManager.list_branches") as mock_list:
             mock_list.return_value = [
                 {
                     "name": "master",
@@ -200,14 +198,13 @@ class TestBranchOperations:
                     "date": "2024-01-01T00:00:00Z",
                     "is_current": True,
                     "is_remote": False,
-                    "tracking_branch": None
+                    "tracking_branch": None,
                 }
             ]
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.get(
-                f"/api/v3/repository/{encoded_path}/branches",
-                headers=admin_auth_headers
+                f"/api/v3/repository/{encoded_path}/branches", headers=admin_auth_headers
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -221,13 +218,13 @@ class TestBranchOperations:
         """Test successful branch creation."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.create_branch') as mock_create:
+        with patch("githound.web.git_operations.GitOperationsManager.create_branch") as mock_create:
             mock_create.return_value = {
                 "name": "feature-branch",
                 "commit_hash": "def456",
                 "start_point": "HEAD",
                 "checked_out": True,
-                "status": "created"
+                "status": "created",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
@@ -238,8 +235,8 @@ class TestBranchOperations:
                     "repo_path": repo_path,
                     "branch_name": "feature-branch",
                     "start_point": None,
-                    "checkout": True
-                }
+                    "checkout": True,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -253,18 +250,18 @@ class TestBranchOperations:
         repo_path = str(temp_repo.working_dir)
         branch_name = "feature-branch"
 
-        with patch('githound.web.git_operations.GitOperationsManager.delete_branch') as mock_delete:
+        with patch("githound.web.git_operations.GitOperationsManager.delete_branch") as mock_delete:
             mock_delete.return_value = {
                 "name": branch_name,
                 "last_commit": "abc123",
                 "forced": False,
-                "status": "deleted"
+                "status": "deleted",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.delete(
                 f"/api/v3/repository/{encoded_path}/branches/{branch_name}",
-                headers=admin_auth_headers
+                headers=admin_auth_headers,
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -278,17 +275,19 @@ class TestBranchOperations:
         repo_path = str(temp_repo.working_dir)
         branch_name = "feature-branch"
 
-        with patch('githound.web.git_operations.GitOperationsManager.checkout_branch') as mock_checkout:
+        with patch(
+            "githound.web.git_operations.GitOperationsManager.checkout_branch"
+        ) as mock_checkout:
             mock_checkout.return_value = {
                 "branch": branch_name,
                 "commit_hash": "abc123",
-                "status": "checked_out"
+                "status": "checked_out",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.post(
                 f"/api/v3/repository/{encoded_path}/branches/{branch_name}/checkout",
-                headers=admin_auth_headers
+                headers=admin_auth_headers,
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -301,14 +300,14 @@ class TestBranchOperations:
         """Test successful branch merge."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.merge_branch') as mock_merge:
+        with patch("githound.web.git_operations.GitOperationsManager.merge_branch") as mock_merge:
             mock_merge.return_value = {
                 "status": "merged",
                 "commit_hash": "merge123",
                 "source_branch": "feature",
                 "target_branch": "main",
                 "strategy": "merge",
-                "message": "Merge branch 'feature' into main"
+                "message": "Merge branch 'feature' into main",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
@@ -320,8 +319,8 @@ class TestBranchOperations:
                     "source_branch": "feature",
                     "target_branch": "main",
                     "strategy": "merge",
-                    "message": None
-                }
+                    "message": None,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -338,7 +337,7 @@ class TestCommitOperations:
         """Test successful commit creation."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.create_commit') as mock_commit:
+        with patch("githound.web.git_operations.GitOperationsManager.create_commit") as mock_commit:
             mock_commit.return_value = {
                 "commit_hash": "new123",
                 "message": "Test commit",
@@ -347,7 +346,7 @@ class TestCommitOperations:
                 "files_changed": 1,
                 "insertions": 5,
                 "deletions": 0,
-                "status": "created"
+                "status": "created",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
@@ -360,8 +359,8 @@ class TestCommitOperations:
                     "files": None,
                     "all_files": True,
                     "author_name": None,
-                    "author_email": None
-                }
+                    "author_email": None,
+                },
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -374,25 +373,21 @@ class TestCommitOperations:
         """Test successful commit amendment."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch('githound.web.git_operations.GitOperationsManager.amend_commit') as mock_amend:
+        with patch("githound.web.git_operations.GitOperationsManager.amend_commit") as mock_amend:
             mock_amend.return_value = {
                 "old_commit_hash": "old123",
                 "new_commit_hash": "new456",
                 "message": "Amended commit message",
                 "author": "Test User <test@example.com>",
                 "date": "2024-01-01T00:00:00Z",
-                "status": "amended"
+                "status": "amended",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.patch(
                 f"/api/v3/repository/{encoded_path}/commits/amend",
                 headers=admin_auth_headers,
-                json={
-                    "repo_path": repo_path,
-                    "message": "Amended commit message",
-                    "files": None
-                }
+                json={"repo_path": repo_path, "message": "Amended commit message", "files": None},
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -405,22 +400,19 @@ class TestCommitOperations:
         repo_path = str(temp_repo.working_dir)
         commit_hash = "abc123"
 
-        with patch('githound.web.git_operations.GitOperationsManager.revert_commit') as mock_revert:
+        with patch("githound.web.git_operations.GitOperationsManager.revert_commit") as mock_revert:
             mock_revert.return_value = {
                 "reverted_commit": commit_hash,
                 "revert_commit": "revert456",
                 "message": f'Revert "Original commit"\n\nThis reverts commit {commit_hash}.',
-                "status": "reverted"
+                "status": "reverted",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.post(
                 f"/api/v3/repository/{encoded_path}/commits/{commit_hash}/revert",
                 headers=admin_auth_headers,
-                json={
-                    "repo_path": repo_path,
-                    "no_commit": False
-                }
+                json={"repo_path": repo_path, "no_commit": False},
             )
 
             assert response.status_code == status.HTTP_200_OK
@@ -434,23 +426,22 @@ class TestCommitOperations:
         repo_path = str(temp_repo.working_dir)
         commit_hash = "abc123"
 
-        with patch('githound.web.git_operations.GitOperationsManager.cherry_pick_commit') as mock_cherry:
+        with patch(
+            "githound.web.git_operations.GitOperationsManager.cherry_pick_commit"
+        ) as mock_cherry:
             mock_cherry.return_value = {
                 "original_commit": commit_hash,
                 "cherry_pick_commit": "cherry456",
                 "message": "Original commit message",
                 "author": "Original Author <author@example.com>",
-                "status": "cherry_picked"
+                "status": "cherry_picked",
             }
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.post(
                 f"/api/v3/repository/{encoded_path}/commits/{commit_hash}/cherry-pick",
                 headers=admin_auth_headers,
-                json={
-                    "repo_path": repo_path,
-                    "no_commit": False
-                }
+                json={"repo_path": repo_path, "no_commit": False},
             )
 
             assert response.status_code == status.HTTP_200_OK

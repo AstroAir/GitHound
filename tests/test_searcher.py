@@ -1,13 +1,14 @@
 """Tests for GitHound searcher module."""
 
-from unittest.mock import Mock, patch, MagicMock
-import subprocess
 import json
+import subprocess
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest  # Added missing import
 
-from githound.searcher import search_blob_content
 # [attr-defined]
 from githound.models import SearchConfig, SearchResult, SearchType
+from githound.searcher import search_blob_content
 
 
 class TestSearchBlobContent:
@@ -29,25 +30,16 @@ class TestSearchBlobContent:
                 "lines": {"text": "def test_function() -> None:"},
                 "line_number": 1,
                 "absolute_offset": 0,
-                "submatches": [
-                    {
-                        "match": {"text": "test_function"},
-                        "start": 4,
-                        "end": 17
-                    }
-                ]
-            }
+                "submatches": [{"match": {"text": "test_function"}, "start": 4, "end": 17}],
+            },
         }
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(
-                stdout=json.dumps(rg_output) + '\n',
-                stderr='',
-                returncode=0
+                stdout=json.dumps(rg_output) + "\n", stderr="", returncode=0
             )
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 1
             result = results[0]
@@ -68,16 +60,13 @@ class TestSearchBlobContent:
         commit_hash = "abc123"
         file_path = "test.py"
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             # Mock no matches for case sensitive search
             mock_run.return_value = Mock(
-                stdout='',
-                stderr='',
-                returncode=1  # ripgrep returns 1 when no matches found
+                stdout="", stderr="", returncode=1  # ripgrep returns 1 when no matches found
             )
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 0
             # Verify case sensitive flag was passed
@@ -100,25 +89,16 @@ class TestSearchBlobContent:
                 "lines": {"text": "def Test_Function() -> None:"},
                 "line_number": 1,
                 "absolute_offset": 0,
-                "submatches": [
-                    {
-                        "match": {"text": "Test_Function"},
-                        "start": 4,
-                        "end": 17
-                    }
-                ]
-            }
+                "submatches": [{"match": {"text": "Test_Function"}, "start": 4, "end": 17}],
+            },
         }
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(
-                stdout=json.dumps(rg_output) + '\n',
-                stderr='',
-                returncode=0
+                stdout=json.dumps(rg_output) + "\n", stderr="", returncode=0
             )
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 1
             # Verify case insensitive flag was passed
@@ -143,8 +123,8 @@ class TestSearchBlobContent:
                     "lines": {"text": "def test_function() -> None:"},
                     "line_number": 1,
                     "absolute_offset": 0,
-                    "submatches": [{"match": {"text": "test"}, "start": 4, "end": 8}]
-                }
+                    "submatches": [{"match": {"text": "test"}, "start": 4, "end": 8}],
+                },
             },
             {
                 "type": "match",
@@ -155,24 +135,18 @@ class TestSearchBlobContent:
                     "absolute_offset": 20,
                     "submatches": [
                         {"match": {"text": "test"}, "start": 4, "end": 8},
-                        {"match": {"text": "test"}, "start": 15, "end": 19}
-                    ]
-                }
-            }
+                        {"match": {"text": "test"}, "start": 15, "end": 19},
+                    ],
+                },
+            },
         ]
 
-        stdout_content = '\n'.join(json.dumps(output)
-                                   for output in rg_outputs) + '\n'
+        stdout_content = "\n".join(json.dumps(output) for output in rg_outputs) + "\n"
 
-        with patch('subprocess.run') as mock_run:
-            mock_run.return_value = Mock(
-                stdout=stdout_content,
-                stderr='',
-                returncode=0
-            )
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = Mock(stdout=stdout_content, stderr="", returncode=0)
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 2
             assert results[0].line_number == 1
@@ -186,15 +160,12 @@ class TestSearchBlobContent:
         commit_hash = "abc123"
         file_path = "test.py"
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(
-                stdout='',
-                stderr='',
-                returncode=1  # ripgrep returns 1 when no matches found
+                stdout="", stderr="", returncode=1  # ripgrep returns 1 when no matches found
             )
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 0
 
@@ -206,12 +177,11 @@ class TestSearchBlobContent:
         commit_hash = "abc123"
         file_path = "test.py"
 
-        with patch('subprocess.run') as mock_run:
-            mock_run.side_effect = subprocess.CalledProcessError(2, 'rg')
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = subprocess.CalledProcessError(2, "rg")
 
             with pytest.raises(subprocess.CalledProcessError):
-                search_blob_content(content, query, config,
-                                    commit_hash, file_path)
+                search_blob_content(content, query, config, commit_hash, file_path)
 
     def test_search_blob_content_invalid_json(self) -> None:
         """Test handling of invalid JSON output from ripgrep."""
@@ -221,37 +191,27 @@ class TestSearchBlobContent:
         commit_hash = "abc123"
         file_path = "test.py"
 
-        with patch('subprocess.run') as mock_run:
-            mock_run.return_value = Mock(
-                stdout='invalid json output\n',
-                stderr='',
-                returncode=0
-            )
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = Mock(stdout="invalid json output\n", stderr="", returncode=0)
 
             # Should handle invalid JSON gracefully and return empty results
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
             assert len(results) == 0
 
     def test_search_blob_content_binary_content(self) -> None:
         """Test search with binary content."""
         # Binary content (e.g., image file)
-        content = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01'
+        content = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
         query = "test"
         config = SearchConfig(case_sensitive=False)
         commit_hash = "abc123"
         file_path = "image.png"
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             # ripgrep typically returns no matches for binary files
-            mock_run.return_value = Mock(
-                stdout='',
-                stderr='',
-                returncode=1
-            )
+            mock_run.return_value = Mock(stdout="", stderr="", returncode=1)
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 0
 
@@ -263,21 +223,18 @@ class TestSearchBlobContent:
         commit_hash = "abc123"
         file_path = "empty.py"
 
-        with patch('subprocess.run') as mock_run:
-            mock_run.return_value = Mock(
-                stdout='',
-                stderr='',
-                returncode=1
-            )
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = Mock(stdout="", stderr="", returncode=1)
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 0
 
     def test_search_blob_content_regex_pattern(self) -> None:
         """Test search with regex pattern."""
-        content = b"def test_function_1() -> None:\n    pass\ndef test_function_2() -> None:\n    pass\n"
+        content = (
+            b"def test_function_1() -> None:\n    pass\ndef test_function_2() -> None:\n    pass\n"
+        )
         query = r"test_function_\d+"
         config = SearchConfig(case_sensitive=False)
         commit_hash = "abc123"
@@ -291,8 +248,8 @@ class TestSearchBlobContent:
                     "lines": {"text": "def test_function_1() -> None:"},
                     "line_number": 1,
                     "absolute_offset": 0,
-                    "submatches": [{"match": {"text": "test_function_1"}, "start": 4, "end": 19}]
-                }
+                    "submatches": [{"match": {"text": "test_function_1"}, "start": 4, "end": 19}],
+                },
             },
             {
                 "type": "match",
@@ -301,23 +258,17 @@ class TestSearchBlobContent:
                     "lines": {"text": "def test_function_2() -> None:"},
                     "line_number": 3,
                     "absolute_offset": 30,
-                    "submatches": [{"match": {"text": "test_function_2"}, "start": 4, "end": 19}]
-                }
-            }
+                    "submatches": [{"match": {"text": "test_function_2"}, "start": 4, "end": 19}],
+                },
+            },
         ]
 
-        stdout_content = '\n'.join(json.dumps(output)
-                                   for output in rg_outputs) + '\n'
+        stdout_content = "\n".join(json.dumps(output) for output in rg_outputs) + "\n"
 
-        with patch('subprocess.run') as mock_run:
-            mock_run.return_value = Mock(
-                stdout=stdout_content,
-                stderr='',
-                returncode=0
-            )
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = Mock(stdout=stdout_content, stderr="", returncode=0)
 
-            results = search_blob_content(
-                content, query, config, commit_hash, file_path)
+            results = search_blob_content(content, query, config, commit_hash, file_path)
 
             assert len(results) == 2
             # Fixed: line_content -> matching_line

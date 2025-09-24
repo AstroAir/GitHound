@@ -31,7 +31,7 @@ class OAuthProxy(RemoteAuthProvider):
         token_endpoint: str,
         userinfo_endpoint: str | None = None,
         scopes: list[str] | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize OAuth proxy.
@@ -72,8 +72,7 @@ class OAuthProxy(RemoteAuthProvider):
             TokenInfo if valid, None otherwise
         """
         if not self.userinfo_endpoint:
-            logger.warning(
-                "No userinfo endpoint configured for token validation")
+            logger.warning("No userinfo endpoint configured for token validation")
             return None
 
         try:
@@ -82,10 +81,7 @@ class OAuthProxy(RemoteAuthProvider):
                 token = token[7:]
 
             # Call userinfo endpoint
-            request = Request(
-                self.userinfo_endpoint,
-                headers={"Authorization": f"Bearer {token}"}
-            )
+            request = Request(self.userinfo_endpoint, headers={"Authorization": f"Bearer {token}"})
 
             with urlopen(request) as response:
                 user_data = json.loads(response.read().decode("utf-8"))
@@ -93,10 +89,10 @@ class OAuthProxy(RemoteAuthProvider):
             # Extract user information
             user_id = user_data.get("id") or user_data.get("sub")
             username = (
-                user_data.get("login") or
-                user_data.get("preferred_username") or
-                user_data.get("name") or
-                user_id
+                user_data.get("login")
+                or user_data.get("preferred_username")
+                or user_data.get("name")
+                or user_id
             )
             email = user_data.get("email")
 
@@ -112,12 +108,11 @@ class OAuthProxy(RemoteAuthProvider):
                 permissions=[],  # No permissions by default
                 expires_at=None,  # Access tokens don't have expiry in userinfo
                 issuer=self.issuer,
-                audience=self.audience
+                audience=self.audience,
             )
 
         except (URLError, HTTPError, json.JSONDecodeError) as e:
-            logger.warning(
-                f"Error validating token with userinfo endpoint: {e}")
+            logger.warning(f"Error validating token with userinfo endpoint: {e}")
             return None
         except Exception as e:
             logger.error(f"Unexpected error validating token: {e}")
@@ -134,7 +129,7 @@ class OAuthProxy(RemoteAuthProvider):
             "grant_types_supported": ["authorization_code", "refresh_token"],
             "scopes_supported": self.scopes,
             "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
-            "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register"
+            "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register",
         }
 
     def supports_dynamic_client_registration(self) -> bool:
@@ -166,7 +161,7 @@ class OAuthProxy(RemoteAuthProvider):
             "grant_types": ["authorization_code", "refresh_token"],
             "response_types": ["code"],
             "scope": " ".join(self.scopes),
-            "created_at": int(time.time())
+            "created_at": int(time.time()),
         }
 
         return self._registered_clients[client_id]
@@ -192,7 +187,7 @@ class OAuthProxy(RemoteAuthProvider):
             "response_type": "code",
             "scope": " ".join(self.scopes),
             "state": params.get("state", ""),
-            "redirect_uri": f"{self.base_url}/oauth/callback"  # Our callback
+            "redirect_uri": f"{self.base_url}/oauth/callback",  # Our callback
         }
 
         auth_url = f"{self.authorization_endpoint}?{urlencode(auth_params)}"
@@ -219,19 +214,18 @@ class OAuthProxy(RemoteAuthProvider):
             "code": params.get("code"),
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "redirect_uri": f"{self.base_url}/oauth/callback"
+            "redirect_uri": f"{self.base_url}/oauth/callback",
         }
 
         try:
             request = Request(
                 self.token_endpoint,
                 data=urlencode(token_data).encode(),
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
 
             with urlopen(request) as response:
-                token_response = cast(
-                    dict[str, Any], json.loads(response.read().decode("utf-8")))
+                token_response = cast(dict[str, Any], json.loads(response.read().decode("utf-8")))
 
             return token_response
 

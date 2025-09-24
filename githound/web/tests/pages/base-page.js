@@ -74,9 +74,9 @@ class BasePage {
    * Take a screenshot
    */
   async takeScreenshot(name) {
-    return await this.page.screenshot({ 
+    return await this.page.screenshot({
       path: `test-results/screenshots/${name}.png`,
-      fullPage: true 
+      fullPage: true
     });
   }
 

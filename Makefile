@@ -75,7 +75,7 @@ type-check: ## Run type checking with mypy
 	mypy $(SRC_DIR)
 
 .PHONY: quality
-quality: format lint type-check ## Run all code quality checks
+quality: format lint type-check docs-validate-quick ## Run all code quality checks
 
 # Testing
 .PHONY: test
@@ -284,6 +284,31 @@ docs-clean: ## Clean documentation build
 	@echo "$(BLUE)Cleaning documentation...$(NC)"
 	cd $(DOCS_DIR) && mkdocs build --clean
 
+.PHONY: docs-validate
+docs-validate: ## Validate documentation (comprehensive)
+	@echo "$(BLUE)Validating documentation...$(NC)"
+	$(PYTHON) scripts/validate_all_docs.py
+
+.PHONY: docs-validate-quick
+docs-validate-quick: ## Quick documentation validation (skip external links)
+	@echo "$(BLUE)Quick documentation validation...$(NC)"
+	$(PYTHON) scripts/validate_documentation.py --skip-external
+
+.PHONY: docs-validate-links
+docs-validate-links: ## Validate documentation links only
+	@echo "$(BLUE)Validating documentation links...$(NC)"
+	$(PYTHON) scripts/validate_links.py
+
+.PHONY: docs-validate-examples
+docs-validate-examples: ## Validate code examples in documentation
+	@echo "$(BLUE)Validating code examples...$(NC)"
+	$(PYTHON) scripts/validate_docs_examples.py
+
+.PHONY: docs-lint
+docs-lint: ## Lint markdown files
+	@echo "$(BLUE)Linting markdown files...$(NC)"
+	markdownlint "**/*.md" --fix || echo "$(YELLOW)markdownlint not found, install with: npm install -g markdownlint-cli$(NC)"
+
 # Development workflow
 .PHONY: dev-setup
 dev-setup: install-dev ## Complete development environment setup
@@ -293,6 +318,10 @@ dev-setup: install-dev ## Complete development environment setup
 .PHONY: check
 check: quality test-unit ## Run quality checks and unit tests
 	@echo "$(GREEN)All checks passed!$(NC)"
+
+.PHONY: check-docs
+check-docs: docs-validate ## Run comprehensive documentation checks
+	@echo "$(GREEN)Documentation checks passed!$(NC)"
 
 .PHONY: ci
 ci: quality test-all build ## Full CI pipeline

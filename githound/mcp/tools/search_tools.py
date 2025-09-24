@@ -8,24 +8,24 @@ from fastmcp import Context
 from git import GitCommandError
 
 from ...git_handler import get_repository
-from ...models import SearchQuery
+from ...models import SearchQuery, SearchResult
 from ...search_engine import (
+    SearchEngineFactory,
     SearchOrchestrator,
     create_search_orchestrator,
-    SearchEngineFactory,
-    get_global_registry,
     get_global_analytics,
+    get_global_registry,
 )
 from ..models import (
     AdvancedSearchInput,
+    BranchAnalysisInput,
     ContentSearchInput,
+    DiffAnalysisInput,
     FuzzySearchInput,
+    PatternDetectionInput,
+    SearchAnalyticsQueryInput,
     SearchEngineConfigInput,
     SearcherRegistryQueryInput,
-    SearchAnalyticsQueryInput,
-    BranchAnalysisInput,
-    DiffAnalysisInput,
-    PatternDetectionInput,
     StatisticalAnalysisInput,
     TagAnalysisInput,
 )
@@ -64,10 +64,16 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
             commit_hash=input_data.commit_hash,
             author_pattern=input_data.author_pattern,
             message_pattern=input_data.message_pattern,
-            date_from=datetime.fromisoformat(input_data.date_from.replace(
-                "Z", "+00:00")) if input_data.date_from else None,
-            date_to=datetime.fromisoformat(input_data.date_to.replace(
-                "Z", "+00:00")) if input_data.date_to else None,
+            date_from=(
+                datetime.fromisoformat(input_data.date_from.replace("Z", "+00:00"))
+                if input_data.date_from
+                else None
+            ),
+            date_to=(
+                datetime.fromisoformat(input_data.date_to.replace("Z", "+00:00"))
+                if input_data.date_to
+                else None
+            ),
             file_path_pattern=input_data.file_path_pattern,
             file_extensions=input_data.file_extensions,
             case_sensitive=input_data.case_sensitive,
@@ -90,21 +96,35 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
             branch=input_data.branch,
             max_results=input_data.max_results,
         ):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path),
-                "line_number": result.line_number,
-                "matching_line": result.matching_line,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-                "commit_info": {
-                    "author_name": result.commit_info.author_name if result.commit_info else None,
-                    "author_email": result.commit_info.author_email if result.commit_info else None,
-                    "date": result.commit_info.date.isoformat() if result.commit_info and result.commit_info.date else None,
-                    "message": result.commit_info.message if result.commit_info else None,
-                } if result.commit_info else None,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path),
+                    "line_number": result.line_number,
+                    "matching_line": result.matching_line,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                    "commit_info": (
+                        {
+                            "author_name": (
+                                result.commit_info.author_name if result.commit_info else None
+                            ),
+                            "author_email": (
+                                result.commit_info.author_email if result.commit_info else None
+                            ),
+                            "date": (
+                                result.commit_info.date.isoformat()
+                                if result.commit_info and result.commit_info.date
+                                else None
+                            ),
+                            "message": result.commit_info.message if result.commit_info else None,
+                        }
+                        if result.commit_info
+                        else None
+                    ),
+                }
+            )
             result_count += 1
 
             if result_count % 10 == 0:
@@ -136,7 +156,9 @@ async def fuzzy_search(input_data: FuzzySearchInput, ctx: Context) -> dict[str, 
     using fuzzy string matching to find approximate matches.
     """
     try:
-        await ctx.info(f"Starting fuzzy search for '{input_data.search_term}' with threshold {input_data.threshold}")
+        await ctx.info(
+            f"Starting fuzzy search for '{input_data.search_term}' with threshold {input_data.threshold}"
+        )
 
         repo = get_repository(Path(input_data.repo_path))
         orchestrator = get_search_orchestrator()
@@ -169,17 +191,19 @@ async def fuzzy_search(input_data: FuzzySearchInput, ctx: Context) -> dict[str, 
             branch=input_data.branch,
             max_results=input_data.max_results,
         ):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path),
-                "line_number": result.line_number,
-                "matching_line": result.matching_line,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-                # For fuzzy search, relevance is similarity
-                "similarity_score": result.relevance_score,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path),
+                    "line_number": result.line_number,
+                    "matching_line": result.matching_line,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                    # For fuzzy search, relevance is similarity
+                    "similarity_score": result.relevance_score,
+                }
+            )
 
         await ctx.info(f"Fuzzy search complete: {len(results)} results found")
 
@@ -241,14 +265,16 @@ async def content_search(input_data: ContentSearchInput, ctx: Context) -> dict[s
             branch=input_data.branch,
             max_results=input_data.max_results,
         ):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path),
-                "line_number": result.line_number,
-                "matching_line": result.matching_line,
-                "match_context": result.match_context,
-                "relevance_score": result.relevance_score,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path),
+                    "line_number": result.line_number,
+                    "matching_line": result.matching_line,
+                    "match_context": result.match_context,
+                    "relevance_score": result.relevance_score,
+                }
+            )
 
         await ctx.info(f"Content search complete: {len(results)} results found")
 
@@ -269,6 +295,7 @@ async def content_search(input_data: ContentSearchInput, ctx: Context) -> dict[s
 
 
 # Advanced Search Engine Tools
+
 
 async def create_search_engine(input_data: SearchEngineConfigInput, ctx: Context) -> dict[str, Any]:
     """
@@ -293,7 +320,7 @@ async def create_search_engine(input_data: SearchEngineConfigInput, ctx: Context
             enable_pattern_detection=input_data.enable_pattern_detection,
             max_workers=input_data.max_workers,
             cache_backend=input_data.cache_backend,
-            cache_ttl_seconds=input_data.cache_ttl_seconds
+            cache_ttl_seconds=input_data.cache_ttl_seconds,
         )
 
         # Create factory with custom configuration
@@ -329,7 +356,9 @@ async def create_search_engine(input_data: SearchEngineConfigInput, ctx: Context
         return {"status": "error", "error": f"Failed to create search engine: {str(e)}"}
 
 
-async def query_searcher_registry(input_data: SearcherRegistryQueryInput, ctx: Context) -> dict[str, Any]:
+async def query_searcher_registry(
+    input_data: SearcherRegistryQueryInput, ctx: Context
+) -> dict[str, Any]:
     """
     Query the searcher registry for available searchers and their capabilities.
 
@@ -365,18 +394,20 @@ async def query_searcher_registry(input_data: SearcherRegistryQueryInput, ctx: C
         for searcher_name in matching_searchers:
             metadata = registry.get_metadata(searcher_name)
             if metadata:
-                searcher_details.append({
-                    "name": metadata.name,
-                    "description": metadata.description,
-                    "search_types": [st.value for st in metadata.search_types],
-                    "capabilities": metadata.capabilities,
-                    "priority": metadata.priority,
-                    "enabled": metadata.enabled,
-                    "requires_advanced": metadata.requires_advanced,
-                    "performance_cost": metadata.performance_cost,
-                    "memory_usage": metadata.memory_usage,
-                    "dependencies": metadata.dependencies,
-                })
+                searcher_details.append(
+                    {
+                        "name": metadata.name,
+                        "description": metadata.description,
+                        "search_types": [st.value for st in metadata.search_types],
+                        "capabilities": metadata.capabilities,
+                        "priority": metadata.priority,
+                        "enabled": metadata.enabled,
+                        "requires_advanced": metadata.requires_advanced,
+                        "performance_cost": metadata.performance_cost,
+                        "memory_usage": metadata.memory_usage,
+                        "dependencies": metadata.dependencies,
+                    }
+                )
 
         # Get registry statistics
         stats = registry.get_registry_stats()
@@ -395,7 +426,9 @@ async def query_searcher_registry(input_data: SearcherRegistryQueryInput, ctx: C
         return {"status": "error", "error": f"Failed to query registry: {str(e)}"}
 
 
-async def get_search_analytics(input_data: SearchAnalyticsQueryInput, ctx: Context) -> dict[str, Any]:
+async def get_search_analytics(
+    input_data: SearchAnalyticsQueryInput, ctx: Context
+) -> dict[str, Any]:
     """
     Retrieve search performance analytics and usage patterns.
 
@@ -409,6 +442,7 @@ async def get_search_analytics(input_data: SearchAnalyticsQueryInput, ctx: Conte
 
         # Get performance metrics
         from datetime import timedelta
+
         time_range = timedelta(hours=input_data.time_range_hours)
 
         result = {
@@ -463,10 +497,8 @@ async def analyze_branches(input_data: BranchAnalysisInput, ctx: Context) -> dic
 
         # Create SearchQuery for branch analysis
         from ...models import SearchQuery
-        query = SearchQuery(
-            branch_analysis=True,
-            max_results=input_data.max_commits
-        )
+
+        query = SearchQuery(branch_analysis=True, max_results=input_data.max_commits)
 
         # Perform branch analysis search
         results: list[dict[str, Any]] = []
@@ -474,16 +506,18 @@ async def analyze_branches(input_data: BranchAnalysisInput, ctx: Context) -> dic
             repo=repo,
             query=query,
             branch=input_data.branch_name,
-            max_results=input_data.max_commits
+            max_results=input_data.max_commits,
         ):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path) if result.file_path else None,
-                "commit_info": result.commit_info.dict() if result.commit_info else None,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path) if result.file_path else None,
+                    "commit_info": result.commit_info.dict() if result.commit_info else None,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                }
+            )
 
         # Get branch-specific metrics if requested
         branch_metrics = {}
@@ -524,24 +558,29 @@ async def analyze_diffs(input_data: DiffAnalysisInput, ctx: Context) -> dict[str
 
         # Create SearchQuery for diff analysis
         from ...models import SearchQuery
+
         query = SearchQuery(
             diff_analysis=True,
-            file_path_pattern="|".join(input_data.file_patterns) if input_data.file_patterns else None
+            file_path_pattern=(
+                "|".join(input_data.file_patterns) if input_data.file_patterns else None
+            ),
         )
 
         # Perform diff analysis search
         results: list[dict[str, Any]] = []
         async for result in orchestrator.search(repo=repo, query=query):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path) if result.file_path else None,
-                "line_number": result.line_number,
-                "matching_line": result.matching_line,
-                "commit_info": result.commit_info.dict() if result.commit_info else None,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path) if result.file_path else None,
+                    "line_number": result.line_number,
+                    "matching_line": result.matching_line,
+                    "commit_info": result.commit_info.dict() if result.commit_info else None,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                }
+            )
 
         # Calculate diff statistics if requested
         diff_stats = {}
@@ -584,30 +623,34 @@ async def detect_patterns(input_data: PatternDetectionInput, ctx: Context) -> di
 
         # Create SearchQuery for pattern detection
         from ...models import SearchQuery
+
         query = SearchQuery(
             pattern_detection=True,
             file_extensions=input_data.file_extensions,
-            max_results=input_data.max_files
+            max_results=input_data.max_files,
         )
 
         # Perform pattern detection search
         results: list[dict[str, Any]] = []
         async for result in orchestrator.search(repo=repo, query=query):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path) if result.file_path else None,
-                "line_number": result.line_number,
-                "matching_line": result.matching_line,
-                "commit_info": result.commit_info.dict() if result.commit_info else None,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path) if result.file_path else None,
+                    "line_number": result.line_number,
+                    "matching_line": result.matching_line,
+                    "commit_info": result.commit_info.dict() if result.commit_info else None,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                }
+            )
 
         # Group results by pattern type
         pattern_summary: dict[str, int] = {}
-        for result in results:
-            match_context = result.get("match_context", {})
+        for result_dict in results:
+            # result_dict is already dict[str, Any] from the search results
+            match_context = result_dict.get("match_context") or {}
             if isinstance(match_context, dict):
                 pattern_type = match_context.get("pattern_type", "unknown")
             else:
@@ -647,22 +690,24 @@ async def analyze_statistics(input_data: StatisticalAnalysisInput, ctx: Context)
 
         # Create SearchQuery for statistical analysis
         from ...models import SearchQuery
+
         query = SearchQuery(
-            statistical_analysis=True,
-            max_results=1000  # Analyze more data for statistics
+            statistical_analysis=True, max_results=1000  # Analyze more data for statistics
         )
 
         # Perform statistical analysis search
         results: list[dict[str, Any]] = []
         async for result in orchestrator.search(repo=repo, query=query):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path) if result.file_path else None,
-                "commit_info": result.commit_info.dict() if result.commit_info else None,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path) if result.file_path else None,
+                    "commit_info": result.commit_info.dict() if result.commit_info else None,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                }
+            )
 
         # Calculate statistical metrics
         statistics = {
@@ -674,25 +719,24 @@ async def analyze_statistics(input_data: StatisticalAnalysisInput, ctx: Context)
 
         # Group results by specified criteria
         grouped_data: dict[str, list[dict[str, Any]]] = {}
-        for result in results:
-            if input_data.group_by == "author" and result.get("commit_info"):
-                commit_info = result.get("commit_info", {})
-                if isinstance(commit_info, dict):
-                    key = commit_info.get("author_name", "unknown")
+        for result_dict in results:
+            # result_dict is already dict[str, Any] from the search results
+            if input_data.group_by == "author" and result_dict.get("commit_info"):
+                commit_info = result_dict.get("commit_info")
+                if isinstance(commit_info, dict) and commit_info.get('author_name'):
+                    key = commit_info.get('author_name') or "unknown"
                 else:
                     key = "unknown"
-            elif input_data.group_by == "file" and result.get("file_path"):
-                key = str(result.get("file_path", "unknown"))
+            elif input_data.group_by == "file" and result_dict.get("file_path"):
+                key = str(result_dict.get("file_path"))
             else:
                 key = "all"
 
             if key not in grouped_data:
                 grouped_data[key] = []
-            grouped_data[key].append(result)
+            grouped_data[key].append(result_dict)
 
-        statistics["grouped_results"] = {
-            key: len(items) for key, items in grouped_data.items()
-        }
+        statistics["grouped_results"] = {key: len(items) for key, items in grouped_data.items()}
 
         await ctx.info(f"Statistical analysis complete: analyzed {len(results)} items")
 
@@ -725,22 +769,22 @@ async def analyze_tags(input_data: TagAnalysisInput, ctx: Context) -> dict[str, 
 
         # Create SearchQuery for tag analysis
         from ...models import SearchQuery
-        query = SearchQuery(
-            tag_analysis=True,
-            content_pattern=input_data.tag_pattern
-        )
+
+        query = SearchQuery(tag_analysis=True, content_pattern=input_data.tag_pattern)
 
         # Perform tag analysis search
         results: list[dict[str, Any]] = []
         async for result in orchestrator.search(repo=repo, query=query):
-            results.append({
-                "commit_hash": result.commit_hash,
-                "file_path": str(result.file_path) if result.file_path else None,
-                "commit_info": result.commit_info.dict() if result.commit_info else None,
-                "search_type": result.search_type.value,
-                "relevance_score": result.relevance_score,
-                "match_context": result.match_context,
-            })
+            results.append(
+                {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path) if result.file_path else None,
+                    "commit_info": result.commit_info.dict() if result.commit_info else None,
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                    "match_context": result.match_context,
+                }
+            )
 
         # Extract tag information
         tag_info = {

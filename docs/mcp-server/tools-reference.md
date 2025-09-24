@@ -11,15 +11,24 @@ Perform multi-modal search across the repository with comprehensive filtering.
 **Parameters:**
 
 - `repo_path` (required): Path to Git repository
-- `query` (required): Search query string
-- `search_type` (optional): "content", "commit", "author", "file" (default: "content")
 - `branch` (optional): Branch to search (default: current branch)
-- `max_results` (optional): Maximum results to return (default: 100)
-- `case_sensitive` (optional): Case-sensitive search (default: false)
-- `include_patterns` (optional): File patterns to include
-- `exclude_patterns` (optional): File patterns to exclude
+- `content_pattern` (optional): Content search pattern
+- `commit_hash` (optional): Specific commit hash to search
+- `author_pattern` (optional): Author name or email pattern
+- `message_pattern` (optional): Commit message pattern
 - `date_from` (optional): Start date filter (ISO format)
 - `date_to` (optional): End date filter (ISO format)
+- `file_path_pattern` (optional): File path pattern
+- `file_extensions` (optional): List of file extensions to search
+- `case_sensitive` (optional): Case-sensitive search (default: false)
+- `fuzzy_search` (optional): Enable fuzzy matching (default: false)
+- `fuzzy_threshold` (optional): Fuzzy matching threshold 0.0-1.0 (default: 0.8)
+- `max_results` (optional): Maximum results to return (default: 100)
+- `include_globs` (optional): Glob patterns to include
+- `exclude_globs` (optional): Glob patterns to exclude
+- `max_file_size` (optional): Maximum file size in bytes
+- `min_commit_size` (optional): Minimum commit size
+- `max_commit_size` (optional): Maximum commit size
 
 **Returns:** Structured search results with matches, context, and metadata
 
@@ -48,6 +57,32 @@ Search within file contents with advanced pattern matching.
 - `context_lines` (optional): Lines of context around matches (default: 3)
 
 **Returns:** Content matches with file locations and context
+
+### `detect_patterns`
+
+Detect common code patterns and anti-patterns in the repository.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `pattern_types` (optional): Types of patterns to detect
+- `file_extensions` (optional): File extensions to analyze
+- `severity_threshold` (optional): Minimum severity level to report
+
+**Returns:** Detected patterns with locations and severity ratings
+
+### `search_by_tag`
+
+Search repository content by Git tags and releases.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `tag_pattern` (optional): Tag name pattern to search
+- `content_pattern` (optional): Content pattern within tagged versions
+- `include_prereleases` (optional): Include pre-release tags (default: false)
+
+**Returns:** Search results organized by tags and releases
 
 ## Repository Analysis Tools
 
@@ -233,6 +268,32 @@ Get comprehensive author statistics and contributions.
 
 **Returns:** Author statistics including commit counts, lines changed, and activity patterns
 
+### `get_file_blame`
+
+Get detailed blame information for a specific file.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `file_path` (required): Path to file within repository
+- `commit` (optional): Specific commit to blame (default: HEAD)
+- `line_range` (optional): Specific line range to analyze
+
+**Returns:** Line-by-line blame information with author and commit details
+
+### `compare_commits_mcp`
+
+Compare commits using MCP-optimized format.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `commit1` (required): First commit hash
+- `commit2` (required): Second commit hash
+- `format` (optional): Output format ("detailed", "summary")
+
+**Returns:** MCP-formatted commit comparison data
+
 ## Export & Management Tools
 
 ### `export_repository_data`
@@ -283,54 +344,58 @@ GitHound provides 7 dynamic MCP resources for real-time data access:
 
 - `githound://repository/{repo_path}/config` - Repository configuration and metadata
 - `githound://repository/{repo_path}/branches` - All branches with detailed information
-- `githound://repository/{repo_path}/tags` - All tags with annotations
 - `githound://repository/{repo_path}/contributors` - Contributor statistics and activity
-
-### Analysis Resources
-
 - `githound://repository/{repo_path}/summary` - Repository summary and health metrics
-- `githound://repository/{repo_path}/activity` - Recent activity and trends
-- `githound://repository/{repo_path}/files` - File structure and statistics
+
+### File Resources
+
+- `githound://repository/{repo_path}/files/{file_path}/history` - Complete file change history
+- `githound://repository/{repo_path}/commits/{commit_hash}/details` - Detailed commit information
+- `githound://repository/{repo_path}/blame/{file_path}` - File blame information
 
 ## MCP Prompts
 
 GitHound provides 3 specialized prompts for common workflows:
 
-### `analyze_codebase`
+### `investigate_bug_prompt`
 
-Comprehensive codebase analysis prompt that guides through:
+Bug investigation prompt that guides through:
 
-- Repository structure analysis
-- Code quality assessment
-- Contributor activity review
-- Security and maintenance recommendations
+**Parameters:**
 
-### `investigate_changes`
+- `bug_description` (required): Description of the bug to investigate
+- `suspected_files` (optional): Files that might be related to the bug
+- `time_frame` (optional): Time frame to focus investigation (default: "last 30 days")
 
-Change investigation prompt for:
+### `prepare_code_review_prompt`
 
-- Tracking specific changes or features
-- Understanding code evolution
-- Identifying related commits and authors
-- Impact analysis
+Code review preparation prompt for:
 
-### `generate_insights`
+**Parameters:**
 
-Repository insights generation prompt for:
+- `branch_name` (required): Branch to review
+- `base_branch` (optional): Base branch for comparison (default: "main")
+- `focus_areas` (optional): Specific areas to focus on during review
 
-- Trend analysis and patterns
-- Performance and activity metrics
-- Collaboration and workflow insights
-- Strategic recommendations
+### `analyze_performance_regression_prompt`
+
+Performance regression analysis prompt for:
+
+**Parameters:**
+
+- `performance_issue` (required): Description of the performance issue
+- `suspected_timeframe` (optional): When the regression might have occurred (default: "last 2 weeks")
+- `affected_components` (optional): Components that might be affected
 
 ## Tool Categories Summary
 
-### Search & Discovery (4 tools)
+### Search & Discovery (5 tools)
 
 - `advanced_search` - Multi-modal repository search
 - `fuzzy_search` - Fuzzy string matching
 - `content_search` - Advanced content pattern matching
-- Pattern analysis capabilities
+- `detect_patterns` - Code pattern detection
+- `search_by_tag` - Tag-based search capabilities
 
 ### Repository Management (7 tools)
 
@@ -342,30 +407,35 @@ Repository insights generation prompt for:
 - `validate_repository` - Repository health checks
 - `generate_repository_report` - Comprehensive reporting
 
-### Commit Analysis (4 tools)
+### Commit Analysis (5 tools)
 
 - `analyze_commit` - Detailed commit information
 - `get_commit_history` - Historical commit data
 - `compare_commits_diff` - Commit comparison
 - `compare_branches_diff` - Branch comparison
+- `compare_commits_mcp` - MCP-optimized commit comparison
 
-### File Operations (2 tools)
+### File Operations (3 tools)
 
 - `get_file_history_mcp` - File change history
 - `analyze_file_blame` - Line-by-line authorship
+- `get_file_blame` - Detailed blame information
 
-### Statistics & Export (3 tools)
+### Statistics & Export (4 tools)
 
 - `get_author_stats` - Author contribution analysis
 - `export_repository_data` - Data export capabilities
 - `start_web_server` - Web interface access
+- Advanced statistics and reporting tools
 
-### Utilities (5+ tools)
+### Utilities (1+ tools)
 
 - Various utility functions for repository validation
 - Configuration management
 - Performance optimization
 - Error handling and diagnostics
+
+**Total: 25+ Tools** providing comprehensive Git repository analysis and search capabilities.
 
 ## Usage Patterns
 

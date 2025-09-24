@@ -15,9 +15,44 @@ from .base import BaseSearcher, SearchContext
 
 
 class SearchOrchestrator:
-    """Orchestrates multiple searchers to handle complex queries."""
+    """Orchestrates multiple searchers to handle complex queries.
+
+    The SearchOrchestrator is the central component of GitHound's search engine,
+    coordinating multiple specialized searchers to handle complex, multi-modal queries.
+    It provides intelligent query routing, result ranking, caching, and performance
+    monitoring capabilities.
+
+    Key Features:
+        - Multi-searcher coordination with parallel execution
+        - Intelligent query routing based on searcher capabilities
+        - Result ranking and relevance scoring
+        - Caching layer for improved performance
+        - Performance metrics and analytics
+        - Progress reporting for long-running operations
+
+    Example:
+        ```python
+        from githound.search_engine import SearchOrchestrator, CommitHashSearcher
+        from githound.models import SearchQuery
+
+        # Create and configure orchestrator
+        orchestrator = SearchOrchestrator()
+        orchestrator.register_searcher(CommitHashSearcher())
+
+        # Perform search
+        query = SearchQuery(commit_hash="abc123")
+        async for result in orchestrator.search(repo, query):
+            print(f"Found: {result.commit_hash}")
+        ```
+    """
 
     def __init__(self) -> None:
+        """Initialize the SearchOrchestrator with default configuration.
+
+        Creates an empty orchestrator with no searchers registered.
+        Additional components (cache, ranking engine, analytics) can be
+        configured using the respective setter methods.
+        """
         self._searchers: list[BaseSearcher] = []
         self._cache = None
         self._ranking_engine = None
@@ -34,7 +69,24 @@ class SearchOrchestrator:
         )
 
     def register_searcher(self, searcher: BaseSearcher) -> None:
-        """Register a searcher with the orchestrator."""
+        """Register a searcher with the orchestrator.
+
+        Adds a searcher to the orchestrator's registry. The searcher will be
+        consulted for all future search operations and will be included in
+        parallel search execution if it can handle the given query.
+
+        Args:
+            searcher: The searcher instance to register. Must implement BaseSearcher.
+
+        Example:
+            ```python
+            from githound.search_engine import CommitHashSearcher, AuthorSearcher
+
+            orchestrator = SearchOrchestrator()
+            orchestrator.register_searcher(CommitHashSearcher())
+            orchestrator.register_searcher(AuthorSearcher())
+            ```
+        """
         self._searchers.append(searcher)
 
     def unregister_searcher(self, searcher: BaseSearcher) -> None:
@@ -92,7 +144,7 @@ class SearchOrchestrator:
         query: SearchQuery,
         branch: str | None = None,
         progress_callback: Callable[[str, float], None] | None = None,
-        cache: dict | None = None,
+        cache: dict[str, Any] | None = None,
         max_results: int | None = None,
     ) -> AsyncGenerator[SearchResult, None]:
         """
@@ -118,9 +170,7 @@ class SearchOrchestrator:
         try:
             # Start analytics tracking if available
             if self._analytics:
-                search_id = await self._analytics.start_search(
-                    query, str(repo.working_dir), branch
-                )
+                search_id = await self._analytics.start_search(query, str(repo.working_dir), branch)
             # Create search context
             # Use internal cache if no cache provided
             effective_cache = cache if cache is not None else self._cache
@@ -128,6 +178,7 @@ class SearchOrchestrator:
             # Ensure forward references are resolved for SearchContext
             try:
                 from .cache import SearchCache
+
                 SearchContext.update_forward_refs(SearchCache=SearchCache)
             except Exception:
                 pass  # Ignore if already resolved or other issues
@@ -185,8 +236,7 @@ class SearchOrchestrator:
                 return searcher_results
 
             # Run all searchers concurrently
-            searcher_tasks = [run_searcher(searcher)
-                              for searcher in applicable_searchers]
+            searcher_tasks = [run_searcher(searcher) for searcher in applicable_searchers]
             all_results = await asyncio.gather(*searcher_tasks)
 
             # Flatten results
@@ -203,8 +253,7 @@ class SearchOrchestrator:
                 )
             else:
                 # Fallback to simple relevance score sorting
-                flattened_results.sort(
-                    key=lambda r: r.relevance_score, reverse=True)
+                flattened_results.sort(key=lambda r: r.relevance_score, reverse=True)
 
             # Apply result processing if processor is available
             if self._result_processor and flattened_results:
@@ -240,7 +289,7 @@ class SearchOrchestrator:
                         cache_misses=self._metrics.cache_misses,
                         memory_usage_mb=self._metrics.memory_usage_mb,
                         error_count=0,  # TODO: Track errors properly
-                        searcher_count=searcher_count
+                        searcher_count=searcher_count,
                     )
                 except Exception:
                     # Don't let analytics errors break the search

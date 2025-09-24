@@ -44,18 +44,18 @@ jobs:
           script: |
             const fs = require('fs');
             const { execSync } = require('child_process');
-            
+
             // Get current date for reporting period
             const now = new Date();
             const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
             const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            
+
             // Repository basic info
             const { data: repo } = await github.rest.repos.get({
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            
+
             // Get recent commits
             const { data: commits } = await github.rest.repos.listCommits({
               owner: context.repo.owner,
@@ -63,7 +63,7 @@ jobs:
               since: thirtyDaysAgo.toISOString(),
               per_page: 100
             });
-            
+
             // Get recent PRs
             const { data: prs } = await github.rest.pulls.list({
               owner: context.repo.owner,
@@ -73,7 +73,7 @@ jobs:
               direction: 'desc',
               per_page: 100
             });
-            
+
             // Get recent issues
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -83,27 +83,27 @@ jobs:
               direction: 'desc',
               per_page: 100
             });
-            
+
             // Filter recent items
             const recentCommits = commits.filter(c => new Date(c.commit.author.date) > sevenDaysAgo);
             const recentPRs = prs.filter(pr => new Date(pr.updated_at) > sevenDaysAgo);
-            const recentIssues = issues.filter(issue => 
+            const recentIssues = issues.filter(issue =>
               !issue.pull_request && new Date(issue.updated_at) > sevenDaysAgo
             );
-            
+
             // Calculate code metrics
             let codeStats = {};
             try {
               const output = execSync('find githound -name "*.py" -exec wc -l {} + | tail -1', { encoding: 'utf8' });
               const totalLines = parseInt(output.trim().split(' ')[0]);
               codeStats.totalLines = totalLines;
-              
+
               const fileCount = execSync('find githound -name "*.py" | wc -l', { encoding: 'utf8' });
               codeStats.pythonFiles = parseInt(fileCount.trim());
             } catch (error) {
               codeStats = { totalLines: 0, pythonFiles: 0 };
             }
-            
+
             const metrics = {
               timestamp: now.toISOString(),
               repository: {
@@ -125,7 +125,7 @@ jobs:
                 last30Days: {
                   commits: commits.length,
                   prs: prs.filter(pr => new Date(pr.updated_at) > thirtyDaysAgo).length,
-                  issues: issues.filter(issue => 
+                  issues: issues.filter(issue =>
                     !issue.pull_request && new Date(issue.updated_at) > thirtyDaysAgo
                   ).length
                 }
@@ -133,10 +133,10 @@ jobs:
               code: codeStats,
               contributors: [...new Set(commits.map(c => c.author?.login).filter(Boolean))].length
             };
-            
+
             // Save metrics to file
             fs.writeFileSync('metrics.json', JSON.stringify(metrics, null, 2));
-            
+
             return metrics;
 
       - name: Upload metrics artifact
@@ -158,15 +158,15 @@ jobs:
         with:
           script: |
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-            
+
             // Get workflow runs
             const { data: workflows } = await github.rest.actions.listRepoWorkflows({
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            
+
             const workflowMetrics = {};
-            
+
             for (const workflow of workflows.workflows) {
               const { data: runs } = await github.rest.actions.listWorkflowRuns({
                 owner: context.repo.owner,
@@ -175,19 +175,19 @@ jobs:
                 per_page: 100,
                 created: `>=${thirtyDaysAgo.toISOString()}`
               });
-              
+
               const successfulRuns = runs.workflow_runs.filter(run => run.conclusion === 'success');
               const failedRuns = runs.workflow_runs.filter(run => run.conclusion === 'failure');
               const totalRuns = runs.workflow_runs.length;
-              
+
               // Calculate average duration for successful runs
-              const avgDuration = successfulRuns.length > 0 
+              const avgDuration = successfulRuns.length > 0
                 ? successfulRuns.reduce((sum, run) => {
                     const duration = new Date(run.updated_at) - new Date(run.created_at);
                     return sum + duration;
                   }, 0) / successfulRuns.length / 1000 / 60 // Convert to minutes
                 : 0;
-              
+
               workflowMetrics[workflow.name] = {
                 id: workflow.id,
                 totalRuns: totalRuns,
@@ -198,7 +198,7 @@ jobs:
                 lastRun: runs.workflow_runs[0]?.created_at || null
               };
             }
-            
+
             return workflowMetrics;
 
   generate-report:
@@ -212,68 +212,68 @@ jobs:
           script: |
             const metrics = ${{ needs.collect-metrics.outputs.metrics }};
             const workflowMetrics = ${{ needs.workflow-metrics.outputs.workflow_metrics }};
-            
+
             const reportType = '${{ github.event.inputs.report_type }}' || 'daily';
             const date = new Date().toISOString().split('T')[0];
-            
+
             // Generate markdown report
             const report = `# GitHound Metrics Report - ${date}
-            
+
             ## 📊 Repository Overview
-            
+
             - **Stars:** ${metrics.repository.stars} ⭐
             - **Forks:** ${metrics.repository.forks} 🍴
             - **Watchers:** ${metrics.repository.watchers} 👀
             - **Open Issues:** ${metrics.repository.openIssues} 🐛
             - **Repository Size:** ${(metrics.repository.size / 1024).toFixed(2)} MB
-            
+
             ## 📈 Activity Metrics
-            
+
             ### Last 7 Days
             - **Commits:** ${metrics.activity.last7Days.commits}
             - **Pull Requests:** ${metrics.activity.last7Days.prs}
             - **Issues:** ${metrics.activity.last7Days.issues}
-            
+
             ### Last 30 Days
             - **Commits:** ${metrics.activity.last30Days.commits}
             - **Pull Requests:** ${metrics.activity.last30Days.prs}
             - **Issues:** ${metrics.activity.last30Days.issues}
             - **Active Contributors:** ${metrics.contributors}
-            
+
             ## 💻 Code Metrics
-            
+
             - **Python Files:** ${metrics.code.pythonFiles}
             - **Total Lines of Code:** ${metrics.code.totalLines.toLocaleString()}
-            
+
             ## 🔄 Workflow Performance
-            
+
             | Workflow | Runs | Success Rate | Avg Duration | Status |
             |----------|------|--------------|--------------|--------|`;
-            
+
             for (const [name, data] of Object.entries(workflowMetrics)) {
               const status = data.successRate >= 90 ? '✅' : data.successRate >= 70 ? '⚠️' : '❌';
               report += `\n| ${name} | ${data.totalRuns} | ${data.successRate}% | ${data.avgDurationMinutes}m | ${status} |`;
             }
-            
+
             report += `\n\n## 🎯 Key Insights
-            
+
             - **Most Active Workflow:** ${Object.entries(workflowMetrics).sort((a, b) => b[1].totalRuns - a[1].totalRuns)[0]?.[0] || 'N/A'}
             - **Best Performing Workflow:** ${Object.entries(workflowMetrics).sort((a, b) => b[1].successRate - a[1].successRate)[0]?.[0] || 'N/A'}
             - **Development Velocity:** ${(metrics.activity.last7Days.commits / 7).toFixed(1)} commits/day
-            
+
             ## 📋 Recommendations
-            
+
             ${workflowMetrics['CI/CD']?.successRate < 90 ? '- ⚠️ CI/CD success rate is below 90%. Consider investigating recent failures.' : '- ✅ CI/CD pipeline is performing well.'}
             ${metrics.activity.last7Days.commits === 0 ? '- 📉 No commits in the last 7 days. Consider checking development activity.' : '- ✅ Active development detected.'}
             ${metrics.repository.openIssues > 20 ? '- 📝 High number of open issues. Consider triaging and prioritizing.' : '- ✅ Issue count is manageable.'}
-            
+
             ---
             *Report generated on ${new Date().toISOString()}*
             `;
-            
+
             // Create or update metrics issue
             const title = `📊 ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Metrics Report - ${date}`;
-            
+
             // Check for existing metrics issue
             const { data: existingIssues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -281,12 +281,12 @@ jobs:
               labels: 'metrics,automated',
               state: 'open'
             });
-            
-            const existingIssue = existingIssues.find(issue => 
-              issue.title.includes('Metrics Report') && 
+
+            const existingIssue = existingIssues.find(issue =>
+              issue.title.includes('Metrics Report') &&
               issue.title.includes(date)
             );
-            
+
             if (existingIssue) {
               // Update existing issue
               await github.rest.issues.update({
@@ -305,7 +305,7 @@ jobs:
                 labels: ['metrics', 'automated', 'documentation']
               });
             }
-            
+
             console.log('Metrics report generated successfully!');
 
   health-check:
@@ -319,9 +319,9 @@ jobs:
           script: |
             const metrics = ${{ needs.collect-metrics.outputs.metrics }};
             const workflowMetrics = ${{ needs.workflow-metrics.outputs.workflow_metrics }};
-            
+
             const issues = [];
-            
+
             // Check workflow health
             for (const [name, data] of Object.entries(workflowMetrics)) {
               if (data.successRate < 70) {
@@ -330,29 +330,29 @@ jobs:
                 issues.push(`🟡 Workflow "${name}" success rate could be improved: ${data.successRate}%`);
               }
             }
-            
+
             // Check activity levels
             if (metrics.activity.last7Days.commits === 0) {
               issues.push('🟡 No commits in the last 7 days');
             }
-            
+
             // Check issue count
             if (metrics.repository.openIssues > 50) {
               issues.push(`🟡 High number of open issues: ${metrics.repository.openIssues}`);
             }
-            
+
             if (issues.length > 0) {
               const alertBody = `# 🚨 Repository Health Alert
-              
+
               The following issues were detected in the repository health check:
-              
+
               ${issues.map(issue => `- ${issue}`).join('\n')}
-              
+
               Please review and address these issues to maintain repository health.
-              
+
               ---
               *Automated health check performed on ${new Date().toISOString()}*`;
-              
+
               // Create health alert issue
               await github.rest.issues.create({
                 owner: context.repo.owner,

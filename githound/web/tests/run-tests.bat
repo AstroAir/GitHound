@@ -286,10 +286,10 @@ REM Run tests based on browser selection
 if "%BROWSER%"=="all" (
     call :run_browser_tests chromium
     if !errorlevel! neq 0 set exit_code=1
-    
+
     call :run_browser_tests firefox
     if !errorlevel! neq 0 set exit_code=1
-    
+
     call :run_browser_tests webkit
     if !errorlevel! neq 0 set exit_code=1
 ) else (
@@ -300,9 +300,9 @@ if "%BROWSER%"=="all" (
 REM Generate coverage if requested
 if "%COVERAGE%"=="true" (
     echo [INFO] Generating coverage reports
-    
+
     node -e "const CoverageReporter = require('./utils/coverage-reporter.js'); const reporter = new CoverageReporter({ outputDir: '%OUTPUT_DIR%/coverage', generateHtml: true, threshold: { statements: 75, branches: 70, functions: 75, lines: 75 } }); reporter.generateReports();"
-    
+
     if !errorlevel! equ 0 (
         echo [SUCCESS] Coverage reports generated in %OUTPUT_DIR%/coverage
     ) else (

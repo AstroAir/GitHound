@@ -39,8 +39,7 @@ class FilePathSearcher(CacheableSearcher):
             return
 
         search_start_time = time.time()
-        self._report_progress(
-            context, f"Searching for files matching '{file_pattern}'...", 0.0)
+        self._report_progress(context, f"Searching for files matching '{file_pattern}'...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -97,8 +96,7 @@ class FilePathSearcher(CacheableSearcher):
                                 files_changed=len(commit.stats.files),
                                 insertions=commit.stats.total["insertions"],
                                 deletions=commit.stats.total["deletions"],
-                                parents=[
-                                    parent.hexsha for parent in commit.parents],
+                                parents=[parent.hexsha for parent in commit.parents],
                             )
 
                             result = SearchResult(
@@ -128,8 +126,7 @@ class FilePathSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(
-                context, f"Error searching file paths: {e}", 1.0)
+            self._report_progress(context, f"Error searching file paths: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -217,8 +214,7 @@ class FileTypeSearcher(CacheableSearcher):
                                 files_changed=len(commit.stats.files),
                                 insertions=commit.stats.total["insertions"],
                                 deletions=commit.stats.total["deletions"],
-                                parents=[
-                                    parent.hexsha for parent in commit.parents],
+                                parents=[parent.hexsha for parent in commit.parents],
                             )
 
                             result = SearchResult(
@@ -249,8 +245,7 @@ class FileTypeSearcher(CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(
-                context, f"Error searching file types: {e}", 1.0)
+            self._report_progress(context, f"Error searching file types: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -299,8 +294,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
             return
 
         search_start_time = time.time()
-        self._report_progress(
-            context, f"Searching file content for '{content_pattern}'...", 0.0)
+        self._report_progress(context, f"Searching file content for '{content_pattern}'...", 0.0)
 
         branch = context.branch or context.repo.active_branch.name
 
@@ -354,8 +348,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                     files_changed=len(commit.stats.files),
                                     insertions=commit.stats.total["insertions"],
                                     deletions=commit.stats.total["deletions"],
-                                    parents=[
-                                        parent.hexsha for parent in commit.parents],
+                                    parents=[parent.hexsha for parent in commit.parents],
                                 )
 
                                 # Calculate relevance score based on match quality
@@ -378,7 +371,9 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                         "column_start": match.get("column_start"),
                                         "column_end": match.get("column_end"),
                                     },
-                                    search_time_ms=self._calculate_search_time_ms(search_start_time),
+                                    search_time_ms=self._calculate_search_time_ms(
+                                        search_start_time
+                                    ),
                                 )
 
                                 results_found += 1
@@ -397,8 +392,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                     )
 
         except Exception as e:
-            self._report_progress(
-                context, f"Error searching content: {e}", 1.0)
+            self._report_progress(context, f"Error searching content: {e}", 1.0)
 
         finally:
             self._update_metrics(
@@ -435,7 +429,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
 
     async def _search_content_with_ripgrep(
         self, content: bytes, pattern: str, query: SearchQuery
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Search content using ripgrep and return structured results."""
         rg_args = ["rg", "--json", pattern, "-"]
 
@@ -472,7 +466,9 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         except (subprocess.CalledProcessError, FileNotFoundError):
             return []
 
-    def _calculate_relevance_score(self, match: dict, pattern: str, file_path: str) -> float:
+    def _calculate_relevance_score(
+        self, match: dict[str, Any], pattern: str, file_path: str
+    ) -> float:
         """Calculate relevance score for a content match."""
         score = 0.5  # Base score
 
@@ -481,8 +477,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
             score += 0.3
 
         # Boost score for matches in important file types
-        important_extensions = [".py", ".js", ".java",
-                                ".cpp", ".c", ".h", ".md", ".txt"]
+        important_extensions = [".py", ".js", ".java", ".cpp", ".c", ".h", ".md", ".txt"]
         if any(file_path.endswith(ext) for ext in important_extensions):
             score += 0.1
 

@@ -26,7 +26,7 @@ class GitHubProvider(OAuthProxy):
         client_secret: str,
         base_url: str,
         scopes: list[str] | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize GitHub OAuth provider.
@@ -45,20 +45,19 @@ class GitHubProvider(OAuthProxy):
             token_endpoint="https://github.com/login/oauth/access_token",
             userinfo_endpoint="https://api.github.com/user",
             scopes=scopes or ["user:email"],
-            **kwargs
+            **kwargs,
         )
 
     def _load_from_environment(self) -> None:
         """Load GitHub OAuth configuration from environment variables."""
         prefix = "FASTMCP_SERVER_AUTH_GITHUB_"
 
-        if not hasattr(self, 'client_id'):
+        if not hasattr(self, "client_id"):
             self.client_id = os.getenv(f"{prefix}CLIENT_ID") or ""
-        if not hasattr(self, 'client_secret'):
+        if not hasattr(self, "client_secret"):
             self.client_secret = os.getenv(f"{prefix}CLIENT_SECRET") or ""
-        if not hasattr(self, 'base_url'):
-            self.base_url = os.getenv(
-                "FASTMCP_SERVER_BASE_URL", "http://localhost:8000")
+        if not hasattr(self, "base_url"):
+            self.base_url = os.getenv("FASTMCP_SERVER_BASE_URL", "http://localhost:8000")
 
         # Validate required configuration
         if not all([self.client_id, self.client_secret]):
@@ -67,8 +66,7 @@ class GitHubProvider(OAuthProxy):
                 missing.append(f"{prefix}CLIENT_ID")
             if not self.client_secret:
                 missing.append(f"{prefix}CLIENT_SECRET")
-            raise ValueError(
-                f"Missing required GitHub OAuth configuration: {', '.join(missing)}")
+            raise ValueError(f"Missing required GitHub OAuth configuration: {', '.join(missing)}")
 
     async def validate_token(self, token: str) -> TokenInfo | None:
         """
@@ -91,8 +89,8 @@ class GitHubProvider(OAuthProxy):
                 headers={
                     "Authorization": f"token {token}",
                     "Accept": "application/vnd.github.v3+json",
-                    "User-Agent": "GitHound-MCP-Server"
-                }
+                    "User-Agent": "GitHound-MCP-Server",
+                },
             )
 
             with urllib.request.urlopen(request) as response:
@@ -107,21 +105,19 @@ class GitHubProvider(OAuthProxy):
                         headers={
                             "Authorization": f"token {token}",
                             "Accept": "application/vnd.github.v3+json",
-                            "User-Agent": "GitHound-MCP-Server"
-                        }
+                            "User-Agent": "GitHound-MCP-Server",
+                        },
                     )
 
                     with urllib.request.urlopen(email_request) as email_response:
-                        emails = json.loads(
-                            email_response.read().decode("utf-8"))
+                        emails = json.loads(email_response.read().decode("utf-8"))
                         # Find primary email
                         for email_data in emails:
                             if email_data.get("primary"):
                                 email = email_data.get("email")
                                 break
                 except Exception as e:
-                    logger.warning(
-                        f"Could not fetch user email from GitHub: {e}")
+                    logger.warning(f"Could not fetch user email from GitHub: {e}")
 
             # Extract user information
             user_id = str(user_data.get("id"))
@@ -129,8 +125,7 @@ class GitHubProvider(OAuthProxy):
             name = user_data.get("name") or username
 
             if not user_id or not username:
-                logger.warning(
-                    "GitHub API response missing required user data")
+                logger.warning("GitHub API response missing required user data")
                 return None
 
             # Determine permissions based on GitHub user type
@@ -146,7 +141,7 @@ class GitHubProvider(OAuthProxy):
                 permissions=permissions,
                 expires_at=None,  # GitHub tokens don't expire
                 issuer="https://github.com",
-                audience=self.client_id
+                audience=self.client_id,
             )
 
         except urllib.error.HTTPError as e:
@@ -162,11 +157,13 @@ class GitHubProvider(OAuthProxy):
     def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for GitHub integration."""
         metadata = super().get_oauth_metadata()
-        metadata.update({
-            "scopes_supported": ["user", "user:email", "repo", "public_repo"],
-            "provider": "github",
-            "provider_name": "GitHub"
-        })
+        metadata.update(
+            {
+                "scopes_supported": ["user", "user:email", "repo", "public_repo"],
+                "provider": "github",
+                "provider_name": "GitHub",
+            }
+        )
         return metadata
 
 
@@ -184,7 +181,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
         base_url: str,
         github_base_url: str,
         scopes: list[str] | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize GitHub Enterprise OAuth provider.
@@ -203,7 +200,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
             client_secret=client_secret,
             base_url=base_url,
             scopes=scopes,
-            **kwargs
+            **kwargs,
         )
 
         # Override endpoints for GitHub Enterprise
@@ -215,15 +212,14 @@ class GitHubEnterpriseProvider(GitHubProvider):
         """Load GitHub Enterprise OAuth configuration from environment variables."""
         prefix = "FASTMCP_SERVER_AUTH_GITHUB_ENTERPRISE_"
 
-        if not hasattr(self, 'client_id'):
+        if not hasattr(self, "client_id"):
             self.client_id = os.getenv(f"{prefix}CLIENT_ID") or ""
-        if not hasattr(self, 'client_secret'):
+        if not hasattr(self, "client_secret"):
             self.client_secret = os.getenv(f"{prefix}CLIENT_SECRET") or ""
-        if not hasattr(self, 'github_base_url'):
+        if not hasattr(self, "github_base_url"):
             self.github_base_url = os.getenv(f"{prefix}BASE_URL") or ""
-        if not hasattr(self, 'base_url'):
-            self.base_url = os.getenv(
-                "FASTMCP_SERVER_BASE_URL", "http://localhost:8000")
+        if not hasattr(self, "base_url"):
+            self.base_url = os.getenv("FASTMCP_SERVER_BASE_URL", "http://localhost:8000")
 
         # Validate required configuration
         if not all([self.client_id, self.client_secret, self.github_base_url]):
@@ -235,7 +231,8 @@ class GitHubEnterpriseProvider(GitHubProvider):
             if not self.github_base_url:
                 missing.append(f"{prefix}BASE_URL")
             raise ValueError(
-                f"Missing required GitHub Enterprise OAuth configuration: {', '.join(missing)}")
+                f"Missing required GitHub Enterprise OAuth configuration: {', '.join(missing)}"
+            )
 
     async def validate_token(self, token: str) -> TokenInfo | None:
         """
@@ -258,8 +255,8 @@ class GitHubEnterpriseProvider(GitHubProvider):
                 headers={
                     "Authorization": f"token {token}",
                     "Accept": "application/vnd.github.v3+json",
-                    "User-Agent": "GitHound-MCP-Server"
-                }
+                    "User-Agent": "GitHound-MCP-Server",
+                },
             )
 
             with urllib.request.urlopen(request) as response:
@@ -271,8 +268,7 @@ class GitHubEnterpriseProvider(GitHubProvider):
             email = user_data.get("email")
 
             if not user_id or not username:
-                logger.warning(
-                    "GitHub Enterprise API response missing required user data")
+                logger.warning("GitHub Enterprise API response missing required user data")
                 return None
 
             return TokenInfo(
@@ -283,15 +279,14 @@ class GitHubEnterpriseProvider(GitHubProvider):
                 permissions=["read"],
                 expires_at=None,
                 issuer=self.github_base_url,
-                audience=self.client_id
+                audience=self.client_id,
             )
 
         except urllib.error.HTTPError as e:
             if e.code == 401:
                 logger.warning("GitHub Enterprise token is invalid or expired")
             else:
-                logger.warning(
-                    f"GitHub Enterprise API error: {e.code} {e.reason}")
+                logger.warning(f"GitHub Enterprise API error: {e.code} {e.reason}")
             return None
         except Exception as e:
             logger.error(f"Error validating GitHub Enterprise token: {e}")

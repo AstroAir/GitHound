@@ -76,7 +76,7 @@ test.describe('Network Error Handling Tests', () => {
 
       // Attempt multiple searches
       const searches = ['function', 'import', 'class'];
-      
+
       for (const query of searches) {
         await page.fill('[data-testid="search-input"]', query);
         await page.click('[data-testid="search-button"]');
@@ -93,7 +93,7 @@ test.describe('Network Error Handling Tests', () => {
           const retryButton = page.locator('[data-testid="retry-button"]');
           if (await retryButton.count() > 0) {
             await retryButton.click();
-            
+
             // Retry should eventually succeed
             await page.waitForSelector('[data-testid="search-results"], [data-testid="error-message"]', { timeout: 10000 });
           }
@@ -455,7 +455,7 @@ test.describe('Network Error Handling Tests', () => {
       const retryButton = page.locator('[data-testid="retry-button"]');
       if (await retryButton.count() > 0) {
         await retryButton.click();
-        
+
         // Should now succeed
         await page.waitForSelector('[data-testid="search-results"], [data-testid="error-message"]', { timeout: 10000 });
       }

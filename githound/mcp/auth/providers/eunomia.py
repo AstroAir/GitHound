@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 # Check if eunomia-mcp is available
 try:
-    from eunomia_mcp import create_eunomia_middleware
+    from eunomia_mcp import create_eunomia_middleware  # type: ignore[import-not-found]
+
     EUNOMIA_AVAILABLE = True
 except ImportError:
     EUNOMIA_AVAILABLE = False
-    logger.warning(
-        "eunomia-mcp not available. Install with: pip install eunomia-mcp")
+    logger.warning("eunomia-mcp not available. Install with: pip install eunomia-mcp")
 
 
 @dataclass
@@ -50,7 +50,8 @@ class EunomiaAuthorizationProvider(AuthProvider):
         """
         if not EUNOMIA_AVAILABLE:
             raise ImportError(
-                "eunomia-mcp is required for EunomiaAuthorizationProvider. Install with: pip install eunomia-mcp")
+                "eunomia-mcp is required for EunomiaAuthorizationProvider. Install with: pip install eunomia-mcp"
+            )
 
         super().__init__(**kwargs)
         self.base_provider = base_provider
@@ -61,11 +62,14 @@ class EunomiaAuthorizationProvider(AuthProvider):
     def _load_from_environment(self) -> None:
         """Load Eunomia configuration from environment variables."""
         self.config["policy_file"] = os.getenv(
-            "EUNOMIA_POLICY_FILE", self.config.get("policy_file"))
+            "EUNOMIA_POLICY_FILE", self.config.get("policy_file")
+        )
         self.config["server_name"] = os.getenv(
-            "EUNOMIA_SERVER_NAME", self.config.get("server_name"))
-        self.config["enable_audit_logging"] = os.getenv(
-            "EUNOMIA_ENABLE_AUDIT_LOGGING", "true").lower() == "true"
+            "EUNOMIA_SERVER_NAME", self.config.get("server_name")
+        )
+        self.config["enable_audit_logging"] = (
+            os.getenv("EUNOMIA_ENABLE_AUDIT_LOGGING", "true").lower() == "true"
+        )
 
         # Parse bypass methods from environment
         bypass_methods_env = os.getenv("EUNOMIA_BYPASS_METHODS")
@@ -73,14 +77,15 @@ class EunomiaAuthorizationProvider(AuthProvider):
             try:
                 self.config["bypass_methods"] = json.loads(bypass_methods_env)
             except json.JSONDecodeError:
-                logger.warning(
-                    f"Invalid JSON in EUNOMIA_BYPASS_METHODS: {bypass_methods_env}")
+                logger.warning(f"Invalid JSON in EUNOMIA_BYPASS_METHODS: {bypass_methods_env}")
 
     def _initialize_eunomia(self) -> None:
         """Initialize the Eunomia middleware."""
         try:
             # Create default policy file if it doesn't exist
-            if not os.path.exists(self.config.get("policy_file", "")) and not self.config.get("custom_policy_data"):
+            if not os.path.exists(self.config.get("policy_file", "")) and not self.config.get(
+                "custom_policy_data"
+            ):
                 self._create_default_policy_file()
 
             # Initialize Eunomia middleware
@@ -97,7 +102,8 @@ class EunomiaAuthorizationProvider(AuthProvider):
 
             self._middleware = create_eunomia_middleware(**middleware_config)
             logger.info(
-                f"Eunomia authorization provider initialized with policy file: {self.config.get('policy_file')}")
+                f"Eunomia authorization provider initialized with policy file: {self.config.get('policy_file')}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize Eunomia middleware: {e}")
@@ -115,7 +121,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
                     "subjects": ["role:admin"],
                     "resources": ["*"],
                     "actions": ["*"],
-                    "effect": "allow"
+                    "effect": "allow",
                 },
                 {
                     "id": "user_read_access",
@@ -124,10 +130,10 @@ class EunomiaAuthorizationProvider(AuthProvider):
                     "resources": [
                         f"{self.config.get('server_name')}:repository:*",
                         f"{self.config.get('server_name')}:search:*",
-                        f"{self.config.get('server_name')}:tools:list"
+                        f"{self.config.get('server_name')}:tools:list",
                     ],
                     "actions": ["read", "search", "list"],
-                    "effect": "allow"
+                    "effect": "allow",
                 },
                 {
                     "id": "readonly_limited_access",
@@ -135,10 +141,10 @@ class EunomiaAuthorizationProvider(AuthProvider):
                     "subjects": ["role:readonly"],
                     "resources": [
                         f"{self.config.get('server_name')}:tools:list",
-                        f"{self.config.get('server_name')}:repository:info"
+                        f"{self.config.get('server_name')}:repository:info",
                     ],
                     "actions": ["list", "read"],
-                    "effect": "allow"
+                    "effect": "allow",
                 },
                 {
                     "id": "default_deny",
@@ -146,16 +152,15 @@ class EunomiaAuthorizationProvider(AuthProvider):
                     "subjects": ["*"],
                     "resources": ["*"],
                     "actions": ["*"],
-                    "effect": "deny"
-                }
-            ]
+                    "effect": "deny",
+                },
+            ],
         }
 
         try:
-            with open(self.config.get("policy_file", "eunomia_policy.json"), 'w') as f:
+            with open(self.config.get("policy_file", "eunomia_policy.json"), "w") as f:
                 json.dump(default_policies, f, indent=2)
-            logger.info(
-                f"Created default Eunomia policy file: {self.config.get('policy_file')}")
+            logger.info(f"Created default Eunomia policy file: {self.config.get('policy_file')}")
         except Exception as e:
             logger.error(f"Failed to create default policy file: {e}")
             raise
@@ -184,7 +189,9 @@ class EunomiaAuthorizationProvider(AuthProvider):
         """
         return await self.base_provider.validate_token(token)
 
-    async def check_permission(self, user: User, permission: str, resource: str | None = None, **context: Any) -> bool:
+    async def check_permission(
+        self, user: User, permission: str, resource: str | None = None, **context: Any
+    ) -> bool:
         """
         Check permission using Eunomia policy engine.
 
@@ -209,7 +216,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
                 "user_id": user.username,
                 "user_role": user.role,
                 "user_permissions": user.permissions or [],
-                **context
+                **context,
             }
 
             # Use Eunomia middleware to check permission
@@ -228,7 +235,9 @@ class EunomiaAuthorizationProvider(AuthProvider):
             # Fallback to base provider on error
             return await self.base_provider.check_permission(user, permission)
 
-    async def _evaluate_policy(self, subject: str, action: str, resource: str, context: dict[str, Any]) -> bool:
+    async def _evaluate_policy(
+        self, subject: str, action: str, resource: str, context: dict[str, Any]
+    ) -> bool:
         """
         Evaluate policy using Eunomia engine.
 
@@ -257,7 +266,8 @@ class EunomiaAuthorizationProvider(AuthProvider):
 
     def get_policy_file_path(self) -> str:
         """Get the path to the policy file."""
-        return self.config.get("policy_file", "eunomia_policy.json")
+        policy_file = self.config.get("policy_file", "eunomia_policy.json")
+        return str(policy_file)
 
     def reload_policies(self) -> None:
         """Reload policies from the policy file."""

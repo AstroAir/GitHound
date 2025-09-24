@@ -102,7 +102,8 @@ class MemoryUserStore(UserStore):
         """Hash password with salt."""
         salt = secrets.token_hex(16)
         hash_bytes = hashlib.pbkdf2_hmac(
-            'sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+            "sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000
+        )
         return hash_bytes.hex() + ":" + salt
 
     def _verify_password(self, password: str, hashed: str) -> bool:
@@ -110,7 +111,8 @@ class MemoryUserStore(UserStore):
         try:
             hash_part, salt = hashed.split(":", 1)
             hash_bytes = hashlib.pbkdf2_hmac(
-                'sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+                "sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000
+            )
             return hash_bytes.hex() == hash_part
         except ValueError:
             return False
@@ -140,7 +142,7 @@ class MemoryUserStore(UserStore):
         user = User(
             username=username,
             role=kwargs.get("role", "user"),
-            permissions=kwargs.get("permissions", [])
+            permissions=kwargs.get("permissions", []),
         )
 
         self._users[user_id] = user
@@ -169,11 +171,10 @@ class MemoryClientStore(ClientStore):
             client_secret=client_secret,
             client_name=client_metadata.get("client_name", "OAuth Client"),
             redirect_uris=client_metadata.get("redirect_uris", []),
-            grant_types=client_metadata.get(
-                "grant_types", ["authorization_code"]),
+            grant_types=client_metadata.get("grant_types", ["authorization_code"]),
             response_types=client_metadata.get("response_types", ["code"]),
             scope=client_metadata.get("scope", "openid profile email"),
-            created_at=int(time.time())
+            created_at=int(time.time()),
         )
 
         self._clients[client_id] = client
@@ -201,7 +202,7 @@ class OAuthProvider(AuthProvider):
         base_url: str,
         user_store: UserStore | None = None,
         client_store: ClientStore | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize OAuth provider.
@@ -228,9 +229,8 @@ class OAuthProvider(AuthProvider):
         """Load OAuth provider configuration from environment variables."""
         prefix = "FASTMCP_SERVER_AUTH_OAUTH_"
 
-        if not hasattr(self, 'base_url'):
-            self.base_url = os.getenv(
-                f"{prefix}BASE_URL", "http://localhost:8000")
+        if not hasattr(self, "base_url"):
+            self.base_url = os.getenv(f"{prefix}BASE_URL", "http://localhost:8000")
 
         self.code_expiry = int(os.getenv(f"{prefix}CODE_EXPIRY", "600"))
         self.token_expiry = int(os.getenv(f"{prefix}TOKEN_EXPIRY", "3600"))
@@ -267,12 +267,12 @@ class OAuthProvider(AuthProvider):
         return TokenInfo(
             user_id=token_data.user_id,
             username=user.username,
-            email=getattr(user, 'email', None),
+            email=getattr(user, "email", None),
             roles=[user.role],
             permissions=user.permissions,
             expires_at=token_data.expires_at,
             issuer=self.base_url,
-            audience=token_data.client_id
+            audience=token_data.client_id,
         )
 
     def get_oauth_metadata(self) -> dict[str, Any]:
@@ -287,7 +287,7 @@ class OAuthProvider(AuthProvider):
             "grant_types_supported": ["authorization_code", "refresh_token"],
             "scopes_supported": ["openid", "profile", "email"],
             "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
-            "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register"
+            "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register",
         }
 
     def supports_dynamic_client_registration(self) -> bool:

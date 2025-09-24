@@ -38,7 +38,7 @@ class AccessibilityTestHelper {
     } catch (error) {
       const violations = await getViolations(page, null, auditOptions);
       this.violations.push(...violations);
-      
+
       console.warn(`⚠️  Accessibility violations found: ${violations.length}`);
       return { passed: false, violations };
     }
@@ -49,32 +49,32 @@ class AccessibilityTestHelper {
    */
   async testKeyboardNavigation(page, elements) {
     const results = [];
-    
+
     for (const element of elements) {
       try {
         // Focus on the element using Tab
         await page.keyboard.press('Tab');
-        
+
         // Check if element is focused
         const isFocused = await page.evaluate((selector) => {
           const el = document.querySelector(`[data-testid="${selector}"]`);
           return document.activeElement === el;
         }, element);
-        
+
         // Test Enter key activation
         if (isFocused) {
           await page.keyboard.press('Enter');
-          
+
           // Wait a moment for any actions to complete
           await page.waitForTimeout(100);
         }
-        
+
         results.push({
           element,
           focusable: isFocused,
           activatable: true // Assume true if no error thrown
         });
-        
+
       } catch (error) {
         results.push({
           element,
@@ -84,7 +84,7 @@ class AccessibilityTestHelper {
         });
       }
     }
-    
+
     return results;
   }
 
@@ -95,21 +95,21 @@ class AccessibilityTestHelper {
     const ariaAttributes = await page.evaluate(() => {
       const elements = document.querySelectorAll('*');
       const ariaInfo = [];
-      
+
       elements.forEach(el => {
         const attributes = {};
-        
+
         // Check for ARIA attributes
         for (const attr of el.attributes) {
           if (attr.name.startsWith('aria-') || attr.name === 'role') {
             attributes[attr.name] = attr.value;
           }
         }
-        
+
         // Check for semantic elements
         const tagName = el.tagName.toLowerCase();
         const semanticTags = ['header', 'nav', 'main', 'section', 'article', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-        
+
         if (Object.keys(attributes).length > 0 || semanticTags.includes(tagName)) {
           ariaInfo.push({
             tagName,
@@ -121,10 +121,10 @@ class AccessibilityTestHelper {
           });
         }
       });
-      
+
       return ariaInfo;
     });
-    
+
     return ariaInfo;
   }
 
@@ -135,12 +135,12 @@ class AccessibilityTestHelper {
     const contrastResults = await page.evaluate(() => {
       const elements = document.querySelectorAll('*');
       const contrastInfo = [];
-      
+
       elements.forEach(el => {
         const styles = window.getComputedStyle(el);
         const color = styles.color;
         const backgroundColor = styles.backgroundColor;
-        
+
         // Only check elements with text content
         if (el.textContent?.trim() && color !== 'rgba(0, 0, 0, 0)' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
           contrastInfo.push({
@@ -151,10 +151,10 @@ class AccessibilityTestHelper {
           });
         }
       });
-      
+
       return contrastInfo;
     });
-    
+
     return contrastResults;
   }
 
@@ -165,16 +165,16 @@ class AccessibilityTestHelper {
     const formResults = await page.evaluate(() => {
       const forms = document.querySelectorAll('form');
       const formInfo = [];
-      
+
       forms.forEach(form => {
         const inputs = form.querySelectorAll('input, select, textarea');
         const inputInfo = [];
-        
+
         inputs.forEach(input => {
-          const label = form.querySelector(`label[for="${input.id}"]`) || 
+          const label = form.querySelector(`label[for="${input.id}"]`) ||
                        input.closest('label') ||
                        form.querySelector(`[aria-labelledby="${input.id}"]`);
-          
+
           inputInfo.push({
             type: input.type || input.tagName.toLowerCase(),
             id: input.id,
@@ -187,16 +187,16 @@ class AccessibilityTestHelper {
             hasAriaRequired: input.getAttribute('aria-required') === 'true'
           });
         });
-        
+
         formInfo.push({
           formId: form.id,
           inputs: inputInfo
         });
       });
-      
+
       return formInfo;
     });
-    
+
     return formResults;
   }
 
@@ -207,7 +207,7 @@ class AccessibilityTestHelper {
     const headingStructure = await page.evaluate(() => {
       const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
       const structure = [];
-      
+
       headings.forEach(heading => {
         structure.push({
           level: parseInt(heading.tagName.charAt(1)),
@@ -216,26 +216,26 @@ class AccessibilityTestHelper {
           hasId: !!heading.id
         });
       });
-      
+
       return structure;
     });
-    
+
     // Validate heading hierarchy
     const violations = [];
     let previousLevel = 0;
-    
+
     headingStructure.forEach((heading, index) => {
       if (index === 0 && heading.level !== 1) {
         violations.push('Page should start with an h1 heading');
       }
-      
+
       if (heading.level > previousLevel + 1) {
         violations.push(`Heading level ${heading.level} skips levels (previous was ${previousLevel})`);
       }
-      
+
       previousLevel = heading.level;
     });
-    
+
     return {
       structure: headingStructure,
       violations
@@ -247,12 +247,12 @@ class AccessibilityTestHelper {
    */
   async testFocusManagement(page, interactiveElements) {
     const focusResults = [];
-    
+
     for (const element of interactiveElements) {
       try {
         // Click on the element
         await page.click(`[data-testid="${element}"]`);
-        
+
         // Check if focus is properly managed
         const focusInfo = await page.evaluate(() => {
           const activeElement = document.activeElement;
@@ -264,13 +264,13 @@ class AccessibilityTestHelper {
             tabIndex: activeElement?.tabIndex
           };
         });
-        
+
         focusResults.push({
           element,
           focusManaged: !!focusInfo.tagName,
           focusInfo
         });
-        
+
       } catch (error) {
         focusResults.push({
           element,
@@ -279,7 +279,7 @@ class AccessibilityTestHelper {
         });
       }
     }
-    
+
     return focusResults;
   }
 
@@ -295,7 +295,7 @@ class AccessibilityTestHelper {
       violationsByCategory: this.groupViolationsByCategory(),
       recommendations: this.generateRecommendations()
     };
-    
+
     return report;
   }
 
@@ -304,13 +304,13 @@ class AccessibilityTestHelper {
    */
   groupViolationsByImpact() {
     const grouped = { critical: 0, serious: 0, moderate: 0, minor: 0 };
-    
+
     this.violations.forEach(violation => {
       if (grouped.hasOwnProperty(violation.impact)) {
         grouped[violation.impact]++;
       }
     });
-    
+
     return grouped;
   }
 
@@ -319,7 +319,7 @@ class AccessibilityTestHelper {
    */
   groupViolationsByCategory() {
     const categories = {};
-    
+
     this.violations.forEach(violation => {
       violation.tags.forEach(tag => {
         if (!categories[tag]) {
@@ -328,7 +328,7 @@ class AccessibilityTestHelper {
         categories[tag]++;
       });
     });
-    
+
     return categories;
   }
 
@@ -337,7 +337,7 @@ class AccessibilityTestHelper {
    */
   generateRecommendations() {
     const recommendations = [];
-    
+
     if (this.violations.length === 0) {
       recommendations.push('Great! No accessibility violations found.');
     } else {
@@ -347,7 +347,7 @@ class AccessibilityTestHelper {
       recommendations.push('Add proper ARIA labels and descriptions');
       recommendations.push('Test with actual screen readers');
     }
-    
+
     return recommendations;
   }
 

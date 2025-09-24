@@ -1,11 +1,12 @@
 """Tests for GitHound MCP server authentication providers."""
 
-import os
-import json
-import pytest
 import asyncio
+import json
+import os
 from typing import Optional
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from githound.mcp.auth.providers.base import AuthProvider, AuthResult, TokenInfo
 from githound.mcp.models import User
@@ -14,7 +15,7 @@ from githound.mcp.models import User
 @pytest.fixture
 def mock_http_session() -> None:
     """Mock aiohttp ClientSession for testing HTTP requests."""
-    with patch('aiohttp.ClientSession') as mock_session:
+    with patch("aiohttp.ClientSession") as mock_session:
         mock_instance = AsyncMock()
         mock_session.return_value.__aenter__.return_value = mock_instance
         mock_session.return_value.__aexit__.return_value = None
@@ -32,9 +33,7 @@ class TestJWTVerifier:
 
             # Create a static JWT verifier for testing
             verifier = StaticJWTVerifier(
-                secret_key="test-secret-key",
-                issuer="test-issuer",
-                audience="test-audience"
+                secret_key="test-secret-key", issuer="test-issuer", audience="test-audience"
             )
 
             # Test with invalid token
@@ -48,15 +47,15 @@ class TestJWTVerifier:
     async def test_jwt_verifier_authentication(self) -> None:
         """Test JWT authentication flow."""
         try:
-            from githound.mcp.auth.providers.jwt import StaticJWTVerifier
-            import jwt
             import datetime
+
+            import jwt
+
+            from githound.mcp.auth.providers.jwt import StaticJWTVerifier
 
             secret_key = "test-secret-key"
             verifier = StaticJWTVerifier(
-                secret_key=secret_key,
-                issuer="test-issuer",
-                audience="test-audience"
+                secret_key=secret_key, issuer="test-issuer", audience="test-audience"
             )
 
             # Create a valid JWT token
@@ -68,7 +67,7 @@ class TestJWTVerifier:
                 "iss": "test-issuer",
                 "aud": "test-audience",
                 "exp": int(datetime.datetime.utcnow().timestamp()) + 3600,
-                "iat": int(datetime.datetime.utcnow().timestamp())
+                "iat": int(datetime.datetime.utcnow().timestamp()),
             }
 
             token = jwt.encode(payload, secret_key, algorithm="HS256")
@@ -93,7 +92,7 @@ class TestGitHubProvider:
         provider = GitHubProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         assert provider.client_id == "test-client-id"
@@ -107,7 +106,7 @@ class TestGitHubProvider:
         provider = GitHubProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         metadata = provider.get_oauth_metadata()
@@ -121,10 +120,7 @@ class TestGitHubProvider:
         """Test GitHub Dynamic Client Registration support."""
         from githound.mcp.auth.providers.github import GitHubProvider
 
-        provider = GitHubProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GitHubProvider(client_id="test-client-id", client_secret="test-client-secret")
 
         assert provider.supports_dynamic_client_registration() is True
 
@@ -133,36 +129,37 @@ class TestGitHubProvider:
         """Test GitHub authentication flow with mocked responses."""
         from githound.mcp.auth.providers.github import GitHubProvider
 
-        provider = GitHubProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GitHubProvider(client_id="test-client-id", client_secret="test-client-secret")
 
         # Mock the HTTP client responses
         mock_token_response = {
             "access_token": "test-access-token",
             "token_type": "bearer",
-            "scope": "user:email"
+            "scope": "user:email",
         }
 
         mock_user_response = {
             "login": "testuser",
             "name": "Test User",
             "email": "test@example.com",
-            "id": 12345
+            "id": 12345,
         }
 
-        with patch('aiohttp.ClientSession.post') as mock_post, \
-                patch('aiohttp.ClientSession.get') as mock_get:
+        with (
+            patch("aiohttp.ClientSession.post") as mock_post,
+            patch("aiohttp.ClientSession.get") as mock_get,
+        ):
 
             # Mock token exchange
             mock_post.return_value.__aenter__.return_value.json = AsyncMock(
-                return_value=mock_token_response)
+                return_value=mock_token_response
+            )
             mock_post.return_value.__aenter__.return_value.status = 200
 
             # Mock user info
             mock_get.return_value.__aenter__.return_value.json = AsyncMock(
-                return_value=mock_user_response)
+                return_value=mock_user_response
+            )
             mock_get.return_value.__aenter__.return_value.status = 200
 
             # Test authentication with authorization code
@@ -183,7 +180,7 @@ class TestGoogleProvider:
         provider = GoogleProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         assert provider.client_id == "test-client-id"
@@ -197,7 +194,7 @@ class TestGoogleProvider:
         provider = GoogleProvider(
             client_id="test-client-id",
             client_secret="test-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         metadata = provider.get_oauth_metadata()
@@ -211,10 +208,7 @@ class TestGoogleProvider:
         """Test Google Dynamic Client Registration support."""
         from githound.mcp.auth.providers.google import GoogleProvider
 
-        provider = GoogleProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GoogleProvider(client_id="test-client-id", client_secret="test-client-secret")
 
         assert provider.supports_dynamic_client_registration() is True
 
@@ -223,37 +217,38 @@ class TestGoogleProvider:
         """Test Google authentication flow with mocked responses."""
         from githound.mcp.auth.providers.google import GoogleProvider
 
-        provider = GoogleProvider(
-            client_id="test-client-id",
-            client_secret="test-client-secret"
-        )
+        provider = GoogleProvider(client_id="test-client-id", client_secret="test-client-secret")
 
         # Mock the HTTP client responses
         mock_token_response = {
             "access_token": "test-access-token",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "id_token": "test-id-token"
+            "id_token": "test-id-token",
         }
 
         mock_user_response = {
             "sub": "12345",
             "name": "Test User",
             "email": "test@example.com",
-            "picture": "https://example.com/avatar.jpg"
+            "picture": "https://example.com/avatar.jpg",
         }
 
-        with patch('aiohttp.ClientSession.post') as mock_post, \
-                patch('aiohttp.ClientSession.get') as mock_get:
+        with (
+            patch("aiohttp.ClientSession.post") as mock_post,
+            patch("aiohttp.ClientSession.get") as mock_get,
+        ):
 
             # Mock token exchange
             mock_post.return_value.__aenter__.return_value.json = AsyncMock(
-                return_value=mock_token_response)
+                return_value=mock_token_response
+            )
             mock_post.return_value.__aenter__.return_value.status = 200
 
             # Mock user info
             mock_get.return_value.__aenter__.return_value.json = AsyncMock(
-                return_value=mock_user_response)
+                return_value=mock_user_response
+            )
             mock_get.return_value.__aenter__.return_value.status = 200
 
             # Test authentication with authorization code
@@ -277,7 +272,7 @@ class TestOAuthProxy:
             base_url="http://localhost:8000",
             authorization_endpoint="https://example.com/oauth/authorize",
             token_endpoint="https://example.com/oauth/token",
-            userinfo_endpoint="https://example.com/oauth/userinfo"
+            userinfo_endpoint="https://example.com/oauth/userinfo",
         )
 
         assert proxy.client_id == "test-client-id"
@@ -294,7 +289,7 @@ class TestOAuthProxy:
             base_url="http://localhost:8000",
             authorization_endpoint="https://example.com/oauth/authorize",
             token_endpoint="https://example.com/oauth/token",
-            userinfo_endpoint="https://example.com/oauth/userinfo"
+            userinfo_endpoint="https://example.com/oauth/userinfo",
         )
 
         metadata = proxy.get_oauth_metadata()
@@ -310,7 +305,7 @@ class TestOAuthProxy:
             client_id="test-client-id",
             client_secret="test-client-secret",
             authorization_endpoint="https://example.com/oauth/authorize",
-            token_endpoint="https://example.com/oauth/token"
+            token_endpoint="https://example.com/oauth/token",
         )
 
         assert proxy.supports_dynamic_client_registration() is True
@@ -326,24 +321,25 @@ class TestOAuthProxy:
             base_url="http://localhost:8000",
             authorization_endpoint="https://example.com/oauth/authorize",
             token_endpoint="https://example.com/oauth/token",
-            userinfo_endpoint="https://example.com/oauth/userinfo"
+            userinfo_endpoint="https://example.com/oauth/userinfo",
         )
 
         client_metadata = {
             "client_name": "Test Client",
-            "redirect_uris": ["http://localhost:3000/callback"]
+            "redirect_uris": ["http://localhost:3000/callback"],
         }
 
         mock_response = {
             "client_id": "generated-client-id",
             "client_secret": "generated-client-secret",
             "client_id_issued_at": 1234567890,
-            "client_secret_expires_at": 0
+            "client_secret_expires_at": 0,
         }
 
-        with patch('aiohttp.ClientSession.post') as mock_post:
+        with patch("aiohttp.ClientSession.post") as mock_post:
             mock_post.return_value.__aenter__.return_value.json = AsyncMock(
-                return_value=mock_response)
+                return_value=mock_response
+            )
             mock_post.return_value.__aenter__.return_value.status = 201
 
             registration = await proxy.register_client(client_metadata)

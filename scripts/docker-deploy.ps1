@@ -5,20 +5,20 @@ param(
     [Parameter(Position=0)]
     [ValidateSet("deploy", "stop", "restart", "logs", "status", "clean", "build", "update")]
     [string]$Action = "deploy",
-    
+
     [Parameter()]
     [ValidateSet("development", "staging", "production")]
     [string]$Environment = "development",
-    
+
     [Parameter()]
     [switch]$Force,
-    
+
     [Parameter()]
     [switch]$Detach = $true,
-    
+
     [Parameter()]
     [switch]$Verbose,
-    
+
     [Parameter()]
     [switch]$Help
 )
@@ -82,17 +82,17 @@ EXAMPLES:
 # Function to check prerequisites
 function Test-Prerequisites {
     Write-Info "Checking prerequisites..."
-    
+
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
         Write-Error "Docker is not installed or not in PATH"
         exit 1
     }
-    
+
     if (-not (Get-Command docker-compose -ErrorAction SilentlyContinue)) {
         Write-Error "Docker Compose is not installed or not in PATH"
         exit 1
     }
-    
+
     # Check Docker daemon
     try {
         docker info | Out-Null
@@ -101,14 +101,14 @@ function Test-Prerequisites {
         Write-Error "Docker daemon is not running"
         exit 1
     }
-    
+
     Write-Success "Prerequisites check passed"
 }
 
 # Function to setup environment
 function Initialize-Environment {
     Write-Info "Setting up environment: $Environment"
-    
+
     $script:ComposeFiles = switch ($Environment) {
         "development" { "-f docker-compose.yml -f docker-compose.override.yml" }
         "staging" { "-f docker-compose.yml" }
@@ -118,11 +118,11 @@ function Initialize-Environment {
             exit 1
         }
     }
-    
+
     # Set build arguments
     $buildDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
     $script:BuildArgs = "--build-arg BUILD_DATE=$buildDate"
-    
+
     if (Get-Command git -ErrorAction SilentlyContinue) {
         try {
             $vcsRef = git rev-parse --short HEAD
@@ -132,7 +132,7 @@ function Initialize-Environment {
             # Git not available or not in a git repository
         }
     }
-    
+
     # Check if .env file exists
     if (-not (Test-Path .env)) {
         Write-Warning ".env file not found, copying from .env.example"
@@ -150,7 +150,7 @@ function Initialize-Environment {
 # Function to deploy services
 function Start-Deployment {
     Write-Info "Deploying GitHound services..."
-    
+
     if ($Force) {
         Write-Info "Force building images..."
         Invoke-Expression "docker-compose $ComposeFiles build --no-cache $BuildArgs"
@@ -158,14 +158,14 @@ function Start-Deployment {
     else {
         Invoke-Expression "docker-compose $ComposeFiles build $BuildArgs"
     }
-    
+
     if ($Detach) {
         Invoke-Expression "docker-compose $ComposeFiles up -d"
     }
     else {
         Invoke-Expression "docker-compose $ComposeFiles up"
     }
-    
+
     Write-Success "Deployment completed"
 }
 
@@ -193,7 +193,7 @@ function Show-Logs {
 function Show-Status {
     Write-Info "Service status:"
     Invoke-Expression "docker-compose $ComposeFiles ps"
-    
+
     Write-Info "Health checks:"
     try {
         Invoke-Expression "docker-compose $ComposeFiles exec -T githound-web curl -f http://localhost:8000/health"
@@ -201,7 +201,7 @@ function Show-Status {
     catch {
         Write-Warning "Web service health check failed"
     }
-    
+
     try {
         Invoke-Expression "docker-compose $ComposeFiles exec -T githound-mcp curl -f http://localhost:3000/health"
     }
@@ -245,18 +245,18 @@ function Main {
         Show-Usage
         return
     }
-    
+
     if ($Verbose) {
         $VerbosePreference = "Continue"
     }
-    
+
     Write-Info "GitHound Docker Deployment Script"
     Write-Info "Environment: $Environment"
     Write-Info "Action: $Action"
-    
+
     Test-Prerequisites
     Initialize-Environment
-    
+
     switch ($Action) {
         "deploy" { Start-Deployment }
         "stop" { Stop-Services }

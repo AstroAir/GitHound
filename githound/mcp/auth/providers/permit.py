@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 # Check if permit-fastmcp is available
 try:
-    from permit_fastmcp.middleware.middleware import PermitMcpMiddleware
+    from permit_fastmcp.middleware.middleware import PermitMcpMiddleware  # type: ignore[import-not-found]
+
     PERMIT_AVAILABLE = True
 except ImportError:
     PERMIT_AVAILABLE = False
-    logger.warning(
-        "permit-fastmcp not available. Install with: pip install permit-fastmcp")
+    logger.warning("permit-fastmcp not available. Install with: pip install permit-fastmcp")
 
 
 @dataclass
@@ -53,7 +53,8 @@ class PermitAuthorizationProvider(AuthProvider):
         """
         if not PERMIT_AVAILABLE:
             raise ImportError(
-                "permit-fastmcp is required for PermitAuthorizationProvider. Install with: pip install permit-fastmcp")
+                "permit-fastmcp is required for PermitAuthorizationProvider. Install with: pip install permit-fastmcp"
+            )
 
         super().__init__(**kwargs)
         self.base_provider = base_provider
@@ -64,17 +65,23 @@ class PermitAuthorizationProvider(AuthProvider):
     def _load_from_environment(self) -> None:
         """Load Permit.io configuration from environment variables."""
         self.config["permit_pdp_url"] = os.getenv(
-            "PERMIT_MCP_PERMIT_PDP_URL", self.config.get("permit_pdp_url"))
+            "PERMIT_MCP_PERMIT_PDP_URL", self.config.get("permit_pdp_url")
+        )
         self.config["permit_api_key"] = os.getenv(
-            "PERMIT_MCP_PERMIT_API_KEY", self.config.get("permit_api_key"))
+            "PERMIT_MCP_PERMIT_API_KEY", self.config.get("permit_api_key")
+        )
         self.config["server_name"] = os.getenv(
-            "PERMIT_MCP_SERVER_NAME", self.config.get("server_name"))
-        self.config["enable_audit_logging"] = os.getenv(
-            "PERMIT_MCP_ENABLE_AUDIT_LOGGING", "true").lower() == "true"
+            "PERMIT_MCP_SERVER_NAME", self.config.get("server_name")
+        )
+        self.config["enable_audit_logging"] = (
+            os.getenv("PERMIT_MCP_ENABLE_AUDIT_LOGGING", "true").lower() == "true"
+        )
         self.config["identity_mode"] = os.getenv(
-            "PERMIT_MCP_IDENTITY_MODE", self.config.get("identity_mode"))
+            "PERMIT_MCP_IDENTITY_MODE", self.config.get("identity_mode")
+        )
         self.config["identity_jwt_secret"] = os.getenv(
-            "PERMIT_MCP_IDENTITY_JWT_SECRET", self.config.get("identity_jwt_secret"))
+            "PERMIT_MCP_IDENTITY_JWT_SECRET", self.config.get("identity_jwt_secret")
+        )
 
         # Parse JSON arrays from environment
         bypass_methods_env = os.getenv("PERMIT_MCP_BYPASSED_METHODS")
@@ -82,23 +89,22 @@ class PermitAuthorizationProvider(AuthProvider):
             try:
                 self.config["bypass_methods"] = json.loads(bypass_methods_env)
             except json.JSONDecodeError:
-                logger.warning(
-                    f"Invalid JSON in PERMIT_MCP_BYPASSED_METHODS: {bypass_methods_env}")
+                logger.warning(f"Invalid JSON in PERMIT_MCP_BYPASSED_METHODS: {bypass_methods_env}")
 
         known_methods_env = os.getenv("PERMIT_MCP_KNOWN_METHODS")
         if known_methods_env:
             try:
                 self.config["known_methods"] = json.loads(known_methods_env)
             except json.JSONDecodeError:
-                logger.warning(
-                    f"Invalid JSON in PERMIT_MCP_KNOWN_METHODS: {known_methods_env}")
+                logger.warning(f"Invalid JSON in PERMIT_MCP_KNOWN_METHODS: {known_methods_env}")
 
     def _initialize_permit(self) -> None:
         """Initialize the Permit.io middleware."""
         try:
             if not self.config.get("permit_api_key"):
                 raise ValueError(
-                    "Permit.io API key is required. Set PERMIT_MCP_PERMIT_API_KEY environment variable.")
+                    "Permit.io API key is required. Set PERMIT_MCP_PERMIT_API_KEY environment variable."
+                )
 
             # Initialize Permit.io middleware
             middleware_config = {
@@ -120,11 +126,11 @@ class PermitAuthorizationProvider(AuthProvider):
             elif self.config.get("identity_mode") in ["header", "source", "fixed"]:
                 os.environ["PERMIT_MCP_IDENTITY_MODE"] = self.config["identity_mode"]
 
-            self._middleware = PermitMcpMiddleware(
-                **middleware_config)  # [attr-defined]
+            self._middleware = PermitMcpMiddleware(**middleware_config)  # [attr-defined]
             logger.info(
                 # [attr-defined]
-                f"Permit.io authorization provider initialized with PDP URL: {self.config.get('permit_pdp_url')}")
+                f"Permit.io authorization provider initialized with PDP URL: {self.config.get('permit_pdp_url')}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize Permit.io middleware: {e}")
@@ -154,7 +160,9 @@ class PermitAuthorizationProvider(AuthProvider):
         """
         return await self.base_provider.validate_token(token)
 
-    async def check_permission(self, user: User, permission: str, resource: str | None = None, **context: Any) -> bool:
+    async def check_permission(
+        self, user: User, permission: str, resource: str | None = None, **context: Any
+    ) -> bool:
         """
         Check permission using Permit.io policy engine.
 
@@ -179,14 +187,16 @@ class PermitAuthorizationProvider(AuthProvider):
                 "user_id": user.username,
                 "user_role": user.role,
                 "user_permissions": user.permissions or [],
-                **context  # This includes tool arguments for ABAC evaluation
+                **context,  # This includes tool arguments for ABAC evaluation
             }
 
             # Use Permit.io middleware to check permission
             if self._middleware:
                 # This would integrate with the actual Permit.io policy engine
                 # For now, implement a simplified version
-                return await self._evaluate_permit_policy(subject, action, resource_name, auth_context)
+                return await self._evaluate_permit_policy(
+                    subject, action, resource_name, auth_context
+                )
             else:
                 # Fallback to base provider's permission check
                 return await self.base_provider.check_permission(user, permission)
@@ -196,7 +206,9 @@ class PermitAuthorizationProvider(AuthProvider):
             # Fallback to base provider on error
             return await self.base_provider.check_permission(user, permission)
 
-    async def _evaluate_permit_policy(self, subject: str, action: str, resource: str, context: dict[str, Any]) -> bool:
+    async def _evaluate_permit_policy(
+        self, subject: str, action: str, resource: str, context: dict[str, Any]
+    ) -> bool:
         """
         Evaluate policy using Permit.io engine.
 
@@ -265,7 +277,9 @@ class PermitAuthorizationProvider(AuthProvider):
         # [attr-defined]
         logger.info("Permit.io configuration updated and reinitialized")
 
-    async def check_tool_permission(self, user: User, tool_name: str, tool_args: dict[str, Any]) -> bool:
+    async def check_tool_permission(
+        self, user: User, tool_name: str, tool_args: dict[str, Any]
+    ) -> bool:
         """
         Check permission for a specific tool with its arguments.
 
@@ -289,5 +303,5 @@ class PermitAuthorizationProvider(AuthProvider):
             user=user,
             permission=tool_name,
             resource=f"{self.config.get('server_name')}",
-            **flattened_args
+            **flattened_args,
         )

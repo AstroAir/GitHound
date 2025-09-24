@@ -77,7 +77,7 @@ def helper_function(x: int) -> int:
 class UtilityClass:
     def __init__(self, value: int) -> None:
         self.value = value
-    
+
     def process(self) -> int:
         return helper_function(self.value)
 """
@@ -135,7 +135,7 @@ def new_feature(data: str) -> str:
 class FeatureProcessor:
     def __init__(self) -> None:
         self.processed_count = 0
-    
+
     def process_item(self, item: str) -> str:
         self.processed_count += 1
         return new_feature(item)
@@ -150,8 +150,7 @@ class FeatureProcessor:
     repo.git.merge("feature/new-functionality")
 
     # Create additional commits with different authors
-    authors = [("Alice Developer", "alice@example.com"),
-               ("Bob Contributor", "bob@example.com")]
+    authors = [("Alice Developer", "alice@example.com"), ("Bob Contributor", "bob@example.com")]
 
     for i, (author_name, author_email) in enumerate(authors):
         with repo.config_writer() as config:  # [attr-defined]
@@ -233,8 +232,7 @@ class TestCompleteWorkflows:
         from githound.mcp_server import FileBlameInput, get_file_blame_direct
 
         # Test with main.py file
-        blame_input = FileBlameInput(
-            repo_path=temp_dir, file_path="src/main.py")
+        blame_input = FileBlameInput(repo_path=temp_dir, file_path="src/main.py")
 
         blame_result = await get_file_blame_direct(blame_input)
 
@@ -281,9 +279,16 @@ class TestCompleteWorkflows:
             assert exported_data["repository_metadata"]["total_commits"] >= 4
 
         # Verify all operations completed successfully
-        assert all(result["status"] == "success" for result in [
-            analysis_result, history_result, blame_result, stats_result, export_result
-        ])
+        assert all(
+            result["status"] == "success"
+            for result in [
+                analysis_result,
+                history_result,
+                blame_result,
+                stats_result,
+                export_result,
+            ]
+        )
 
     @pytest.mark.asyncio
     async def test_error_handling_workflow(self, integration_test_repo) -> None:
@@ -303,8 +308,7 @@ class TestCompleteWorkflows:
         # Test 2: Invalid file path for blame
         from githound.mcp_server import FileBlameInput, get_file_blame_direct
 
-        invalid_blame_input = FileBlameInput(
-            repo_path=temp_dir, file_path="nonexistent/file.py")
+        invalid_blame_input = FileBlameInput(repo_path=temp_dir, file_path="nonexistent/file.py")
 
         blame_result = await get_file_blame_direct(invalid_blame_input)
         assert blame_result["status"] == "error"
@@ -357,8 +361,7 @@ class TestCompleteWorkflows:
         assert len(results) == 3
 
         for i, result in enumerate(results):
-            assert not isinstance(
-                result, Exception), f"Task {i} failed with exception: {result}"
+            assert not isinstance(result, Exception), f"Task {i} failed with exception: {result}"
             assert (
                 result["status"] == "success"
             ), f"Task {i} failed: {result.get('error', 'Unknown error')}"
@@ -490,8 +493,8 @@ class TestDataConsistency:
         # Extract names from metadata contributors (format: "Name <email>")
         metadata_contributor_names = set()
         for contributor in metadata["contributors"]:
-            if '<' in contributor:
-                name = contributor.split('<')[0].strip()
+            if "<" in contributor:
+                name = contributor.split("<")[0].strip()
             else:
                 name = contributor
             metadata_contributor_names.add(name)
@@ -501,8 +504,8 @@ class TestDataConsistency:
         # Extract names from stats authors (format: "Name <email>")
         stats_author_names = set()
         for author in author_stats.keys():
-            if '<' in author:
-                name = author.split('<')[0].strip()
+            if "<" in author:
+                name = author.split("<")[0].strip()
             else:
                 name = author
             stats_author_names.add(name)
@@ -516,13 +519,12 @@ class TestDataConsistency:
         # Verify commit counts in author stats match actual commits
         for author_with_email, stats in author_stats.items():
             # Extract just the name from "Name <email>" format
-            if '<' in author_with_email:
-                author_name = author_with_email.split('<')[0].strip()
+            if "<" in author_with_email:
+                author_name = author_with_email.split("<")[0].strip()
             else:
                 author_name = author_with_email
 
-            author_commits = [
-                c for c in commits if c["author_name"] == author_name]
+            author_commits = [c for c in commits if c["author_name"] == author_name]
             assert stats.get("total_commits", 0) == len(author_commits), (
                 f"Author {author_with_email} stats show {stats.get('total_commits', 0)} commits, "
                 f"but found {len(author_commits)} in history for name '{author_name}'"

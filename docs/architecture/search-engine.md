@@ -134,6 +134,7 @@ class SearchContext:
 ```
 
 **Features:**
+
 - Shared repository access
 - Query configuration
 - Progress reporting
@@ -294,6 +295,7 @@ async def get_applicable_searchers(
 ```
 
 **Selection Criteria:**
+
 - Content pattern → Content Searcher
 - Author pattern → Author Searcher
 - Message pattern → Message Searcher
@@ -381,6 +383,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
 ```
 
 **Key Features:**
+
 - Parallel file processing
 - Binary file detection
 - Large file handling

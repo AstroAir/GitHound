@@ -8,7 +8,7 @@ for various repository sizes and operation types.
 import asyncio
 import time
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any, Optional
 
 import pytest
 
@@ -179,8 +179,7 @@ class TestGitOperationPerformance:
 
         # Create a file with multiple lines for blame testing
         test_file = Path(temp_dir) / "blame_test.py"
-        content = "\n".join(
-            [f"# Line {i+1}: This is test content" for i in range(100)])
+        content = "\n".join([f"# Line {i+1}: This is test content" for i in range(100)])
         test_file.write_text(content)
 
         repo.index.add(["blame_test.py"])
@@ -241,8 +240,7 @@ class TestGitOperationPerformance:
         thresholds = performance_thresholds["commit_comparison"]
 
         # Create additional commits for comparison
-        third_commit = self._create_additional_commits(
-            repo, temp_dir, count=1)[0]
+        third_commit = self._create_additional_commits(repo, temp_dir, count=1)[0]
 
         performance_monitor.start_monitoring()
 
@@ -271,8 +269,7 @@ class TestGitOperationPerformance:
 
         for i in range(count):
             file_path = Path(temp_dir) / f"perf_test_{i}.txt"
-            file_path.write_text(
-                f"Performance test file {i}\nContent line 2\nContent line 3")
+            file_path.write_text(f"Performance test file {i}\nContent line 2\nContent line 3")
 
             repo.index.add([f"perf_test_{i}.txt"])
             commit = repo.index.commit(f"Performance test commit {i}")
@@ -342,7 +339,9 @@ class TestConcurrentOperations:
         ), f"Concurrent analysis took {metrics['duration_seconds']:.2f}s, expected < 10.0s"
 
     @pytest.mark.asyncio
-    async def test_concurrent_commit_operations(self, temp_repo_with_commits, performance_monitor) -> None:
+    async def test_concurrent_commit_operations(
+        self, temp_repo_with_commits, performance_monitor
+    ) -> None:
         """Test concurrent commit-related operations."""
         repo, temp_dir, initial_commit, second_commit = temp_repo_with_commits
 
@@ -356,8 +355,7 @@ class TestConcurrentOperations:
             )
 
         commits = [initial_commit, second_commit]
-        tasks = [extract_commit_async(commit)
-                 for commit in commits for _ in range(3)]
+        tasks = [extract_commit_async(commit) for commit in commits for _ in range(3)]
 
         results = await asyncio.gather(*tasks)
 

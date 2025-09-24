@@ -163,16 +163,16 @@
     left: var(--spacing-sm);
     padding: var(--spacing-xs) var(--spacing-sm);
   }
-  
+
   .connection-indicator {
     width: 0.5rem;
     height: 0.5rem;
   }
-  
+
   .connection-text {
     font-size: 0.7rem;
   }
-  
+
   .websocket-details {
     display: none !important; /* Hide details on mobile */
   }
@@ -257,7 +257,7 @@
   .connection-indicator::before {
     animation: none;
   }
-  
+
   .connection-indicator.error,
   .connection-indicator.reconnecting {
     animation: none;

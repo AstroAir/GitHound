@@ -18,8 +18,8 @@ pip install "fastmcp>=2.11.0"
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/githound.git
-cd githound
+git clone https://github.com/AstroAir/GitHound.git
+cd GitHound
 
 # Install in development mode
 pip install -e .[mcp]

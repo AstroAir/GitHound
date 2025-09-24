@@ -13,6 +13,7 @@ from githound.mcp.config import (  # [attr-defined]
     get_server_config_from_mcp_json,
     load_mcp_json_config,
 )
+
 # [attr-defined]
 from githound.mcp.models import MCPJsonConfig, MCPServerConfig, ServerConfig
 
@@ -27,7 +28,7 @@ class TestMCPJsonModels:
             command="python",
             args=["-m", "githound.mcp_server"],
             env={"PYTHONPATH": "/path/to/githound"},
-            description="Test server"
+            description="Test server",
         )
         assert config.command == "python"  # [attr-defined]
         assert config.args == ["-m", "githound.mcp_server"]  # [attr-defined]
@@ -71,19 +72,16 @@ class TestMCPJsonModels:
         assert result[0] == "GitHound"
 
         # Test partial match
-        config = MCPJsonConfig(
-            mcpServers={"my-githound-server": server_config})
+        config = MCPJsonConfig(mcpServers={"my-githound-server": server_config})
         result = config.get_githound_server()  # [attr-defined]
         assert result is not None
         assert result[0] == "my-githound-server"
 
         # Test module detection
         server_config_with_module = MCPServerConfig(
-            command="python",
-            args=["-m", "githound.mcp_server"]
+            command="python", args=["-m", "githound.mcp_server"]
         )
-        config = MCPJsonConfig(
-            mcpServers={"custom-server": server_config_with_module})
+        config = MCPJsonConfig(mcpServers={"custom-server": server_config_with_module})
         result = config.get_githound_server()  # [attr-defined]
         assert result is not None
         assert result[0] == "custom-server"
@@ -105,12 +103,12 @@ class TestMCPJsonConfigLoading:
                     "command": "python",
                     "args": ["-m", "githound.mcp_server"],
                     "env": {"PYTHONPATH": "/path/to/githound"},
-                    "description": "GitHound MCP Server"
+                    "description": "GitHound MCP Server",
                 }
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(config_data, f)  # [attr-defined]
             config_path = Path(f.name)  # [attr-defined]
 
@@ -125,7 +123,7 @@ class TestMCPJsonConfigLoading:
 
     def test_load_mcp_json_config_invalid_json(self) -> None:
         """Test loading invalid JSON file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write("{ invalid json }")
             config_path = Path(f.name)  # [attr-defined]
 
@@ -137,11 +135,9 @@ class TestMCPJsonConfigLoading:
 
     def test_load_mcp_json_config_invalid_structure(self) -> None:
         """Test loading JSON with invalid structure."""
-        config_data = {
-            "mcpServers": {}  # Empty servers should fail validation
-        }
+        config_data = {"mcpServers": {}}  # Empty servers should fail validation
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(config_data, f)  # [attr-defined]
             config_path = Path(f.name)  # [attr-defined]
 
@@ -160,9 +156,9 @@ class TestMCPJsonConfigLoading:
                 "FASTMCP_SERVER_NAME": "Test Server",
                 "FASTMCP_SERVER_VERSION": "1.0.0",
                 "FASTMCP_SERVER_LOG_LEVEL": "DEBUG",
-                "FASTMCP_SERVER_ENABLE_AUTH": "true"
+                "FASTMCP_SERVER_ENABLE_AUTH": "true",
             },
-            description="Test GitHound Server"
+            description="Test GitHound Server",
         )
         mcp_config = MCPJsonConfig(mcpServers={"githound": server_config})
 
@@ -185,8 +181,8 @@ class TestMCPJsonConfigLoading:
 class TestMCPJsonIntegration:
     """Test MCP.json integration with existing configuration system."""  # [attr-defined]
 
-    @patch('githound.mcp.config.find_mcp_json_files')  # [attr-defined]
-    @patch('githound.mcp.config.load_mcp_json_config')  # [attr-defined]
+    @patch("githound.mcp.config.find_mcp_json_files")  # [attr-defined]
+    @patch("githound.mcp.config.load_mcp_json_config")  # [attr-defined]
     def test_get_server_config_with_mcp_json(self, mock_load, mock_find) -> None:
         """Test get_server_config with MCP.json configuration."""  # [attr-defined]
         # Mock finding MCP.json file
@@ -195,8 +191,7 @@ class TestMCPJsonIntegration:
 
         # Mock loading MCP.json configuration  # [attr-defined]
         server_config = MCPServerConfig(
-            command="python",
-            env={"FASTMCP_SERVER_NAME": "MCP Test Server"}
+            command="python", env={"FASTMCP_SERVER_NAME": "MCP Test Server"}
         )
         mcp_config = MCPJsonConfig(mcpServers={"githound": server_config})
         mock_load.return_value = mcp_config  # [attr-defined]
@@ -204,13 +199,13 @@ class TestMCPJsonIntegration:
         config = get_server_config()
         assert config.name == "MCP Test Server"  # [attr-defined]
 
-    @patch('githound.mcp.config.find_mcp_json_files')  # [attr-defined]
+    @patch("githound.mcp.config.find_mcp_json_files")  # [attr-defined]
     def test_get_server_config_no_mcp_json(self, mock_find) -> None:
         """Test get_server_config falls back to environment variables."""
         # Mock no MCP.json files found
         mock_find.return_value = []
 
-        with patch.dict('os.environ', {'FASTMCP_SERVER_NAME': 'Env Test Server'}):
+        with patch.dict("os.environ", {"FASTMCP_SERVER_NAME": "Env Test Server"}):
             config = get_server_config()
             assert config.name == "Env Test Server"  # [attr-defined]
 

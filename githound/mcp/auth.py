@@ -1,9 +1,9 @@
 """Authentication and authorization functionality for GitHound MCP server."""
 
-import os
 import logging
-from typing import Any, Optional, Dict, List, Protocol
+import os
 from importlib import import_module
+from typing import Any, Dict, List, Optional, Protocol
 
 from .models import User
 
@@ -74,8 +74,7 @@ def _create_auth_provider_from_environment() -> Optional[AuthProvider]:
         return provider
 
     except Exception as e:
-        logger.error(
-            f"Failed to create authentication provider from {provider_class_path}: {e}")
+        logger.error(f"Failed to create authentication provider from {provider_class_path}: {e}")
         return None
 
 
@@ -95,21 +94,21 @@ def _wrap_with_authorization_provider(base_provider: AuthProvider) -> AuthProvid
     if os.getenv("EUNOMIA_ENABLE", "false").lower() == "true":
         try:
             from .providers.eunomia import EunomiaAuthorizationProvider
+
             provider = EunomiaAuthorizationProvider(provider)
             logger.info("Wrapped provider with Eunomia authorization")
         except ImportError:
-            logger.warning(
-                "Eunomia authorization requested but eunomia-mcp not available")
+            logger.warning("Eunomia authorization requested but eunomia-mcp not available")
 
     # Check for Permit.io authorization
     if os.getenv("PERMIT_ENABLE", "false").lower() == "true":
         try:
             from .providers.permit import PermitAuthorizationProvider
+
             provider = PermitAuthorizationProvider(provider)
             logger.info("Wrapped provider with Permit.io authorization")
         except ImportError:
-            logger.warning(
-                "Permit.io authorization requested but permit-fastmcp not available")
+            logger.warning("Permit.io authorization requested but permit-fastmcp not available")
 
     return provider
 
@@ -171,7 +170,9 @@ def check_rate_limit(user: User | None = None) -> bool:
     return True
 
 
-async def check_permission(user: User, permission: str, resource: Optional[str] = None, **context: Any) -> bool:
+async def check_permission(
+    user: User, permission: str, resource: Optional[str] = None, **context: Any
+) -> bool:
     """
     Check if a user has a specific permission.
 
@@ -191,7 +192,10 @@ async def check_permission(user: User, permission: str, resource: Optional[str] 
 
     try:
         # Check if provider supports enhanced permission checking with context
-        if hasattr(provider, 'check_permission') and 'resource' in provider.check_permission.__code__.co_varnames:
+        if (
+            hasattr(provider, "check_permission")
+            and "resource" in provider.check_permission.__code__.co_varnames
+        ):
             return await provider.check_permission(user, permission, resource, **context)
         else:
             # Fallback to basic permission checking
@@ -223,7 +227,7 @@ async def check_tool_permission(user: User, tool_name: str, tool_args: Dict[str,
 
     try:
         # Check if provider supports tool-specific permission checking
-        if hasattr(provider, 'check_tool_permission'):
+        if hasattr(provider, "check_tool_permission"):
             return await provider.check_tool_permission(user, tool_name, tool_args)
         else:
             # Fallback to regular permission check with tool arguments as context

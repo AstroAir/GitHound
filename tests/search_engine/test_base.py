@@ -1,10 +1,10 @@
 """Tests for GitHound search engine base classes."""
 
-import pytest
+from abc import ABC
 from datetime import datetime, timedelta
 from unittest.mock import Mock
-from abc import ABC
 
+import pytest
 from git import Repo
 
 from githound.models import SearchQuery, SearchResult, SearchType
@@ -33,11 +33,9 @@ def mock_repo() -> None:
         commit.committer.name = f"Author {i}"
         commit.committer.email = f"author{i}@example.com"
         commit.message = f"Test commit {i}"
-        commit.committed_date = int(
-            (datetime.now() - timedelta(days=i)).timestamp())
+        commit.committed_date = int((datetime.now() - timedelta(days=i)).timestamp())
         commit.committed_datetime = datetime.now() - timedelta(days=i)
-        commit.stats.files = {f"file{i}.py": {
-            "insertions": 10, "deletions": 5}}
+        commit.stats.files = {f"file{i}.py": {"insertions": 10, "deletions": 5}}
         commit.stats.total = {"insertions": 10, "deletions": 5}
         commit.parents = []
         commit.repo = mock_repo
@@ -92,7 +90,7 @@ class MockSearcher(BaseSearcher):
             line_number=1,
             matching_line="test content",
             search_type=SearchType.CONTENT,
-            relevance_score=0.9
+            relevance_score=0.9,
         )
 
 
@@ -120,14 +118,16 @@ class MockCacheableSearcher(CacheableSearcher):
             return
 
         # Generate new results
-        results = [SearchResult(
-            commit_hash="def456",
-            file_path="cached_test.py",
-            line_number=2,
-            matching_line="cached test content",
-            search_type=SearchType.CONTENT,
-            relevance_score=0.8
-        )]
+        results = [
+            SearchResult(
+                commit_hash="def456",
+                file_path="cached_test.py",
+                line_number=2,
+                matching_line="cached test content",
+                search_type=SearchType.CONTENT,
+                relevance_score=0.8,
+            )
+        ]
 
         # Cache the results (work around base class bug)
         if context.cache is not None:
@@ -224,10 +224,8 @@ class TestCacheableSearcherClass:
         query1 = SearchQuery(content_pattern="test1")
         query2 = SearchQuery(content_pattern="test2")
 
-        context1 = SearchContext(
-            repo=mock_repo, query=query1, branch="main", cache={})
-        context2 = SearchContext(
-            repo=mock_repo, query=query2, branch="main", cache={})
+        context1 = SearchContext(repo=mock_repo, query=query1, branch="main", cache={})
+        context2 = SearchContext(repo=mock_repo, query=query2, branch="main", cache={})
 
         key1 = searcher._get_cache_key(context1)
         key2 = searcher._get_cache_key(context2)
@@ -285,7 +283,7 @@ class TestCacheableSearcherClass:
             line_number=5,
             matching_line="cached content",
             search_type=SearchType.CONTENT,
-            relevance_score=0.8
+            relevance_score=0.8,
         )
         search_context.cache[cache_key] = [cached_result]
 
@@ -300,7 +298,9 @@ class TestCacheableSearcherClass:
         assert results[0].line_number == 5
 
     @pytest.mark.asyncio
-    async def test_cacheable_searcher_different_branches(self, mock_repo, sample_search_query) -> None:
+    async def test_cacheable_searcher_different_branches(
+        self, mock_repo, sample_search_query
+    ) -> None:
         """Test that different branches generate different cache keys."""
         searcher = MockCacheableSearcher()
 
@@ -350,9 +350,7 @@ class TestSearchContextClass:
         """Test SearchContext with pre-populated cache."""
         cache = {"test_key": "test_value"}
 
-        context = SearchContext(
-            repo=mock_repo, query=sample_search_query, cache=cache
-        )
+        context = SearchContext(repo=mock_repo, query=sample_search_query, cache=cache)
 
         assert context.cache == cache
         assert context.cache["test_key"] == "test_value"

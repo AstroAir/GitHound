@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from git import GitCommandError
 
@@ -26,14 +26,28 @@ from .models import (
 )
 
 
-class MockContext:
+# Import Context for type compatibility
+try:
+    from fastmcp import Context as BaseContext
+except ImportError:
+    # Create a base context class for type compatibility
+    class BaseContext:  # type: ignore
+        async def info(self, message: str) -> None: ...
+        async def error(self, message: str) -> None: ...
+
+class MockContext(BaseContext):
     """Mock context for direct function calls."""
 
-    async def info(self, message: str) -> None:
+    def __init__(self, fastmcp: Any = None) -> None:
+        """Initialize mock context."""
+        # Don't set fastmcp as it's read-only in the base class
+        pass
+
+    async def info(self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None) -> None:
         """Mock info logging."""
         print(f"INFO: {message}")
 
-    async def error(self, message: str) -> None:
+    async def error(self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None) -> None:
         """Mock error logging."""
         print(f"ERROR: {message}")
 
@@ -117,14 +131,14 @@ async def export_repository_data_direct(input_data: ExportInput) -> dict[str, An
         output_path = Path(input_data.output_path)
 
         if input_data.format.lower() == "json":
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, indent=2, default=str)
         elif input_data.format.lower() == "yaml":
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 yaml.dump(export_data, f, default_flow_style=False)
         else:
             # Default to JSON
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, indent=2, default=str)
 
         await ctx.info(f"Repository data export complete: {output_path}")
@@ -151,12 +165,14 @@ async def get_commit_history_direct(input_data: CommitHistoryInput) -> dict[str,
         await ctx.info(f"Retrieving commit history from {input_data.repo_path}")
 
         repo = get_repository(Path(input_data.repo_path))
-        commit_objects = list(get_commits_with_filters(
-            repo,
-            max_count=input_data.max_count,
-            author_pattern=input_data.author,
-            branch=input_data.branch
-        ))
+        commit_objects = list(
+            get_commits_with_filters(
+                repo,
+                max_count=input_data.max_count,
+                author_pattern=input_data.author,
+                branch=input_data.branch,
+            )
+        )
 
         # Convert commit objects to dictionaries
         commits: list[Any] = []
@@ -203,8 +219,12 @@ async def get_file_blame_direct(input_data: FileBlameInput) -> dict[str, Any]:
             "file_path": blame_result.file_path,
             "total_lines": blame_result.total_lines,
             "contributors": blame_result.contributors,
-            "oldest_line_date": blame_result.oldest_line_date.isoformat() if blame_result.oldest_line_date else None,
-            "newest_line_date": blame_result.newest_line_date.isoformat() if blame_result.newest_line_date else None,
+            "oldest_line_date": (
+                blame_result.oldest_line_date.isoformat() if blame_result.oldest_line_date else None
+            ),
+            "newest_line_date": (
+                blame_result.newest_line_date.isoformat() if blame_result.newest_line_date else None
+            ),
             "line_blame": [
                 {
                     "line_number": line.line_number,
@@ -216,7 +236,7 @@ async def get_file_blame_direct(input_data: FileBlameInput) -> dict[str, Any]:
                     "commit_message": line.commit_message,
                 }
                 for line in blame_result.blame_info
-            ]
+            ],
         }
 
         await ctx.info(f"Blame analysis complete for {input_data.file_path}")
@@ -242,8 +262,7 @@ async def compare_commits_direct(input_data: CommitComparisonInput) -> dict[str,
         await ctx.info(f"Comparing commits {input_data.from_commit} and {input_data.to_commit}")
 
         repo = get_repository(Path(input_data.repo_path))
-        diff_result = compare_commits(
-            repo, input_data.from_commit, input_data.to_commit)
+        diff_result = compare_commits(repo, input_data.from_commit, input_data.to_commit)
 
         await ctx.info("Commit comparison complete")
 
@@ -365,10 +384,9 @@ async def get_repository_contributors_direct(repo_path: str) -> str:
             else:
                 result_lines.append(f"{i}. **{contributor}**")
 
-        result_lines.extend([
-            "",
-            f"Generated at: {datetime.now().isoformat() if datetime is not None else None}"
-        ])
+        result_lines.extend(
+            ["", f"Generated at: {datetime.now().isoformat() if datetime is not None else None}"]
+        )
 
         return "\n".join(result_lines)
 
@@ -400,18 +418,19 @@ async def get_repository_summary_direct(repo_path: str) -> str:
         ]
 
         # Add recent commits if available
-        if metadata.get('recent_commits'):
-            for commit in metadata['recent_commits'][:5]:  # Show last 5 commits
-                summary_lines.append(
-                    f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
+        if metadata.get("recent_commits"):
+            for commit in metadata["recent_commits"][:5]:  # Show last 5 commits
+                summary_lines.append(f"  - {commit['hash'][:8]}: {commit['message'][:60]}...")
 
         # Add top contributors
-        if metadata.get('contributors'):
-            summary_lines.extend([
-                "",
-                "Top Contributors:",
-            ])
-            contributors = metadata['contributors']
+        if metadata.get("contributors"):
+            summary_lines.extend(
+                [
+                    "",
+                    "Top Contributors:",
+                ]
+            )
+            contributors = metadata["contributors"]
             if isinstance(contributors, list):
                 for i, contributor in enumerate(contributors[:5], 1):
                     if isinstance(contributor, dict):

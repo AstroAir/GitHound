@@ -14,6 +14,7 @@ from ...git_handler import get_repository
 
 class GitOperationError(Exception):
     """Custom exception for Git operation errors."""
+
     pass
 
 
@@ -40,11 +41,14 @@ class GitOperationsManager:
                             "path": str(repo_path),
                             "bare": existing_repo.bare,
                             "status": "already_exists",
-                            "head_commit": existing_repo.head.commit.hexsha if not existing_repo.bare else None
+                            "head_commit": (
+                                existing_repo.head.commit.hexsha if not existing_repo.bare else None
+                            ),
                         }
                     except InvalidGitRepositoryError:
                         raise GitOperationError(
-                            f"Directory {path} is not empty and not a Git repository")
+                            f"Directory {path} is not empty and not a Git repository"
+                        )
             else:
                 repo_path.mkdir(parents=True, exist_ok=True)
 
@@ -56,7 +60,7 @@ class GitOperationsManager:
                 "bare": bare,
                 "status": "created",
                 "git_dir": str(repo.git_dir),
-                "working_dir": str(repo.working_dir) if not bare else None
+                "working_dir": str(repo.working_dir) if not bare else None,
             }
 
         except Exception as e:
@@ -68,7 +72,7 @@ class GitOperationsManager:
         path: str,
         branch: str | None = None,
         depth: int | None = None,
-        recursive: bool = False
+        recursive: bool = False,
     ) -> dict[str, Any]:
         """Clone a remote repository."""
         try:
@@ -76,29 +80,25 @@ class GitOperationsManager:
 
             # Check if target directory exists
             if repo_path.exists() and any(repo_path.iterdir()):
-                raise GitOperationError(
-                    f"Target directory {path} is not empty")
+                raise GitOperationError(f"Target directory {path} is not empty")
 
             # Clone repository
             if branch and depth and recursive:
                 repo = Repo.clone_from(
-                    url, str(repo_path), branch=branch, depth=depth, recursive=recursive)
+                    url, str(repo_path), branch=branch, depth=depth, recursive=recursive
+                )
             elif branch and depth:
-                repo = Repo.clone_from(
-                    url, str(repo_path), branch=branch, depth=depth)
+                repo = Repo.clone_from(url, str(repo_path), branch=branch, depth=depth)
             elif branch and recursive:
-                repo = Repo.clone_from(
-                    url, str(repo_path), branch=branch, recursive=recursive)
+                repo = Repo.clone_from(url, str(repo_path), branch=branch, recursive=recursive)
             elif depth and recursive:
-                repo = Repo.clone_from(
-                    url, str(repo_path), depth=depth, recursive=recursive)
+                repo = Repo.clone_from(url, str(repo_path), depth=depth, recursive=recursive)
             elif branch:
                 repo = Repo.clone_from(url, str(repo_path), branch=branch)
             elif depth:
                 repo = Repo.clone_from(url, str(repo_path), depth=depth)
             elif recursive:
-                repo = Repo.clone_from(
-                    url, str(repo_path), recursive=recursive)
+                repo = Repo.clone_from(url, str(repo_path), recursive=recursive)
             else:
                 repo = Repo.clone_from(url, str(repo_path))
 
@@ -109,7 +109,7 @@ class GitOperationsManager:
                 "status": "cloned",
                 "git_dir": str(repo.git_dir),
                 "working_dir": str(repo.working_dir),
-                "head_commit": repo.head.commit.hexsha
+                "head_commit": repo.head.commit.hexsha,
             }
 
         except Exception as e:
@@ -132,7 +132,7 @@ class GitOperationsManager:
                 "total_commits": len(list(repo.iter_commits())),
                 "branches": [branch.name for branch in repo.branches],
                 "tags": [tag.name for tag in repo.tags],
-                "remotes": [remote.name for remote in repo.remotes]
+                "remotes": [remote.name for remote in repo.remotes],
             }
 
             return status
@@ -149,17 +149,23 @@ class GitOperationsManager:
             conflicts = []
             if repo.is_dirty():
                 for item in repo.index.diff(None):
-                    if item.change_type == 'M':  # Modified files might have conflicts
+                    if item.change_type == "M":  # Modified files might have conflicts
                         file_path = item.a_path
+                        if file_path is None:
+                            continue
                         try:
-                            with open(repo.working_dir / file_path, 'r', encoding='utf-8') as f:
+                            from pathlib import Path
+                            file_full_path = Path(repo.working_dir) / file_path
+                            with open(file_full_path, "r", encoding="utf-8") as f:
                                 content = f.read()
-                                if '<<<<<<< HEAD' in content:
-                                    conflicts.append({
-                                        "file_path": file_path,
-                                        "status": "conflicted",
-                                        "conflict_markers": True
-                                    })
+                                if "<<<<<<< HEAD" in content:
+                                    conflicts.append(
+                                        {
+                                            "file_path": file_path,
+                                            "status": "conflicted",
+                                            "conflict_markers": True,
+                                        }
+                                    )
                         except (UnicodeDecodeError, FileNotFoundError):
                             # Skip binary files or missing files
                             pass
@@ -168,7 +174,7 @@ class GitOperationsManager:
                 "has_conflicts": len(conflicts) > 0,
                 "conflicted_files": conflicts,
                 "total_conflicts": len(conflicts),
-                "merge_in_progress": repo.git.status().find("You have unmerged paths") != -1
+                "merge_in_progress": repo.git.status().find("You have unmerged paths") != -1,
             }
 
         except Exception as e:
@@ -176,7 +182,9 @@ class GitOperationsManager:
 
     # Branch Operations
 
-    def create_branch(self, path: str, branch_name: str, start_point: str | None = None) -> dict[str, Any]:
+    def create_branch(
+        self, path: str, branch_name: str, start_point: str | None = None
+    ) -> dict[str, Any]:
         """Create a new branch."""
         try:
             repo = get_repository(Path(path))
@@ -195,7 +203,7 @@ class GitOperationsManager:
                 "branch_name": branch_name,
                 "start_point": start_point or "HEAD",
                 "status": "created",
-                "commit": new_branch.commit.hexsha
+                "commit": new_branch.commit.hexsha,
             }
 
         except Exception as e:
@@ -218,11 +226,7 @@ class GitOperationsManager:
             branch = repo.heads[branch_name]
             repo.delete_head(branch, force=force)
 
-            return {
-                "branch_name": branch_name,
-                "status": "deleted",
-                "force": force
-            }
+            return {"branch_name": branch_name, "status": "deleted", "force": force}
 
         except Exception as e:
             raise GitOperationError(f"Failed to delete branch: {e}")
@@ -248,7 +252,7 @@ class GitOperationsManager:
                 "previous_branch": repo.active_branch.name if repo.active_branch else None,
                 "current_branch": branch_name,
                 "status": "switched",
-                "head_commit": repo.head.commit.hexsha
+                "head_commit": repo.head.commit.hexsha,
             }
 
         except Exception as e:
@@ -262,7 +266,7 @@ class GitOperationsManager:
         message: str,
         author_name: str | None = None,
         author_email: str | None = None,
-        add_all: bool = False
+        add_all: bool = False,
     ) -> dict[str, Any]:
         """Create a new commit."""
         try:
@@ -290,7 +294,7 @@ class GitOperationsManager:
                 "author": f"{commit.author.name} <{commit.author.email}>",
                 "timestamp": commit.committed_datetime.isoformat(),
                 "files_changed": len(commit.stats.files),
-                "status": "created"
+                "status": "created",
             }
 
         except Exception as e:
@@ -298,7 +302,9 @@ class GitOperationsManager:
 
     # Tag Operations
 
-    def create_tag(self, path: str, tag_name: str, message: str | None = None, commit: str | None = None) -> dict[str, Any]:
+    def create_tag(
+        self, path: str, tag_name: str, message: str | None = None, commit: str | None = None
+    ) -> dict[str, Any]:
         """Create a new tag."""
         try:
             repo = get_repository(Path(path))
@@ -323,7 +329,7 @@ class GitOperationsManager:
                 "commit": target_commit.hexsha,
                 "message": message,
                 "status": "created",
-                "timestamp": target_commit.committed_datetime.isoformat()
+                "timestamp": target_commit.committed_datetime.isoformat(),
             }
 
         except Exception as e:
@@ -342,10 +348,7 @@ class GitOperationsManager:
             tag = repo.tags[tag_name]
             repo.delete_tag(tag)
 
-            return {
-                "tag_name": tag_name,
-                "status": "deleted"
-            }
+            return {"tag_name": tag_name, "status": "deleted"}
 
         except Exception as e:
             raise GitOperationError(f"Failed to delete tag: {e}")

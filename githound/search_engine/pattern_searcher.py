@@ -42,7 +42,6 @@ class CodePatternSearcher(CacheableSearcher):
                 "description": "Potential SQL injection vulnerability",
                 "file_types": [".py", ".java", ".cs", ".php"],
             },
-            
             # Code quality patterns
             "long_functions": {
                 "patterns": [
@@ -68,7 +67,6 @@ class CodePatternSearcher(CacheableSearcher):
                     r"return\s+\d+",  # Return statements
                 ],
             },
-            
             # Performance patterns
             "nested_loops": {
                 "patterns": [
@@ -79,7 +77,6 @@ class CodePatternSearcher(CacheableSearcher):
                 "description": "Nested loops that may impact performance",
                 "file_types": [".py", ".js", ".java", ".cs", ".cpp", ".c"],
             },
-            
             # Design patterns
             "singleton_pattern": {
                 "patterns": [
@@ -90,7 +87,6 @@ class CodePatternSearcher(CacheableSearcher):
                 "description": "Singleton pattern implementation",
                 "file_types": [".py", ".java", ".cs"],
             },
-            
             # Documentation patterns
             "missing_docstrings": {
                 "patterns": [
@@ -100,7 +96,6 @@ class CodePatternSearcher(CacheableSearcher):
                 "description": "Functions missing documentation",
                 "file_types": [".py"],
             },
-            
             # Error handling patterns
             "bare_except": {
                 "patterns": [
@@ -117,10 +112,15 @@ class CodePatternSearcher(CacheableSearcher):
         """Check if this searcher can handle pattern detection queries."""
         # Handle queries that request pattern analysis
         return bool(
-            (hasattr(query, 'pattern_analysis') and query.pattern_analysis) or
-            (hasattr(query, 'code_quality') and query.code_quality) or
-            (query.content_pattern and any(keyword in query.content_pattern.lower()
-                                         for keyword in ['pattern', 'anti-pattern', 'smell', 'quality']))
+            (hasattr(query, "pattern_analysis") and query.pattern_analysis)
+            or (hasattr(query, "code_quality") and query.code_quality)
+            or (
+                query.content_pattern
+                and any(
+                    keyword in query.content_pattern.lower()
+                    for keyword in ["pattern", "anti-pattern", "smell", "quality"]
+                )
+            )
         )
 
     async def estimate_work(self, context: SearchContext) -> int:
@@ -147,7 +147,7 @@ class CodePatternSearcher(CacheableSearcher):
 
         # Perform pattern analysis
         results: list[SearchResult] = []
-        
+
         # Analyze patterns in repository
         self._report_progress(context, "Scanning for code patterns...", 0.2)
         pattern_results = await self._scan_for_patterns(context)
@@ -155,51 +155,48 @@ class CodePatternSearcher(CacheableSearcher):
 
         # Cache results
         await self._set_cache(context, cache_key, results)
-        
+
         # Yield results
         for result in results:
             yield result
-            
+
         self._report_progress(context, "Pattern analysis completed", 1.0)
 
     async def _scan_for_patterns(self, context: SearchContext) -> list[SearchResult]:
         """Scan repository for code patterns."""
         results: list[SearchResult] = []
         branch = context.branch or context.repo.active_branch.name
-        
+
         commits_processed = 0
         files_analyzed = 0
-        
+
         for commit in context.repo.iter_commits(branch):
             commits_processed += 1
             if commits_processed > 1000:  # Limit for performance
                 break
-                
+
             # Analyze files in this commit
             for file_path in commit.stats.files:
                 if self._should_analyze_file(file_path):
-                    file_results = await self._analyze_file_patterns(
-                        commit, file_path, context
-                    )
+                    file_results = await self._analyze_file_patterns(commit, file_path, context)
                     results.extend(file_results)
                     files_analyzed += 1
 
         self._update_metrics(
-            total_commits_searched=commits_processed,
-            total_files_searched=files_analyzed
+            total_commits_searched=commits_processed, total_files_searched=files_analyzed
         )
-        
+
         return results
 
     def _should_analyze_file(self, file_path: str) -> bool:
         """Determine if a file should be analyzed for patterns."""
         file_ext = Path(file_path).suffix.lower()
-        
+
         # Check if any pattern supports this file type
         for pattern_info in self._pattern_definitions.values():
             if file_ext in pattern_info.get("file_types", []):
                 return True
-        
+
         return False
 
     async def _analyze_file_patterns(
@@ -207,66 +204,72 @@ class CodePatternSearcher(CacheableSearcher):
     ) -> list[SearchResult]:
         """Analyze a specific file for code patterns."""
         results: list[SearchResult] = []
-        
+
         try:
             # Get file content at this commit
-            file_content = commit.tree[file_path].data_stream.read().decode('utf-8', errors='ignore')
-            lines = file_content.split('\n')
+            file_content = (
+                commit.tree[file_path].data_stream.read().decode("utf-8", errors="ignore")
+            )
+            lines = file_content.split("\n")
             file_ext = Path(file_path).suffix.lower()
-            
+
             # Check each pattern
             for pattern_name, pattern_info in self._pattern_definitions.items():
                 if file_ext not in pattern_info.get("file_types", []):
                     continue
-                    
+
                 pattern_results = await self._check_pattern_in_file(
-                    pattern_name, pattern_info, file_content, lines, 
-                    commit, file_path, context
+                    pattern_name, pattern_info, file_content, lines, commit, file_path, context
                 )
                 results.extend(pattern_results)
-                
+
         except (UnicodeDecodeError, KeyError, AttributeError):
             # Skip files that can't be read or don't exist
             pass
-            
+
         return results
 
     async def _check_pattern_in_file(
-        self, pattern_name: str, pattern_info: dict[str, Any], 
-        file_content: str, lines: list[str], commit: Any, 
-        file_path: str, context: SearchContext
+        self,
+        pattern_name: str,
+        pattern_info: dict[str, Any],
+        file_content: str,
+        lines: list[str],
+        commit: Any,
+        file_path: str,
+        context: SearchContext,
     ) -> list[SearchResult]:
         """Check for a specific pattern in a file."""
         results: list[SearchResult] = []
-        
+
         patterns = pattern_info["patterns"]
         exclude_patterns = pattern_info.get("exclude_patterns", [])
         severity = pattern_info["severity"]
         description = pattern_info["description"]
-        
+
         for pattern in patterns:
             try:
                 regex = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
-                
+
                 for line_num, line in enumerate(lines, 1):
                     matches = regex.finditer(line)
-                    
+
                     for match in matches:
                         # Check exclude patterns
                         if self._should_exclude_match(line, exclude_patterns):
                             continue
-                            
+
                         # Special handling for patterns requiring line analysis
                         if pattern_info.get("requires_line_analysis"):
                             if not self._analyze_function_length(lines, line_num):
                                 continue
-                        
+
                         # Create commit info
                         commit_info = self._create_commit_info(commit)
-                        
+
                         # Calculate relevance based on severity
                         relevance_score = self._calculate_pattern_relevance(severity)
-                        
+
                         result = SearchResult(
                             commit_hash=commit.hexsha,
                             file_path=Path(file_path),
@@ -280,16 +283,16 @@ class CodePatternSearcher(CacheableSearcher):
                                 "pattern_description": description,
                                 "severity": severity,
                                 "matched_text": match.group(),
-                                "analysis_type": "code_pattern"
+                                "analysis_type": "code_pattern",
                             },
-                            search_time_ms=None
+                            search_time_ms=None,
                         )
                         results.append(result)
-                        
+
             except re.error:
                 # Skip invalid regex patterns
                 continue
-                
+
         return results
 
     def _should_exclude_match(self, line: str, exclude_patterns: list[str]) -> bool:
@@ -307,27 +310,28 @@ class CodePatternSearcher(CacheableSearcher):
         # Simple heuristic: count lines until next function or class definition
         function_lines = 0
         indent_level = None
-        
+
         for i in range(start_line, min(start_line + 100, len(lines))):
             line = lines[i].rstrip()
             if not line:
                 continue
-                
+
             # Determine initial indent level
             if indent_level is None:
                 indent_level = len(line) - len(line.lstrip())
-                
+
             current_indent = len(line) - len(line.lstrip())
-            
+
             # If we hit a line with same or less indentation that starts a new definition
-            if (current_indent <= indent_level and 
-                (line.strip().startswith('def ') or 
-                 line.strip().startswith('class ') or
-                 line.strip().startswith('function '))):
+            if current_indent <= indent_level and (
+                line.strip().startswith("def ")
+                or line.strip().startswith("class ")
+                or line.strip().startswith("function ")
+            ):
                 break
-                
+
             function_lines += 1
-            
+
         # Consider functions with more than 50 lines as potentially too long
         return function_lines > 50
 

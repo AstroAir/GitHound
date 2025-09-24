@@ -185,39 +185,39 @@ print_status "Output: $OUTPUT_DIR"
 run_browser_tests() {
     local browser=$1
     print_status "Running tests for $browser"
-    
+
     # Base test command
     local cmd="playwright test --project=$browser --output-dir=$OUTPUT_DIR/$browser"
-    
+
     # Add reporters
     cmd="$cmd --reporter=html:$OUTPUT_DIR/$browser/html-report"
     cmd="$cmd --reporter=junit:$OUTPUT_DIR/$browser/results.xml"
     cmd="$cmd --reporter=./utils/custom-reporter.js:$OUTPUT_DIR/$browser/custom"
-    
+
     # Add specific test filters based on options
     local test_filters=""
-    
+
     if [[ "$PERFORMANCE" == "true" ]]; then
         test_filters="$test_filters --grep=@performance"
     fi
-    
+
     if [[ "$ACCESSIBILITY" == "true" ]]; then
         test_filters="$test_filters --grep=@accessibility"
     fi
-    
+
     if [[ "$VISUAL" == "true" ]]; then
         test_filters="$test_filters --grep=@visual"
     fi
-    
+
     if [[ "$LOAD_TEST" == "true" ]]; then
         test_filters="$test_filters --grep=@load"
     fi
-    
+
     # If no specific tests selected, run core tests
     if [[ -z "$test_filters" ]]; then
         test_filters="--grep=@unit|@integration|@ui"
     fi
-    
+
     # Execute the test command
     if eval "$cmd $test_filters"; then
         print_success "Tests completed successfully for $browser"
@@ -232,7 +232,7 @@ run_browser_tests() {
 generate_coverage() {
     if [[ "$COVERAGE" == "true" ]]; then
         print_status "Generating coverage reports"
-        
+
         node -e "
             const CoverageReporter = require('./utils/coverage-reporter.js');
             const reporter = new CoverageReporter({
@@ -242,7 +242,7 @@ generate_coverage() {
             });
             reporter.generateReports();
         "
-        
+
         if [[ $? -eq 0 ]]; then
             print_success "Coverage reports generated in $OUTPUT_DIR/coverage"
         else
@@ -254,9 +254,9 @@ generate_coverage() {
 # Function to generate summary report
 generate_summary() {
     print_status "Generating test summary"
-    
+
     local summary_file="$OUTPUT_DIR/summary.md"
-    
+
     cat > "$summary_file" << EOF
 # GitHound Web Frontend Test Summary
 
@@ -270,27 +270,27 @@ generate_summary() {
 ## Test Categories Run
 
 EOF
-    
+
     if [[ "$PERFORMANCE" == "true" ]]; then
         echo "- ⚡ Performance Tests" >> "$summary_file"
     fi
-    
+
     if [[ "$ACCESSIBILITY" == "true" ]]; then
         echo "- ♿ Accessibility Tests" >> "$summary_file"
     fi
-    
+
     if [[ "$VISUAL" == "true" ]]; then
         echo "- 👁️ Visual Regression Tests" >> "$summary_file"
     fi
-    
+
     if [[ "$LOAD_TEST" == "true" ]]; then
         echo "- 🔥 Load Tests" >> "$summary_file"
     fi
-    
+
     if [[ "$COVERAGE" == "true" ]]; then
         echo "- 📊 Coverage Analysis" >> "$summary_file"
     fi
-    
+
     cat >> "$summary_file" << EOF
 
 ## Results
@@ -301,30 +301,30 @@ Test results are available in the following locations:
 - Custom Reports: \`$OUTPUT_DIR/*/custom/\`
 
 EOF
-    
+
     if [[ "$COVERAGE" == "true" ]]; then
         echo "- Coverage Reports: \`$OUTPUT_DIR/coverage/\`" >> "$summary_file"
     fi
-    
+
     print_success "Test summary generated: $summary_file"
 }
 
 # Main execution
 main() {
     local exit_code=0
-    
+
     # Check if we're in the correct directory
     if [[ ! -f "playwright.config.js" ]]; then
         print_error "playwright.config.js not found. Please run this script from the githound/web/tests directory."
         exit 1
     fi
-    
+
     # Install dependencies if needed
     if [[ ! -d "node_modules" ]]; then
         print_status "Installing dependencies..."
         npm install
     fi
-    
+
     # Run tests based on browser selection
     if [[ "$BROWSER" == "all" ]]; then
         for browser in chromium firefox webkit; do
@@ -337,20 +337,20 @@ main() {
             exit_code=1
         fi
     fi
-    
+
     # Generate coverage if requested
     generate_coverage
-    
+
     # Generate summary
     generate_summary
-    
+
     if [[ $exit_code -eq 0 ]]; then
         print_success "All tests completed successfully!"
         print_status "Results available in: $OUTPUT_DIR"
     else
         print_error "Some tests failed. Check the reports for details."
     fi
-    
+
     exit $exit_code
 }
 

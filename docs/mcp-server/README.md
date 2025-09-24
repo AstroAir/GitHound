@@ -6,16 +6,16 @@ Complete documentation for GitHound's Model Context Protocol (MCP) server implem
 
 ### Getting Started
 
-- **[Overview](overview.md)** - Introduction to GitHound MCP server and its capabilities
+- **[Setup](setup.md)** - Installation, configuration, and client integration guide
 - **[Setup](setup.md)** - Installation, configuration, and client integration guide
 - **[Configuration](configuration.md)** - Complete configuration reference with MCP.json support
 
 ### Reference Documentation
 
-- **[Tools Reference](tools-reference.md)** - Comprehensive guide to all 25+ MCP tools
+- **[Tools Reference](tools-reference.md)** - Comprehensive guide to all 20+ MCP tools
 - **[Integration Examples](integration-examples.md)** - Practical examples and usage patterns
 
-## What is GitHound MCP Server?
+## What is GitHound MCP Server
 
 GitHound MCP Server is a comprehensive Model Context Protocol implementation that exposes all of GitHound's Git repository analysis capabilities through a standardized interface. Built with FastMCP 2.0, it provides:
 
@@ -79,85 +79,41 @@ GitHound MCP Server is a comprehensive Model Context Protocol implementation tha
                        └──────────────────┘
 ```
 
+## What is MCP
+
+The Model Context Protocol (MCP) is a standardized protocol that enables AI applications to access external data sources and tools in a secure, structured way. GitHound's MCP server exposes all of its Git analysis capabilities through this protocol.
+
+## Key Benefits
+
+### For AI Applications
+
+- **Structured Data Access**: Get Git data in standardized, type-safe formats
+- **Context-Aware Analysis**: Understand code evolution and repository patterns
+- **Real-time Information**: Access up-to-date repository information
+- **Comprehensive Coverage**: Full access to GitHound's analysis capabilities
+
+### For Developers
+
+- **Easy Integration**: Simple setup with any MCP-compatible AI tool
+- **Rich Metadata**: Detailed information about commits, authors, and changes
+- **Flexible Queries**: Support for complex search and analysis operations
+- **Performance Optimized**: Efficient data retrieval with caching
+
 ## Quick Start
 
-### 1. Installation
-
-```bash
-# Install GitHound with MCP support
-pip install githound[mcp]
-
-# Or upgrade FastMCP to 2.0+
-pip install "fastmcp>=2.11.0"
-```
-
-### 2. Basic Configuration
-
-Create `mcp.json` in your project directory:
-
-```json
-{
-  "mcpServers": {
-    "githound": {
-      "command": "python",
-      "args": ["-m", "githound.mcp_server"],
-      "env": {
-        "PYTHONPATH": "/path/to/githound",
-        "FASTMCP_SERVER_LOG_LEVEL": "INFO"
-      },
-      "description": "GitHound MCP Server - Git repository analysis"
-    }
-  }
-}
-```
-
-### 3. Start the Server
-
-```bash
-# Start with stdio transport (default)
-python -m githound.mcp_server
-
-# Start with HTTP transport
-python -m githound.mcp_server --http --port 3000
-```
-
-### 4. Client Integration
-
-Add to your MCP client configuration (e.g., Claude Desktop):
-
-```json
-{
-  "mcpServers": {
-    "githound": {
-      "command": "python",
-      "args": ["-m", "githound.mcp_server"],
-      "env": {
-        "PYTHONPATH": "/path/to/githound"
-      }
-    }
-  }
-}
-```
+For detailed installation and setup instructions, see the **[Setup Guide](setup.md)**.
 
 ## Documentation Structure
 
 ### Core Documentation
 
-1. **[Overview](overview.md)**
-
-   - MCP protocol introduction
-   - GitHound MCP architecture
-   - Key benefits and features
-   - Available tools and resources
-
-2. **[Setup](setup.md)**
-
+1. **[Setup](setup.md)**
    - Installation instructions
    - Configuration methods
    - Client integration guides
    - Troubleshooting tips
 
-3. **[Configuration](configuration.md)**
+2. **[Configuration](configuration.md)**
    - MCP.json format specification
    - Environment variables reference
    - Authentication setup
@@ -165,14 +121,13 @@ Add to your MCP client configuration (e.g., Claude Desktop):
 
 ### Reference Materials
 
-4. **[Tools Reference](tools-reference.md)**
-
+3. **[Tools Reference](tools-reference.md)**
    - Complete tool documentation
    - Parameter specifications
    - Return value formats
    - Usage examples
 
-5. **[Integration Examples](integration-examples.md)**
+4. **[Integration Examples](integration-examples.md)**
    - Client setup examples
    - Common usage patterns
    - AI assistant integration
@@ -278,7 +233,7 @@ GitHound MCP Server is released under the same license as GitHound core. See the
 
 **Next Steps:**
 
-1. Read the [Overview](overview.md) to understand the architecture
-2. Follow the [Setup](setup.md) guide to get started
-3. Explore [Integration Examples](integration-examples.md) for practical usage
-4. Reference the [Tools Documentation](tools-reference.md) for detailed API information
+1. Follow the [Setup](setup.md) guide to get started
+2. Explore [Integration Examples](integration-examples.md) for practical usage
+3. Reference the [Tools Documentation](tools-reference.md) for detailed API information
+4. Check the [Configuration Guide](configuration.md) for advanced setup options

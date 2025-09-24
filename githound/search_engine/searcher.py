@@ -4,7 +4,7 @@ import asyncio
 import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, Literal, Pattern
+from typing import Any, Awaitable, Callable, Literal, Pattern
 
 try:
     from rapidfuzz import fuzz
@@ -12,9 +12,11 @@ except ImportError:
     # Use mock for testing when rapidfuzz is not available
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     import mock_rapidfuzz
-    fuzz = mock_rapidfuzz.fuzz
+
+    fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, ParallelSearcher, SearchContext
@@ -35,14 +37,16 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
     async def can_handle(self, query: SearchQuery) -> bool:
         """Check if this searcher can handle complex queries."""
         # Handle queries with multiple criteria
-        criteria_count = sum([
-            bool(query.content_pattern),
-            bool(query.author_pattern),
-            bool(query.message_pattern),
-            bool(query.file_path_pattern),
-            bool(query.commit_hash),
-            bool(query.date_from or query.date_to),
-        ])
+        criteria_count = sum(
+            [
+                bool(query.content_pattern),
+                bool(query.author_pattern),
+                bool(query.message_pattern),
+                bool(query.file_path_pattern),
+                bool(query.commit_hash),
+                bool(query.date_from or query.date_to),
+            ]
+        )
         return criteria_count >= 2
 
     async def estimate_work(self, context: SearchContext) -> int:
@@ -86,7 +90,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             return
 
         # Perform multi-criteria search
-        results = []
+        results: list[SearchResult] = []
         async for result in self._perform_multi_criteria_search(context):
             results.append(result)
             yield result
@@ -104,7 +108,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
         # Create search tasks for different criteria
         search_tasks = []
-        
+
         if query.content_pattern:
             search_tasks.append(self._search_content_criteria)
         if query.author_pattern:
@@ -117,14 +121,14 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             search_tasks.append(self._search_date_criteria)
 
         # Execute searches in parallel
-        task_results = await self._run_parallel(
-            [lambda task=task: task(context) for task in search_tasks],
-            context
-        )
+        task_lambdas: list[Callable[[], Awaitable[list[SearchResult]]]] = [
+            lambda task=task: task(context) for task in search_tasks  # type: ignore[misc]
+        ]
+        task_results = await self._run_parallel(task_lambdas, context)
 
         # Combine results using logical operations
         combined_results = self._combine_search_results(task_results, query)
-        
+
         # Sort by relevance and yield
         combined_results.sort(key=lambda r: r.relevance_score, reverse=True)
         for result in combined_results:
@@ -132,7 +136,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
     async def _search_content_criteria(self, context: SearchContext) -> list[SearchResult]:
         """Search based on content criteria."""
-        results = []
+        results: list[SearchResult] = []
         query = context.query
         branch = context.branch or context.repo.active_branch.name
 
@@ -141,43 +145,38 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
         try:
             # Use ripgrep for fast content search
-            import subprocess
             import json
+            import subprocess
 
-            cmd = [
-                "rg", "--json", "--line-number", "--no-heading",
-                "--max-filesize", "10M"
-            ]
-            
+            cmd = ["rg", "--json", "--line-number", "--no-heading", "--max-filesize", "10M"]
+
             if not query.case_sensitive:
                 cmd.append("--ignore-case")
-            
+
             cmd.extend([query.content_pattern, str(context.repo.working_dir)])
 
-            process = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30
-            )
+            process = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if process.returncode == 0:
-                for line in process.stdout.strip().split('\n'):
+                for line in process.stdout.strip().split("\n"):
                     if line:
                         try:
                             data = json.loads(line)
-                            if data.get('type') == 'match':
+                            if data.get("type") == "match":
                                 # Get commit info for this file
-                                file_path = data['data']['path']['text']
-                                line_number = data['data']['line_number']
-                                matching_line = data['data']['lines']['text']
+                                file_path = data["data"]["path"]["text"]
+                                line_number = data["data"]["line_number"]
+                                matching_line = data["data"]["lines"]["text"]
 
                                 # Find the most recent commit for this file
-                                commits = list(context.repo.iter_commits(
-                                    branch, paths=file_path, max_count=1
-                                ))
-                                
+                                commits = list(
+                                    context.repo.iter_commits(branch, paths=file_path, max_count=1)
+                                )
+
                                 if commits:
                                     commit = commits[0]
                                     commit_info = self._create_commit_info(commit)
-                                    
+
                                     result = SearchResult(
                                         commit_hash=commit.hexsha,
                                         file_path=file_path,
@@ -190,8 +189,8 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                                         ),
                                         match_context={
                                             "search_criteria": "content",
-                                            "pattern": query.content_pattern
-                                        }
+                                            "pattern": query.content_pattern,
+                                        },
                                     )
                                     results.append(result)
                         except (json.JSONDecodeError, KeyError):
@@ -206,7 +205,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
     async def _search_author_criteria(self, context: SearchContext) -> list[SearchResult]:
         """Search based on author criteria."""
-        results = []
+        results: list[SearchResult] = []
         query = context.query
         branch = context.branch or context.repo.active_branch.name
 
@@ -222,7 +221,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             author_match = self._match_author(commit, query.author_pattern, query.fuzzy_search)
             if author_match:
                 commit_info = self._create_commit_info(commit)
-                
+
                 # Create result for each file in the commit
                 for file_path in commit.stats.files:
                     result = SearchResult(
@@ -236,8 +235,8 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                         match_context={
                             "search_criteria": "author",
                             "pattern": query.author_pattern,
-                            "matched_author": f"{commit.author.name} <{commit.author.email}>"
-                        }
+                            "matched_author": f"{commit.author.name} <{commit.author.email}>",
+                        },
                     )
                     results.append(result)
 
@@ -246,7 +245,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
     async def _search_message_criteria(self, context: SearchContext) -> list[SearchResult]:
         """Search based on commit message criteria."""
-        results = []
+        results: list[SearchResult] = []
         query = context.query
         branch = context.branch or context.repo.active_branch.name
 
@@ -262,7 +261,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             message_match = self._match_message(commit, query.message_pattern, query.fuzzy_search)
             if message_match:
                 commit_info = self._create_commit_info(commit)
-                
+
                 # Create result for each file in the commit
                 for file_path in commit.stats.files:
                     result = SearchResult(
@@ -276,8 +275,8 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                         match_context={
                             "search_criteria": "message",
                             "pattern": query.message_pattern,
-                            "matched_message": commit.message.strip()
-                        }
+                            "matched_message": commit.message.strip(),
+                        },
                     )
                     results.append(result)
 
@@ -286,7 +285,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
     async def _search_file_criteria(self, context: SearchContext) -> list[SearchResult]:
         """Search based on file path criteria."""
-        results = []
+        results: list[SearchResult] = []
         query = context.query
         branch = context.branch or context.repo.active_branch.name
 
@@ -308,10 +307,12 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                 break
 
             for file_path in commit.stats.files:
-                file_match = self._match_file_path(file_path, query.file_path_pattern, regex_pattern)
+                file_match = self._match_file_path(
+                    file_path, query.file_path_pattern, regex_pattern
+                )
                 if file_match:
                     commit_info = self._create_commit_info(commit)
-                    
+
                     result = SearchResult(
                         commit_hash=commit.hexsha,
                         file_path=file_path,
@@ -323,8 +324,8 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                         match_context={
                             "search_criteria": "file_path",
                             "pattern": query.file_path_pattern,
-                            "matched_path": file_path
-                        }
+                            "matched_path": file_path,
+                        },
                     )
                     results.append(result)
 
@@ -333,7 +334,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
     async def _search_date_criteria(self, context: SearchContext) -> list[SearchResult]:
         """Search based on date criteria."""
-        results = []
+        results: list[SearchResult] = []
         query = context.query
         branch = context.branch or context.repo.active_branch.name
 
@@ -348,10 +349,10 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
             commit_date = datetime.fromtimestamp(commit.committed_date)
             date_match = self._match_date_range(commit_date, query.date_from, query.date_to)
-            
+
             if date_match:
                 commit_info = self._create_commit_info(commit)
-                
+
                 # Create result for each file in the commit
                 for file_path in commit.stats.files:
                     result = SearchResult(
@@ -366,8 +367,8 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                             "search_criteria": "date_range",
                             "commit_date": commit_date.isoformat(),
                             "date_from": query.date_from.isoformat() if query.date_from else None,
-                            "date_to": query.date_to.isoformat() if query.date_to else None
-                        }
+                            "date_to": query.date_to.isoformat() if query.date_to else None,
+                        },
                     )
                     results.append(result)
 
@@ -388,7 +389,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
         # Find intersection based on commit_hash + file_path
         result_keys = set()
-        combined_results = []
+        combined_results: list[SearchResult] = []
 
         # Start with first result set
         first_results = task_results[0]
@@ -403,8 +404,9 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             result_keys = result_keys.intersection(other_keys)
 
         # Filter to only include intersected results
-        final_results = [r for r in combined_results
-                        if (r.commit_hash, str(r.file_path)) in result_keys]
+        final_results = [
+            r for r in combined_results if (r.commit_hash, str(r.file_path)) in result_keys
+        ]
 
         # Boost relevance scores for results that match multiple criteria
         for result in final_results:
@@ -460,13 +462,16 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                 pass
             return 1.0 if pattern_lower in message else 0.0
 
-    def _match_file_path(self, file_path: str, pattern: str, regex_pattern: Pattern[str] | None = None) -> float:
+    def _match_file_path(
+        self, file_path: str, pattern: str, regex_pattern: Pattern[str] | None = None
+    ) -> float:
         """Match file path against pattern."""
         if regex_pattern:
             return 1.0 if regex_pattern.search(file_path) else 0.0
         else:
             # Fallback to glob-style matching
             import fnmatch
+
             return 1.0 if fnmatch.fnmatch(file_path, pattern) else 0.0
 
     def _match_date_range(
@@ -515,15 +520,21 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             for file_path in commit.stats.files:
                 try:
                     # Get file content at this commit
-                    file_content = commit.tree[file_path].data_stream.read().decode('utf-8', errors='ignore')
-                    lines = file_content.split('\n')
+                    file_content = (
+                        commit.tree[file_path].data_stream.read().decode("utf-8", errors="ignore")
+                    )
+                    lines = file_content.split("\n")
 
                     for line_num, line in enumerate(lines, 1):
                         match = False
                         if regex_pattern:
                             match = bool(regex_pattern.search(line))
                         else:
-                            pattern_check = query.content_pattern.lower() if not query.case_sensitive else query.content_pattern
+                            pattern_check = (
+                                query.content_pattern.lower()
+                                if not query.case_sensitive
+                                else query.content_pattern
+                            )
                             line_check = line.lower() if not query.case_sensitive else line
                             match = pattern_check in line_check
 
@@ -537,12 +548,14 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                                 matching_line=line.strip(),
                                 commit_info=commit_info,
                                 search_type=SearchType.CONTENT,
-                                relevance_score=self._calculate_content_relevance(line, query.content_pattern),
+                                relevance_score=self._calculate_content_relevance(
+                                    line, query.content_pattern
+                                ),
                                 match_context={
                                     "search_criteria": "content",
                                     "pattern": query.content_pattern,
-                                    "manual_search": True
-                                }
+                                    "manual_search": True,
+                                },
                             )
                             results.append(result)
 
@@ -553,12 +566,16 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
         return results
 
     # Logical operation methods for future enhancement
-    async def _and_operation(self, results_a: list[SearchResult], results_b: list[SearchResult]) -> list[SearchResult]:
+    async def _and_operation(
+        self, results_a: list[SearchResult], results_b: list[SearchResult]
+    ) -> list[SearchResult]:
         """Perform AND operation on two result sets."""
         keys_a = {(r.commit_hash, str(r.file_path)) for r in results_a}
         return [r for r in results_b if (r.commit_hash, str(r.file_path)) in keys_a]
 
-    async def _or_operation(self, results_a: list[SearchResult], results_b: list[SearchResult]) -> list[SearchResult]:
+    async def _or_operation(
+        self, results_a: list[SearchResult], results_b: list[SearchResult]
+    ) -> list[SearchResult]:
         """Perform OR operation on two result sets."""
         combined = results_a.copy()
         existing_keys = {(r.commit_hash, str(r.file_path)) for r in results_a}
@@ -571,7 +588,9 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
         return combined
 
-    async def _not_operation(self, results_a: list[SearchResult], results_b: list[SearchResult]) -> list[SearchResult]:
+    async def _not_operation(
+        self, results_a: list[SearchResult], results_b: list[SearchResult]
+    ) -> list[SearchResult]:
         """Perform NOT operation (A - B)."""
         keys_b = {(r.commit_hash, str(r.file_path)) for r in results_b}
         return [r for r in results_a if (r.commit_hash, str(r.file_path)) not in keys_b]

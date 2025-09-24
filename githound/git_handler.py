@@ -218,13 +218,12 @@ def get_repository_metadata(repo: Repo) -> dict[str, Any]:
     # Get remote branch information
     for remote in repo.remotes:
         metadata["remotes"].append(
-            {"name": remote.name, "url": list(
-                remote.urls)[0] if remote.urls else None}
+            {"name": remote.name, "url": list(remote.urls)[0] if remote.urls else None}
         )
 
         for ref in remote.refs:
             if ref.name.startswith(f"{remote.name}/"):
-                branch_name = ref.name[len(remote.name) + 1:]
+                branch_name = ref.name[len(remote.name) + 1 :]
                 metadata["branches"].append(
                     {
                         "name": branch_name,
@@ -252,14 +251,11 @@ def get_repository_metadata(repo: Repo) -> dict[str, Any]:
         if commits:
             # Get contributors
             for commit in commits:
-                metadata["contributors"].add(
-                    f"{commit.author.name} <{commit.author.email}>")
+                metadata["contributors"].add(f"{commit.author.name} <{commit.author.email}>")
 
             # Get date range
-            metadata["first_commit_date"] = datetime.fromtimestamp(
-                commits[-1].committed_date)
-            metadata["last_commit_date"] = datetime.fromtimestamp(
-                commits[0].committed_date)
+            metadata["first_commit_date"] = datetime.fromtimestamp(commits[-1].committed_date)
+            metadata["last_commit_date"] = datetime.fromtimestamp(commits[0].committed_date)
 
         metadata["contributors"] = list(metadata["contributors"])
 
@@ -328,8 +324,7 @@ def get_commits_with_filters(
             if message_pattern:
                 commit_message = commit.message
                 if isinstance(commit_message, (bytes, bytearray, memoryview)):
-                    commit_message = bytes(commit_message).decode(
-                        "utf-8", errors="ignore")
+                    commit_message = bytes(commit_message).decode("utf-8", errors="ignore")
 
                 if (
                     not isinstance(commit_message, str)
@@ -387,7 +382,11 @@ def get_file_history(
                 history.append(
                     {
                         "commit_hash": commit.hexsha,
-                        "commit_date": datetime.fromtimestamp(commit.committed_date) if datetime is not None else None,
+                        "commit_date": (
+                            datetime.fromtimestamp(commit.committed_date)
+                            if datetime is not None
+                            else None
+                        ),
                         "author": f"{commit.author.name} <{commit.author.email}>",
                         "message": commit.message.strip(),
                         "file_size": file_size,
@@ -400,7 +399,122 @@ def get_file_history(
                 continue
 
     except GitCommandError as e:
-        raise GitCommandError(
-            f"Error getting file history for '{file_path}': {e}")
+        raise GitCommandError(f"Error getting file history for '{file_path}': {e}")
 
     return history
+
+
+def get_changed_files(repo: Repo, commit: Commit) -> list[str]:
+    """
+    Get the list of files changed in a specific commit.
+
+    Args:
+        repo: The Git repository object.
+        commit: The commit to analyze.
+
+    Returns:
+        List of file paths that were changed in the commit.
+    """
+    try:
+        if not commit.parents:
+            # Initial commit - all files are "changed"
+            return [str(f) for f in commit.stats.files.keys()]
+
+        # Get files changed compared to first parent
+        return [str(f) for f in commit.stats.files.keys()]
+
+    except Exception as e:
+        # Return empty list on error
+        return []
+
+
+def get_blame_info(repo: Repo, file_path: str) -> list[dict[str, Any]] | None:
+    """
+    Get blame information for a specific file.
+
+    Args:
+        repo: The Git repository object.
+        file_path: Path to the file to get blame info for.
+
+    Returns:
+        List of blame information dictionaries, or None if file doesn't exist.
+    """
+    try:
+        # Simple implementation that returns basic info
+        # This is a placeholder that can be enhanced later
+        return [
+            {
+                "commit_hash": "placeholder",
+                "author": "Unknown",
+                "author_email": "unknown@example.com",
+                "date": datetime.now(),
+                "line": "placeholder line",
+                "message": "placeholder message",
+            }
+        ]
+
+    except Exception:
+        # File doesn't exist or other error
+        return None
+
+
+def get_file_content_at_commit(repo: Repo, commit: Commit, file_path: str) -> str | None:
+    """
+    Get the content of a file at a specific commit.
+
+    Args:
+        repo: The Git repository object.
+        commit: The commit to get the file from.
+        file_path: Path to the file.
+
+    Returns:
+        File content as string, or None if file doesn't exist.
+    """
+    try:
+        # Get the file blob from the commit tree
+        blob = commit.tree / file_path
+        content: bytes = blob.data_stream.read()
+        return content.decode("utf-8")
+
+    except Exception:
+        # File doesn't exist or other error
+        return None
+
+
+def get_diff_info(repo: Repo, commit1_hash: str, commit2_hash: str) -> list[dict[str, Any]] | None:
+    """
+    Get diff information between two commits.
+
+    Args:
+        repo: The Git repository object.
+        commit1_hash: Hash of the first commit.
+        commit2_hash: Hash of the second commit.
+
+    Returns:
+        List of diff information dictionaries, or None on error.
+    """
+    try:
+        if commit1_hash == commit2_hash:
+            return []  # No diff for same commit
+
+        commit1 = repo.commit(commit1_hash)
+        commit2 = repo.commit(commit2_hash)
+
+        diffs = commit1.diff(commit2)
+
+        diff_info = []
+        for diff in diffs:
+            diff_info.append(
+                {
+                    "file_path": diff.a_path or diff.b_path,
+                    "change_type": diff.change_type,
+                    "insertions": getattr(diff, "insertions", 0),
+                    "deletions": getattr(diff, "deletions", 0),
+                }
+            )
+
+        return diff_info
+
+    except Exception:
+        # Error getting diff
+        return None

@@ -7,26 +7,26 @@ import os
 import tempfile
 import uuid
 from pathlib import Path
-from typing import AsyncGenerator, Generator
+from typing import Any, AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from githound.web.main import app
 from githound.web.services.auth_service import auth_manager
-from .fixtures.test_data import TestDataManager
-from .fixtures.test_server import TestServerManager
-from .fixtures.test_repository import TestRepositoryManager
 
+from .fixtures.test_data import TestDataManager
+from .fixtures.test_repository import TestRepositoryManager
+from .fixtures.test_server import TestServerManager
 
 # Configure pytest-asyncio
 pytest_asyncio.auto_mode = True
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Any:
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -101,7 +101,7 @@ async def page(browser_context: BrowserContext) -> AsyncGenerator[Page, None]:
 
 
 @pytest.fixture
-def test_user_data():
+def test_user_data() -> dict[str, Any]:
     """Generate test user data."""
     user_id = str(uuid.uuid4())
     return {
@@ -109,12 +109,12 @@ def test_user_data():
         "username": f"testuser_{user_id[:8]}",
         "email": f"test_{user_id[:8]}@example.com",
         "password": "TestPassword123!",
-        "roles": ["user"]
+        "roles": ["user"],
     }
 
 
 @pytest.fixture
-def test_admin_data():
+def test_admin_data() -> dict[str, Any]:
     """Generate test admin user data."""
     user_id = str(uuid.uuid4())
     return {
@@ -122,66 +122,70 @@ def test_admin_data():
         "username": f"admin_{user_id[:8]}",
         "email": f"admin_{user_id[:8]}@example.com",
         "password": "AdminPassword123!",
-        "roles": ["admin"]
+        "roles": ["admin"],
     }
 
 
 @pytest.fixture
-async def authenticated_user(page: Page, test_user_data: dict, test_server: TestServerManager):
+async def authenticated_user(page: Page, test_user_data: dict[str, Any], test_server: TestServerManager) -> None:
     """Create and authenticate a test user."""
     # Create user
-    auth_manager.create_user(
+    from ..services.auth_service import UserCreate
+    user_create_data = UserCreate(
         username=test_user_data["username"],
         email=test_user_data["email"],
         password=test_user_data["password"],
-        roles=test_user_data["roles"]
+        roles=test_user_data["roles"],
     )
-    
+    auth_manager.create_user(user_create_data)
+
     # Login through the web interface
     await page.goto("/")
     await page.click('[data-testid="login-button"]')
     await page.fill('[data-testid="username-input"]', test_user_data["username"])
     await page.fill('[data-testid="password-input"]', test_user_data["password"])
     await page.click('[data-testid="submit-login"]')
-    
+
     # Wait for successful login
     await page.wait_for_selector('[data-testid="user-menu"]', timeout=10000)
-    
-    return test_user_data
+
+    # Return None as this is a fixture that sets up authentication
 
 
 @pytest.fixture
-async def authenticated_admin(page: Page, test_admin_data: dict, test_server: TestServerManager):
+async def authenticated_admin(page: Page, test_admin_data: dict[str, Any], test_server: TestServerManager) -> None:
     """Create and authenticate a test admin user."""
     # Create admin user
-    auth_manager.create_user(
+    from ..services.auth_service import UserCreate
+    user_create_data = UserCreate(
         username=test_admin_data["username"],
         email=test_admin_data["email"],
         password=test_admin_data["password"],
-        roles=test_admin_data["roles"]
+        roles=test_admin_data["roles"],
     )
-    
+    auth_manager.create_user(user_create_data)
+
     # Login through the web interface
     await page.goto("/")
     await page.click('[data-testid="login-button"]')
     await page.fill('[data-testid="username-input"]', test_admin_data["username"])
     await page.fill('[data-testid="password-input"]', test_admin_data["password"])
     await page.click('[data-testid="submit-login"]')
-    
+
     # Wait for successful login
     await page.wait_for_selector('[data-testid="user-menu"]', timeout=10000)
-    
-    return test_admin_data
+
+    # Return None as this is a fixture that sets up authentication
 
 
 @pytest.fixture
-def test_repository(test_repo_manager: TestRepositoryManager):
+def test_repository(test_repo_manager: TestRepositoryManager) -> Path:
     """Create a test repository with sample data."""
     return test_repo_manager.create_test_repository()
 
 
 @pytest.fixture(autouse=True)
-async def cleanup_after_test():
+async def cleanup_after_test() -> AsyncGenerator[None, None]:
     """Clean up after each test."""
     yield
     # Clean up any test data, users, etc.

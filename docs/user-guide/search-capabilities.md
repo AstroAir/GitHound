@@ -64,6 +64,7 @@ GitHound provides 8 specialized searchers, each optimized for different types of
 Searches within file contents using pattern matching and regular expressions.
 
 **Features:**
+
 - Regular expression support
 - Case-sensitive/insensitive matching
 - Context lines around matches
@@ -71,12 +72,14 @@ Searches within file contents using pattern matching and regular expressions.
 - Large file handling
 
 **Use Cases:**
+
 - Finding specific functions or variables
 - Locating TODO comments or bug markers
 - Searching for configuration values
 - Code pattern analysis
 
 **CLI Examples:**
+
 ```bash
 # Basic content search
 githound search "function authenticate" /path/to/repo
@@ -92,6 +95,7 @@ githound search "TODO" /path/to/repo --context 3
 ```
 
 **Python API:**
+
 ```python
 from githound.models import SearchQuery
 
@@ -117,18 +121,21 @@ query = SearchQuery(
 Searches for commits by author name or email address.
 
 **Features:**
+
 - Name and email pattern matching
 - Partial name matching
 - Case-insensitive author search
 - Author alias resolution
 
 **Use Cases:**
+
 - Finding all commits by a specific developer
 - Tracking contributions by team members
 - Analyzing author activity patterns
 - Code ownership analysis
 
 **CLI Examples:**
+
 ```bash
 # Search by author name
 githound search --author "John Doe" /path/to/repo
@@ -144,6 +151,7 @@ githound search --author "alice" "bug fix" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 # Author-only search
 query = SearchQuery(author_pattern="John Doe")
@@ -163,18 +171,21 @@ query = SearchQuery(
 Searches commit messages for specific keywords or patterns.
 
 **Features:**
+
 - Keyword and phrase matching
 - Regular expression support in messages
 - Case-insensitive message search
 - Multi-word phrase matching
 
 **Use Cases:**
+
 - Finding bug fixes and feature implementations
 - Tracking specific issues or tickets
 - Analyzing commit message patterns
 - Release and version tracking
 
 **CLI Examples:**
+
 ```bash
 # Search commit messages
 githound search --message "bug fix" /path/to/repo
@@ -190,6 +201,7 @@ githound search --message "feature" --author "alice" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 # Message search
 query = SearchQuery(message_pattern="bug fix")
@@ -210,33 +222,37 @@ query = SearchQuery(
 Filters commits by date ranges and time periods.
 
 **Features:**
+
 - Flexible date range specification
 - Relative date expressions
 - Time zone handling
 - Date format auto-detection
 
 **Use Cases:**
+
 - Analyzing activity in specific time periods
 - Finding changes around release dates
 - Tracking development velocity
 - Historical code analysis
 
 **CLI Examples:**
+
 ```bash
 # Search by date range
-githound search --date-from "2023-01-01" --date-to "2023-12-31" /path/to/repo
+githound search --repo-path /path/to/repo --date-from "2023-01-01" --date-to "2023-12-31"
 
 # Recent commits
-githound search --date-from "1 week ago" /path/to/repo
+githound search --repo-path /path/to/repo --date-from "1 week ago"
 
 # Specific month
-githound search --date-from "2023-06-01" --date-to "2023-06-30" /path/to/repo
+githound search --repo-path /path/to/repo --date-from "2023-06-01" --date-to "2023-06-30"
 
 # Combined with other criteria
 githound search --date-from "2023-01-01" --author "john" "refactor" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 from datetime import datetime, timedelta
 
@@ -264,18 +280,21 @@ query = SearchQuery(
 Searches for files based on path patterns and directory structures.
 
 **Features:**
+
 - Glob pattern matching
 - Directory-based filtering
 - Path regex support
 - Recursive directory search
 
 **Use Cases:**
+
 - Finding files in specific directories
 - Locating configuration files
 - Analyzing project structure
 - Path-based code organization
 
 **CLI Examples:**
+
 ```bash
 # Search by file path pattern
 githound search --file-path "*/config/*" /path/to/repo
@@ -291,6 +310,7 @@ githound search --file-path "src/" "import React" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 # Path pattern search
 query = SearchQuery(file_path_pattern="*/config/*")
@@ -310,18 +330,21 @@ query = SearchQuery(file_path_pattern="**/*.config.js")
 Filters results by file extensions and types.
 
 **Features:**
+
 - Multiple file extension support
 - MIME type detection
 - Binary file filtering
 - Custom file type definitions
 
 **Use Cases:**
+
 - Language-specific code analysis
 - Configuration file searches
 - Documentation searches
 - Asset and resource analysis
 
 **CLI Examples:**
+
 ```bash
 # Search specific file types
 githound search --file-type py,js "function" /path/to/repo
@@ -337,6 +360,7 @@ githound search --file-type py --author "alice" "class" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 # File type filtering
 query = SearchQuery(
@@ -363,18 +387,21 @@ query = SearchQuery(
 Searches for specific commits by hash or hash patterns.
 
 **Features:**
+
 - Full and partial hash matching
 - Hash prefix search
 - Commit validation
 - Related commit discovery
 
 **Use Cases:**
+
 - Finding specific commits
 - Tracking commit references
 - Debugging specific changes
 - Commit relationship analysis
 
 **CLI Examples:**
+
 ```bash
 # Search by full commit hash
 githound search --commit abc123def456... /path/to/repo
@@ -390,6 +417,7 @@ githound search --commit abc123 --author "john" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 # Specific commit
 query = SearchQuery(commit_hash="abc123def456...")
@@ -409,18 +437,21 @@ query = SearchQuery(
 Performs approximate string matching with configurable similarity thresholds.
 
 **Features:**
+
 - Levenshtein distance calculation
 - Configurable similarity thresholds
 - Typo-tolerant search
 - Phonetic matching options
 
 **Use Cases:**
+
 - Finding misspelled terms
 - Approximate code searches
 - Typo-tolerant documentation search
 - Similar pattern discovery
 
 **CLI Examples:**
+
 ```bash
 # Basic fuzzy search
 githound search --fuzzy "functon" /path/to/repo
@@ -436,6 +467,7 @@ githound search --fuzzy "functon,metod,clas" /path/to/repo
 ```
 
 **Python API:**
+
 ```python
 # Basic fuzzy search
 query = SearchQuery(
@@ -481,6 +513,7 @@ The Search Orchestrator coordinates multiple searchers and provides unified resu
 - **Memory Management**: Efficient memory usage for large results
 
 **Python API Usage:**
+
 ```python
 from githound.search_engine import SearchOrchestrator
 

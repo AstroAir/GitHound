@@ -22,7 +22,7 @@ test.describe('API Performance Tests', () => {
 
     await loginPage.register(testUser);
     await loginPage.login(testUser.username, testUser.password);
-    
+
     // Get auth token for direct API calls
     authToken = await page.evaluate(() => localStorage.getItem('access_token'));
   });
@@ -104,7 +104,7 @@ test.describe('API Performance Tests', () => {
       };
 
       const startTime = Date.now();
-      
+
       // Make concurrent requests
       const promises = Array(concurrentRequests).fill().map(() =>
         page.evaluate(async (request, token) => {
@@ -174,7 +174,7 @@ test.describe('API Performance Tests', () => {
       let errorCount = 0;
 
       const startTime = Date.now();
-      
+
       const intervalId = setInterval(async () => {
         if (Date.now() - startTime >= duration) {
           clearInterval(intervalId);
@@ -182,7 +182,7 @@ test.describe('API Performance Tests', () => {
         }
 
         requestCount++;
-        
+
         try {
           const response = await page.evaluate(async (token) => {
             const response = await fetch('/api/auth/profile', {
@@ -224,7 +224,7 @@ test.describe('API Performance Tests', () => {
 
       for (let burst = 0; burst < burstCount; burst++) {
         const burstStartTime = Date.now();
-        
+
         // Create burst of requests
         const burstPromises = Array(burstSize).fill().map(() =>
           page.evaluate(async (token) => {
@@ -265,7 +265,7 @@ test.describe('API Performance Tests', () => {
 
       for (const concurrency of loadLevels) {
         const startTime = Date.now();
-        
+
         const promises = Array(concurrency).fill().map(() =>
           page.evaluate(async (token) => {
             const response = await fetch('/api/search/advanced', {
@@ -304,7 +304,7 @@ test.describe('API Performance Tests', () => {
       // Performance should not degrade significantly with increased load
       const firstResult = results[0];
       const lastResult = results[results.length - 1];
-      
+
       // Response time should not increase more than 3x
       expect(lastResult.averageResponseTime).toBeLessThan(firstResult.averageResponseTime * 3);
     });
