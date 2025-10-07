@@ -76,25 +76,25 @@ def get_endpoint_rate_limiter() -> Callable[[str, str], str]:
 
 # Rate limit decorators for different endpoint types
 
-def search_rate_limit():
+def search_rate_limit() -> Callable[..., Any]:
     """Rate limit decorator for search endpoints."""
     limiter = get_limiter()
     return limiter.limit(SEARCH_RATE_LIMIT)
 
 
-def auth_rate_limit():
+def auth_rate_limit() -> Callable[..., Any]:
     """Rate limit decorator for authentication endpoints."""
     limiter = get_limiter()
     return limiter.limit(AUTH_RATE_LIMIT)
 
 
-def export_rate_limit():
+def export_rate_limit() -> Callable[..., Any]:
     """Rate limit decorator for export endpoints."""
     limiter = get_limiter()
     return limiter.limit(EXPORT_RATE_LIMIT)
 
 
-def default_rate_limit():
+def default_rate_limit() -> Callable[..., Any]:
     """Rate limit decorator for general endpoints."""
     limiter = get_limiter()
     return limiter.limit(DEFAULT_RATE_LIMIT)
@@ -105,7 +105,7 @@ def default_rate_limit():
 class RateLimitConfig:
     """Rate limiting configuration."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.enabled = RATE_LIMIT_ENABLED
         self.redis_url = REDIS_URL
         self.default_limit = DEFAULT_RATE_LIMIT

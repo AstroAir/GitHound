@@ -79,6 +79,25 @@ class SearchRequest(BaseModel):
         3, ge=0, le=20, description="Number of context lines")
     include_metadata: bool = Field(True, description="Include commit metadata")
 
+    def to_search_query(self) -> SearchQuery:
+        """Convert this request to the internal SearchQuery model."""
+        return SearchQuery(
+            content_pattern=self.content_pattern,
+            commit_hash=self.commit_hash,
+            author_pattern=self.author_pattern,
+            message_pattern=self.message_pattern,
+            date_from=self.date_from,
+            date_to=self.date_to,
+            file_path_pattern=self.file_path_pattern,
+            file_extensions=self.file_extensions,
+            case_sensitive=self.case_sensitive,
+            fuzzy_search=self.fuzzy_search,
+            fuzzy_threshold=self.fuzzy_threshold,
+            include_globs=self.include_globs,
+            exclude_globs=self.exclude_globs,
+            max_file_size=self.max_file_size,
+        )
+
 
 class SearchResultResponse(BaseModel):
     """Response model for individual search results."""
@@ -105,6 +124,31 @@ class SearchResultResponse(BaseModel):
     # File metadata
     file_size: int | None = Field(None, description="File size in bytes")
     file_type: str | None = Field(None, description="File type/extension")
+
+    @classmethod
+    def from_search_result(cls, result: SearchResult, include_metadata: bool = True) -> "SearchResultResponse":
+        """Build a response object from a core SearchResult."""
+        data: dict[str, Any] = {
+            "commit_hash": result.commit_hash,
+            "file_path": str(result.file_path),
+            "line_number": result.line_number,
+            "matching_line": result.matching_line,
+            "search_type": result.search_type.value if hasattr(result.search_type, "value") else str(result.search_type),
+            "relevance_score": result.relevance_score,
+        }
+
+        if include_metadata and result.commit_info is not None:
+            ci = result.commit_info
+            data.update(
+                {
+                    "author_name": getattr(ci, "author_name", None),
+                    "author_email": getattr(ci, "author_email", None),
+                    "commit_date": getattr(ci, "date", None),
+                    "commit_message": getattr(ci, "message", None),
+                }
+            )
+
+        return cls(**data)
 
 
 class SearchResponse(BaseModel):
@@ -138,6 +182,33 @@ class SearchResponse(BaseModel):
     filters_applied: dict[str, Any] = Field(
         default_factory=dict, description="Filters that were applied")
 
+    @classmethod
+    def from_results(
+        cls,
+        results: list[SearchResult],
+        search_id: str,
+        metrics: SearchMetrics | None = None,
+        include_metadata: bool = True,
+        status: str = "completed",
+    ) -> "SearchResponse":
+        """Create a SearchResponse from core SearchResult objects and metrics."""
+        result_items = [
+            SearchResultResponse.from_search_result(r, include_metadata=include_metadata) for r in results
+        ]
+        total_count = len(result_items)
+        metrics = metrics or SearchMetrics(
+            total_commits_searched=0, total_files_searched=0, search_duration_ms=0.0
+        )
+        return cls(
+            results=result_items,
+            total_count=total_count,
+            search_id=search_id,
+            status=status,
+            commits_searched=getattr(metrics, "total_commits_searched", 0),
+            files_searched=getattr(metrics, "total_files_searched", 0),
+            search_duration_ms=getattr(metrics, "search_duration_ms", 0.0),
+        )
+
 
 class SearchStatusResponse(BaseModel):
     """Response model for search status queries."""
@@ -152,6 +223,8 @@ class SearchStatusResponse(BaseModel):
     commits_searched: int = Field(0, description="Commits searched so far")
     files_searched: int = Field(0, description="Files searched so far")
     results_found: int = Field(0, description="Results found so far")
+    # For backward-compat in tests that pass results_count:
+    results_count: int = Field(0, description="Results found so far (alias)")
 
     # Timing
     started_at: datetime | None = Field(None, description="Search start time")

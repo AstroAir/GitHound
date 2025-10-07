@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from git import Repo
 
-from githound.web.enhanced_api import app
+from githound.web.api import app
 
 
 @pytest.fixture
@@ -75,7 +75,7 @@ class TestRepositoryAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/repository/analyze",
+            "/api/repository/analyze",
             json={"repo_path": temp_dir, "include_detailed_stats": True},
             headers=auth_headers,
         )
@@ -92,7 +92,7 @@ class TestRepositoryAnalysis:
     def test_analyze_repository_invalid_path(self, client, auth_headers) -> None:
         """Test repository analysis with invalid path."""
         response = client.post(
-            "/api/v2/repository/analyze",
+            "/api/repository/analyze",
             json={"repo_path": "/nonexistent/path",
                   "include_detailed_stats": False},
             headers=auth_headers,
@@ -106,7 +106,7 @@ class TestRepositoryAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/commit/analyze",
+            "/api/commit/analyze",
             json={
                 "repo_path": temp_dir,
                 "commit_hash": second_commit.hexsha,
@@ -128,7 +128,7 @@ class TestRepositoryAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/commits/filter",
+            "/api/commits/filter",
             json={"repo_path": temp_dir,
                   "author_pattern": "Test User", "max_count": 10},
             headers=auth_headers,
@@ -154,7 +154,7 @@ class TestFileAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.get(
-            "/api/v2/file/test.py/history",
+            "/api/file/test.py/history",
             params={"repo_path": temp_dir, "max_count": 10},
             headers=auth_headers,
         )
@@ -172,7 +172,7 @@ class TestFileAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/file/blame",
+            "/api/file/blame",
             json={"repo_path": temp_dir, "file_path": "test.py"},
             headers=auth_headers,
         )
@@ -190,7 +190,7 @@ class TestFileAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/file/blame",
+            "/api/file/blame",
             json={"repo_path": temp_dir, "file_path": "nonexistent.py"},
             headers=auth_headers,
         )
@@ -206,7 +206,7 @@ class TestDiffAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/diff/commits",
+            "/api/diff/commits",
             json={
                 "repo_path": temp_dir,
                 "from_commit": initial_commit.hexsha,
@@ -228,7 +228,7 @@ class TestDiffAnalysis:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/diff/branches",
+            "/api/diff/branches",
             json={"repo_path": temp_dir, "from_branch": "master",
                   "to_branch": "feature-branch"},
             headers=auth_headers,
@@ -249,7 +249,7 @@ class TestStatistics:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.get(
-            f"/api/v2/repository/{temp_dir}/statistics",
+            f"/api/repository/{temp_dir}/statistics",
             params={"include_author_stats": True},
             headers=auth_headers,
         )
@@ -278,7 +278,7 @@ class TestExport:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/export",
+            "/api/export",
             json={
                 "repo_path": temp_dir,
                 "export_type": "repository_metadata",
@@ -299,7 +299,7 @@ class TestExport:
         # Test getting export status
         export_id = data["data"]["export_id"]
         status_response = client.get(
-            f"/api/v2/export/{export_id}/status", headers=auth_headers)
+            f"/api/export/{export_id}/status", headers=auth_headers)
 
         assert status_response.status_code == 200
         status_data = status_response.json()
@@ -308,7 +308,7 @@ class TestExport:
     def test_export_status_not_found(self, client, auth_headers) -> None:
         """Test export status for nonexistent export."""
         response = client.get(
-            "/api/v2/export/nonexistent-id/status", headers=auth_headers)
+            "/api/export/nonexistent-id/status", headers=auth_headers)
 
         assert response.status_code == 404
 
@@ -318,7 +318,7 @@ class TestHealthAndInfo:
 
     def test_health_check(self, client) -> None:
         """Test health check endpoint."""
-        response = client.get("/api/v2/health")
+        response = client.get("/api/health")
 
         assert response.status_code == 200
         data = response.json()
@@ -330,7 +330,7 @@ class TestHealthAndInfo:
 
     def test_api_info(self, client) -> None:
         """Test API info endpoint."""
-        response = client.get("/api/v2/info")
+        response = client.get("/api/info")
 
         assert response.status_code == 200
         data = response.json()
@@ -350,7 +350,7 @@ class TestAuthentication:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/repository/analyze",
+            "/api/repository/analyze",
             json={"repo_path": temp_dir, "include_detailed_stats": False},
         )
 
@@ -363,7 +363,7 @@ class TestAuthentication:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/repository/analyze",
+            "/api/repository/analyze",
             json={"repo_path": temp_dir, "include_detailed_stats": False},
             headers={"Authorization": "Bearer invalid-token"},
         )
@@ -379,7 +379,7 @@ class TestErrorHandling:
     def test_invalid_json_payload(self, client, auth_headers) -> None:
         """Test request with invalid JSON payload."""
         response = client.post(
-            "/api/v2/repository/analyze",
+            "/api/repository/analyze",
             content="invalid json",
             headers={**auth_headers, "Content-Type": "application/json"},
         )
@@ -389,7 +389,7 @@ class TestErrorHandling:
     def test_missing_required_fields(self, client, auth_headers) -> None:
         """Test request with missing required fields."""
         response = client.post(
-            "/api/v2/repository/analyze",
+            "/api/repository/analyze",
             json={
                 "include_detailed_stats": True
                 # Missing repo_path
@@ -404,7 +404,7 @@ class TestErrorHandling:
         repo, temp_dir, initial_commit, second_commit, feature_commit = temp_repo
 
         response = client.post(
-            "/api/v2/commit/analyze",
+            "/api/commit/analyze",
             json={
                 "repo_path": temp_dir,
                 "commit_hash": "invalid_hash_123",

@@ -6,12 +6,13 @@ Consolidates all API components into a single, unified application.
 
 import time
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Dict, Any
+from typing import AsyncGenerator, Dict, Any, Callable, Awaitable
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -288,7 +289,7 @@ async def api_info(request_id: str = get_request_id()) -> ApiResponse:
 
 # Add request ID middleware
 @app.middleware("http")
-async def add_request_id(request: Request, call_next) -> Any:
+async def add_request_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """Add request ID to all requests."""
     request.state.request_id = get_request_id()
     response = await call_next(request)
