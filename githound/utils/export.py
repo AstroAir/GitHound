@@ -5,23 +5,21 @@ import json
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 # Optional dependencies with graceful fallbacks
 try:
-    import pandas as pd
-
+    import pandas as pd  # type: ignore[import-not-found]
     HAS_PANDAS = True
 except ImportError:
-    pd = None  #
+    pd = cast(Any, None)
     HAS_PANDAS = False
 
 try:
-    import yaml
-
+    import yaml  # type: ignore[import-not-found]
     HAS_YAML = True
 except ImportError:
-    yaml = None  #
+    yaml = cast(Any, None)
     HAS_YAML = False
 
 from rich.console import Console

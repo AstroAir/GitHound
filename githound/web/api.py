@@ -70,7 +70,7 @@ active_searches: dict[str, ActiveSearchState] = {}
 exports_registry: dict[str, dict[str, Any]] = {}
 
 
-def get_export_manager():
+def get_export_manager() -> Any:
     # Separated for test patching
     from githound.utils.export import ExportManager
 
@@ -269,7 +269,7 @@ async def v2_filtered_commits(
     author_pattern: str | None = Body(None),
     message_pattern: str | None = Body(None),
     max_count: int = Body(10),
-):
+) -> JSONResponse:
     repo = get_repository(Path(repo_path))
     commits = list(
         get_commits_with_filters(
@@ -356,7 +356,7 @@ async def v2_export_data(
 
 
 @app.get("/api/export/{export_id}/status", response_model=ApiResponse, tags=["export"])
-async def v2_export_status(export_id: str):
+async def v2_export_status(export_id: str) -> ApiResponse | JSONResponse:
     meta = exports_registry.get(export_id)
     if not meta:
         return JSONResponse(
@@ -411,7 +411,7 @@ async def _run_search(search_id: str, search_request: SearchRequest) -> None:
         results: list[SearchResult] = []
         start = time.time()
 
-        async for result in orchestrator.search(repo, query):  # type: ignore[attr-defined]
+        async for result in orchestrator.search(repo, query):
             results.append(result)
             state.results_count = len(results)
             # simple progress hint for tests
