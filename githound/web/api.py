@@ -1,12 +1,12 @@
 """
-Legacy FastAPI application for GitHound (v1 style API).
+Unified FastAPI application for GitHound.
 
-This module provides a minimal, test-oriented API surface to maintain backward
-compatibility with callers and tests that import `githound.web.api:app`.
-It includes:
-- Health endpoint
-- Search lifecycle endpoints under /api/search
-- Simple export endpoint
+Single application exposing:
+- Core health endpoint (/health) and unified API health/info under /api/*
+- Search lifecycle endpoints under /api/search (start/status/results/cancel/export)
+- Enhanced analysis endpoints under /api (repository/commit/commits/file/diff/export/statistics)
+
+All imports should use `githound.web.api:app`. No duplicated implementation across versions.
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ async def export_results(search_id: str, export_request: ExportRequest) -> dict[
     return {"exported": True, "path": str(export_path)}
 
 # v2 API (enhanced) endpoints - unified with v1 on the same app
-@app.get("/api/v2/health", response_model=dict, tags=["health"])
+@app.get("/api/health", response_model=dict, tags=["health"])
 async def v2_health() -> dict[str, Any]:
     return {
         "status": "healthy",
@@ -205,7 +205,7 @@ async def v2_health() -> dict[str, Any]:
     }
 
 
-@app.get("/api/v2/info", response_model=dict, tags=["info"])
+@app.get("/api/info", response_model=dict, tags=["info"])
 async def v2_info() -> dict[str, Any]:
     return {
         "name": "GitHound Enhanced API",
@@ -226,7 +226,7 @@ async def v2_info() -> dict[str, Any]:
     }
 
 
-@app.post("/api/v2/repository/analyze", response_model=ApiResponse, tags=["repository"])
+@app.post("/api/repository/analyze", response_model=ApiResponse, tags=["repository"])
 async def v2_analyze_repository(
     repo_path: str = Body(...),
     include_detailed_stats: bool = Body(True),
@@ -247,7 +247,7 @@ async def v2_analyze_repository(
     return ApiResponse(success=True, message="Repository analysis complete", data=metadata)
 
 
-@app.post("/api/v2/commit/analyze", response_model=ApiResponse, tags=["commit"])
+@app.post("/api/commit/analyze", response_model=ApiResponse, tags=["commit"])
 async def v2_analyze_commit(
     repo_path: str = Body(...),
     commit_hash: str = Body(...),
@@ -263,7 +263,7 @@ async def v2_analyze_commit(
     return ApiResponse(success=True, message="Commit analysis complete", data=data)
 
 
-@app.post("/api/v2/commits/filter", tags=["commit"])
+@app.post("/api/commits/filter", tags=["commit"])
 async def v2_filtered_commits(
     repo_path: str = Body(...),
     author_pattern: str | None = Body(None),
@@ -290,7 +290,7 @@ async def v2_filtered_commits(
     )
 
 
-@app.get("/api/v2/file/{file_path}/history", response_model=ApiResponse, tags=["file"])
+@app.get("/api/file/{file_path}/history", response_model=ApiResponse, tags=["file"])
 async def v2_file_history(
     file_path: str,
     repo_path: str = Query(...),
@@ -305,7 +305,7 @@ async def v2_file_history(
     )
 
 
-@app.post("/api/v2/file/blame", response_model=ApiResponse, tags=["file"])
+@app.post("/api/file/blame", response_model=ApiResponse, tags=["file"])
 async def v2_file_blame(
     repo_path: str = Body(...),
     file_path: str = Body(...),
@@ -316,7 +316,7 @@ async def v2_file_blame(
     return ApiResponse(success=True, message="Blame analysis complete", data=data)
 
 
-@app.post("/api/v2/diff/commits", response_model=ApiResponse, tags=["diff"])
+@app.post("/api/diff/commits", response_model=ApiResponse, tags=["diff"])
 async def v2_diff_commits(
     repo_path: str = Body(...),
     from_commit: str = Body(...),
@@ -328,7 +328,7 @@ async def v2_diff_commits(
     return ApiResponse(success=True, message="Commit diff complete", data=data)
 
 
-@app.post("/api/v2/diff/branches", response_model=ApiResponse, tags=["diff"])
+@app.post("/api/diff/branches", response_model=ApiResponse, tags=["diff"])
 async def v2_diff_branches(
     repo_path: str = Body(...),
     from_branch: str = Body(...),
@@ -340,7 +340,7 @@ async def v2_diff_branches(
     return ApiResponse(success=True, message="Branch diff complete", data=data)
 
 
-@app.post("/api/v2/export", response_model=ApiResponse, tags=["export"])
+@app.post("/api/export", response_model=ApiResponse, tags=["export"])
 async def v2_export_data(
     repo_path: str = Body(...),
     export_type: str = Body(...),
@@ -355,7 +355,7 @@ async def v2_export_data(
     )
 
 
-@app.get("/api/v2/export/{export_id}/status", response_model=ApiResponse, tags=["export"])
+@app.get("/api/export/{export_id}/status", response_model=ApiResponse, tags=["export"])
 async def v2_export_status(export_id: str):
     meta = exports_registry.get(export_id)
     if not meta:
@@ -367,7 +367,7 @@ async def v2_export_status(export_id: str):
     return ApiResponse(success=True, message="Export status", data=payload)
 
 
-@app.get("/api/v2/repository/{repo_path:path}/statistics", response_model=ApiResponse, tags=["repository"])
+@app.get("/api/repository/{repo_path:path}/statistics", response_model=ApiResponse, tags=["repository"])
 async def v2_repository_statistics(
     repo_path: str,
     include_author_stats: bool = Query(True),
