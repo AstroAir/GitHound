@@ -4,14 +4,15 @@ import re
 import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from pathlib import Path
 
 try:
     from rapidfuzz import fuzz
 except ImportError:
     # Use mock for testing when rapidfuzz is not available
     import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from pathlib import Path as PathLib
+    sys.path.insert(0, str(PathLib(__file__).parent.parent.parent))
     import mock_rapidfuzz
     fuzz = mock_rapidfuzz.fuzz
 
@@ -61,7 +62,7 @@ class CommitHashSearcher(CacheableSearcher):
             # Create search result
             result = SearchResult(
                 commit_hash=commit.hexsha,
-                file_path=context.repo.working_dir,  # Repository root
+                file_path=Path(context.repo.working_dir),  # Repository root
                 line_number=None,
                 matching_line=None,
                 search_type=SearchType.COMMIT_HASH,
@@ -99,7 +100,7 @@ class AuthorSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 100  # Default estimate
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -129,8 +130,8 @@ class AuthorSearcher(CacheableSearcher):
         results_found = 0
 
         try:
-            # Iterate through commits
-            for commit in context.repo.iter_commits(branch):
+            # Iterate through commits (limit for performance parity with internal cap)
+            for commit in context.repo.iter_commits(branch, max_count=2000):
                 commits_searched += 1
 
                 # Check author name and email
@@ -201,7 +202,7 @@ class AuthorSearcher(CacheableSearcher):
                     # Create search result
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=context.repo.working_dir,
+                        file_path=Path(context.repo.working_dir),
                         line_number=None,
                         matching_line=None,
                         search_type=SearchType.AUTHOR,
@@ -259,7 +260,7 @@ class MessageSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -287,7 +288,7 @@ class MessageSearcher(CacheableSearcher):
         results_found = 0
 
         try:
-            for commit in context.repo.iter_commits(branch):
+            for commit in context.repo.iter_commits(branch, max_count=2000):
                 commits_searched += 1
 
                 message = commit.message.strip()
@@ -332,7 +333,7 @@ class MessageSearcher(CacheableSearcher):
 
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=context.repo.working_dir,
+                        file_path=Path(context.repo.working_dir),
                         line_number=None,
                         matching_line=None,
                         search_type=SearchType.MESSAGE,
@@ -394,7 +395,7 @@ class DateRangeSearcher(CacheableSearcher):
 
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -445,7 +446,7 @@ class DateRangeSearcher(CacheableSearcher):
 
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=context.repo.working_dir,
+                        file_path=Path(context.repo.working_dir),
                         line_number=None,
                         matching_line=None,
                         search_type=SearchType.DATE_RANGE,

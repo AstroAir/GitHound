@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
@@ -123,7 +124,7 @@ class DiffSearcher(CacheableSearcher):
                         
                         result = SearchResult(
                             commit_hash=commit.hexsha,
-                            file_path=f"diffs/commit_{commit.hexsha[:8]}.txt",
+                            file_path=Path(f"diffs/commit_{commit.hexsha[:8]}.txt"),
                             line_number=1,
                             matching_line=f"Commit changes: {change_summary['files_changed']} files, +{change_summary['insertions']} -{change_summary['deletions']}",
                             commit_info=commit_info,
@@ -148,7 +149,7 @@ class DiffSearcher(CacheableSearcher):
                 
                 summary_result = SearchResult(
                     commit_hash="diff_analysis",
-                    file_path="diffs/recent_summary.txt",
+                    file_path=Path("diffs/recent_summary.txt"),
                     line_number=1,
                     matching_line=f"Recent activity: {len(results)} commits, {total_files} files changed, +{total_insertions} -{total_deletions}",
                     commit_info=None,
@@ -168,7 +169,7 @@ class DiffSearcher(CacheableSearcher):
             # Error handling
             result = SearchResult(
                 commit_hash="diff_analysis",
-                file_path="diffs/error.txt",
+                file_path=Path("diffs/error.txt"),
                 line_number=1,
                 matching_line=f"Error analyzing recent changes: {str(e)}",
                 commit_info=None,
@@ -224,7 +225,7 @@ class DiffSearcher(CacheableSearcher):
                     
                     result = SearchResult(
                         commit_hash="pattern_analysis",
-                        file_path=f"patterns/{pattern_type}.txt",
+                        file_path=Path(f"patterns/{pattern_type}.txt"),
                         line_number=1,
                         matching_line=f"Pattern '{pattern_type}': {len(matches)} occurrences",
                         commit_info=None,
@@ -301,7 +302,7 @@ class DiffSearcher(CacheableSearcher):
                     
                     result = SearchResult(
                         commit_hash=recent_change["commit"],
-                        file_path=file_path,
+                        file_path=Path(file_path),
                         line_number=1,
                         matching_line=f"File evolution: {len(changes)} changes, +{total_insertions} -{total_deletions}",
                         commit_info=None,

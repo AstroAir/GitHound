@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
@@ -97,7 +98,7 @@ class BranchSearcher(CacheableSearcher):
                 
                 result = SearchResult(
                     commit_hash=commit.hexsha,
-                    file_path="branches/current_branch.txt",
+                    file_path=Path("branches/current_branch.txt"),
                     line_number=1,
                     matching_line=f"Current branch: {current_branch.name}",
                     commit_info=commit_info,
@@ -125,7 +126,7 @@ class BranchSearcher(CacheableSearcher):
                     
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=f"branches/{branch.name}.txt",
+                        file_path=Path(f"branches/{branch.name}.txt"),
                         line_number=1,
                         matching_line=f"Branch: {branch.name} - {commit.message.strip()[:50]}",
                         commit_info=commit_info,
@@ -147,7 +148,7 @@ class BranchSearcher(CacheableSearcher):
             for i, insight in enumerate(insights):
                 result = SearchResult(
                     commit_hash="branch_analysis",
-                    file_path=f"branches/summary_{i}.txt",
+                    file_path=Path(f"branches/summary_{i}.txt"),
                     line_number=1,
                     matching_line=insight,
                     commit_info=None,
@@ -164,7 +165,7 @@ class BranchSearcher(CacheableSearcher):
             # Error handling
             result = SearchResult(
                 commit_hash="branch_analysis",
-                file_path="branches/error.txt",
+                file_path=Path("branches/error.txt"),
                 line_number=1,
                 matching_line=f"Error analyzing branches: {str(e)}",
                 commit_info=None,
@@ -203,7 +204,7 @@ class BranchSearcher(CacheableSearcher):
                         
                         result = SearchResult(
                             commit_hash=latest_merge.hexsha,
-                            file_path=f"branches/merges/{branch.name}.txt",
+                            file_path=Path(f"branches/merges/{branch.name}.txt"),
                             line_number=1,
                             matching_line=f"Latest merge in {branch.name}: {latest_merge.message.strip()[:50]}",
                             commit_info=commit_info,
@@ -224,7 +225,7 @@ class BranchSearcher(CacheableSearcher):
             for i, info in enumerate(merge_info):
                 result = SearchResult(
                     commit_hash="branch_analysis",
-                    file_path=f"branches/merge_summary_{i}.txt",
+                    file_path=Path(f"branches/merge_summary_{i}.txt"),
                     line_number=1,
                     matching_line=info,
                     commit_info=None,
@@ -273,7 +274,7 @@ class BranchSearcher(CacheableSearcher):
                 insight = f"Fresh branches (≤30 days): {len(fresh_branches)}"
                 result = SearchResult(
                     commit_hash="branch_analysis",
-                    file_path="branches/fresh_branches.txt",
+                    file_path=Path("branches/fresh_branches.txt"),
                     line_number=1,
                     matching_line=insight,
                     commit_info=None,
@@ -293,7 +294,7 @@ class BranchSearcher(CacheableSearcher):
                 insight = f"Stale branches (>90 days): {len(stale_branches)}"
                 result = SearchResult(
                     commit_hash="branch_analysis",
-                    file_path="branches/stale_branches.txt",
+                    file_path=Path("branches/stale_branches.txt"),
                     line_number=1,
                     matching_line=insight,
                     commit_info=None,
