@@ -8,6 +8,7 @@ import time
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
+from datetime import datetime
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, ParallelSearcher, SearchContext
@@ -29,7 +30,7 @@ class FilePathSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=500))
             return min(len(commits), 500)
-        except:
+        except Exception:
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -93,7 +94,7 @@ class FilePathSearcher(CacheableSearcher):
                                 committer_name=commit.committer.name,
                                 committer_email=commit.committer.email,
                                 message=commit.message.strip(),
-                                date=commit.committed_date,
+                                date=datetime.fromtimestamp(commit.committed_date),
                                 files_changed=len(commit.stats.files),
                                 insertions=commit.stats.total["insertions"],
                                 deletions=commit.stats.total["deletions"],
@@ -158,7 +159,7 @@ class FileTypeSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=500))
             return min(len(commits), 500)
-        except:
+        except Exception:
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -169,11 +170,12 @@ class FileTypeSearcher(CacheableSearcher):
 
         search_start_time = time.time()
         # Normalize extensions (ensure they start with .)
-        normalized_extensions: list[Any] = []
+        normalized_extensions: list[str] = []
         for ext in extensions:
             if not ext.startswith("."):
                 ext = "." + ext
             normalized_extensions.append(ext.lower())
+        normalized_extensions_set = set(normalized_extensions)
 
         self._report_progress(
             context, f"Searching for files with extensions: {', '.join(normalized_extensions)}", 0.0
@@ -202,7 +204,7 @@ class FileTypeSearcher(CacheableSearcher):
 
                         # Check file extension
                         file_ext = Path(file_path).suffix.lower()
-                        if file_ext in normalized_extensions:
+                        if file_ext in normalized_extensions_set:
                             seen_files.add(file_path)
 
                             commit_info = CommitInfo(
@@ -213,7 +215,7 @@ class FileTypeSearcher(CacheableSearcher):
                                 committer_name=commit.committer.name,
                                 committer_email=commit.committer.email,
                                 message=commit.message.strip(),
-                                date=commit.committed_date,
+                                date=datetime.fromtimestamp(commit.committed_date),
                                 files_changed=len(commit.stats.files),
                                 insertions=commit.stats.total["insertions"],
                                 deletions=commit.stats.total["deletions"],
@@ -289,7 +291,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
 
             avg_files_per_commit = max(total_files / 10, 1) if commits else 1
             return int(len(commits) * avg_files_per_commit)
-        except:
+        except Exception:
             return 500
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -350,7 +352,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                     committer_name=commit.committer.name,
                                     committer_email=commit.committer.email,
                                     message=commit.message.strip(),
-                                    date=commit.committed_date,
+                                    date=datetime.fromtimestamp(commit.committed_date),
                                     files_changed=len(commit.stats.files),
                                     insertions=commit.stats.total["insertions"],
                                     deletions=commit.stats.total["deletions"],

@@ -251,7 +251,7 @@ class GitHound:
         except Exception as e:
             raise GitCommandError(f"Failed to analyze repository: {str(e)}")
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> "GitHound":
         """Context manager entry."""
         return self
 

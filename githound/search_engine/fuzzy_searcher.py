@@ -3,6 +3,7 @@
 import time
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 try:
@@ -10,8 +11,8 @@ try:
 except ImportError:
     # Use mock for testing when rapidfuzz is not available
     import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from pathlib import Path as PathLib
+    sys.path.insert(0, str(PathLib(__file__).parent.parent.parent))
     import mock_rapidfuzz
     fuzz = mock_rapidfuzz.fuzz
     process = mock_rapidfuzz.process
@@ -42,7 +43,7 @@ class FuzzySearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 200
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -99,7 +100,7 @@ class FuzzySearcher(CacheableSearcher):
         self._report_progress(context, "Building search index...", 0.1)
 
         commits_processed = 0
-        for commit in context.repo.iter_commits(branch):
+        for commit in context.repo.iter_commits(branch, max_count=1000):
             commits_processed += 1
 
             # Create commit info
@@ -181,7 +182,7 @@ class FuzzySearcher(CacheableSearcher):
             for target in author_to_commits[match]:
                 result = SearchResult(
                     commit_hash=target["commit_info"].hash,
-                    file_path=target["commit"].repo.working_dir,
+                    file_path=Path(target["commit"].repo.working_dir),
                     line_number=None,
                     matching_line=None,
                     search_type=SearchType.AUTHOR,
@@ -224,7 +225,7 @@ class FuzzySearcher(CacheableSearcher):
 
             result = SearchResult(
                 commit_hash=target["commit_info"].hash,
-                file_path=target["commit"].repo.working_dir,
+                file_path=Path(target["commit"].repo.working_dir),
                 line_number=None,
                 matching_line=None,
                 search_type=SearchType.MESSAGE,
@@ -283,7 +284,7 @@ class FuzzySearcher(CacheableSearcher):
 
             result = SearchResult(
                 commit_hash=target["commit_info"].hash,
-                file_path=context["file_path"],
+                file_path=Path(context["file_path"]),
                 line_number=context["line_number"],
                 matching_line=match,
                 search_type=SearchType.CONTENT,

@@ -4,6 +4,7 @@ import asyncio
 import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Literal, Pattern
 
 try:
@@ -11,8 +12,8 @@ try:
 except ImportError:
     # Use mock for testing when rapidfuzz is not available
     import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from pathlib import Path as PathLib
+    sys.path.insert(0, str(PathLib(__file__).parent.parent.parent))
     import mock_rapidfuzz
     fuzz = mock_rapidfuzz.fuzz
 
@@ -180,7 +181,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                                     
                                     result = SearchResult(
                                         commit_hash=commit.hexsha,
-                                        file_path=file_path,
+                                        file_path=Path(file_path),
                                         line_number=line_number,
                                         matching_line=matching_line.strip(),
                                         commit_info=commit_info,
@@ -214,7 +215,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             return results
 
         commits_processed = 0
-        for commit in context.repo.iter_commits(branch):
+        for commit in context.repo.iter_commits(branch, max_count=2000):
             commits_processed += 1
             if commits_processed > 2000:  # Limit for performance
                 break
@@ -227,7 +228,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                 for file_path in commit.stats.files:
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=file_path,
+                        file_path=Path(file_path),
                         line_number=None,
                         matching_line=None,
                         commit_info=commit_info,
@@ -254,10 +255,10 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             return results
 
         commits_processed = 0
-        for commit in context.repo.iter_commits(branch):
+        for commit in context.repo.iter_commits(branch, max_count=2000):
             commits_processed += 1
             if commits_processed > 2000:  # Limit for performance
-                break
+               break
 
             message_match = self._match_message(commit, query.message_pattern, query.fuzzy_search)
             if message_match:
@@ -267,7 +268,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                 for file_path in commit.stats.files:
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=file_path,
+                        file_path=Path(file_path),
                         line_number=None,
                         matching_line=commit.message.strip(),
                         commit_info=commit_info,
@@ -302,7 +303,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             regex_pattern = None
 
         commits_processed = 0
-        for commit in context.repo.iter_commits(branch):
+        for commit in context.repo.iter_commits(branch, max_count=2000):
             commits_processed += 1
             if commits_processed > 2000:  # Limit for performance
                 break
@@ -314,7 +315,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                     
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=file_path,
+                        file_path=Path(file_path),
                         line_number=None,
                         matching_line=None,
                         commit_info=commit_info,
@@ -341,7 +342,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             return results
 
         commits_processed = 0
-        for commit in context.repo.iter_commits(branch):
+        for commit in context.repo.iter_commits(branch, max_count=2000):
             commits_processed += 1
             if commits_processed > 2000:  # Limit for performance
                 break
@@ -356,7 +357,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
                 for file_path in commit.stats.files:
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=file_path,
+                        file_path=Path(file_path),
                         line_number=None,
                         matching_line=None,
                         commit_info=commit_info,
@@ -507,7 +508,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
             regex_pattern = None
 
         commits_processed = 0
-        for commit in context.repo.iter_commits(branch):
+        for commit in context.repo.iter_commits(branch, max_count=500):
             commits_processed += 1
             if commits_processed > 500:  # Limit for manual search
                 break
@@ -532,7 +533,7 @@ class AdvancedSearcher(CacheableSearcher, ParallelSearcher):
 
                             result = SearchResult(
                                 commit_hash=commit.hexsha,
-                                file_path=file_path,
+                                file_path=Path(file_path),
                                 line_number=line_num,
                                 matching_line=line.strip(),
                                 commit_info=commit_info,

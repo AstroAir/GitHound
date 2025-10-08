@@ -231,7 +231,7 @@ async def enhanced_search(
     # Create orchestrator using factory for consistent configuration
     orchestrator = create_search_orchestrator(enable_advanced=query.has_advanced_analysis())
 
-    results: list[Any] = []
+    results: list[SearchResult] = []
 
     # Set up enhanced progress reporting
     if enable_progress:

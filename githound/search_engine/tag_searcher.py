@@ -4,6 +4,7 @@ import asyncio
 import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
@@ -92,7 +93,7 @@ class TagSearcher(CacheableSearcher):
             if not tags:
                 result = SearchResult(
                     commit_hash="tag_analysis",
-                    file_path="tags/no_tags.txt",
+                    file_path=Path("tags/no_tags.txt"),
                     line_number=1,
                     matching_line="No tags found in repository",
                     commit_info=None,
@@ -125,7 +126,7 @@ class TagSearcher(CacheableSearcher):
                     
                     result = SearchResult(
                         commit_hash=commit.hexsha,
-                        file_path=f"tags/{tag.name}.txt",
+                        file_path=Path(f"tags/{tag.name}.txt"),
                         line_number=1,
                         matching_line=f"Tag: {tag.name} - {commit.message.strip()[:50]}",
                         commit_info=commit_info,
@@ -149,7 +150,7 @@ class TagSearcher(CacheableSearcher):
             for i, insight in enumerate(insights):
                 result = SearchResult(
                     commit_hash="tag_analysis",
-                    file_path=f"tags/summary_{i}.txt",
+                    file_path=Path(f"tags/summary_{i}.txt"),
                     line_number=1,
                     matching_line=insight,
                     commit_info=None,
@@ -166,7 +167,7 @@ class TagSearcher(CacheableSearcher):
             # Error handling
             result = SearchResult(
                 commit_hash="tag_analysis",
-                file_path="tags/error.txt",
+                file_path=Path("tags/error.txt"),
                 line_number=1,
                 matching_line=f"Error analyzing tags: {str(e)}",
                 commit_info=None,
@@ -213,7 +214,7 @@ class TagSearcher(CacheableSearcher):
                 
                 result = SearchResult(
                     commit_hash=latest_tag.commit.hexsha,
-                    file_path="versions/latest.txt",
+                    file_path=Path("versions/latest.txt"),
                     line_number=1,
                     matching_line=f"Latest version: {latest_tag.name}",
                     commit_info=commit_info,
@@ -234,7 +235,7 @@ class TagSearcher(CacheableSearcher):
                     
                     result = SearchResult(
                         commit_hash="version_analysis",
-                        file_path="versions/progression.txt",
+                        file_path=Path("versions/progression.txt"),
                         line_number=1,
                         matching_line=f"Version progression: {version_jump['type']} update",
                         commit_info=None,
@@ -272,7 +273,7 @@ class TagSearcher(CacheableSearcher):
             for i, stat in enumerate(stats):
                 result = SearchResult(
                     commit_hash="version_analysis",
-                    file_path=f"versions/stats_{i}.txt",
+                    file_path=Path(f"versions/stats_{i}.txt"),
                     line_number=1,
                     matching_line=stat,
                     commit_info=None,
@@ -334,7 +335,7 @@ class TagSearcher(CacheableSearcher):
                 for i, info in enumerate(timeline_info):
                     result = SearchResult(
                         commit_hash="timeline_analysis",
-                        file_path=f"timeline/frequency_{i}.txt",
+                        file_path=Path(f"timeline/frequency_{i}.txt"),
                         line_number=1,
                         matching_line=info,
                         commit_info=None,

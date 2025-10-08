@@ -4,6 +4,7 @@ import asyncio
 from collections import Counter, defaultdict
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 try:
@@ -189,7 +190,7 @@ class StatisticalSearcher(CacheableSearcher):
         for i, insight in enumerate(insights):
             result = SearchResult(
                 commit_hash="statistical_analysis",
-                file_path=f"stats/commit_patterns_{i}.txt",
+                file_path=Path(f"stats/commit_patterns_{i}.txt"),
                 line_number=1,
                 matching_line=insight,
                 commit_info=None,
@@ -240,7 +241,7 @@ class StatisticalSearcher(CacheableSearcher):
         for i, insight in enumerate(insights):
             result = SearchResult(
                 commit_hash="statistical_analysis",
-                file_path=f"stats/author_statistics_{i}.txt",
+                file_path=Path(f"stats/author_statistics_{i}.txt"),
                 line_number=1,
                 matching_line=insight,
                 commit_info=None,
@@ -293,7 +294,7 @@ class StatisticalSearcher(CacheableSearcher):
         for i, insight in enumerate(insights):
             result = SearchResult(
                 commit_hash="statistical_analysis",
-                file_path=f"stats/file_patterns_{i}.txt",
+                file_path=Path(f"stats/file_patterns_{i}.txt"),
                 line_number=1,
                 matching_line=insight,
                 commit_info=None,
