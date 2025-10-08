@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optionalnal, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 def get_project_root() -> Path:
@@ -78,7 +78,6 @@ def run_command(
     except FileNotFoundError:
         raise RuntimeError(f"Command not found: {command[0]}")
 
-
 def run_command_with_output(
     command: Union[str, List[str]],
     cwd: Optional[Path] = None,
@@ -109,7 +108,6 @@ def run_command_with_output(
         return result.returncode, result.stdout, result.stderr
     except FileNotFoundError:
         return 1, "", f"Command not found: {command[0]}"
-
 
 def get_git_info() -> Dict[str, str]:
     """Get Git repository information."""
@@ -146,11 +144,9 @@ def get_git_info() -> Dict[str, str]:
 
     return info
 
-
 def find_files_by_pattern(directory: Path, pattern: str) -> List[Path]:
     """Find files matching a pattern in directory."""
     return list(directory.rglob(pattern))
-
 
 def get_directory_size(directory: Path) -> int:
     """Get total size of directory in bytes."""
@@ -163,7 +159,6 @@ def get_directory_size(directory: Path) -> int:
         pass
     return total_size
 
-
 def format_bytes(bytes_count: int) -> str:
     """Format bytes as human-readable string."""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
@@ -172,11 +167,9 @@ def format_bytes(bytes_count: int) -> str:
         bytes_count /= 1024.0
     return f"{bytes_count:.1f} PB"
 
-
 def ensure_directory(path: Path) -> None:
     """Ensure directory exists, create if necessary."""
     path.mkdir(parents=True, exist_ok=True)
-
 
 def safe_remove_directory(path: Path) -> bool:
     """Safely remove directory and contents."""
@@ -188,7 +181,6 @@ def safe_remove_directory(path: Path) -> bool:
         pass
     return False
 
-
 def safe_remove_file(path: Path) -> bool:
     """Safely remove file."""
     try:
@@ -199,7 +191,6 @@ def safe_remove_file(path: Path) -> bool:
         pass
     return False
 
-
 def get_python_info() -> Dict[str, str]:
     """Get Python environment information."""
     return {
@@ -209,7 +200,6 @@ def get_python_info() -> Dict[str, str]:
         "platform": sys.platform,
         "implementation": sys.implementation.name,
     }
-
 
 def check_port_available(port: int, host: str = "localhost") -> bool:
     """Check if a port is available."""
@@ -222,7 +212,6 @@ def check_port_available(port: int, host: str = "localhost") -> bool:
             return result != 0
     except Exception:
         return False
-
 
 def get_free_port(start_port: int = 8000, max_attempts: int = 100) -> Optional[int]:
     """Find a free port starting from start_port."""

@@ -13,7 +13,7 @@ import time
 import psutil
 import gc
 from pathlib import Path
-from typing import Optionalny, Any
+from typing import Any, Dict, Optional
 from unittest.mock import patch, MagicMock
 
 from fastmcp import Client
@@ -173,7 +173,7 @@ class TestLargeRepositoryHandling:
                             "repo_path": temp_dir,
                             "content_pattern": "test"
                         }
-                )
+                    )
                 execution_time = time.time() - start_time
                 
                 # Should handle large search results efficiently

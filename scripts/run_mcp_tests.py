@@ -23,7 +23,7 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optionalny
+from typing import Any, List, Optional
 
 
 class MCPTestRunner:
@@ -163,7 +163,7 @@ class MCPTestRunner:
 
         try:
             result = subprocess.run(cmd, cwd=self.project_root)
-            if result.returncode = = 0:
+            if result.returncode == 0:
                 print("\nCoverage report generated:")
                 print("  - Terminal: displayed above")
                 print("  - HTML: htmlcov/index.html")
