@@ -1578,39 +1578,80 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
     """Print file blame analysis in text format."""
     console.print("\n[bold magenta]File Blame Analysis[/bold magenta]")
     console.print(f"[bold]File:[/bold] {blame_result.file_path}")
-    console.print(f"[bold]Commit:[/bold] {blame_result.commit_hash}")
 
-    if hasattr(blame_result, "lines") and blame_result.lines:
+    # Support pydantic model from githound.git_blame (FileBlameResult)
+    lines = []
+    if hasattr(blame_result, "blame_info") and isinstance(blame_result.blame_info, list):
+        lines = blame_result.blame_info  # list[BlameInfo]
+    elif hasattr(blame_result, "lines") and isinstance(blame_result.lines, list):
+        # Backward compatibility with dict-like structures
+        lines = blame_result.lines
+
+    if lines:
         console.print("\n[bold]Line-by-line Analysis:[/bold]")
 
         table = Table(show_header=True, header_style="bold magenta")
         if show_line_numbers:
             table.add_column("Line", style="dim", width=6, justify="right")
-        table.add_column("Author", style="cyan", width=20)
+        table.add_column("Author", style="cyan", width=24)
         table.add_column("Commit", style="green", width=12)
-        table.add_column("Date", style="yellow", width=12)
+        table.add_column("Date", style="yellow", width=20)
         table.add_column("Content", style="white")
 
-        for line_info in blame_result.lines[:50]:  # Show first 50 lines
+        # Normalize rows from either BlameInfo objects or dicts
+        for line_info in lines[:50]:  # Show first 50 lines
             row: list[Any] = []
+
+            # Extract fields from object or dict
+            if hasattr(line_info, "line_number"):
+                line_number = getattr(line_info, "line_number", None)
+                author_name = getattr(line_info, "author_name", None)
+                author_email = getattr(line_info, "author_email", None)
+                commit_hash = getattr(line_info, "commit_hash", "")
+                commit_date = getattr(line_info, "commit_date", "")
+                content = getattr(line_info, "content", "")
+            else:
+                # dict-like
+                line_number = (line_info or {}).get("line_number")
+                author = (line_info or {}).get("author") or ""
+                # If separate name/email keys exist
+                author_name = (line_info or {}).get("author_name")
+                author_email = (line_info or {}).get("author_email")
+                commit_hash = (line_info or {}).get("commit_hash", "")
+                commit_date = (line_info or {}).get("date") or (line_info or {}).get("commit_date", "")
+                content = (line_info or {}).get("content", "")
+
+                # Derive name/email from combined string if needed
+                if not author_name and isinstance(author, str) and "<" in author and ">" in author:
+                    author_name = author.split("<")[0].strip()
+                    author_email = author.split("<")[1].split(">")[0].strip()
+
             if show_line_numbers:
-                row.append(
-                    str(line_info.get("line_number", "") if line_info is not None else ""))
+                row.append("" if line_number is None else str(line_number))
+
+            author_display = "Unknown"
+            if author_name and author_email:
+                author_display = f"{author_name} <{author_email}>"
+            elif author_name:
+                author_display = author_name
+
             row.extend(
                 [
-                    (line_info.get("author", "Unknown") if line_info is not None else "Unknown")[:18],
-                    line_info.get("commit_hash", "")[:10],
-                    line_info.get("date", "")[:10],
-                    line_info.get("content", "")[:80],
+                    author_display[:40],
+                    str(commit_hash)[:10],
+                    (commit_date.isoformat() if hasattr(commit_date, "isoformat") else str(commit_date))[:19],
+                    str(content)[:120],
                 ]
             )
             table.add_row(*row)
 
         console.print(table)
 
-        if len(blame_result.lines) > 50:
+        total_lines = getattr(blame_result, "total_lines", None)
+        if isinstance(total_lines, int) and total_lines > 50:
             console.print(
-                f"[dim]... and {len(blame_result.lines) - 50} more lines[/dim]")
+                f"[dim]... and {total_lines - 50} more lines[/dim]"
+            )
 
 
 def _print_diff_text(diff_result: Any) -> None:
