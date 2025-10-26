@@ -5,8 +5,9 @@ Consolidates all API components into a single, unified application.
 """
 
 import time
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Callable, Dict
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,7 @@ from slowapi.errors import RateLimitExceeded
 from .apis.analysis_api import router as analysis_router
 from .apis.search_api import router as search_router
 from .middleware.rate_limiting import get_limiter
-from .models.api_models import ApiResponse, HealthResponse
+from .models.api_models import ApiResponse
 from .services.auth_service import Token, UserCreate, UserLogin, auth_manager
 from .utils.validation import get_request_id
 
@@ -38,7 +39,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         print("✅ Rate limiting initialized")
 
         # Initialize search orchestrator
-        from .core.search_orchestrator import create_search_orchestrator
+        from githound.search_engine import create_search_orchestrator
 
         orchestrator = create_search_orchestrator()
         print("✅ Search orchestrator initialized")
@@ -77,13 +78,10 @@ app = FastAPI(
     - Repository statistics and contributor analysis
     - File history tracking
 
-    ### 🔗 Integration Features
+    ### 🔗 Export Features
     - Export capabilities (JSON, YAML, CSV formats)
-    - Webhook support for repository events
-    - Batch operations for multiple repositories
-    - Real-time updates via WebSocket connections
 
-    ### 🔐 Security & Performance
+    ### 🔐 Security
     - JWT-based authentication with role-based access control
     - Configurable rate limiting with Redis backend
     - Comprehensive error handling and validation
@@ -106,10 +104,6 @@ app = FastAPI(
             "description": "Root endpoints and basic information",
         },
         {
-            "name": "health",
-            "description": "Health check and system status endpoints",
-        },
-        {
             "name": "information",
             "description": "API information and metadata endpoints",
         },
@@ -124,18 +118,6 @@ app = FastAPI(
         {
             "name": "analysis",
             "description": "Git analysis, blame, diff, and repository statistics",
-        },
-        {
-            "name": "repository",
-            "description": "Repository management and Git operations",
-        },
-        {
-            "name": "integration",
-            "description": "Export, webhook, and integration endpoints",
-        },
-        {
-            "name": "websocket",
-            "description": "Real-time WebSocket connections and streaming",
         },
     ],
 )
@@ -157,15 +139,16 @@ app.add_middleware(
 limiter = get_limiter()
 app.state.limiter = limiter
 
+
 async def rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle rate limit exceeded exceptions."""
     if isinstance(exc, RateLimitExceeded):
         response = _rate_limit_exceeded_handler(request, exc)
         return JSONResponse(
-            status_code=response.status_code,
-            content={"detail": "Rate limit exceeded"}
+            status_code=response.status_code, content={"detail": "Rate limit exceeded"}
         )
     raise exc
+
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
@@ -189,14 +172,10 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 # Include API routers
 from .apis.auth_api import router as auth_router
-from .apis.integration_api import router as integration_router
-from .apis.repository_api import router as repository_router
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(search_router, prefix="/api/v1")
 app.include_router(analysis_router, prefix="/api/v1")
-app.include_router(repository_router, prefix="/api/v1")
-app.include_router(integration_router, prefix="/api/v1")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="githound/web/static"), name="static")
@@ -205,38 +184,20 @@ app.mount("/static", StaticFiles(directory="githound/web/static"), name="static"
 
 
 @app.get("/", tags=["root"])
-async def root() -> Dict[str, Any]:
+async def root() -> dict[str, Any]:
     """API root endpoint with basic information."""
     return {
         "name": "GitHound API",
         "version": "1.0.0",
         "description": "Comprehensive Git repository analysis and search API",
         "documentation": "/docs",
-        "health_check": "/health",
         "authentication": "/auth/login",
         "features": [
             "Advanced Search",
             "Git Analysis",
-            "Integration Features",
-            "Security & Performance",
+            "Authentication",
         ],
     }
-
-
-@app.get("/health", response_model=HealthResponse, tags=["health"])
-async def health_check() -> HealthResponse:
-    """API health check endpoint."""
-    return HealthResponse(
-        status="healthy",
-        version="1.0.0",
-        uptime_seconds=time.time(),  # This would be actual uptime in production
-        active_searches=0,  # This would be actual count in production
-        system_info={
-            "python_version": "3.11+",
-            "fastapi_version": "0.100+",
-            "features_enabled": ["search", "analysis", "authentication", "rate_limiting"],
-        },
-    )
 
 
 # Authentication endpoints
@@ -269,7 +230,7 @@ async def register(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Registration failed: {str(e)}",
-        )
+        ) from e
 
 
 @app.post("/auth/login", response_model=Token, tags=["authentication"])
@@ -285,7 +246,7 @@ async def login(request: Request, login_data: UserLogin) -> Token:
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Login failed: {str(e)}"
-        )
+        ) from e
 
 
 @app.post("/auth/logout", response_model=ApiResponse, tags=["authentication"])

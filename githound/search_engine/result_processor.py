@@ -1,10 +1,10 @@
 """Advanced result processing and filtering for GitHound search results."""
 
-import asyncio
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 try:
     import pandas as pd
@@ -14,7 +14,7 @@ except ImportError:
     HAS_PANDAS = False
     from ._pandas_compat import mock_pd
 
-    pd = mock_pd  # type: ignore[assignment]
+    pd = mock_pd  # type: ignore[assignment]  # MockPandas provides pandas-like interface
 
 from ..models import SearchQuery, SearchResult, SearchType
 from .base import SearchContext
@@ -103,14 +103,20 @@ class ResultProcessor:
     async def _apply_enrichment(
         self, results: list[SearchResult], context: SearchContext
     ) -> list[SearchResult]:
-        """Apply all registered enrichers to the results."""
-        enriched_results = []
+        """Apply all registered enrichers to the results with chunked processing.
 
-        for result in results:
-            enriched_result = result
-            for enricher_func in self.enrichers:
-                enriched_result = enricher_func(enriched_result, context)
-            enriched_results.append(enriched_result)
+        Optimize: Process results in chunks to reduce memory pressure for large result sets.
+        """
+        enriched_results = []
+        chunk_size = 100  # Process 100 results at a time
+
+        for i in range(0, len(results), chunk_size):
+            chunk = results[i : i + chunk_size]
+            for result in chunk:
+                enriched_result = result
+                for enricher_func in self.enrichers:
+                    enriched_result = enricher_func(enriched_result, context)
+                enriched_results.append(enriched_result)
 
         return enriched_results
 
@@ -142,7 +148,11 @@ class ResultProcessor:
         if not results:
             return {}
 
-        # Convert to DataFrame for easier analysis
+        # Optimization: For large result sets, use streaming approach instead of building full DataFrame
+        if len(results) > 1000:
+            return await self._generate_statistics_streaming(results)
+
+        # Convert to DataFrame for easier analysis (for smaller result sets)
         df_data = []
         for result in results:
             df_data.append(
@@ -382,3 +392,78 @@ class ResultProcessor:
             return str(Path(result.file_path).parent)
 
         return grouper_func
+
+    async def _generate_statistics_streaming(self, results: list[SearchResult]) -> dict[str, Any]:
+        """Generate statistics using streaming approach for large result sets.
+
+        Optimization: Avoid building full DataFrame for large result sets to reduce memory usage.
+        """
+        from collections import Counter
+        from datetime import datetime
+
+        # Initialize counters and accumulators
+        search_type_counts: Counter[str] = Counter()
+        file_extension_counts: Counter[str] = Counter()
+        file_paths: set[str] = set()
+        commit_hashes: set[str] = set()
+        author_counts: Counter[str] = Counter()
+
+        relevance_scores: list[float] = []
+        commit_dates: list[datetime] = []
+        results_with_line_numbers = 0
+        results_with_commit_info = 0
+
+        # Single pass through results
+        for result in results:
+            search_type_counts[result.search_type.value] += 1
+            file_extension_counts[Path(result.file_path).suffix.lower()] += 1
+            file_paths.add(str(result.file_path))
+            commit_hashes.add(result.commit_hash)
+            relevance_scores.append(result.relevance_score)
+
+            if result.line_number is not None:
+                results_with_line_numbers += 1
+
+            if result.commit_info:
+                results_with_commit_info += 1
+                author_counts[result.commit_info.author_name] += 1
+                # CommitInfo.date is datetime
+                commit_dates.append(result.commit_info.date)
+
+        # Calculate statistics
+        statistics = {
+            "total_results": len(results),
+            "search_types": dict(search_type_counts),
+            "file_extensions": dict(file_extension_counts.most_common(10)),
+            "relevance_stats": {
+                "mean": sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0,
+                "median": sorted(relevance_scores)[len(relevance_scores) // 2]
+                if relevance_scores
+                else 0,
+                "min": min(relevance_scores) if relevance_scores else 0,
+                "max": max(relevance_scores) if relevance_scores else 0,
+            },
+            "unique_files": len(file_paths),
+            "unique_commits": len(commit_hashes),
+            "results_with_line_numbers": results_with_line_numbers,
+            "results_with_commit_info": results_with_commit_info,
+        }
+
+        # Add temporal statistics if commit dates are available
+        if commit_dates:
+            min_date = min(commit_dates)
+            max_date = max(commit_dates)
+            statistics["temporal_stats"] = {
+                "earliest_commit": min_date.isoformat(),
+                "latest_commit": max_date.isoformat(),
+                "date_range_days": (max_date - min_date).days,
+            }
+
+        # Add author statistics if available
+        if author_counts:
+            statistics["author_stats"] = {
+                "unique_authors": len(author_counts),
+                "top_authors": dict(author_counts.most_common(5)),
+            }
+
+        return statistics

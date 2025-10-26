@@ -14,8 +14,11 @@ except ImportError:
     # Create dummy classes for type checking
 
     class PyJWKClient:  # type: ignore[no-redef]
-        def __init__(self, uri: str) -> None: ...
-        def get_signing_key_from_jwt(self, token: str) -> Any: ...
+        def __init__(self, uri: str) -> None:
+            ...
+
+        def get_signing_key_from_jwt(self, token: str) -> Any:
+            ...
 
 
 from .base import TokenInfo, TokenVerifier
@@ -176,9 +179,12 @@ class StaticJWTVerifier(TokenVerifier):
                 "PyJWT is required for JWT verification. Install with: pip install PyJWT"
             )
 
-        super().__init__(issuer=issuer, audience=audience, **kwargs)
+        # Set attributes before calling super().__init__() so they're available
+        # when _load_from_environment() is called
         self.secret_key = secret_key
         self.algorithm = algorithm
+
+        super().__init__(issuer=issuer, audience=audience, **kwargs)
 
     def _load_from_environment(self) -> None:
         """Load static JWT configuration from environment variables."""

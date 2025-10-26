@@ -1,6 +1,6 @@
 """Mock implementation of rapidfuzz for testing purposes."""
 
-from typing import Any, Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
 
 
 class _MockFuzzModule:
@@ -44,13 +44,13 @@ class _MockProcessModule:
     @staticmethod
     def extract(
         query: str,
-        choices: List[str],
-        limit: Optional[int] = None,
-        score_cutoff: Optional[float] = None,
-        scorer: Optional[Callable[[str, str], float]] = None
-    ) -> List[Tuple[str, float, int]]:
+        choices: list[str],
+        limit: int | None = None,
+        score_cutoff: float | None = None,
+        scorer: Callable[[str, str], float] | None = None,
+    ) -> list[tuple[str, float, int]]:
         """Mock extract function that returns simple matches."""
-        results: List[Tuple[str, float, int]] = []
+        results: list[tuple[str, float, int]] = []
 
         # Use provided scorer or default to MockFuzz.ratio
         scoring_func = scorer if scorer is not None else _MockFuzzModule.ratio
@@ -71,12 +71,14 @@ class _MockProcessModule:
     @staticmethod
     def extractOne(
         query: str,
-        choices: List[str],
-        score_cutoff: Optional[float] = None,
-        scorer: Optional[Callable[[str, str], float]] = None
-    ) -> Optional[Tuple[str, float, int]]:
+        choices: list[str],
+        score_cutoff: float | None = None,
+        scorer: Callable[[str, str], float] | None = None,
+    ) -> tuple[str, float, int] | None:
         """Mock extractOne function that returns the best match."""
-        results = _MockProcessModule.extract(query, choices, limit=1, score_cutoff=score_cutoff, scorer=scorer)
+        results = _MockProcessModule.extract(
+            query, choices, limit=1, score_cutoff=score_cutoff, scorer=scorer
+        )
         return results[0] if results else None
 
 

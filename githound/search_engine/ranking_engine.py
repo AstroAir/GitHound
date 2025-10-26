@@ -1,9 +1,13 @@
 """Advanced ranking engine for GitHound search results."""
 
-import math
-from datetime import datetime, timedelta
+from __future__ import annotations
+
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .bm25_ranker import BM25Ranker
 
 try:
     from rapidfuzz import fuzz
@@ -17,14 +21,14 @@ except ImportError:
 
     fuzz = mock_rapidfuzz.fuzz  # type: ignore[assignment]
 
-from ..models import SearchQuery, SearchResult, SearchType
+from ..models import SearchQuery, SearchResult
 from .base import SearchContext
 
 
 class RankingEngine:
     """Sophisticated ranking engine for search results with multiple relevance factors."""
 
-    def __init__(self) -> None:
+    def __init__(self, use_bm25: bool = True) -> None:
         self.ranking_factors = {
             "query_match": 0.3,  # How well the result matches the query
             "recency": 0.2,  # How recent the commit is
@@ -34,6 +38,20 @@ class RankingEngine:
             "context_relevance": 0.1,  # Relevance of surrounding context
             "frequency": 0.05,  # How often this pattern appears
         }
+        # Optimization: Cache for expensive calculations
+        self._file_importance_cache: dict[str, float] = {}
+        self._frequency_cache: dict[str, float] = {}
+
+        # BM25 ranker for advanced text matching
+        self.use_bm25 = use_bm25
+        self._bm25_ranker: BM25Ranker | None = None
+        if use_bm25:
+            try:
+                from .bm25_ranker import BM25Ranker
+
+                self._bm25_ranker = BM25Ranker(k1=1.5, b=0.75)
+            except ImportError:
+                self.use_bm25 = False
 
     def set_ranking_weights(self, weights: dict[str, float]) -> None:
         """Set custom weights for ranking factors."""
@@ -51,6 +69,17 @@ class RankingEngine:
         if not results:
             return results
 
+        # Optimization: Use BM25 for initial ranking if available
+        if self.use_bm25 and self._bm25_ranker:
+            results = self._bm25_ranker.rank_results(results, query)
+
+        # Optimization: Clear caches for new ranking session
+        self._file_importance_cache.clear()
+        self._frequency_cache.clear()
+
+        # Optimization: Pre-calculate frequency scores once for all results
+        await self._precalculate_frequencies(results)
+
         # Calculate scores for each result
         scored_results = []
         for result in results:
@@ -62,6 +91,20 @@ class RankingEngine:
         scored_results.sort(key=lambda r: r.relevance_score, reverse=True)
 
         return scored_results
+
+    async def _precalculate_frequencies(self, results: list[SearchResult]) -> None:
+        """Pre-calculate frequency scores for all results to avoid redundant calculations."""
+        # Count occurrences of each file path
+        file_counts: dict[str, int] = {}
+        for result in results:
+            file_key = str(result.file_path)
+            file_counts[file_key] = file_counts.get(file_key, 0) + 1
+
+        # Calculate frequency scores (inverse frequency)
+        total_results = len(results)
+        for file_key, count in file_counts.items():
+            # Inverse frequency: less common files get higher scores
+            self._frequency_cache[file_key] = 1.0 - (count / total_results)
 
     async def _calculate_relevance_score(
         self,
@@ -169,6 +212,12 @@ class RankingEngine:
 
         commit_date = result.commit_info.date
         now = datetime.now()
+
+        # Ensure both datetimes are timezone-compatible
+        if now.tzinfo is not None and commit_date.tzinfo is None:
+            commit_date = commit_date.replace(tzinfo=now.tzinfo)
+        elif now.tzinfo is None and commit_date.tzinfo is not None:
+            now = now.replace(tzinfo=commit_date.tzinfo)
 
         # Calculate days since commit
         days_ago = (now - commit_date).days
@@ -367,20 +416,14 @@ class RankingEngine:
         if not all_results:
             return 0.5
 
-        # Count how many results are from the same file
-        same_file_count = sum(1 for r in all_results if str(r.file_path) == str(result.file_path))
+        # Optimization: Use pre-calculated file frequency from cache
+        file_key = str(result.file_path)
+        file_score = self._frequency_cache.get(file_key, 0.5)
 
-        # Count how many results have the same search type
+        # Count how many results have the same search type (this is fast enough)
         same_type_count = sum(1 for r in all_results if r.search_type == result.search_type)
-
         total_results = len(all_results)
-
-        # Calculate inverse frequency scores
-        file_frequency = same_file_count / total_results
         type_frequency = same_type_count / total_results
-
-        # Lower frequency (more unique) gets higher score
-        file_score = 1.0 - file_frequency
         type_score = 1.0 - type_frequency
 
         # Combine scores

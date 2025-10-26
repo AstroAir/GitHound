@@ -66,7 +66,7 @@ githound search --repo-path . --date-from "2023-01-01" --date-to "2023-12-31"
 ### Search by File Type
 
 ```bash
-githound search --repo-path . --content "class" --file-extensions py
+githound search --repo-path . --content "class" --ext py
 ```
 
 ### Combined Search
@@ -77,14 +77,14 @@ githound search \
   --author "john.doe" \
   --date-from "2023-01-01" \
   --message "bug fix" \
-  --file-extensions py \
+  --ext py \
   --content "function"
 ```
 
 ### Fuzzy Search
 
 ```bash
-githound search --repo-path . --content "functon" --fuzzy-search --fuzzy-threshold 0.8
+githound search --repo-path . --content "functon" --fuzzy --fuzzy-threshold 0.8
 ```
 
 ## Export Results
@@ -104,7 +104,7 @@ githound search --repo-path . --content "function" --output results.yaml --forma
 ### Export to CSV
 
 ```bash
-githound search "function" . --export results.csv --format csv
+githound search --repo-path . --content "function" --output results.csv --format csv
 ```
 
 ## Web Interface
@@ -143,13 +143,13 @@ When investigating a bug, you might want to:
 
 ```bash
 # Find recent changes to a specific file
-githound search --repo-path . --file-path-pattern "src/buggy_file.py" --date-from "2023-11-01"
+githound search --repo-path . --file-path "src/buggy_file.py" --date-from "2023-11-01"
 
 # Check who last modified specific lines
 githound blame . src/buggy_file.py
 
 # Compare recent commits
-githound diff --repo-path . --commit1 HEAD~5 --commit2 HEAD
+githound diff . HEAD~5 HEAD
 ```
 
 ### 2. Code Review Preparation
@@ -177,7 +177,7 @@ githound search --repo-path . --content "old_function_name"
 githound blame . src/legacy_file.py
 
 # Check recent changes to understand impact
-githound search --repo-path . --file-path-pattern "src/legacy_file.py" --date-from "2023-01-01"
+githound search --repo-path . --file-path "src/legacy_file.py" --date-from "2023-01-01"
 ```
 
 ## Configuration

@@ -234,18 +234,21 @@ All functionality has been preserved while eliminating duplication and improving
 ### Common Issues
 
 1. **Port Already in Use**
+
    ```bash
    # Find and kill process using port 8000
    lsof -ti:8000 | xargs kill -9
    ```
 
 2. **Redis Connection Error**
+
    ```bash
    # Start Redis server
    redis-server
    ```
 
 3. **CORS Issues**
+
    ```bash
    # Add your frontend URL to ALLOWED_ORIGINS
    export ALLOWED_ORIGINS=http://localhost:3000
@@ -254,6 +257,7 @@ All functionality has been preserved while eliminating duplication and improving
 ### Logs
 
 Check application logs for detailed error information:
+
 ```bash
 # View logs with timestamps
 python -m githound.web.main 2>&1 | tee web.log

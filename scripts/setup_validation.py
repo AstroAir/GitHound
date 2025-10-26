@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
 """
 Setup script for GitHound documentation validation tools.
 
 This script ensures all validation scripts are properly configured and executable.
 """
 
-import os
 import stat
 import sys
 from pathlib import Path
+
 
 def make_executable(script_path: Path) -> None:
     """Make a script executable."""
@@ -16,13 +15,10 @@ def make_executable(script_path: Path) -> None:
     script_path.chmod(current_permissions | stat.S_IEXEC)
     print(f"✅ Made {script_path.name} executable")
 
+
 def check_dependencies() -> bool:
     """Check if required dependencies are installed."""
-    required_packages = [
-        'yaml',
-        'requests',
-        'pathlib'
-    ]
+    required_packages = ["yaml", "requests", "pathlib"]
 
     missing_packages = []
     for package in required_packages:
@@ -39,15 +35,16 @@ def check_dependencies() -> bool:
     print("✅ All required Python packages are installed")
     return True
 
+
 def setup_validation_scripts() -> bool:
     """Setup validation scripts."""
     script_dir = Path(__file__).parent
     validation_scripts = [
-        'validate_documentation.py',
-        'validate_all_docs.py',
-        'validate_links.py',
-        'validate_docs_examples.py',
-        'validate_config_examples.py'
+        "validate_documentation.py",
+        "validate_all_docs.py",
+        "validate_links.py",
+        "validate_docs_examples.py",
+        "validate_config_examples.py",
     ]
 
     success = True
@@ -66,15 +63,16 @@ def setup_validation_scripts() -> bool:
 
     return success
 
+
 def check_config_files() -> bool:
     """Check if configuration files exist."""
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
 
     config_files = [
-        script_dir / 'validation-config.yaml',
-        project_root / '.markdownlint.json',
-        project_root / '.pre-commit-config.yaml'
+        script_dir / "validation-config.yaml",
+        project_root / ".markdownlint.json",
+        project_root / ".pre-commit-config.yaml",
     ]
 
     success = True
@@ -88,6 +86,7 @@ def check_config_files() -> bool:
 
     return success
 
+
 def test_validation_scripts() -> bool:
     """Test that validation scripts can be imported/executed."""
     script_dir = Path(__file__).parent
@@ -96,6 +95,7 @@ def test_validation_scripts() -> bool:
     try:
         sys.path.insert(0, str(script_dir))
         from validate_documentation import DocumentationValidator
+
         print("✅ Main validation module can be imported")
     except ImportError as e:
         print(f"❌ Failed to import validation module: {e}")
@@ -112,19 +112,21 @@ def test_validation_scripts() -> bool:
 
     return True
 
+
 def setup_pre_commit_hook() -> bool:
     """Setup pre-commit hook if pre-commit is available."""
     try:
         import subprocess
-        result = subprocess.run(['pre-commit', '--version'],
-                              capture_output=True, text=True)
+
+        result = subprocess.run(["pre-commit", "--version"], capture_output=True, text=True)
         if result.returncode == 0:
             print("✅ Pre-commit is available")
 
             # Install the hooks
             project_root = Path(__file__).parent.parent
-            result = subprocess.run(['pre-commit', 'install'],
-                                  cwd=project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                ["pre-commit", "install"], cwd=project_root, capture_output=True, text=True
+            )
             if result.returncode == 0:
                 print("✅ Pre-commit hooks installed")
                 return True
@@ -141,6 +143,7 @@ def setup_pre_commit_hook() -> bool:
         print(f"⚠️  Error checking pre-commit: {e}")
         return True  # Not a failure, just not available
 
+
 def main():
     """Main setup function."""
     print("GitHound Documentation Validation Setup")
@@ -151,7 +154,7 @@ def main():
         ("Setting up validation scripts", setup_validation_scripts),
         ("Checking configuration files", check_config_files),
         ("Testing validation scripts", test_validation_scripts),
-        ("Setting up pre-commit hooks", setup_pre_commit_hook)
+        ("Setting up pre-commit hooks", setup_pre_commit_hook),
     ]
 
     all_passed = True
@@ -174,6 +177,7 @@ def main():
         print("Please review the output above and fix any problems.")
 
     return 0 if all_passed else 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

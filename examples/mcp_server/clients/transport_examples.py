@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 FastMCP Transport Examples
 
@@ -21,28 +20,26 @@ This example covers:
 import asyncio
 import logging
 from pathlib import Path
-from typing import Optional, Any
-import json
+from typing import Any
 
+import httpx
 from fastmcp import Client
 from fastmcp.client.transports import (
+    FastMCPTransport,
+    SSETransport,
     StdioTransport,
     StreamableHttpTransport,
-    SSETransport,
-    FastMCPTransport
 )
 from fastmcp.exceptions import McpError
-import httpx
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-async def demonstrate_stdio_transport() -> Dict[str, Any]:
+async def demonstrate_stdio_transport() -> dict[str, Any]:
     """
     Demonstrate STDIO transport for local process communication.
 
@@ -84,19 +81,15 @@ async def demonstrate_stdio_transport() -> Dict[str, Any]:
                 "status": "success",
                 "tools_count": len(tools),
                 "resources_count": len(resources),
-                "connection_method": "process_communication"
+                "connection_method": "process_communication",
             }
 
     except Exception as e:
         logger.error(f"STDIO transport failed: {e}")
-        return {
-            "transport_type": "stdio",
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"transport_type": "stdio", "status": "failed", "error": str(e)}
 
 
-async def demonstrate_http_transport() -> Dict[str, Any]:
+async def demonstrate_http_transport() -> dict[str, Any]:
     """
     Demonstrate HTTP transport for remote server connections.
 
@@ -136,7 +129,7 @@ async def demonstrate_http_transport() -> Dict[str, Any]:
                 "status": "success",
                 "server_url": server_url,
                 "tools_count": len(tools),
-                "connection_method": "http_request"
+                "connection_method": "http_request",
             }
 
     except (McpError, httpx.ConnectError, Exception) as e:
@@ -145,11 +138,11 @@ async def demonstrate_http_transport() -> Dict[str, Any]:
             "transport_type": "http",
             "status": "failed",
             "error": str(e),
-            "note": "HTTP server may not be running"
+            "note": "HTTP server may not be running",
         }
 
 
-async def demonstrate_sse_transport() -> Dict[str, Any]:
+async def demonstrate_sse_transport() -> dict[str, Any]:
     """
     Demonstrate SSE (Server-Sent Events) transport for real-time communication.
 
@@ -189,8 +182,10 @@ async def demonstrate_sse_transport() -> Dict[str, Any]:
                 "status": "success",
                 "server_url": sse_url,
                 "tools_count": len(tools),
-                "streaming_capable": len(streaming_tools) > 0 if 'streaming_tools' in locals() else False,
-                "connection_method": "server_sent_events"
+                "streaming_capable": len(streaming_tools) > 0
+                if "streaming_tools" in locals()
+                else False,
+                "connection_method": "server_sent_events",
             }
 
     except Exception as e:
@@ -199,11 +194,11 @@ async def demonstrate_sse_transport() -> Dict[str, Any]:
             "transport_type": "sse",
             "status": "failed",
             "error": str(e),
-            "note": "SSE server may not be running"
+            "note": "SSE server may not be running",
         }
 
 
-async def demonstrate_inmemory_transport() -> Dict[str, Any]:
+async def demonstrate_inmemory_transport() -> dict[str, Any]:
     """
     Demonstrate In-Memory transport for testing and development.
 
@@ -249,19 +244,15 @@ async def demonstrate_inmemory_transport() -> Dict[str, Any]:
                 "transport_type": "inmemory",
                 "status": "success",
                 "server_type": "mock",
-                "connection_method": "direct_memory"
+                "connection_method": "direct_memory",
             }
 
     except Exception as e:
         logger.error(f"In-Memory transport failed: {e}")
-        return {
-            "transport_type": "inmemory",
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"transport_type": "inmemory", "status": "failed", "error": str(e)}
 
 
-async def demonstrate_transport_selection() -> Dict[str, Any]:
+async def demonstrate_transport_selection() -> dict[str, Any]:
     """
     Demonstrate automatic transport selection based on input.
 
@@ -279,23 +270,23 @@ async def demonstrate_transport_selection() -> Dict[str, Any]:
         "stdio_by_path": {
             "input": str(Path(__file__).parent.parent / "servers" / "simple_server.py"),
             "expected_transport": "StdioTransport",
-            "description": "File path automatically selects STDIO transport"
+            "description": "File path automatically selects STDIO transport",
         },
         "http_by_url": {
             "input": "http://localhost:8000/mcp",
             "expected_transport": "StreamableHttpTransport",
-            "description": "HTTP URL automatically selects HTTP transport"
+            "description": "HTTP URL automatically selects HTTP transport",
         },
         "https_by_url": {
             "input": "https://api.example.com/mcp",
             "expected_transport": "StreamableHttpTransport",
-            "description": "HTTPS URL automatically selects HTTP transport"
+            "description": "HTTPS URL automatically selects HTTP transport",
         },
         "sse_by_url": {
             "input": "http://localhost:8001/mcp/sse",
             "expected_transport": "SSETransport",
-            "description": "SSE endpoint automatically selects SSE transport"
-        }
+            "description": "SSE endpoint automatically selects SSE transport",
+        },
     }
 
     results: dict[str, Any] = {}
@@ -311,24 +302,24 @@ async def demonstrate_transport_selection() -> Dict[str, Any]:
             results[example_name] = {
                 "input": example_info["input"],
                 "expected_transport": example_info["expected_transport"],
-                "status": "documented"
+                "status": "documented",
             }
 
         except Exception as e:
             results[example_name] = {
                 "input": example_info["input"],
                 "status": "failed",
-                "error": str(e)
+                "error": str(e),
             }
 
     return {
         "transport_selection": "automatic",
         "examples": results,
-        "total_examples": len(transport_examples)
+        "total_examples": len(transport_examples),
     }
 
 
-async def demonstrate_transport_configuration() -> Dict[str, Any]:
+async def demonstrate_transport_configuration() -> dict[str, Any]:
     """
     Demonstrate advanced transport configuration options.
 
@@ -354,14 +345,14 @@ async def demonstrate_transport_configuration() -> Dict[str, Any]:
             "python",
             str(server_script),
             env={"PYTHONPATH": str(Path(__file__).parent.parent)},
-            cwd=str(Path(__file__).parent.parent)
+            cwd=str(Path(__file__).parent.parent),
         )
 
         configurations["stdio_custom"] = {
             "transport_type": "stdio",
             "custom_env": True,
             "custom_cwd": True,
-            "status": "configured"
+            "status": "configured",
         }
 
     except Exception as e:
@@ -373,26 +364,23 @@ async def demonstrate_transport_configuration() -> Dict[str, Any]:
         http_transport = StreamableHttpTransport(
             "http://localhost:8000/mcp",
             headers={"Authorization": "Bearer token123"},
-            sse_read_timeout=30.0
+            sse_read_timeout=30.0,
         )
 
         configurations["http_auth"] = {
             "transport_type": "http",
             "has_auth": True,
             "timeout": 30.0,
-            "status": "configured"
+            "status": "configured",
         }
 
     except Exception as e:
         configurations["http_auth"] = {"status": "failed", "error": str(e)}
 
-    return {
-        "configuration_examples": configurations,
-        "total_configurations": len(configurations)
-    }
+    return {"configuration_examples": configurations, "total_configurations": len(configurations)}
 
 
-async def main() -> Dict[str, Any]:
+async def main() -> dict[str, Any]:
     """
     Main function demonstrating all FastMCP transport types and configurations.
 
@@ -450,7 +438,7 @@ async def main() -> Dict[str, Any]:
 if __name__ == "__main__":
     # Run the transport examples
     result = asyncio.run(main())
-    print(f"\nTransport Results Summary:")
+    print("\nTransport Results Summary:")
     for transport_type, result_data in result.items():
         if isinstance(result_data, dict) and "status" in result_data:
             print(f"  {transport_type}: {result_data['status']}")

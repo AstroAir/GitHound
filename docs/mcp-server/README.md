@@ -7,23 +7,29 @@ Complete documentation for GitHound's Model Context Protocol (MCP) server implem
 ### Getting Started
 
 - **[Setup](setup.md)** - Installation, configuration, and client integration guide
-- **[Setup](setup.md)** - Installation, configuration, and client integration guide
 - **[Configuration](configuration.md)** - Complete configuration reference with MCP.json support
 
 ### Reference Documentation
 
-- **[Tools Reference](tools-reference.md)** - Comprehensive guide to all 20+ MCP tools
+- **[Tools Reference](tools-reference.md)** - Comprehensive guide to all 29 MCP tools
 - **[Integration Examples](integration-examples.md)** - Practical examples and usage patterns
 
 ## What is GitHound MCP Server
 
 GitHound MCP Server is a comprehensive Model Context Protocol implementation that exposes all of GitHound's Git repository analysis capabilities through a standardized interface. Built with FastMCP 2.0, it provides:
 
-- **25+ MCP Tools** for repository analysis, search, and management
+- **29 MCP Tools** for repository analysis, search, and management
 - **7 MCP Resources** for dynamic data access
 - **3 MCP Prompts** for common workflows
 - **Universal Client Support** through MCP.json configuration
 - **Robust Authentication** with multiple provider options
+
+### 🔐 **Advanced Authentication**
+
+- **Permit.io Integration** for Role-Based Access Control (RBAC)
+- **Eunomia Authorization** for Attribute-Based Access Control (ABAC)
+- **Fine-grained Permissions** for tool and resource access
+- **Multi-tenant Support** with organization-level isolation
 
 ## Key Features
 

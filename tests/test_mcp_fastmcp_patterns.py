@@ -13,8 +13,6 @@ Based on: https://gofastmcp.com/deployment/testing
 """
 
 import asyncio
-from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -24,6 +22,7 @@ from git import GitCommandError
 try:
     from fastmcp import Client, FastMCP
     from fastmcp.exceptions import McpError, ToolError
+
     FASTMCP_AVAILABLE = True
 except ImportError:
     FASTMCP_AVAILABLE = False
@@ -33,10 +32,10 @@ except ImportError:
     McpError = Exception
     ToolError = Exception
 
-from githound.mcp_server import get_mcp_server
 
-
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestFastMCPInMemoryTesting:
     """Test FastMCP in-memory testing patterns."""
 
@@ -97,7 +96,9 @@ class TestFastMCPInMemoryTesting:
             pytest.skip(f"Resource not available: {e}")
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMockingExternalDependencies:
     """Test mocking external dependencies following FastMCP patterns."""
 
@@ -140,7 +141,9 @@ class TestMockingExternalDependencies:
                 assert result is not None
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestErrorHandling:
     """Test error handling and edge cases."""
 
@@ -178,7 +181,9 @@ class TestErrorHandling:
                 assert "error" in result_text
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestToolFunctionality:
     """Test individual MCP tools comprehensively."""
 
@@ -229,7 +234,9 @@ class TestToolFunctionality:
                 pytest.skip(f"Tool {tool_name} not available: {e}")
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestResourceAccess:
     """Test MCP resource access patterns."""
 
@@ -265,7 +272,9 @@ class TestResourceAccess:
                 pytest.skip(f"Resource {uri} not available: {e}")
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestPromptFunctionality:
     """Test MCP prompt functionality."""
 
@@ -293,7 +302,9 @@ class TestPromptFunctionality:
             pytest.skip(f"Prompt not available: {e}")
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestPerformancePatterns:
     """Test performance-related patterns."""
 

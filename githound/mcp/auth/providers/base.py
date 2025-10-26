@@ -40,6 +40,7 @@ class AuthProvider(ABC):
         self.config = kwargs
         self._load_from_environment()
 
+    @abstractmethod
     def _load_from_environment(self) -> None:
         """Load configuration from environment variables."""
         # Override in subclasses to load specific environment variables
@@ -120,9 +121,11 @@ class TokenVerifier(AuthProvider):
     """Base class for token-only verification providers."""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+        # Set attributes before calling super().__init__() so they're available
+        # when _load_from_environment() is called
         self.issuer = kwargs.get("issuer")
         self.audience = kwargs.get("audience")
+        super().__init__(**kwargs)
 
     async def authenticate(self, token: str) -> AuthResult:
         """Authenticate by validating the token."""
@@ -143,8 +146,10 @@ class RemoteAuthProvider(TokenVerifier):
     """Base class for providers that work with external identity providers."""
 
     def __init__(self, base_url: str, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+        # Set base_url before calling super().__init__() so it's available
+        # when _load_from_environment() is called
         self.base_url = base_url.rstrip("/")
+        super().__init__(**kwargs)
 
     def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for MCP clients."""

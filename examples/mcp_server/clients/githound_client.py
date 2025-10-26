@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound MCP Client Example
 
@@ -23,21 +22,20 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
-from fastmcp.exceptions import ToolError, McpError
+from fastmcp.exceptions import McpError, ToolError
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-async def analyze_repository_comprehensive(client: Client, repo_path: str) -> Dict[str, Any]:
+async def analyze_repository_comprehensive(client: Client, repo_path: str) -> dict[str, Any]:
     """
     Perform comprehensive repository analysis using GitHound MCP server.
 
@@ -61,18 +59,27 @@ async def analyze_repository_comprehensive(client: Client, repo_path: str) -> Di
             repo_info = repo_result.data
             analysis_results["repository"] = repo_info
 
-            logger.info(f"✓ Repository: {repo_info.get if repo_info is not None else None('name', 'Unknown')}")
-            logger.info(f"  Total commits: {repo_info.get if repo_info is not None else None('total_commits', 0)}")
-            logger.info(f"  Total files: {repo_info.get if repo_info is not None else None('total_files', 0)}")
-            logger.info(f"  Total authors: {repo_info.get if repo_info is not None else None('total_authors', 0)}")
-            logger.info(f"  Branches: {', '.join(repo_info.get if repo_info is not None else None('branches', []))}")
+            logger.info(
+                f"✓ Repository: {repo_info.get if repo_info is not None else None('name', 'Unknown')}"
+            )
+            logger.info(
+                f"  Total commits: {repo_info.get if repo_info is not None else None('total_commits', 0)}"
+            )
+            logger.info(
+                f"  Total files: {repo_info.get if repo_info is not None else None('total_files', 0)}"
+            )
+            logger.info(
+                f"  Total authors: {repo_info.get if repo_info is not None else None('total_authors', 0)}"
+            )
+            logger.info(
+                f"  Branches: {', '.join(repo_info.get if repo_info is not None else None('branches', []))}"
+            )
 
         # 2. Recent commit history
         logger.info("2. Analyzing recent commit history...")
-        history_result = await client.call_tool("get_commit_history", {
-            "repo_path": repo_path,
-            "limit": 10
-        })
+        history_result = await client.call_tool(
+            "get_commit_history", {"repo_path": repo_path, "limit": 10}
+        )
 
         if history_result.data:
             commits = history_result.data
@@ -80,7 +87,9 @@ async def analyze_repository_comprehensive(client: Client, repo_path: str) -> Di
 
             logger.info(f"✓ Retrieved {len(commits)} recent commits")
             for i, commit in enumerate(commits[:3]):  # Show first 3
-                logger.info(f"  {i+1}. {commit.get if commit is not None else None('hash', '')[:8]} - {commit.get('message', '')[:50]}...")
+                logger.info(
+                    f"  {i+1}. {commit.get if commit is not None else None('hash', '')[:8]} - {commit.get('message', '')[:50]}..."
+                )
 
         # 3. Author statistics
         logger.info("3. Analyzing author contributions...")
@@ -90,10 +99,14 @@ async def analyze_repository_comprehensive(client: Client, repo_path: str) -> Di
             author_stats = authors_result.data
             analysis_results["author_statistics"] = author_stats
 
-            logger.info(f"✓ Found {author_stats.get if author_stats is not None else None('total_authors', 0)} contributors")
-            authors = author_stats.get('authors', [])
+            logger.info(
+                f"✓ Found {author_stats.get if author_stats is not None else None('total_authors', 0)} contributors"
+            )
+            authors = author_stats.get("authors", [])
             for i, author in enumerate(authors[:3]):  # Show top 3
-                logger.info(f"  {i+1}. {author.get if author is not None else None('name', 'Unknown')} - {author.get('commits', 0)} commits")
+                logger.info(
+                    f"  {i+1}. {author.get if author is not None else None('name', 'Unknown')} - {author.get('commits', 0)} commits"
+                )
 
         analysis_results["analysis_completed"] = True
         analysis_results["analysis_timestamp"] = datetime.now().isoformat()
@@ -110,7 +123,9 @@ async def analyze_repository_comprehensive(client: Client, repo_path: str) -> Di
         return analysis_results
 
 
-async def analyze_specific_commit(client: Client, repo_path: str, commit_hash: str) -> Dict[str, Any]:
+async def analyze_specific_commit(
+    client: Client, repo_path: str, commit_hash: str
+) -> dict[str, Any]:
     """
     Analyze a specific commit in detail.
 
@@ -125,27 +140,37 @@ async def analyze_specific_commit(client: Client, repo_path: str, commit_hash: s
     logger.info(f"Analyzing specific commit: {commit_hash}")
 
     try:
-        result = await client.call_tool("analyze_commit", {
-            "repo_path": repo_path,
-            "commit_hash": commit_hash
-        })
+        result = await client.call_tool(
+            "analyze_commit", {"repo_path": repo_path, "commit_hash": commit_hash}
+        )
 
         if result.data:
             commit_info = result.data
 
-            logger.info(f"✓ Commit Analysis:")
-            logger.info(f"  Hash: {commit_info.get if commit_info is not None else None('hash', 'Unknown')}")
-            logger.info(f"  Author: {commit_info.get if commit_info is not None else None('author', 'Unknown')}")
-            logger.info(f"  Date: {commit_info.get if commit_info is not None else None('date', 'Unknown')}")
-            logger.info(f"  Message: {commit_info.get if commit_info is not None else None('message', 'No message')}")
-            logger.info(f"  Files changed: {commit_info.get if commit_info is not None else None('files_changed', 0)}")
-            logger.info(f"  Insertions: {commit_info.get if commit_info is not None else None('insertions', 0)}")
-            logger.info(f"  Deletions: {commit_info.get if commit_info is not None else None('deletions', 0)}")
+            logger.info("✓ Commit Analysis:")
+            logger.info(
+                f"  Hash: {commit_info.get if commit_info is not None else None('hash', 'Unknown')}"
+            )
+            logger.info(
+                f"  Author: {commit_info.get if commit_info is not None else None('author', 'Unknown')}"
+            )
+            logger.info(
+                f"  Date: {commit_info.get if commit_info is not None else None('date', 'Unknown')}"
+            )
+            logger.info(
+                f"  Message: {commit_info.get if commit_info is not None else None('message', 'No message')}"
+            )
+            logger.info(
+                f"  Files changed: {commit_info.get if commit_info is not None else None('files_changed', 0)}"
+            )
+            logger.info(
+                f"  Insertions: {commit_info.get if commit_info is not None else None('insertions', 0)}"
+            )
+            logger.info(
+                f"  Deletions: {commit_info.get if commit_info is not None else None('deletions', 0)}"
+            )
 
-            return {
-                "commit_analysis": commit_info,
-                "analysis_successful": True
-            }
+            return {"commit_analysis": commit_info, "analysis_successful": True}
         else:
             return {"error": "No commit data returned"}
 
@@ -154,7 +179,7 @@ async def analyze_specific_commit(client: Client, repo_path: str, commit_hash: s
         return {"error": str(e)}
 
 
-async def analyze_file_history(client: Client, repo_path: str, file_path: str) -> Dict[str, Any]:
+async def analyze_file_history(client: Client, repo_path: str, file_path: str) -> dict[str, Any]:
     """
     Analyze the history of a specific file.
 
@@ -169,11 +194,9 @@ async def analyze_file_history(client: Client, repo_path: str, file_path: str) -
     logger.info(f"Analyzing file history: {file_path}")
 
     try:
-        result = await client.call_tool("get_file_history", {
-            "repo_path": repo_path,
-            "file_path": file_path,
-            "limit": 5
-        })
+        result = await client.call_tool(
+            "get_file_history", {"repo_path": repo_path, "file_path": file_path, "limit": 5}
+        )
 
         if result.data:
             file_commits = result.data
@@ -182,13 +205,15 @@ async def analyze_file_history(client: Client, repo_path: str, file_path: str) -
             logger.info(f"  Total commits affecting this file: {len(file_commits)}")
 
             for i, commit in enumerate(file_commits):
-                logger.info(f"  {i+1}. {commit.get if commit is not None else None('hash', '')[:8]} - {commit.get('author', 'Unknown')} - {commit.get('message', '')[:40]}...")
+                logger.info(
+                    f"  {i+1}. {commit.get if commit is not None else None('hash', '')[:8]} - {commit.get('author', 'Unknown')} - {commit.get('message', '')[:40]}..."
+                )
 
             return {
                 "file_path": file_path,
                 "commit_history": file_commits,
                 "total_commits": len(file_commits),
-                "analysis_successful": True
+                "analysis_successful": True,
             }
         else:
             return {"error": "No file history data returned"}
@@ -198,7 +223,7 @@ async def analyze_file_history(client: Client, repo_path: str, file_path: str) -
         return {"error": str(e)}
 
 
-async def access_repository_resources(client: Client, repo_path: str) -> Dict[str, Any]:
+async def access_repository_resources(client: Client, repo_path: str) -> dict[str, Any]:
     """
     Access GitHound repository resources through MCP.
 
@@ -221,14 +246,20 @@ async def access_repository_resources(client: Client, repo_path: str) -> Dict[st
         try:
             summary_content = await client.read_resource(summary_uri)
             if summary_content:
-                summary_text = getattr(summary_content[0], 'text', str(summary_content[0]))
+                summary_text = getattr(summary_content[0], "text", str(summary_content[0]))
                 summary_data = json.loads(summary_text)
                 resource_results["summary"] = summary_data
 
                 logger.info("✓ Repository summary accessed")
-                logger.info(f"  Activity level: {summary_data.get if summary_data is not None else None('summary', {}).get('activity_level', 'Unknown')}")
-                logger.info(f"  Team size: {summary_data.get if summary_data is not None else None('summary', {}).get('team_size', 'Unknown')}")
-                logger.info(f"  Maturity: {summary_data.get if summary_data is not None else None('summary', {}).get('maturity', 'Unknown')}")
+                logger.info(
+                    f"  Activity level: {summary_data.get if summary_data is not None else None('summary', {}).get('activity_level', 'Unknown')}"
+                )
+                logger.info(
+                    f"  Team size: {summary_data.get if summary_data is not None else None('summary', {}).get('team_size', 'Unknown')}"
+                )
+                logger.info(
+                    f"  Maturity: {summary_data.get if summary_data is not None else None('summary', {}).get('maturity', 'Unknown')}"
+                )
         except Exception as e:
             logger.warning(f"Failed to access summary resource: {e}")
             resource_results["summary_error"] = str(e)
@@ -240,15 +271,23 @@ async def access_repository_resources(client: Client, repo_path: str) -> Dict[st
         try:
             contributors_content = await client.read_resource(contributors_uri)
             if contributors_content:
-                contributors_text = getattr(contributors_content[0], 'text', str(contributors_content[0]))
+                contributors_text = getattr(
+                    contributors_content[0], "text", str(contributors_content[0])
+                )
                 contributors_data = json.loads(contributors_text)
                 resource_results["contributors"] = contributors_data
 
                 logger.info("✓ Contributors resource accessed")
-                summary = contributors_data.get('summary', {})
-                logger.info(f"  Total contributors: {summary.get if summary is not None else None('total_contributors', 0)}")
-                logger.info(f"  Top contributor: {summary.get if summary is not None else None('top_contributor', 'Unknown')}")
-                logger.info(f"  Total commits: {summary.get if summary is not None else None('total_commits', 0)}")
+                summary = contributors_data.get("summary", {})
+                logger.info(
+                    f"  Total contributors: {summary.get if summary is not None else None('total_contributors', 0)}"
+                )
+                logger.info(
+                    f"  Top contributor: {summary.get if summary is not None else None('top_contributor', 'Unknown')}"
+                )
+                logger.info(
+                    f"  Total commits: {summary.get if summary is not None else None('total_commits', 0)}"
+                )
         except Exception as e:
             logger.warning(f"Failed to access contributors resource: {e}")
             resource_results["contributors_error"] = str(e)
@@ -261,7 +300,7 @@ async def access_repository_resources(client: Client, repo_path: str) -> Dict[st
         return {"error": str(e)}
 
 
-async def demonstrate_advanced_queries(client: Client, repo_path: str) -> Dict[str, Any]:
+async def demonstrate_advanced_queries(client: Client, repo_path: str) -> dict[str, Any]:
     """
     Demonstrate advanced query patterns with GitHound MCP server.
 
@@ -282,37 +321,34 @@ async def demonstrate_advanced_queries(client: Client, repo_path: str) -> Dict[s
 
         # First get author stats to find an author
         authors_result = await client.call_tool("get_author_stats", {"repo_path": repo_path})
-        if authors_result.data and authors_result.data.get('authors'):
-            top_author = authors_result.data['authors'][0]['name']
+        if authors_result.data and authors_result.data.get("authors"):
+            top_author = authors_result.data["authors"][0]["name"]
 
-            filtered_commits = await client.call_tool("get_commit_history", {
-                "repo_path": repo_path,
-                "limit": 5,
-                "author": top_author
-            })
+            filtered_commits = await client.call_tool(
+                "get_commit_history", {"repo_path": repo_path, "limit": 5, "author": top_author}
+            )
 
             if filtered_commits.data:
                 advanced_results["author_commits"] = {
                     "author": top_author,
                     "commits": filtered_commits.data,
-                    "count": len(filtered_commits.data)
+                    "count": len(filtered_commits.data),
                 }
                 logger.info(f"✓ Found {len(filtered_commits.data)} commits by {top_author}")
 
         # 2. Recent commits with date filtering
         logger.info("2. Querying recent commits with date filtering...")
 
-        recent_commits = await client.call_tool("get_commit_history", {
-            "repo_path": repo_path,
-            "limit": 20,
-            "since": "2024-01-01T00:00:00Z"
-        })
+        recent_commits = await client.call_tool(
+            "get_commit_history",
+            {"repo_path": repo_path, "limit": 20, "since": "2024-01-01T00:00:00Z"},
+        )
 
         if recent_commits.data:
             advanced_results["recent_commits"] = {
                 "since": "2024-01-01",
                 "commits": recent_commits.data,
-                "count": len(recent_commits.data)
+                "count": len(recent_commits.data),
             }
             logger.info(f"✓ Found {len(recent_commits.data)} commits since 2024-01-01")
 
@@ -324,18 +360,18 @@ async def demonstrate_advanced_queries(client: Client, repo_path: str) -> Dict[s
 
         for file_path in common_files:
             try:
-                file_result = await client.call_tool("get_file_history", {
-                    "repo_path": repo_path,
-                    "file_path": file_path,
-                    "limit": 3
-                })
+                file_result = await client.call_tool(
+                    "get_file_history", {"repo_path": repo_path, "file_path": file_path, "limit": 3}
+                )
 
                 if file_result.data:
-                    file_analyses.append({
-                        "file": file_path,
-                        "commits": len(file_result.data),
-                        "latest_commit": file_result.data[0] if file_result.data else None
-                    })
+                    file_analyses.append(
+                        {
+                            "file": file_path,
+                            "commits": len(file_result.data),
+                            "latest_commit": file_result.data[0] if file_result.data else None,
+                        }
+                    )
                     logger.info(f"  {file_path}: {len(file_result.data)} commits")
             except ToolError:
                 # File doesn't exist or no history
@@ -351,7 +387,7 @@ async def demonstrate_advanced_queries(client: Client, repo_path: str) -> Dict[s
         return {"error": str(e)}
 
 
-async def main(repo_path: str = ".") -> Dict[str, Any]:
+async def main(repo_path: str = ".") -> dict[str, Any]:
     """
     Main function demonstrating comprehensive GitHound MCP client usage.
 
@@ -443,7 +479,7 @@ if __name__ == "__main__":
     result = asyncio.run(main(repo_path))
 
     # Print summary
-    print(f"\nAnalysis Summary:")
+    print("\nAnalysis Summary:")
     if "error" in result:
         print(f"  Error: {result['error']}")
     else:
@@ -453,5 +489,9 @@ if __name__ == "__main__":
             print(f"  Commits: {repo_info.get('total_commits', 0)}")
             print(f"  Authors: {repo_info.get('total_authors', 0)}")
 
-        print(f"  Analysis sections completed: {len([k for k in result.keys() if not k.startswith('error')])}")
-        print(f"  Total data points collected: {sum(len(str(v)) for v in result.values()) // 100} (approx)")
+        print(
+            f"  Analysis sections completed: {len([k for k in result.keys() if not k.startswith('error')])}"
+        )
+        print(
+            f"  Total data points collected: {sum(len(str(v)) for v in result.values()) // 100} (approx)"
+        )

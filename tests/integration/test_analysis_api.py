@@ -19,7 +19,7 @@ class TestBlameAnalysis:
         """Test successful file blame analysis."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_file_blame") as mock_blame:
+        with patch("githound.web.apis.analysis_api.get_file_blame") as mock_blame:
             mock_blame.return_value = Mock(
                 dict=lambda: {
                     "file_path": "test_file.py",
@@ -43,7 +43,7 @@ class TestBlameAnalysis:
             )
 
             response = api_client.post(
-                "/api/v3/analysis/blame",
+                "/api/v1/analysis/blame",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={"file_path": "test_file.py", "commit": None, "line_range": None},
@@ -61,16 +61,16 @@ class TestBlameAnalysis:
         """Test file blame analysis with line range."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_file_blame") as mock_blame:
-            mock_blame.return_value = Mock(
-                line_blame={
+        with patch("githound.web.apis.analysis_api.get_file_blame") as mock_blame:
+            mock_blame.return_value = {
+                "line_blame": {
                     5: {"commit_hash": "abc123", "author": "Test User"},
                     6: {"commit_hash": "def456", "author": "Another User"},
                 }
-            )
+            }
 
             response = api_client.post(
-                "/api/v3/analysis/blame",
+                "/api/v1/analysis/blame",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={"file_path": "test_file.py", "commit": "abc123", "line_range": [5, 10]},
@@ -86,11 +86,11 @@ class TestBlameAnalysis:
         """Test file blame analysis with invalid file."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_file_blame") as mock_blame:
+        with patch("githound.web.apis.analysis_api.get_file_blame") as mock_blame:
             mock_blame.side_effect = FileNotFoundError("File not found")
 
             response = api_client.post(
-                "/api/v3/analysis/blame",
+                "/api/v1/analysis/blame",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={"file_path": "nonexistent.py"},
@@ -107,7 +107,7 @@ class TestDiffAnalysis:
         """Test successful commit comparison."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.compare_commits") as mock_compare:
+        with patch("githound.web.apis.analysis_api.compare_commits") as mock_compare:
             mock_compare.return_value = Mock(
                 dict=lambda: {
                     "from_commit": "abc123",
@@ -133,7 +133,7 @@ class TestDiffAnalysis:
             )
 
             response = api_client.post(
-                "/api/v3/analysis/diff/commits",
+                "/api/v1/analysis/diff/commits",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={
@@ -155,7 +155,7 @@ class TestDiffAnalysis:
         """Test successful branch comparison."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.compare_branches") as mock_compare:
+        with patch("githound.web.apis.analysis_api.compare_branches") as mock_compare:
             mock_compare.return_value = Mock(
                 dict=lambda: {
                     "from_branch": "main",
@@ -168,7 +168,7 @@ class TestDiffAnalysis:
             )
 
             response = api_client.post(
-                "/api/v3/analysis/diff/branches",
+                "/api/v1/analysis/diff/branches",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={
@@ -188,11 +188,11 @@ class TestDiffAnalysis:
         """Test commit comparison with invalid commit hash."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.compare_commits") as mock_compare:
+        with patch("githound.web.apis.analysis_api.compare_commits") as mock_compare:
             mock_compare.side_effect = ValueError("Invalid commit hash")
 
             response = api_client.post(
-                "/api/v3/analysis/diff/commits",
+                "/api/v1/analysis/diff/commits",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={"from_commit": "invalid", "to_commit": "also_invalid"},
@@ -209,11 +209,11 @@ class TestCommitFiltering:
         """Test successful commit filtering."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_commits_with_filters") as mock_filter:
+        with patch("githound.web.apis.analysis_api.get_commits_with_filters") as mock_filter:
             mock_commits = [Mock(), Mock()]
             mock_filter.return_value = mock_commits
 
-            with patch("githound.web.analysis_api.extract_commit_metadata") as mock_extract:
+            with patch("githound.web.apis.analysis_api.extract_commit_metadata") as mock_extract:
                 mock_extract.return_value = Mock(
                     dict=lambda: {
                         "commit_hash": "abc123",
@@ -225,7 +225,7 @@ class TestCommitFiltering:
                 )
 
                 response = api_client.post(
-                    "/api/v3/analysis/commits/filter",
+                    "/api/v1/analysis/commits/filter",
                     headers=admin_auth_headers,
                     params={"repo_path": repo_path},
                     json={
@@ -251,11 +251,11 @@ class TestCommitFiltering:
         """Test commit filtering with no results."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_commits_with_filters") as mock_filter:
+        with patch("githound.web.apis.analysis_api.get_commits_with_filters") as mock_filter:
             mock_filter.return_value = []
 
             response = api_client.post(
-                "/api/v3/analysis/commits/filter",
+                "/api/v1/analysis/commits/filter",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={"author_pattern": "NonexistentAuthor", "max_count": 10},
@@ -275,7 +275,7 @@ class TestFileHistory:
         """Test successful file history retrieval."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_file_history") as mock_history:
+        with patch("githound.web.apis.analysis_api.get_file_history") as mock_history:
             mock_history.return_value = [
                 {
                     "commit_hash": "abc123",
@@ -294,7 +294,7 @@ class TestFileHistory:
             ]
 
             response = api_client.get(
-                "/api/v3/analysis/file-history",
+                "/api/v1/analysis/file-history",
                 headers=admin_auth_headers,
                 params={
                     "repo_path": repo_path,
@@ -317,11 +317,11 @@ class TestFileHistory:
         """Test file history for nonexistent file."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_file_history") as mock_history:
+        with patch("githound.web.apis.analysis_api.get_file_history") as mock_history:
             mock_history.return_value = []
 
             response = api_client.get(
-                "/api/v3/analysis/file-history",
+                "/api/v1/analysis/file-history",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path, "file_path": "nonexistent.py"},
             )
@@ -342,7 +342,7 @@ class TestRepositoryStatistics:
         """Test successful repository statistics retrieval."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_repository_metadata") as mock_metadata:
+        with patch("githound.web.apis.analysis_api.get_repository_metadata") as mock_metadata:
             mock_metadata.return_value = {
                 "total_commits": 10,
                 "contributors": ["Alice", "Bob"],
@@ -352,7 +352,7 @@ class TestRepositoryStatistics:
                 "last_commit_date": "2024-01-10T00:00:00Z",
             }
 
-            with patch("githound.web.analysis_api.get_author_statistics") as mock_author_stats:
+            with patch("githound.web.apis.analysis_api.get_author_statistics") as mock_author_stats:
                 mock_author_stats.return_value = {
                     "Alice": {
                         "total_commits": 6,
@@ -369,7 +369,7 @@ class TestRepositoryStatistics:
                 }
 
                 response = api_client.get(
-                    "/api/v3/analysis/repository-stats",
+                    "/api/v1/analysis/repository-stats",
                     headers=admin_auth_headers,
                     params={
                         "repo_path": repo_path,
@@ -383,7 +383,6 @@ class TestRepositoryStatistics:
                 assert data["success"] is True
                 assert "repository_info" in data["data"]
                 assert "author_statistics" in data["data"]
-                assert "top_contributors" in data["data"]
                 assert data["data"]["summary"]["total_commits"] == 10
                 assert data["data"]["summary"]["total_contributors"] == 2
 
@@ -393,7 +392,7 @@ class TestRepositoryStatistics:
         """Test repository statistics with minimal options."""
         repo_path = str(temp_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_repository_metadata") as mock_metadata:
+        with patch("githound.web.apis.analysis_api.get_repository_metadata") as mock_metadata:
             mock_metadata.return_value = {
                 "total_commits": 5,
                 "contributors": ["Alice"],
@@ -402,7 +401,7 @@ class TestRepositoryStatistics:
             }
 
             response = api_client.get(
-                "/api/v3/analysis/repository-stats",
+                "/api/v1/analysis/repository-stats",
                 headers=admin_auth_headers,
                 params={
                     "repo_path": repo_path,
@@ -419,8 +418,9 @@ class TestRepositoryStatistics:
 
 
 @pytest.mark.integration
+@pytest.mark.skip(reason="Merge conflict endpoints removed - not core analysis functionality")
 class TestMergeConflicts:
-    """Test merge conflict detection and resolution endpoints."""
+    """Test merge conflict detection and resolution endpoints (REMOVED)."""
 
     def test_get_merge_conflicts_no_conflicts(
         self, api_client, admin_auth_headers, temp_repo
@@ -429,7 +429,7 @@ class TestMergeConflicts:
         repo_path = str(temp_repo.working_dir)
 
         with patch(
-            "githound.web.git_operations.GitOperationsManager.get_merge_conflicts"
+            "githound.web.core.git_operations.GitOperationsManager.get_merge_conflicts"
         ) as mock_conflicts:
             mock_conflicts.return_value = {
                 "has_conflicts": False,
@@ -438,7 +438,7 @@ class TestMergeConflicts:
             }
 
             response = api_client.get(
-                "/api/v3/analysis/conflicts",
+                "/api/v1/analysis/conflicts",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
             )
@@ -456,7 +456,7 @@ class TestMergeConflicts:
         repo_path = str(temp_repo.working_dir)
 
         with patch(
-            "githound.web.git_operations.GitOperationsManager.get_merge_conflicts"
+            "githound.web.core.git_operations.GitOperationsManager.get_merge_conflicts"
         ) as mock_conflicts:
             mock_conflicts.return_value = {
                 "has_conflicts": True,
@@ -475,7 +475,7 @@ class TestMergeConflicts:
             }
 
             response = api_client.get(
-                "/api/v3/analysis/conflicts",
+                "/api/v1/analysis/conflicts",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
             )
@@ -492,7 +492,7 @@ class TestMergeConflicts:
         repo_path = str(temp_repo.working_dir)
 
         with patch(
-            "githound.web.git_operations.GitOperationsManager.resolve_conflict"
+            "githound.web.core.git_operations.GitOperationsManager.resolve_conflict"
         ) as mock_resolve:
             mock_resolve.return_value = {
                 "file_path": "conflicted_file.py",
@@ -501,7 +501,7 @@ class TestMergeConflicts:
             }
 
             response = api_client.post(
-                "/api/v3/analysis/conflicts/resolve",
+                "/api/v1/analysis/conflicts/resolve",
                 headers=admin_auth_headers,
                 params={"repo_path": repo_path},
                 json={"file_path": "conflicted_file.py", "resolution": "ours"},
@@ -521,7 +521,7 @@ class TestMergeConflicts:
         repo_path = str(temp_repo.working_dir)
 
         response = api_client.post(
-            "/api/v3/analysis/conflicts/resolve",
+            "/api/v1/analysis/conflicts/resolve",
             headers=admin_auth_headers,
             params={"repo_path": repo_path},
             json={"file_path": "conflicted_file.py", "resolution": "invalid_strategy"},

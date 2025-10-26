@@ -15,11 +15,12 @@ try:
 except ImportError:
     from ..search_engine._pandas_compat import MockPandas
 
-    pd = MockPandas()  # type: ignore[assignment]
+    pd = MockPandas()  # type: ignore[assignment]  # MockPandas provides pandas-like interface
     HAS_PANDAS = False
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     yaml = None  # type: ignore[assignment]
@@ -28,19 +29,27 @@ except ImportError:
 from rich.console import Console
 
 from ..models import SearchMetrics, SearchResult
-from ..schemas import (
-    DataFilter,
-    ExportOptions,
-    OutputFormat,
-    SortCriteria,
-)
+from ..schemas import DataFilter, ExportOptions, OutputFormat, SortCriteria
 
 
 class ExportManager:
     """Manager for exporting search results in various formats."""
 
     def __init__(self, console: Console | None = None) -> None:
-        self.console = console or Console()
+        # Use provided console or create a new one with UTF-8 support
+        if console is None:
+            # Force UTF-8 encoding for console output to support Unicode characters on Windows
+            import sys
+
+            if sys.platform == "win32":
+                # On Windows, ensure UTF-8 encoding by setting the console to use UTF-8
+                try:
+                    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+                except (AttributeError, OSError):
+                    pass  # Fallback if reconfigure is not available or fails
+            self.console = Console()
+        else:
+            self.console = console
 
     def export_to_json(
         self,
@@ -49,8 +58,16 @@ class ExportManager:
         include_metadata: bool = True,
         pretty: bool = True,
     ) -> None:
-        """Export results to JSON format."""
+        """Export results to JSON format.
+
+        Optimization: Use streaming for large result sets to reduce memory usage.
+        """
         try:
+            # Optimization: Use streaming for large datasets
+            if len(results) > 1000:
+                self._export_to_json_streaming(results, output_file, include_metadata, pretty)
+                return
+
             json_data = self._prepare_json_data(results, include_metadata)
 
             with open(output_file, "w", encoding="utf-8") as f:
@@ -277,6 +294,84 @@ class ExportManager:
             "total_count": len(results),
             "exported_at": datetime.now().isoformat(),
         }
+
+    def _export_to_json_streaming(
+        self,
+        results: list[SearchResult],
+        output_file: Path,
+        include_metadata: bool,
+        pretty: bool,
+    ) -> None:
+        """Stream export results to JSON for large datasets.
+
+        Optimization: Write JSON incrementally to avoid loading entire dataset in memory.
+        """
+        indent_str = "  " if pretty else ""
+        newline = "\n" if pretty else ""
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            # Write opening
+            f.write("{" + newline)
+            f.write(f'{indent_str}"results": [' + newline)
+
+            # Stream write results
+            for i, result in enumerate(results):
+                result_dict: dict[str, Any] = {
+                    "commit_hash": result.commit_hash,
+                    "file_path": str(result.file_path),
+                    "search_type": result.search_type.value,
+                    "relevance_score": result.relevance_score,
+                }
+
+                if result.line_number is not None:
+                    result_dict["line_number"] = result.line_number
+
+                if result.matching_line is not None:
+                    result_dict["matching_line"] = result.matching_line
+
+                if include_metadata and result.commit_info:
+                    result_dict["commit_info"] = {
+                        "author_name": result.commit_info.author_name,
+                        "author_email": result.commit_info.author_email,
+                        "message": result.commit_info.message,
+                        "date": result.commit_info.date,
+                        "files_changed": result.commit_info.files_changed,
+                        "insertions": result.commit_info.insertions,
+                        "deletions": result.commit_info.deletions,
+                    }
+
+                if result.match_context:
+                    result_dict["match_context"] = result.match_context
+
+                # Write result
+                if pretty:
+                    result_json = json.dumps(result_dict, indent=2, default=self._json_serializer)
+                    # Indent each line
+                    result_json = "\n".join(
+                        indent_str + indent_str + line for line in result_json.split("\n")
+                    )
+                else:
+                    result_json = json.dumps(result_dict, default=self._json_serializer)
+
+                f.write(result_json)
+
+                # Add comma if not last item
+                if i < len(results) - 1:
+                    f.write(",")
+                f.write(newline)
+
+                # Flush periodically
+                if (i + 1) % 1000 == 0:
+                    f.flush()
+                    self.console.print(f"[cyan]Exported {i + 1} results...[/cyan]")
+
+            # Write closing
+            f.write(f"{indent_str}]," + newline)
+            f.write(f'{indent_str}"total_count": {len(results)},' + newline)
+            f.write(f'{indent_str}"exported_at": "{datetime.now().isoformat()}"' + newline)
+            f.write("}" + newline)
+
+        self.console.print(f"[green]✓ Streamed {len(results)} results to {output_file}[/green]")
 
     def _get_csv_header(self, include_metadata: bool) -> list[str]:
         """Get CSV header row."""
@@ -547,7 +642,7 @@ class ExportManager:
         elif filter_criteria.operator == FilterOperator.IN:
             try:
                 # Ensure the value is a container type for 'in' operator
-                if isinstance(filter_criteria.value, (list, tuple, set, str)):
+                if isinstance(filter_criteria.value, list | tuple | set | str):
                     return bool(field_value in filter_criteria.value)
                 else:
                     return False
@@ -556,7 +651,7 @@ class ExportManager:
         elif filter_criteria.operator == FilterOperator.NOT_IN:
             try:
                 # Ensure the value is a container type for 'not in' operator
-                if isinstance(filter_criteria.value, (list, tuple, set, str)):
+                if isinstance(filter_criteria.value, list | tuple | set | str):
                     return bool(field_value not in filter_criteria.value)
                 else:
                     return True

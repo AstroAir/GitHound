@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Example: GitHound MCP Server with Permit.io Authorization
 
@@ -20,11 +19,16 @@ Usage:
     python permit_example.py
 """
 
-import os
 import asyncio
-import logging
-import jwt
 import datetime
+import logging
+import os
+
+import jwt
+
+from githound.mcp.auth.providers import PermitAuthorizationProvider
+from githound.mcp.auth_manager import check_permission, check_tool_permission, set_auth_provider
+from githound.mcp.models import User
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)  # [attr-defined]
@@ -37,11 +41,6 @@ os.environ["PERMIT_MCP_IDENTITY_MODE"] = "jwt"
 os.environ["PERMIT_MCP_IDENTITY_JWT_SECRET"] = "demo-secret-key"
 os.environ["PERMIT_MCP_ENABLE_AUDIT_LOGGING"] = "true"
 
-# Import GitHound components
-from githound.mcp.auth import set_auth_provider, check_permission, check_tool_permission
-from githound.mcp.auth.providers import JWTVerifier, PermitAuthorizationProvider
-from githound.mcp.models import User
-
 
 def create_demo_jwt_token(username: str, role: str) -> str:
     """Create a demo JWT token for testing."""
@@ -53,7 +52,7 @@ def create_demo_jwt_token(username: str, role: str) -> str:
         "iss": "githound-demo",
         "aud": "mcp-client",
         "exp": int(datetime.datetime.utcnow().timestamp()) + 3600,
-        "iat": int(datetime.datetime.utcnow().timestamp())
+        "iat": int(datetime.datetime.utcnow().timestamp()),
     }
 
     return jwt.encode(payload, "demo-secret-key", algorithm="HS256")
@@ -62,9 +61,9 @@ def create_demo_jwt_token(username: str, role: str) -> str:
 async def demo_permit_authorization() -> None:
     """Demonstrate Permit.io authorization with GitHound."""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("GitHound MCP Server - Permit.io Authorization Demo")
-    print("="*60)
+    print("=" * 60)
 
     # Check if API key is set
     api_key = os.getenv("PERMIT_API_KEY")
@@ -78,9 +77,7 @@ async def demo_permit_authorization() -> None:
     from githound.mcp.auth.providers.jwt import StaticJWTVerifier
 
     jwt_provider = StaticJWTVerifier(
-        secret_key="demo-secret-key",
-        issuer="githound-demo",
-        audience="mcp-client"
+        secret_key="demo-secret-key", issuer="githound-demo", audience="mcp-client"
     )
 
     # Wrap with Permit.io authorization
@@ -91,13 +88,13 @@ async def demo_permit_authorization() -> None:
         server_name="githound-mcp",
         identity_mode="jwt",
         identity_jwt_secret="demo-secret-key",
-        enable_audit_logging=True
+        enable_audit_logging=True,
     )
 
     # Set as the global auth provider
     set_auth_provider(auth_provider)
 
-    print(f"✓ Created Permit.io authorization provider")
+    print("✓ Created Permit.io authorization provider")
     print(f"✓ PDP URL: {auth_provider.get_permit_config().permit_pdp_url}")  # [attr-defined]
     print(f"✓ Identity Mode: {auth_provider.get_permit_config().identity_mode}")  # [attr-defined]
 
@@ -118,25 +115,27 @@ async def demo_permit_authorization() -> None:
         ("admin", "githound-mcp:admin"),
     ]
 
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Basic Permission Test Results:")
-    print("-"*60)
+    print("-" * 60)
     print(f"{'User':<15} {'Role':<12} {'Operation':<10} {'Resource':<20} {'Allowed':<8}")
-    print("-"*60)
+    print("-" * 60)
 
     for user in test_users:
         for operation, resource in test_operations:
             try:
                 allowed = await check_permission(user, operation, resource)
                 status = "✓ YES" if allowed else "✗ NO"
-                print(f"{user.username:<15} {user.role:<12} {operation:<10} {resource:<20} {status:<8}")
-            except Exception as e:
+                print(
+                    f"{user.username:<15} {user.role:<12} {operation:<10} {resource:<20} {status:<8}"
+                )
+            except Exception:
                 print(f"{user.username:<15} {user.role:<12} {operation:<10} {resource:<20} ERROR")
 
     # Test ABAC (Attribute-Based Access Control) with tool arguments
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("ABAC Tool Permission Test Results:")
-    print("-"*60)
+    print("-" * 60)
     print("Testing conditional access based on tool arguments...")
 
     # Create a user for ABAC testing
@@ -144,15 +143,15 @@ async def demo_permit_authorization() -> None:
 
     # Test conditional tool with different argument values
     abac_tests = [
-        ("conditional-greet", {"name": "Alice", "number": 5}),   # Should be denied (number <= 10)
-        ("conditional-greet", {"name": "Bob", "number": 15}),   # Should be allowed (number > 10)
-        ("conditional-greet", {"name": "Charlie", "number": 25}), # Should be allowed (number > 10)
+        ("conditional-greet", {"name": "Alice", "number": 5}),  # Should be denied (number <= 10)
+        ("conditional-greet", {"name": "Bob", "number": 15}),  # Should be allowed (number > 10)
+        ("conditional-greet", {"name": "Charlie", "number": 25}),  # Should be allowed (number > 10)
         ("search_files", {"repo_path": "/public/repo", "max_results": 10}),
         ("search_files", {"repo_path": "/secure/repo", "max_results": 100}),
     ]
 
     print(f"{'Tool':<20} {'Arguments':<35} {'Allowed':<8}")
-    print("-"*60)
+    print("-" * 60)
 
     for tool_name, tool_args in abac_tests:
         try:
@@ -164,15 +163,15 @@ async def demo_permit_authorization() -> None:
             print(f"{tool_name:<20} ERROR: {str(e)[:30]:<30} ERROR")
 
     # Demonstrate JWT-based identity extraction
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("JWT Identity Extraction Demo:")
-    print("-"*60)
+    print("-" * 60)
 
     # Create JWT tokens for different users
     jwt_tokens = {
         "admin": create_demo_jwt_token("admin", "admin"),
         "user": create_demo_jwt_token("developer", "user"),
-        "readonly": create_demo_jwt_token("analyst", "readonly")
+        "readonly": create_demo_jwt_token("analyst", "readonly"),
     }
 
     print("Created JWT tokens for identity extraction:")
@@ -181,7 +180,7 @@ async def demo_permit_authorization() -> None:
         try:
             decoded = jwt.decode(token, "demo-secret-key", algorithms=["HS256"])
             print(f"  {role}: sub={decoded['sub']}, role={decoded.get('role', 'N/A')}")
-        except Exception as e:
+        except Exception:
             print(f"  {role}: Error decoding token")
 
     # Test permission checking with JWT context
@@ -194,7 +193,7 @@ async def demo_permit_authorization() -> None:
             jwt_user = User(
                 username=decoded["sub"],
                 role=decoded.get("role", "user"),
-                permissions=decoded.get("permissions", [])
+                permissions=decoded.get("permissions", []),
             )
 
             # Test a search operation
@@ -206,9 +205,9 @@ async def demo_permit_authorization() -> None:
             print(f"  {role}: Error testing JWT permission - {e}")
 
     # Show configuration
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Permit.io Configuration:")  # [attr-defined]
-    print("-"*60)
+    print("-" * 60)
 
     config = auth_provider.get_permit_config()  # [attr-defined]
     print(f"PDP URL: {config.permit_pdp_url}")  # [attr-defined]
@@ -218,17 +217,16 @@ async def demo_permit_authorization() -> None:
     print(f"Bypass Methods: {config.bypass_methods}")  # [attr-defined]
 
     # Demonstrate configuration updates
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Configuration Management:")
-    print("-"*60)
+    print("-" * 60)
 
     print("✓ Current configuration loaded")
 
     # You can update configuration at runtime
     try:
         auth_provider.update_permit_config(  # [attr-defined]
-            enable_audit_logging=False,
-            bypass_methods=["initialize", "ping", "health"]
+            enable_audit_logging=False, bypass_methods=["initialize", "ping", "health"]
         )
         print("✓ Configuration updated successfully")
 
@@ -240,9 +238,9 @@ async def demo_permit_authorization() -> None:
     except Exception as e:
         print(f"✗ Configuration update failed: {e}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Demo Complete!")
-    print("="*60)
+    print("=" * 60)
     print("\nNext Steps:")
     print("1. Set up your Permit.io account and get an API key")
     print("2. Configure resources and policies in Permit.io dashboard")  # [attr-defined]

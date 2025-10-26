@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Services Manager
 
@@ -75,7 +74,7 @@ class ServiceManager:
                 "health_endpoint": None,  # MCP doesn't have HTTP health endpoint
                 "command": ["python", "-m", "githound.mcp_server"],
                 "log_file": "logs/mcp-server.log",
-            }
+            },
         }
         self.pid_dir = self.project_root / ".pids"
         self.log_dir = self.project_root / "logs"
@@ -107,9 +106,7 @@ class ServiceManager:
             if is_windows():
                 # Windows process check
                 result = subprocess.run(
-                    ["tasklist", "/FI", f"PID eq {pid}"],
-                    capture_output=True,
-                    text=True
+                    ["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True
                 )
                 if str(pid) in result.stdout:
                     return True, pid
@@ -117,6 +114,7 @@ class ServiceManager:
                 # Unix process check
                 try:
                     import os
+
                     os.kill(pid, 0)  # Signal 0 just checks if process exists
                     return True, pid
                 except OSError:
@@ -134,7 +132,7 @@ class ServiceManager:
         service: str,
         port: int | None = None,
         host: str = "localhost",
-        background: bool = True
+        background: bool = True,
     ) -> bool:
         """Start a service."""
         if service not in self.services_config:  # [attr-defined]
@@ -183,7 +181,7 @@ class ServiceManager:
                             cwd=self.project_root,
                             stdout=log,
                             stderr=subprocess.STDOUT,
-                            start_new_session=True
+                            start_new_session=True,
                         )
 
                     # Save PID
@@ -227,14 +225,13 @@ class ServiceManager:
                 if is_windows():
                     # Windows process termination
                     if force:
-                        subprocess.run(
-                            ["taskkill", "/F", "/PID", str(pid)], check=True)
+                        subprocess.run(["taskkill", "/F", "/PID", str(pid)], check=True)
                     else:
-                        subprocess.run(
-                            ["taskkill", "/PID", str(pid)], check=True)
+                        subprocess.run(["taskkill", "/PID", str(pid)], check=True)
                 else:
                     # Unix process termination
                     import os
+
                     if force:
                         os.kill(pid, signal.SIGKILL)
                     else:
@@ -285,8 +282,11 @@ class ServiceManager:
                 url = f"http://localhost:{config['default_port']}{config['health_endpoint']}"
                 response = requests.get(url, timeout=5)
                 status["health"] = "healthy" if response.status_code == 200 else "unhealthy"
-                status["health_details"] = response.json() if response.headers.get(
-                    "content-type", "").startswith("application/json") else response.text
+                status["health_details"] = (
+                    response.json()
+                    if response.headers.get("content-type", "").startswith("application/json")
+                    else response.text
+                )
             except Exception as e:
                 status["health"] = "unhealthy"
                 status["health_details"] = str(e)
@@ -309,14 +309,10 @@ class ServiceManager:
 
 @app.command()
 def start(
-    service: str = typer.Argument(...,
-                                  help="Service to start (web, mcp, or all)"),
-    port: int | None = typer.Option(
-        None, "--port", "-p", help="Port to use"),
-    host: str = typer.Option("localhost", "--host",
-                             "-h", help="Host to bind to"),
-    foreground: bool = typer.Option(
-        False, "--foreground", "-f", help="Run in foreground"),
+    service: str = typer.Argument(..., help="Service to start (web, mcp, or all)"),
+    port: int | None = typer.Option(None, "--port", "-p", help="Port to use"),
+    host: str = typer.Option("localhost", "--host", "-h", help="Host to bind to"),
+    foreground: bool = typer.Option(False, "--foreground", "-f", help="Run in foreground"),
 ) -> None:
     """Start GitHound services."""
     manager = ServiceManager()
@@ -333,12 +329,7 @@ def start(
             success = False
             continue
 
-        svc_success = manager.start_service(
-            svc,
-            port=port,
-            host=host,
-            background=not foreground
-        )
+        svc_success = manager.start_service(svc, port=port, host=host, background=not foreground)
         success = success and svc_success
 
     sys.exit(0 if success else 1)
@@ -346,8 +337,7 @@ def start(
 
 @app.command()
 def stop(
-    service: str = typer.Argument(...,
-                                  help="Service to stop (web, mcp, or all)"),
+    service: str = typer.Argument(..., help="Service to stop (web, mcp, or all)"),
     force: bool = typer.Option(False, "--force", "-f", help="Force stop"),
 ) -> None:
     """Stop GitHound services."""
@@ -373,12 +363,9 @@ def stop(
 
 @app.command()
 def restart(
-    service: str = typer.Argument(...,
-                                  help="Service to restart (web, mcp, or all)"),
-    port: int | None = typer.Option(
-        None, "--port", "-p", help="Port to use"),
-    host: str = typer.Option("localhost", "--host",
-                             "-h", help="Host to bind to"),
+    service: str = typer.Argument(..., help="Service to restart (web, mcp, or all)"),
+    port: int | None = typer.Option(None, "--port", "-p", help="Port to use"),
+    host: str = typer.Option("localhost", "--host", "-h", help="Host to bind to"),
 ) -> None:
     """Restart GitHound services."""
     manager = ServiceManager()
@@ -408,10 +395,8 @@ def restart(
 
 @app.command()
 def status(
-    service: str | None = typer.Argument(
-        None, help="Service to check (web, mcp, or all)"),
-    watch: bool = typer.Option(
-        False, "--watch", "-w", help="Watch status continuously"),
+    service: str | None = typer.Argument(None, help="Service to check (web, mcp, or all)"),
+    watch: bool = typer.Option(False, "--watch", "-w", help="Watch status continuously"),
 ) -> None:
     """Check service status."""
     manager = ServiceManager()
@@ -432,13 +417,7 @@ def status(
             port_text = str(status_info["port"])
             health_text = status_info.get("health", "N/A")
 
-            table.add_row(
-                status_info["name"],
-                status_text,
-                pid_text,
-                port_text,
-                health_text
-            )
+            table.add_row(status_info["name"], status_text, pid_text, port_text, health_text)
 
         return table
 
@@ -456,12 +435,9 @@ def status(
 
 @app.command()
 def logs(
-    service: str = typer.Argument(...,
-                                  help="Service to show logs for (web or mcp)"),
-    follow: bool = typer.Option(
-        False, "--follow", "-f", help="Follow log output"),
-    lines: int = typer.Option(
-        50, "--lines", "-n", help="Number of lines to show"),
+    service: str = typer.Argument(..., help="Service to show logs for (web or mcp)"),
+    follow: bool = typer.Option(False, "--follow", "-f", help="Follow log output"),
+    lines: int = typer.Option(50, "--lines", "-n", help="Number of lines to show"),
 ) -> None:
     """View service logs."""
     manager = ServiceManager()
@@ -497,8 +473,7 @@ def logs(
         try:
             with open(log_file) as f:
                 all_lines = f.readlines()
-                recent_lines = all_lines[-lines:] if len(
-                    all_lines) > lines else all_lines
+                recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
 
                 for line in recent_lines:
                     print(line.rstrip())
@@ -508,8 +483,7 @@ def logs(
 
 @app.command()
 def health(
-    service: str | None = typer.Argument(
-        None, help="Service to check (web, mcp, or all)"),
+    service: str | None = typer.Argument(None, help="Service to check (web, mcp, or all)"),
 ) -> None:
     """Perform health check on services."""
     manager = ServiceManager()
@@ -533,8 +507,7 @@ def health(
                     print_step("Health check", "error")
                     all_healthy = False
                     if "health_details" in status_info:
-                        print_error(
-                            f"Details: {status_info['health_details']}")
+                        print_error(f"Details: {status_info['health_details']}")
         else:
             print_step("Service running", "error")
             all_healthy = False

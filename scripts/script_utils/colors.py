@@ -2,7 +2,7 @@
 Console output utilities with colors and formatting.
 """
 
-from typing import Optional, Any
+from typing import Any
 
 # Try to import rich, fall back to basic console if not available
 try:
@@ -11,6 +11,7 @@ try:
     from rich.progress import Progress, SpinnerColumn, TextColumn
     from rich.table import Table
     from rich.text import Text
+
     RICH_AVAILABLE = True
     console = Console()
 except ImportError:
@@ -50,12 +51,11 @@ def print_error(message: str, **kwargs) -> None:
         print(f"❌ {message}")
 
 
-def print_header(title: str, subtitle: Optional[str] = None) -> None:
+def print_header(title: str, subtitle: str | None = None) -> None:
     """Print a formatted header."""
     if RICH_AVAILABLE and console:
         if subtitle:
-            console.print(
-                Panel(f"[bold]{title}[/bold]\n{subtitle}", style="blue"))
+            console.print(Panel(f"[bold]{title}[/bold]\n{subtitle}", style="blue"))
         else:
             console.print(Panel(f"[bold]{title}[/bold]", style="blue"))
     else:
@@ -103,7 +103,7 @@ def print_command(command: str) -> None:
     console.print(f"[dim]$ {command}[/dim]")
 
 
-def print_table(data: list, headers: list, title: Optional[str] = None) -> None:
+def print_table(data: list, headers: list, title: str | None = None) -> None:
     """Print data as a formatted table."""
     table = Table(title=title)
 
@@ -116,7 +116,7 @@ def print_table(data: list, headers: list, title: Optional[str] = None) -> None:
     console.print(table)
 
 
-def print_key_value_pairs(pairs: dict, title: Optional[str] = None) -> None:
+def print_key_value_pairs(pairs: dict, title: str | None = None) -> None:
     """Print key-value pairs in a formatted way."""
     if title:
         console.print(f"\n[bold]{title}[/bold]")
@@ -125,7 +125,7 @@ def print_key_value_pairs(pairs: dict, title: Optional[str] = None) -> None:
         console.print(f"  [cyan]{key}:[/cyan] {value}")
 
 
-def print_list(items: list, title: Optional[str] = None, bullet: str = "•") -> None:
+def print_list(items: list, title: str | None = None, bullet: str = "•") -> None:
     """Print a formatted list."""
     if title:
         console.print(f"\n[bold]{title}[/bold]")
@@ -160,16 +160,15 @@ def print_separator(char: str = "─", length: int = 50) -> None:
 def confirm(message: str, default: bool = True) -> bool:
     """Ask for user confirmation."""
     default_text = "Y/n" if default else "y/N"
-    response = console.input(
-        f"[yellow]❓ {message} ({default_text}): [/yellow]")
+    response = console.input(f"[yellow]❓ {message} ({default_text}): [/yellow]")
 
     if not response:
         return default
 
-    return response.lower().startswith('y')
+    return response.lower().startswith("y")
 
 
-def prompt(message: str, default: Optional[str] = None) -> str:
+def prompt(message: str, default: str | None = None) -> str:
     """Prompt user for input."""
     if default:
         response = console.input(f"[yellow]❓ {message} [{default}]: [/yellow]")
@@ -181,6 +180,7 @@ def prompt(message: str, default: Optional[str] = None) -> str:
 def print_code_block(code: str, language: str = "bash") -> None:
     """Print a code block with syntax highlighting."""
     from rich.syntax import Syntax
+
     syntax = Syntax(code, language, theme="monokai", line_numbers=False)
     console.print(syntax)
 
@@ -188,6 +188,7 @@ def print_code_block(code: str, language: str = "bash") -> None:
 def print_json(data: Any) -> None:
     """Print JSON data with syntax highlighting."""
     import json
+
     from rich.syntax import Syntax
 
     json_str = json.dumps(data, indent=2, default=str)
@@ -235,9 +236,12 @@ class StatusContext:
 
 def with_status(message: str) -> None:
     """Decorator for functions that should show status."""
+
     def decorator(func) -> None:
         def wrapper(*args: Any, **kwargs: Any) -> None:
             with StatusContext(message):
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator

@@ -1,10 +1,9 @@
 """Search engine factory for consistent orchestrator creation and configuration."""
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from ..models import SearchEngineConfig, SearchQuery, SearchType
-from .analytics import SearchAnalytics, get_global_analytics
 from .base import BaseSearcher
 from .branch_searcher import BranchSearcher
 from .cache import CacheBackend, MemoryCache, RedisCache, SearchCache
@@ -12,6 +11,9 @@ from .cache import CacheBackend, MemoryCache, RedisCache, SearchCache
 # Import all searchers
 from .commit_searcher import AuthorSearcher, CommitHashSearcher, DateRangeSearcher, MessageSearcher
 from .diff_searcher import DiffSearcher
+
+# Import enhanced components
+from .enhanced_orchestrator import EnhancedSearchOrchestrator
 from .file_searcher import ContentSearcher, FilePathSearcher, FileTypeSearcher
 from .fuzzy_searcher import FuzzySearcher
 from .history_searcher import HistorySearcher
@@ -23,7 +25,6 @@ from .ranking_engine import RankingEngine
 from .registry import SearcherMetadata, SearcherRegistry, get_global_registry
 from .result_processor import ResultProcessor
 from .searcher import AdvancedSearcher
-from .statistical_searcher import StatisticalSearcher
 from .tag_searcher import TagSearcher
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 class SearchEngineFactory:
     """Factory for creating and configuring search orchestrators."""
 
-    def __init__(self, config: Optional[SearchEngineConfig] = None) -> None:
+    def __init__(self, config: SearchEngineConfig | None = None) -> None:
         """Initialize the factory with configuration."""
         self.config = config or SearchEngineConfig()
         self._validate_config()
@@ -47,11 +48,22 @@ class SearchEngineFactory:
 
     def create_orchestrator(
         self,
-        enable_advanced: Optional[bool] = None,
-        enable_caching: Optional[bool] = None,
-        enable_ranking: Optional[bool] = None,
+        enable_advanced: bool | None = None,
+        enable_caching: bool | None = None,
+        enable_ranking: bool | None = None,
+        enhanced: bool = False,
     ) -> SearchOrchestrator:
-        """Create a fully configured search orchestrator."""
+        """Create a fully configured search orchestrator.
+
+        Args:
+            enable_advanced: Enable advanced searchers
+            enable_caching: Enable result caching
+            enable_ranking: Enable result ranking
+            enhanced: Use enhanced orchestrator with monitoring and optimization
+
+        Returns:
+            Configured SearchOrchestrator instance
+        """
         # Override config with parameters if provided
         use_advanced = (
             enable_advanced
@@ -61,8 +73,13 @@ class SearchEngineFactory:
         use_caching = enable_caching if enable_caching is not None else self.config.enable_caching
         use_ranking = enable_ranking if enable_ranking is not None else self.config.enable_ranking
 
-        # Create orchestrator
-        orchestrator = SearchOrchestrator()
+        # Create orchestrator (enhanced or regular)
+        if enhanced:
+            orchestrator = EnhancedSearchOrchestrator(
+                enable_monitoring=True, enable_optimization=True
+            )
+        else:
+            orchestrator = SearchOrchestrator()
 
         # Register searchers based on configuration
         self._register_searchers(orchestrator, use_advanced)
@@ -80,11 +97,6 @@ class SearchEngineFactory:
         # Configure result processor
         result_processor = self._create_result_processor()
         orchestrator.set_result_processor(result_processor)
-
-        # Configure analytics if enabled
-        if self.config.enable_analytics:
-            analytics = self._create_analytics()
-            orchestrator.set_analytics(analytics)
 
         logger.info(f"Created orchestrator with {len(orchestrator._searchers)} searchers")
         return orchestrator
@@ -135,7 +147,6 @@ class SearchEngineFactory:
         searchers.append(DiffSearcher())
         searchers.append(HistorySearcher())
         searchers.append(TagSearcher())
-        searchers.append(StatisticalSearcher())
 
         # Add pattern searcher if enabled
         if self.config.enable_pattern_detection:
@@ -196,15 +207,6 @@ class SearchEngineFactory:
         logger.debug("Created result processor with default configuration")
         return processor
 
-    def _create_analytics(self) -> SearchAnalytics:
-        """Create analytics instance with configuration."""
-        analytics = SearchAnalytics(
-            retention_days=self.config.metrics_retention_days,
-            enable_persistence=self.config.enable_analytics,
-        )
-        logger.debug("Created analytics instance")
-        return analytics
-
     def create_for_query(self, query: SearchQuery) -> SearchOrchestrator:
         """Create an orchestrator optimized for a specific query."""
         # Determine if advanced searchers are needed
@@ -234,7 +236,6 @@ class SearchEngineFactory:
             "diff": DiffSearcher,
             "history": HistorySearcher,
             "pattern": CodePatternSearcher,
-            "statistical": StatisticalSearcher,
             "tag": TagSearcher,
         }
         return searchers
@@ -273,7 +274,7 @@ class SearchEngineFactory:
 
 
 # Global factory instance for convenience
-_default_factory: Optional[SearchEngineFactory] = None
+_default_factory: SearchEngineFactory | None = None
 
 
 def get_default_factory() -> SearchEngineFactory:
@@ -285,7 +286,7 @@ def get_default_factory() -> SearchEngineFactory:
 
 
 def create_search_orchestrator(
-    config: Optional[SearchEngineConfig] = None, enable_advanced: Optional[bool] = None
+    config: SearchEngineConfig | None = None, enable_advanced: bool | None = None
 ) -> SearchOrchestrator:
     """Convenience function to create a search orchestrator."""
     if config:
@@ -484,21 +485,6 @@ def initialize_default_registry() -> SearcherRegistry:
             requires_advanced=True,
             performance_cost=5,
             memory_usage=4,
-        ),
-    )
-
-    registry.register_searcher(
-        StatisticalSearcher,
-        SearcherMetadata(
-            name="statistical",
-            description="Statistical repository analysis",
-            search_types=[SearchType.STATISTICAL_ANALYSIS, SearchType.REPOSITORY_INSIGHTS],
-            capabilities=["statistical_analysis"],
-            priority=150,
-            requires_advanced=True,
-            performance_cost=4,
-            memory_usage=3,
-            dependencies=["pandas", "numpy"],
         ),
     )
 

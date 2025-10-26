@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test script for GitHound enhanced web interface.
 This script starts the web server and opens the interface in the browser.

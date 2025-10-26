@@ -13,10 +13,11 @@ logger = logging.getLogger(__name__)
 
 # Check if eunomia-mcp is available
 try:
-    from eunomia_mcp import create_eunomia_middleware  # type: ignore[import-not-found]
+    from eunomia_mcp import create_eunomia_middleware
 
     EUNOMIA_AVAILABLE = True
 except ImportError:
+    create_eunomia_middleware = None
     EUNOMIA_AVAILABLE = False
     logger.warning("eunomia-mcp not available. Install with: pip install eunomia-mcp")
 
@@ -225,7 +226,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
             if self._middleware:
                 # For now, implement basic role-based logic as fallback
                 # In a full implementation, this would call the Eunomia policy engine
-                return await self._evaluate_policy(subject, action, resource_name, auth_context)
+                return await self._evaluate_policy(subject, action, resource_name, auth_context)  # type: ignore[unreachable]
             else:
                 # Fallback to base provider's permission check
                 return await self.base_provider.check_permission(user, permission)
@@ -272,7 +273,7 @@ class EunomiaAuthorizationProvider(AuthProvider):
     def reload_policies(self) -> None:
         """Reload policies from the policy file."""
         if self._middleware:
-            try:
+            try:  # type: ignore[unreachable]
                 self._initialize_eunomia()
                 logger.info("Eunomia policies reloaded successfully")
             except Exception as e:

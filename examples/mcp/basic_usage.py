@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Basic MCP usage examples for GitHound.
 
@@ -7,7 +6,6 @@ programmatically using the FastMCP client.
 """
 
 import asyncio
-import json
 from pathlib import Path
 
 from fastmcp import FastMCPClient
@@ -30,10 +28,7 @@ async def main() -> None:
     print("-" * 30)
 
     try:
-        result = await client.call_tool(
-            "analyze_repository",
-            {"repo_path": repo_path}
-        )
+        result = await client.call_tool("analyze_repository", {"repo_path": repo_path})
 
         if result["status"] == "success":
             metadata = result["metadata"]
@@ -58,8 +53,8 @@ async def main() -> None:
                 "repo_path": repo_path,
                 "content_pattern": "def main",
                 "file_extensions": [".py"],
-                "max_results": 10
-            }
+                "max_results": 10,
+            },
         )
 
         if result["status"] == "success":
@@ -86,8 +81,8 @@ async def main() -> None:
                 "repo_path": repo_path,
                 "search_term": "authentication",
                 "threshold": 0.7,
-                "max_results": 5
-            }
+                "max_results": 5,
+            },
         )
 
         if result["status"] == "success":
@@ -114,11 +109,7 @@ async def main() -> None:
 
             result = await client.call_tool(
                 "get_file_history_mcp",
-                {
-                    "repo_path": repo_path,
-                    "file_path": file_path,
-                    "max_count": 5
-                }
+                {"repo_path": repo_path, "file_path": file_path, "max_count": 5},
             )
 
             if result["status"] == "success":
@@ -141,21 +132,14 @@ async def main() -> None:
     print("-" * 30)
 
     try:
-        result = await client.call_tool(
-            "get_author_stats",
-            {"repo_path": repo_path}
-        )
+        result = await client.call_tool("get_author_stats", {"repo_path": repo_path})
 
         if result["status"] == "success":
             stats = result["author_stats"]
-            print(f"Top contributors:")
+            print("Top contributors:")
 
             # Sort by commit count and show top 3
-            sorted_authors = sorted(
-                stats.items(),
-                key=lambda x: x[1]["commit_count"],
-                reverse=True
-            )
+            sorted_authors = sorted(stats.items(), key=lambda x: x[1]["commit_count"], reverse=True)
 
             for author, data in sorted_authors[:3]:
                 print(f"  - {author}: {data['commit_count']} commits")
@@ -171,9 +155,7 @@ async def main() -> None:
 
     try:
         # Get repository summary resource
-        summary = await client.get_resource(
-            f"githound://repository/{repo_path}/summary"
-        )
+        summary = await client.get_resource(f"githound://repository/{repo_path}/summary")
 
         print("Repository Summary:")
         print(summary[:200] + "..." if len(summary) > 200 else summary)
@@ -191,8 +173,8 @@ async def main() -> None:
             {
                 "bug_description": "Authentication fails for new users",
                 "suspected_files": "auth.py, user.py",
-                "time_frame": "last 7 days"
-            }
+                "time_frame": "last 7 days",
+            },
         )
 
         print("Generated investigation workflow:")

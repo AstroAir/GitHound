@@ -1,10 +1,12 @@
 """Tests for GitHound export utilities."""
 
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
+from rich.console import Console
 
 from githound.models import CommitInfo, SearchResult, SearchType
 from githound.schemas import DataFilter, ExportOptions, OutputFormat, SortCriteria, SortOrder
@@ -16,7 +18,9 @@ class TestExportManager:
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
-        self.export_manager = ExportManager()
+        # Use a quiet console to avoid encoding issues in tests
+        quiet_console = Console(file=StringIO(), force_terminal=False)
+        self.export_manager = ExportManager(console=quiet_console)
         self.sample_results = [
             SearchResult(
                 commit_hash="abc123",

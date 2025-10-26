@@ -25,6 +25,8 @@ The module automatically detects available optional dependencies and
 exposes only the providers that can be used in the current environment.
 """
 
+import logging
+
 from .providers import (
     EUNOMIA_AVAILABLE,
     PERMIT_AVAILABLE,
@@ -36,16 +38,16 @@ from .providers import (
     OAuthProxy,
 )
 
-# Import auth functions from the main auth module
-# Note: Avoiding circular import - these functions are available in githound.mcp.auth
-# from githound.mcp.auth import check_rate_limit, get_current_user
+# Import auth functions from the main auth manager module
+# Note: Avoiding circular import - these functions are available in githound.mcp.auth_manager
+# from githound.mcp.auth_manager import check_rate_limit, get_current_user
 
 # Import authorization providers if available
 if EUNOMIA_AVAILABLE:
-    from .providers import EunomiaAuthorizationProvider
+    pass
 
 if PERMIT_AVAILABLE:
-    from .providers import PermitAuthorizationProvider
+    pass
 
 __all__ = [
     "AuthProvider",
@@ -64,3 +66,5 @@ if EUNOMIA_AVAILABLE:
 
 if PERMIT_AVAILABLE:
     __all__.append("PermitAuthorizationProvider")
+
+logger = logging.getLogger(__name__)

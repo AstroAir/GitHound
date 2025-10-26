@@ -8,11 +8,12 @@ FastMCP client examples and server implementations.
 import asyncio
 import logging
 import tempfile
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
+
 import pytest
 import pytest_asyncio
-
 from fastmcp.client import Client as FastMCPClient
 from fastmcp.client import StdioTransport
 
@@ -44,8 +45,12 @@ def temp_git_repo() -> None:
 
         # Initialize git repository
         subprocess.run(["git", "init"], cwd=repo_path, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_path, check=True)  # [attr-defined]
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_path, check=True)  # [attr-defined]
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"], cwd=repo_path, check=True
+        )  # [attr-defined]
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"], cwd=repo_path, check=True
+        )  # [attr-defined]
 
         # Create initial commit
         readme_file = repo_path / "README.md"
@@ -111,7 +116,7 @@ def mock_server_data() -> None:
             "total_files": 5,
             "total_authors": 2,
             "branches": ["main", "develop"],
-            "tags": ["v1.0.0"]
+            "tags": ["v1.0.0"],
         },
         "commits": [
             {
@@ -122,7 +127,7 @@ def mock_server_data() -> None:
                 "message": "Test commit",
                 "files_changed": 2,
                 "insertions": 10,
-                "deletions": 5
+                "deletions": 5,
             }
         ],
         "authors": [
@@ -132,7 +137,7 @@ def mock_server_data() -> None:
                 "commits": 8,
                 "insertions": 100,
                 "deletions": 20,
-                "files_modified": 5
+                "files_modified": 5,
             },
             {
                 "name": "Another Author",
@@ -140,9 +145,9 @@ def mock_server_data() -> None:
                 "commits": 2,
                 "insertions": 30,
                 "deletions": 10,
-                "files_modified": 2
-            }
-        ]
+                "files_modified": 2,
+            },
+        ],
     }
 
 
@@ -159,7 +164,7 @@ def sample_tool_args() -> None:
         "add_numbers": {"a": 10.5, "b": 20.3},
         "analyze_repository": {"repo_path": "."},
         "get_commit_history": {"repo_path": ".", "limit": 5},
-        "get_author_stats": {"repo_path": "."}
+        "get_author_stats": {"repo_path": "."},
     }
 
 
@@ -176,14 +181,16 @@ def sample_resource_uris() -> None:
         "simple://config/settings",
         "simple://status/current",
         "githound://repository/./summary",
-        "githound://repository/./contributors"
+        "githound://repository/./contributors",
     ]
 
 
 class MockMCPServer:
     """Mock MCP server for testing client functionality."""
 
-    def __init__(self, tools: Optional[Dict[str, Any]] = None, resources: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, tools: dict[str, Any] | None = None, resources: dict[str, Any] | None = None
+    ) -> None:
         self.tools = tools or {}
         self.resources = resources or {}
         self.call_count = 0
@@ -193,7 +200,7 @@ class MockMCPServer:
         """Mock list_tools implementation."""
         return list(self.tools.keys())
 
-    async def call_tool(self, name: str, args: Dict[str, Any]) -> None:
+    async def call_tool(self, name: str, args: dict[str, Any]) -> None:
         """Mock call_tool implementation."""
         self.call_count += 1
         self.last_call = {"tool": name, "args": args}
@@ -226,12 +233,12 @@ def mock_mcp_server() -> None:
     tools = {
         "echo": {"data": "Echo response", "content": []},
         "add_numbers": {"data": {"sum": 30.8, "operation": "addition"}, "content": []},
-        "get_server_info": {"data": {"name": "Mock Server", "version": "1.0.0"}, "content": []}
+        "get_server_info": {"data": {"name": "Mock Server", "version": "1.0.0"}, "content": []},
     }
 
     resources = {
         "mock://server/info": [{"text": '{"server": "mock", "version": "1.0.0"}'}],
-        "mock://config/settings": [{"text": '{"setting1": "value1", "setting2": "value2"}'}]
+        "mock://config/settings": [{"text": '{"setting1": "value1", "setting2": "value2"}'}],
     }
 
     return MockMCPServer(tools, resources)
@@ -252,7 +259,7 @@ def client_test_config() -> None:
         "max_content_size": 1024 * 1024,  # 1MB
         "supported_transports": ["stdio", "http", "sse", "inmemory"],
         "test_repo_path": ".",
-        "mock_mode": True
+        "mock_mode": True,
     }
 
 
@@ -269,7 +276,7 @@ def performance_thresholds() -> None:
         "resource_access_max_time": 2.0,  # seconds
         "connection_max_time": 10.0,  # seconds
         "max_memory_usage": 100 * 1024 * 1024,  # 100MB
-        "max_response_size": 10 * 1024 * 1024  # 10MB
+        "max_response_size": 10 * 1024 * 1024,  # 10MB
     }
 
 
@@ -281,9 +288,7 @@ def pytest_configure(config) -> None:
     config.addinivalue_line(  # [attr-defined]
         "markers", "performance: mark test as performance test"
     )
-    config.addinivalue_line(  # [attr-defined]
-        "markers", "slow: mark test as slow running"
-    )
+    config.addinivalue_line("markers", "slow: mark test as slow running")  # [attr-defined]
     config.addinivalue_line(  # [attr-defined]
         "markers", "requires_git: mark test as requiring git repository"
     )

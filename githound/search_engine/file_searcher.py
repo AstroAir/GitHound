@@ -6,6 +6,7 @@ import re
 import subprocess
 import time
 from collections.abc import AsyncGenerator
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,8 +30,28 @@ class FilePathSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=500))
             return min(len(commits), 500)
-        except:
+        except Exception:
             return 100
+
+    def _create_commit_info(self, commit: Any) -> CommitInfo:
+        """Helper method to create CommitInfo from a git commit object.
+
+        Optimization: Extracted to avoid code duplication.
+        """
+        return CommitInfo(
+            hash=commit.hexsha,
+            short_hash=commit.hexsha[:8],
+            author_name=commit.author.name,
+            author_email=commit.author.email,
+            committer_name=commit.committer.name,
+            committer_email=commit.committer.email,
+            message=commit.message.strip(),
+            date=datetime.fromtimestamp(commit.committed_date),
+            files_changed=len(commit.stats.files),
+            insertions=commit.stats.total["insertions"],
+            deletions=commit.stats.total["deletions"],
+            parents=[parent.hexsha for parent in commit.parents],
+        )
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
         """Search for files by path pattern."""
@@ -56,8 +77,15 @@ class FilePathSearcher(CacheableSearcher):
         results_found = 0
         seen_files = set()  # Track unique file paths
 
+        # Optimization: Get max_results from query for early termination
+        max_results = context.query.max_results if context.query.max_results else float("inf")
+
         try:
             for commit in context.repo.iter_commits(branch):
+                # Optimization: Early termination if max results reached
+                if results_found >= max_results:
+                    break
+
                 commits_searched += 1
 
                 # Get files changed in this commit
@@ -73,6 +101,7 @@ class FilePathSearcher(CacheableSearcher):
                         if file_path in seen_files:
                             continue
 
+                        # Optimization: Check match before adding to seen_files
                         match = False
                         if regex_pattern:
                             match = regex_pattern.search(file_path) is not None
@@ -83,21 +112,8 @@ class FilePathSearcher(CacheableSearcher):
                         if match:
                             seen_files.add(file_path)
 
-                            # Create commit info
-                            commit_info = CommitInfo(
-                                hash=commit.hexsha,
-                                short_hash=commit.hexsha[:8],
-                                author_name=commit.author.name,
-                                author_email=commit.author.email,
-                                committer_name=commit.committer.name,
-                                committer_email=commit.committer.email,
-                                message=commit.message.strip(),
-                                date=commit.committed_date,
-                                files_changed=len(commit.stats.files),
-                                insertions=commit.stats.total["insertions"],
-                                deletions=commit.stats.total["deletions"],
-                                parents=[parent.hexsha for parent in commit.parents],
-                            )
+                            # Optimization: Use helper method to create commit info
+                            commit_info = self._create_commit_info(commit)
 
                             result = SearchResult(
                                 commit_hash=commit.hexsha,
@@ -117,7 +133,12 @@ class FilePathSearcher(CacheableSearcher):
                             results_found += 1
                             yield result
 
-                if commits_searched % 50 == 0:
+                            # Optimization: Early termination check after each result
+                            if results_found >= max_results:
+                                break
+
+                # Optimization: Less frequent progress reporting (every 100 commits instead of 50)
+                if commits_searched % 100 == 0:
                     progress = min(commits_searched / 500, 0.9)
                     self._report_progress(
                         context,
@@ -155,7 +176,7 @@ class FileTypeSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=500))
             return min(len(commits), 500)
-        except:
+        except Exception:
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -269,6 +290,26 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         """Check if this searcher can handle the query."""
         return query.content_pattern is not None
 
+    def _create_commit_info(self, commit: Any) -> CommitInfo:
+        """Helper method to create CommitInfo from a git commit object.
+
+        Optimization: Extracted to avoid code duplication.
+        """
+        return CommitInfo(
+            hash=commit.hexsha,
+            short_hash=commit.hexsha[:8],
+            author_name=commit.author.name,
+            author_email=commit.author.email,
+            committer_name=commit.committer.name,
+            committer_email=commit.committer.email,
+            message=commit.message.strip(),
+            date=datetime.fromtimestamp(commit.committed_date),
+            files_changed=len(commit.stats.files),
+            insertions=commit.stats.total["insertions"],
+            deletions=commit.stats.total["deletions"],
+            parents=[parent.hexsha for parent in commit.parents],
+        )
+
     async def estimate_work(self, context: SearchContext) -> int:
         """Estimate work based on repository size and file filters."""
         try:
@@ -284,7 +325,7 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
 
             avg_files_per_commit = max(total_files / 10, 1) if commits else 1
             return int(len(commits) * avg_files_per_commit)
-        except:
+        except Exception:
             return 500
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -301,9 +342,17 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
         commits_searched = 0
         files_searched = 0
         results_found = 0
+        max_results = context.query.max_results or 100
 
         try:
             for commit in context.repo.iter_commits(branch):
+                # Early termination if we have enough results
+                if results_found >= max_results:
+                    self._report_progress(
+                        context, f"Reached max results limit ({max_results})", 1.0
+                    )
+                    break
+
                 commits_searched += 1
 
                 for parent in commit.parents:
@@ -320,10 +369,14 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                             continue
 
                         try:
+                            # Optimize: Check file size before reading
+                            if diff.b_blob.size > 1024 * 1024:  # Skip files > 1MB
+                                continue
+
                             # Get file content
                             content = diff.b_blob.data_stream.read()
 
-                            # Check file size limit
+                            # Check file size limit from query
                             if (
                                 context.query.max_file_size
                                 and len(content) > context.query.max_file_size
@@ -335,22 +388,11 @@ class ContentSearcher(ParallelSearcher, CacheableSearcher):
                                 content, content_pattern, context.query
                             )
 
-                            for match in matches:
-                                commit_info = CommitInfo(
-                                    hash=commit.hexsha,
-                                    short_hash=commit.hexsha[:8],
-                                    author_name=commit.author.name,
-                                    author_email=commit.author.email,
-                                    committer_name=commit.committer.name,
-                                    committer_email=commit.committer.email,
-                                    message=commit.message.strip(),
-                                    date=commit.committed_date,
-                                    files_changed=len(commit.stats.files),
-                                    insertions=commit.stats.total["insertions"],
-                                    deletions=commit.stats.total["deletions"],
-                                    parents=[parent.hexsha for parent in commit.parents],
-                                )
+                            # Optimization: Create commit info once per file, not per match
+                            if matches:
+                                commit_info = self._create_commit_info(commit)
 
+                            for match in matches:
                                 # Calculate relevance score based on match quality
                                 relevance_score = self._calculate_relevance_score(
                                     match, content_pattern, file_path

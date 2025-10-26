@@ -18,11 +18,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 try:
     from typing import Self  # Python 3.11+
 except ImportError:
-    from typing_extensions import Self
+    from typing import Self
 
 # Platform-specific signal imports for type checking
 if TYPE_CHECKING:
-    import signal
     from types import FrameType
 
 from git import GitCommandError
@@ -32,10 +31,7 @@ from .git_diff import CommitDiffResult, compare_branches, compare_commits
 from .git_handler import get_repository, get_repository_metadata
 from .models import SearchQuery, SearchResult
 from .schemas import ExportOptions, OutputFormat
-from .search_engine import (
-    SearchOrchestrator,
-    create_search_orchestrator,
-)
+from .search_engine import SearchOrchestrator, create_search_orchestrator
 from .utils.export import ExportManager
 
 # Suppress NumPy compatibility warnings for better user experience
@@ -98,8 +94,8 @@ def with_timeout(timeout_seconds: int) -> Callable[[Callable[..., T]], Callable[
             try:
                 with timeout_context(timeout_seconds):
                     return func(*args, **kwargs)
-            except TimeoutError:
-                raise GitCommandError(f"Operation timed out after {timeout_seconds} seconds")
+            except TimeoutError as e:
+                raise GitCommandError(f"Operation timed out after {timeout_seconds} seconds") from e
 
         return wrapper
 
@@ -120,7 +116,6 @@ def with_retry(
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
-
             last_exception = None
             current_delay = delay
 
@@ -135,7 +130,7 @@ def with_retry(
                     else:
                         raise GitCommandError(
                             f"Operation failed after {max_attempts} attempts: {str(e)}"
-                        )
+                        ) from e
                 except Exception as e:
                     # Don't retry for non-transient errors
                     raise e
@@ -169,7 +164,7 @@ class GitHound:
 
         # Perform advanced search
         query = SearchQuery(content_pattern="function", author_pattern="john")
-        results = gh.search_advanced(query)
+        results = gh.search_advanced_sync(query)
 
         # Analyze file blame
         blame_info = gh.analyze_blame("src/main.py")
@@ -216,7 +211,9 @@ class GitHound:
 
                 self._export_manager = ExportManager(Console())
             except ImportError as e:
-                raise GitCommandError(f"Export functionality requires additional dependencies: {e}")
+                raise GitCommandError(
+                    f"Export functionality requires additional dependencies: {e}"
+                ) from e
         return self._export_manager
 
     def analyze_repository(
@@ -268,7 +265,7 @@ class GitHound:
         try:
             return _analyze()
         except Exception as e:
-            raise GitCommandError(f"Failed to analyze repository: {str(e)}")
+            raise GitCommandError(f"Failed to analyze repository: {str(e)}") from e
 
     def __enter__(self) -> Self:
         """Context manager entry."""
@@ -347,7 +344,7 @@ class GitHound:
             return results
 
         except Exception as e:
-            raise GitCommandError(f"Search operation failed: {str(e)}")
+            raise GitCommandError(f"Search operation failed: {str(e)}") from e
 
     def search_advanced_sync(
         self,
@@ -396,7 +393,7 @@ class GitHound:
         try:
             return get_file_blame(self.repo, file_path, commit)
         except Exception as e:
-            raise GitCommandError(f"Blame analysis failed: {str(e)}")
+            raise GitCommandError(f"Blame analysis failed: {str(e)}") from e
 
     def compare_commits(
         self, from_commit: str, to_commit: str, file_patterns: list[str] | None = None
@@ -417,7 +414,7 @@ class GitHound:
         try:
             return compare_commits(self.repo, from_commit, to_commit, file_patterns)
         except Exception as e:
-            raise GitCommandError(f"Commit comparison failed: {str(e)}")
+            raise GitCommandError(f"Commit comparison failed: {str(e)}") from e
 
     def compare_branches(
         self, from_branch: str, to_branch: str, file_patterns: list[str] | None = None
@@ -438,7 +435,7 @@ class GitHound:
         try:
             return compare_branches(self.repo, from_branch, to_branch, file_patterns)
         except Exception as e:
-            raise GitCommandError(f"Branch comparison failed: {str(e)}")
+            raise GitCommandError(f"Branch comparison failed: {str(e)}") from e
 
     def export_with_options(
         self, data: Any, output_path: str | Path, options: ExportOptions
@@ -481,7 +478,7 @@ class GitHound:
                 )
 
         except Exception as e:
-            raise GitCommandError(f"Export operation failed: {str(e)}")
+            raise GitCommandError(f"Export operation failed: {str(e)}") from e
 
     def get_file_history(
         self, file_path: str, max_count: int | None = None, branch: str | None = None
@@ -504,7 +501,7 @@ class GitHound:
 
             return get_file_history(self.repo, file_path, branch, max_count)
         except Exception as e:
-            raise GitCommandError(f"File history retrieval failed: {str(e)}")
+            raise GitCommandError(f"File history retrieval failed: {str(e)}") from e
 
     def get_author_statistics(self, branch: str | None = None) -> dict[str, Any]:
         """Get author statistics for the repository.
@@ -523,7 +520,7 @@ class GitHound:
 
             return get_author_statistics(self.repo, branch)
         except Exception as e:
-            raise GitCommandError(f"Author statistics retrieval failed: {str(e)}")
+            raise GitCommandError(f"Author statistics retrieval failed: {str(e)}") from e
 
 
 # Version information

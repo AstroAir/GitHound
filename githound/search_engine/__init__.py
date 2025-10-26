@@ -1,11 +1,26 @@
 """Search engine package for GitHound."""
 
-from .analytics import PerformanceMetrics, SearchAnalytics, SearchEvent, get_global_analytics
 from .base import BaseSearcher, CacheableSearcher, ParallelSearcher, SearchContext
 from .branch_searcher import BranchSearcher
 from .cache import CacheBackend, MemoryCache, RedisCache, SearchCache
 from .commit_searcher import AuthorSearcher, CommitHashSearcher, DateRangeSearcher, MessageSearcher
 from .diff_searcher import DiffSearcher
+
+# Enhanced components (optional imports for backward compatibility)
+try:
+    from .bm25_ranker import BM25Ranker  # noqa: F401
+    from .enhanced_orchestrator import EnhancedSearchOrchestrator  # noqa: F401
+    from .indexer import IncrementalIndexer, InvertedIndex  # noqa: F401
+    from .performance_monitor import (  # noqa: F401
+        BottleneckDetector,
+        PerformanceMonitor,
+        SearchProfiler,
+    )
+    from .query_optimizer import QueryOptimizer, QueryPlanner  # noqa: F401
+
+    _HAS_ENHANCED_FEATURES = True
+except ImportError:
+    _HAS_ENHANCED_FEATURES = False
 
 # Factory and configuration
 from .factory import (
@@ -27,7 +42,6 @@ from .result_processor import ResultProcessor
 
 # Advanced search components
 from .searcher import AdvancedSearcher
-from .statistical_searcher import StatisticalSearcher
 from .tag_searcher import TagSearcher
 
 __all__ = [
@@ -53,7 +67,6 @@ __all__ = [
     "DiffSearcher",
     "HistorySearcher",
     "CodePatternSearcher",
-    "StatisticalSearcher",
     "TagSearcher",
     # Search utilities
     "RankingEngine",
@@ -72,9 +85,20 @@ __all__ = [
     "SearcherRegistry",
     "SearcherMetadata",
     "get_global_registry",
-    # Analytics
-    "SearchAnalytics",
-    "SearchEvent",
-    "PerformanceMetrics",
-    "get_global_analytics",
 ]
+
+# Conditionally add enhanced features to __all__
+if _HAS_ENHANCED_FEATURES:
+    __all__.extend(
+        [
+            "EnhancedSearchOrchestrator",
+            "IncrementalIndexer",
+            "InvertedIndex",
+            "BM25Ranker",
+            "QueryOptimizer",
+            "QueryPlanner",
+            "PerformanceMonitor",
+            "SearchProfiler",
+            "BottleneckDetector",
+        ]
+    )

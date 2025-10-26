@@ -8,7 +8,7 @@ import string
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class TestDataManager:
@@ -29,7 +29,7 @@ class TestDataManager:
                 )
             )
 
-    def create_test_user(self, role: str = "user") -> Dict[str, Any]:
+    def create_test_user(self, role: str = "user") -> dict[str, Any]:
         """Create test user data."""
         user_id = str(uuid.uuid4())
         user_data = {
@@ -50,11 +50,11 @@ class TestDataManager:
 
         return user_data
 
-    def create_test_admin(self) -> Dict[str, Any]:
+    def create_test_admin(self) -> dict[str, Any]:
         """Create test admin user data."""
         return self.create_test_user(role="admin")
 
-    def create_search_request_data(self) -> Dict[str, Any]:
+    def create_search_request_data(self) -> dict[str, Any]:
         """Create sample search request data."""
         return {
             "repo_path": "/test/repo",
@@ -71,7 +71,7 @@ class TestDataManager:
             "case_sensitive": False,
         }
 
-    def create_fuzzy_search_data(self) -> Dict[str, Any]:
+    def create_fuzzy_search_data(self) -> dict[str, Any]:
         """Create fuzzy search request data."""
         return {
             "repo_path": "/test/repo",
@@ -81,7 +81,7 @@ class TestDataManager:
             "max_results": 50,
         }
 
-    def create_historical_search_data(self) -> Dict[str, Any]:
+    def create_historical_search_data(self) -> dict[str, Any]:
         """Create historical search request data."""
         return {
             "repo_path": "/test/repo",
@@ -91,7 +91,7 @@ class TestDataManager:
             "max_results": 200,
         }
 
-    def create_sample_search_results(self) -> List[Dict[str, Any]]:
+    def create_sample_search_results(self) -> list[dict[str, Any]]:
         """Create sample search results."""
         return [
             {
@@ -123,7 +123,7 @@ class TestDataManager:
             },
         ]
 
-    def create_export_request_data(self) -> Dict[str, Any]:
+    def create_export_request_data(self) -> dict[str, Any]:
         """Create export request data."""
         return {
             "search_id": str(uuid.uuid4()),
@@ -132,7 +132,7 @@ class TestDataManager:
             "filename": "search_results_export.json",
         }
 
-    def create_webhook_data(self) -> Dict[str, Any]:
+    def create_webhook_data(self) -> dict[str, Any]:
         """Create webhook configuration data."""
         return {
             "url": "https://example.com/webhook",
@@ -141,7 +141,7 @@ class TestDataManager:
             "active": True,
         }
 
-    def create_repository_data(self) -> Dict[str, Any]:
+    def create_repository_data(self) -> dict[str, Any]:
         """Create repository configuration data."""
         return {
             "path": "/test/repo",
@@ -151,15 +151,15 @@ class TestDataManager:
             "is_active": True,
         }
 
-    def create_blame_request_data(self) -> Dict[str, Any]:
+    def create_blame_request_data(self) -> dict[str, Any]:
         """Create blame analysis request data."""
         return {"file_path": "src/main.py", "commit": "HEAD", "line_range": [1, 50]}
 
-    def create_diff_request_data(self) -> Dict[str, Any]:
+    def create_diff_request_data(self) -> dict[str, Any]:
         """Create diff analysis request data."""
         return {"from_commit": "HEAD~1", "to_commit": "HEAD", "file_patterns": ["*.py"]}
 
-    def create_branch_diff_data(self) -> Dict[str, Any]:
+    def create_branch_diff_data(self) -> dict[str, Any]:
         """Create branch diff request data."""
         return {
             "from_branch": "main",
@@ -167,22 +167,22 @@ class TestDataManager:
             "file_patterns": ["*.py", "*.js"],
         }
 
-    def get_test_credentials(self) -> Dict[str, str]:
+    def get_test_credentials(self) -> dict[str, str]:
         """Get test user credentials."""
         return {"username": "testuser", "password": "TestPassword123!", "email": "test@example.com"}
 
-    def get_admin_credentials(self) -> Dict[str, str]:
+    def get_admin_credentials(self) -> dict[str, str]:
         """Get test admin credentials."""
         return {"username": "admin", "password": "AdminPassword123!", "email": "admin@example.com"}
 
-    def _load_data(self) -> Dict[str, Any]:
+    def _load_data(self) -> dict[str, Any]:
         """Load data from the test data file."""
         try:
             return json.loads(self.data_file.read_text())  # type: ignore[no-any-return]
         except (FileNotFoundError, json.JSONDecodeError):
             return {"users": [], "repositories": [], "search_results": [], "exports": []}
 
-    def _save_data(self, data: Dict[str, Any]) -> None:
+    def _save_data(self, data: dict[str, Any]) -> None:
         """Save data to the test data file."""
         self.data_file.write_text(json.dumps(data, indent=2))
 
@@ -213,7 +213,7 @@ class TestDataManager:
             chars += "!@#$%^&*"
         return "".join(random.choices(chars, k=12))
 
-    def create_invalid_user_data(self) -> List[Dict[str, Any]]:
+    def create_invalid_user_data(self) -> list[dict[str, Any]]:
         """Create various invalid user data for testing validation."""
         return [
             {
@@ -241,7 +241,7 @@ class TestDataManager:
             },  # Long username
         ]
 
-    def create_performance_test_data(self) -> Dict[str, Any]:
+    def create_performance_test_data(self) -> dict[str, Any]:
         """Create data for performance testing."""
         return {
             "large_query": "function class method import export async await def return",
@@ -253,7 +253,7 @@ class TestDataManager:
             "memory_limit_mb": 512,
         }
 
-    def create_websocket_test_data(self) -> Dict[str, Any]:
+    def create_websocket_test_data(self) -> dict[str, Any]:
         """Create data for WebSocket testing."""
         return {
             "connection_timeout_ms": 5000,
@@ -267,7 +267,7 @@ class TestDataManager:
             ],
         }
 
-    def create_accessibility_test_data(self) -> Dict[str, Any]:
+    def create_accessibility_test_data(self) -> dict[str, Any]:
         """Create data for accessibility testing."""
         return {
             "keyboard_navigation_elements": [
@@ -290,7 +290,7 @@ class TestDataManager:
             ],
         }
 
-    def create_export_test_data(self) -> List[Dict[str, Any]]:
+    def create_export_test_data(self) -> list[dict[str, Any]]:
         """Create various export format test data."""
         base_results = self.create_sample_search_results()
         return [
@@ -314,7 +314,7 @@ class TestDataManager:
             },
         ]
 
-    def create_error_scenarios(self) -> List[Dict[str, Any]]:
+    def create_error_scenarios(self) -> list[dict[str, Any]]:
         """Create various error scenarios for testing."""
         return [
             {

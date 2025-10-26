@@ -7,39 +7,48 @@ Common issues and solutions for the GitHound web frontend testing framework.
 ### Installation Problems
 
 #### Issue: Playwright installation fails
+
 ```
 Error: Failed to download browser binaries
 ```
 
 **Solutions:**
+
 1. **Check network connectivity:**
+
    ```bash
    curl -I https://playwright.azureedge.net/
    ```
 
 2. **Install with force flag:**
+
    ```bash
    playwright install --force
    ```
 
 3. **Set proxy if behind corporate firewall:**
+
    ```bash
    export HTTPS_PROXY=http://proxy.company.com:8080
    playwright install
    ```
 
 4. **Install specific browsers only:**
+
    ```bash
    playwright install chromium
    ```
 
 #### Issue: Python dependencies conflict
+
 ```
 ERROR: pip's dependency resolver does not currently consider all the packages that are installed
 ```
 
 **Solutions:**
+
 1. **Use virtual environment:**
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # Linux/Mac
@@ -48,6 +57,7 @@ ERROR: pip's dependency resolver does not currently consider all the packages th
    ```
 
 2. **Clear pip cache:**
+
    ```bash
    pip cache purge
    pip install --no-cache-dir -e ".[dev,test]"
@@ -56,23 +66,28 @@ ERROR: pip's dependency resolver does not currently consider all the packages th
 ### Test Execution Issues
 
 #### Issue: Tests timeout frequently
+
 ```
 Test timeout of 30000ms exceeded
 ```
 
 **Solutions:**
+
 1. **Increase timeout in configuration:**
+
    ```javascript
    // playwright.config.js
    timeout: 60000  // 60 seconds
    ```
 
 2. **Add specific waits:**
+
    ```javascript
    await page.waitForSelector('[data-testid="results"]', { timeout: 60000 });
    ```
 
 3. **Check for slow network requests:**
+
    ```javascript
    // Monitor network activity
    page.on('request', request => console.log('Request:', request.url()));
@@ -80,36 +95,44 @@ Test timeout of 30000ms exceeded
    ```
 
 #### Issue: Element not found errors
+
 ```
 Error: locator.click: Target closed
 ```
 
 **Solutions:**
+
 1. **Verify selector accuracy:**
+
    ```javascript
    // Use Playwright inspector to verify selectors
    await page.pause();
    ```
 
 2. **Wait for element to be ready:**
+
    ```javascript
    await page.waitForSelector('[data-testid="button"]', { state: 'visible' });
    await page.locator('[data-testid="button"]').click();
    ```
 
 3. **Check for dynamic content:**
+
    ```javascript
    // Wait for network to be idle
    await page.waitForLoadState('networkidle');
    ```
 
 #### Issue: Flaky tests
+
 ```
 Test passes sometimes, fails other times
 ```
 
 **Solutions:**
+
 1. **Add proper wait conditions:**
+
    ```javascript
    // Instead of fixed timeout
    await page.waitForTimeout(1000);
@@ -119,6 +142,7 @@ Test passes sometimes, fails other times
    ```
 
 2. **Use stable selectors:**
+
    ```javascript
    // Prefer data-testid over CSS classes
    page.locator('[data-testid="search-button"]')  // Good
@@ -126,6 +150,7 @@ Test passes sometimes, fails other times
    ```
 
 3. **Implement retry logic:**
+
    ```javascript
    // playwright.config.js
    retries: process.env.CI ? 3 : 1
@@ -134,12 +159,15 @@ Test passes sometimes, fails other times
 ### Browser-Specific Issues
 
 #### Issue: Tests fail only in Firefox
+
 ```
 Error: Protocol error (Runtime.callFunctionOn): Object reference chain is too long
 ```
 
 **Solutions:**
+
 1. **Reduce object complexity:**
+
    ```javascript
    // Avoid deep object nesting in page.evaluate()
    const result = await page.evaluate(() => {
@@ -148,6 +176,7 @@ Error: Protocol error (Runtime.callFunctionOn): Object reference chain is too lo
    ```
 
 2. **Use browser-specific configuration:**
+
    ```javascript
    // playwright.config.js
    projects: [
@@ -162,12 +191,15 @@ Error: Protocol error (Runtime.callFunctionOn): Object reference chain is too lo
    ```
 
 #### Issue: Safari/WebKit tests fail
+
 ```
 Error: browserType.launch: Executable doesn't exist
 ```
 
 **Solutions:**
+
 1. **Install WebKit browser:**
+
    ```bash
    playwright install webkit
    ```
@@ -180,23 +212,28 @@ Error: browserType.launch: Executable doesn't exist
 ### Performance Test Issues
 
 #### Issue: Performance tests fail inconsistently
+
 ```
 Expected load time < 2000ms, got 3500ms
 ```
 
 **Solutions:**
+
 1. **Run performance tests in isolation:**
+
    ```bash
    playwright test --project=chromium performance/
    ```
 
 2. **Use performance budgets with tolerance:**
+
    ```javascript
    const loadTime = await measureLoadTime();
    expect(loadTime).toBeLessThan(2500); // Add 25% tolerance
    ```
 
 3. **Warm up the application:**
+
    ```javascript
    // Navigate to page once before measuring
    await page.goto('/');
@@ -211,27 +248,33 @@ Expected load time < 2000ms, got 3500ms
 ### Accessibility Test Issues
 
 #### Issue: axe-playwright not working
+
 ```
 Error: Cannot find module 'axe-playwright'
 ```
 
 **Solutions:**
+
 1. **Install axe-playwright (JavaScript/npm):**
+
    ```bash
    npm install axe-playwright
    ```
 
    **For Python accessibility testing, install axe-playwright-python:**
+
    ```bash
    pip install axe-playwright-python
    ```
 
 2. **Import correctly:**
+
    ```javascript
    const { injectAxe, checkA11y } = require('axe-playwright');
    ```
 
 3. **Initialize in test:**
+
    ```javascript
    await injectAxe(page);
    await checkA11y(page);
@@ -240,22 +283,27 @@ Error: Cannot find module 'axe-playwright'
 ### Visual Regression Issues
 
 #### Issue: Screenshots don't match
+
 ```
 Screenshot comparison failed: 15% difference
 ```
 
 **Solutions:**
+
 1. **Update baseline screenshots:**
+
    ```bash
    playwright test --update-snapshots
    ```
 
 2. **Adjust threshold:**
+
    ```javascript
    await expect(page).toHaveScreenshot('page.png', { threshold: 0.3 });
    ```
 
 3. **Disable animations:**
+
    ```javascript
    await page.addStyleTag({
      content: `
@@ -272,18 +320,22 @@ Screenshot comparison failed: 15% difference
 ### CI/CD Issues
 
 #### Issue: Tests pass locally but fail in CI
+
 ```
 Tests work on local machine but fail in GitHub Actions
 ```
 
 **Solutions:**
+
 1. **Check environment differences:**
+
    ```bash
    # Compare environment variables
    env | grep -E "(HEADLESS|CI|DISPLAY)"
    ```
 
 2. **Use consistent browser versions:**
+
    ```javascript
    // playwright.config.js
    use: {
@@ -292,6 +344,7 @@ Tests work on local machine but fail in GitHub Actions
    ```
 
 3. **Add CI-specific configuration:**
+
    ```javascript
    // playwright.config.js
    workers: process.env.CI ? 2 : 4,
@@ -299,12 +352,15 @@ Tests work on local machine but fail in GitHub Actions
    ```
 
 #### Issue: Artifacts not uploaded
+
 ```
 Test artifacts missing from CI run
 ```
 
 **Solutions:**
+
 1. **Check artifact paths:**
+
    ```yaml
    # .github/workflows/web-frontend-tests.yml
    - name: Upload test results
@@ -317,6 +373,7 @@ Test artifacts missing from CI run
    ```
 
 2. **Ensure directories exist:**
+
    ```bash
    mkdir -p test-results/{screenshots,videos,traces}
    ```
@@ -324,18 +381,22 @@ Test artifacts missing from CI run
 ### Memory and Resource Issues
 
 #### Issue: Tests consume too much memory
+
 ```
 Error: Page crashed
 ```
 
 **Solutions:**
+
 1. **Limit concurrent workers:**
+
    ```javascript
    // playwright.config.js
    workers: 2  // Reduce from default
    ```
 
 2. **Close contexts properly:**
+
    ```javascript
    test.afterEach(async ({ context }) => {
      await context.close();
@@ -343,6 +404,7 @@ Error: Page crashed
    ```
 
 3. **Monitor memory usage:**
+
    ```javascript
    const memoryUsage = await page.evaluate(() => {
      return performance.memory ? {
@@ -355,6 +417,7 @@ Error: Page crashed
 ## 🔧 Debugging Tools
 
 ### Playwright Inspector
+
 ```bash
 # Debug specific test
 playwright test --debug auth/authentication.spec.js
@@ -364,6 +427,7 @@ playwright test --ui
 ```
 
 ### Trace Viewer
+
 ```bash
 # View trace file
 playwright show-trace test-results/traces/trace.zip
@@ -373,6 +437,7 @@ playwright test --trace on
 ```
 
 ### Screenshots and Videos
+
 ```bash
 # Force screenshot capture
 playwright test --screenshot=on
@@ -382,6 +447,7 @@ playwright test --video=on
 ```
 
 ### Network Monitoring
+
 ```javascript
 // Log all network requests
 page.on('request', request => {
@@ -396,28 +462,35 @@ page.on('response', response => {
 ## 📊 Performance Optimization
 
 ### Test Execution Speed
+
 1. **Run tests in parallel:**
+
    ```javascript
    workers: 4  // Adjust based on CPU cores
    ```
 
 2. **Use test sharding:**
+
    ```bash
    playwright test --shard=1/4
    ```
 
 3. **Skip unnecessary tests:**
+
    ```javascript
    test.skip(condition, 'Reason for skipping');
    ```
 
 ### Resource Usage
+
 1. **Reuse browser contexts:**
+
    ```javascript
    test.describe.configure({ mode: 'serial' });
    ```
 
 2. **Optimize selectors:**
+
    ```javascript
    // Fast
    page.locator('[data-testid="button"]')
@@ -429,22 +502,27 @@ page.on('response', response => {
 ## 🆘 Getting Help
 
 ### Log Analysis
+
 1. **Enable verbose logging:**
+
    ```bash
    DEBUG=pw:api playwright test
    ```
 
 2. **Check test output:**
+
    ```bash
    playwright test --reporter=line
    ```
 
 ### Community Resources
+
 - [Playwright Discord](https://discord.gg/playwright-807756831384403968)
 - [Playwright GitHub Issues](https://github.com/microsoft/playwright/issues)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/playwright)
 
 ### Internal Support
+
 - Check GitHound project documentation
 - Create issue in GitHound repository
 - Contact development team

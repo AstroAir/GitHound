@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound MCP Server Test Runner
 
@@ -23,7 +22,6 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optionalny
 
 
 class MCPTestRunner:
@@ -40,28 +38,28 @@ class MCPTestRunner:
                     "tests/test_mcp_fastmcp_patterns.py::TestFastMCPInMemoryTesting",
                     "tests/test_mcp_fastmcp_patterns.py::TestMockingExternalDependencies",
                     "tests/test_mcp_fastmcp_patterns.py::TestErrorHandling",
-                ]
+                ],
             },
             "integration": {
                 "description": "Integration tests requiring external services",
                 "markers": "integration",
                 "files": [
                     "tests/test_mcp_integration.py",
-                ]
+                ],
             },
             "performance": {
                 "description": "Performance and scalability tests",
                 "markers": "performance",
                 "files": [
                     "tests/test_mcp_performance.py",
-                ]
+                ],
             },
             "auth": {
                 "description": "Authentication and authorization tests",
                 "markers": "auth",
                 "files": [
                     "tests/test_mcp_authentication.py",
-                ]
+                ],
             },
             "fastmcp": {
                 "description": "Tests following FastMCP patterns",
@@ -69,13 +67,9 @@ class MCPTestRunner:
                 "files": [
                     "tests/test_mcp_fastmcp_patterns.py",
                     "tests/test_mcp_server.py::TestFastMCPInMemoryPatterns",
-                ]
+                ],
             },
-            "all": {
-                "description": "All tests",
-                "markers": "",
-                "files": ["tests/"]
-            }
+            "all": {"description": "All tests", "markers": "", "files": ["tests/"]},
         }
 
     def run_test_suite(self, suite_name: str, extra_args: Optional[List[str]] = None) -> int:
@@ -153,17 +147,19 @@ class MCPTestRunner:
         print("-" * 60)
 
         cmd = [
-            "python", "-m", "pytest",
+            "python",
+            "-m",
+            "pytest",
             "--cov=githound",
             "--cov-report=term-missing",
             "--cov-report=html:htmlcov",
             "--cov-report=xml",
-            "tests/"
+            "tests/",
         ]
 
         try:
             result = subprocess.run(cmd, cwd=self.project_root)
-            if result.returncode = = 0:
+            if result.returncode == 0:
                 print("\nCoverage report generated:")
                 print("  - Terminal: displayed above")
                 print("  - HTML: htmlcov/index.html")
@@ -187,44 +183,23 @@ Examples:
   python scripts/run_mcp_tests.py --list        # List available test suites
   python scripts/run_mcp_tests.py --quick       # Run quick check
   python scripts/run_mcp_tests.py --coverage    # Run with coverage
-        """
+        """,
     )
 
     parser.add_argument(
-        "suite",
-        nargs="?",
-        default="unit",
-        help="Test suite to run (default: unit)"
+        "suite", nargs="?", default="unit", help="Test suite to run (default: unit)"
     )
 
-    parser.add_argument(
-        "--list",
-        action="store_true",
-        help="List available test suites"
-    )
+    parser.add_argument("--list", action="store_true", help="List available test suites")
+
+    parser.add_argument("--quick", action="store_true", help="Run quick check with essential tests")
+
+    parser.add_argument("--coverage", action="store_true", help="Run tests with coverage reporting")
+
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     parser.add_argument(
-        "--quick",
-        action="store_true",
-        help="Run quick check with essential tests"
-    )
-
-    parser.add_argument(
-        "--coverage",
-        action="store_true",
-        help="Run tests with coverage reporting"
-    )
-
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Verbose output"
-    )
-
-    parser.add_argument(
-        "--parallel", "-n",
-        type=int,
-        help="Run tests in parallel (number of workers)"
+        "--parallel", "-n", type=int, help="Run tests in parallel (number of workers)"
     )
 
     args, extra_args = parser.parse_known_args()

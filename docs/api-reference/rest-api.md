@@ -10,11 +10,22 @@ http://localhost:8000/api/v1
 
 ## Authentication
 
-The API supports JWT-based authentication with role-based access control:
+The API supports multiple authentication mechanisms with fine-grained access control:
+
+### JWT Authentication
+
+Standard JWT-based authentication with role-based access control:
 
 ```http
 Authorization: Bearer <jwt_token>
 ```
+
+### Advanced Authentication Providers
+
+GitHound supports enterprise-grade authentication providers:
+
+- **Permit.io**: Role-Based Access Control (RBAC) with policy management
+- **Eunomia**: Attribute-Based Access Control (ABAC) with fine-grained permissions
 
 ### Authentication Endpoints
 
@@ -23,6 +34,8 @@ Authorization: Bearer <jwt_token>
 - `POST /api/v1/auth/refresh` - Token refresh
 - `POST /api/v1/auth/change-password` - Password change
 - `GET /api/v1/auth/profile` - User profile
+- `PUT /api/v1/auth/profile` - Update user profile
+- `GET /api/v1/auth/users` - List all users (admin only)
 
 ## API Documentation
 
@@ -33,28 +46,6 @@ Interactive API documentation is available at:
 - **API Info**: `http://localhost:8000/api/info`
 
 ## Core Endpoints
-
-### Health Check
-
-Check API health and status.
-
-**GET** `/health`
-
-**Response:**
-
-```json
-{
-  "status": "healthy",
-  "version": "1.0.0",
-  "uptime_seconds": 3600,
-  "active_searches": 0,
-  "system_info": {
-    "python_version": "3.11+",
-    "fastapi_version": "0.100+",
-    "features_enabled": ["search", "analysis", "authentication", "rate_limiting"]
-  }
-}
-```
 
 ## Search API
 
@@ -122,6 +113,28 @@ Search across entire repository history timeline.
 - `max_commits` (optional): Maximum commits to search (default: 1000)
 - `date_from` (optional): Start date
 - `date_to` (optional): End date
+
+### Search Status
+
+Get the status of a running search operation.
+
+**GET** `/api/v1/search/status/{search_id}`
+
+**Response:**
+
+```json
+{
+  "search_id": "uuid-string",
+  "status": "running",
+  "progress": 0.75,
+  "message": "Searching commits...",
+  "commits_searched": 750,
+  "files_searched": 300,
+  "results_found": 42,
+  "started_at": "2023-11-15T14:30:00Z",
+  "estimated_completion": "2023-11-15T14:32:00Z"
+}
+```
 
 ## Analysis API
 
@@ -226,23 +239,6 @@ Export search results and analysis data.
 }
 ```
 
-### Webhook Management
-
-Create and manage webhooks for repository events.
-
-**POST** `/api/v1/integration/webhooks`
-
-**Request Body:**
-
-```json
-{
-  "url": "https://example.com/webhook",
-  "secret": "webhook-secret",
-  "events": ["search_completed", "analysis_finished"],
-  "active": true
-}
-```
-
 ### Repository Analysis
 
 #### Analyze Repository
@@ -294,12 +290,13 @@ Analyze a Git repository and return comprehensive metadata.
 
 ## Rate Limiting
 
-The API implements rate limiting to ensure fair usage:
+The API implements Redis-backed rate limiting with slowapi to ensure fair usage:
 
 - **Search endpoints**: 15 requests per minute
 - **Analysis endpoints**: 10 requests per minute
 - **Export endpoints**: 3 requests per minute
 - **Authentication endpoints**: 5 requests per minute
+- **Global limit**: 1000 requests per hour for authenticated users
 
 Rate limit headers are included in responses:
 
@@ -575,6 +572,97 @@ All API responses follow standardized schemas for consistency and validation.
   }
 }
 ```
+
+## WebSocket API
+
+GitHound provides real-time WebSocket endpoints for streaming search results and live updates.
+
+### WebSocket Endpoints
+
+#### Real-time Search
+
+**WebSocket** `/ws/search`
+
+Stream search results in real-time as they are discovered.
+
+**Connection:**
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/search');
+```
+
+**Message Format:**
+
+```json
+{
+  "type": "search_request",
+  "data": {
+    "repo_path": "/path/to/repo",
+    "content_pattern": "function",
+    "max_results": 100
+  }
+}
+```
+
+**Response Stream:**
+
+```json
+{
+  "type": "search_result",
+  "data": {
+    "match": {
+      "file_path": "src/main.py",
+      "line_number": 42,
+      "content": "def function_name():",
+      "commit_hash": "abc123"
+    },
+    "progress": {
+      "files_processed": 150,
+      "total_files": 500,
+      "percentage": 30
+    }
+  }
+}
+```
+
+#### Repository Monitoring
+
+**WebSocket** `/ws/monitor/{repo_id}`
+
+Monitor repository changes and receive real-time notifications.
+
+**Connection:**
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/monitor/repo123');
+```
+
+**Event Types:**
+
+- `commit_added` - New commit detected
+- `branch_created` - New branch created
+- `tag_created` - New tag created
+- `file_changed` - File modification detected
+
+### WebSocket Authentication
+
+WebSocket connections support the same authentication mechanisms as REST endpoints:
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/search', [], {
+  headers: {
+    'Authorization': 'Bearer <jwt_token>'
+  }
+});
+```
+
+### Rate Limiting
+
+WebSocket connections are subject to rate limiting:
+
+- **Connection limit**: 10 concurrent connections per user
+- **Message rate**: 100 messages per minute
+- **Data transfer**: 10MB per minute
 
 ### Export Response Schema
 

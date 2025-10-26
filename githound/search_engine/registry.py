@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any
 
 from ..models import SearchQuery, SearchType
 from .base import BaseSearcher
@@ -16,28 +16,28 @@ class SearcherMetadata:
 
     name: str
     description: str
-    search_types: List[SearchType]
-    capabilities: List[str]
+    search_types: list[SearchType]
+    capabilities: list[str]
     priority: int = 100  # Lower numbers = higher priority
     enabled: bool = True
     requires_advanced: bool = False
     performance_cost: int = 1  # 1=low, 5=high
     memory_usage: int = 1  # 1=low, 5=high
-    dependencies: List[str] = field(default_factory=list)  # External dependencies
+    dependencies: list[str] = field(default_factory=list)  # External dependencies
 
 
 class SearcherRegistry:
     """Registry for managing searchers dynamically."""
 
     def __init__(self) -> None:
-        self._searchers: Dict[str, Type[BaseSearcher]] = {}
-        self._metadata: Dict[str, SearcherMetadata] = {}
-        self._instances: Dict[str, BaseSearcher] = {}
+        self._searchers: dict[str, type[BaseSearcher]] = {}
+        self._metadata: dict[str, SearcherMetadata] = {}
+        self._instances: dict[str, BaseSearcher] = {}
         self._initialized = False
 
     def register_searcher(
         self,
-        searcher_class: Type[BaseSearcher],
+        searcher_class: type[BaseSearcher],
         metadata: SearcherMetadata,
         replace_existing: bool = False,
     ) -> None:
@@ -50,7 +50,7 @@ class SearcherRegistry:
 
         # Validate searcher class
         if not issubclass(searcher_class, BaseSearcher):
-            raise ValueError(f"Searcher class must inherit from BaseSearcher")
+            raise ValueError("Searcher class must inherit from BaseSearcher")
 
         self._searchers[name] = searcher_class
         self._metadata[name] = metadata
@@ -68,11 +68,11 @@ class SearcherRegistry:
         else:
             logger.warning(f"Searcher '{name}' not found for unregistration")
 
-    def get_searcher_class(self, name: str) -> Optional[Type[BaseSearcher]]:
+    def get_searcher_class(self, name: str) -> type[BaseSearcher] | None:
         """Get a searcher class by name."""
         return self._searchers.get(name)
 
-    def get_searcher_instance(self, name: str, **kwargs: Any) -> Optional[BaseSearcher]:
+    def get_searcher_instance(self, name: str, **kwargs: Any) -> BaseSearcher | None:
         """Get or create a searcher instance."""
         if name not in self._searchers:
             logger.error(f"Searcher '{name}' not found")
@@ -96,16 +96,16 @@ class SearcherRegistry:
             logger.error(f"Failed to create searcher instance '{name}': {e}")
             return None
 
-    def get_metadata(self, name: str) -> Optional[SearcherMetadata]:
+    def get_metadata(self, name: str) -> SearcherMetadata | None:
         """Get metadata for a searcher."""
         return self._metadata.get(name)
 
     def list_searchers(
         self,
         enabled_only: bool = True,
-        search_type: Optional[SearchType] = None,
-        capability: Optional[str] = None,
-    ) -> List[str]:
+        search_type: SearchType | None = None,
+        capability: str | None = None,
+    ) -> list[str]:
         """List available searchers with optional filtering."""
         searchers = []
 
@@ -128,7 +128,7 @@ class SearcherRegistry:
         searchers.sort(key=lambda name: self._metadata[name].priority)
         return searchers
 
-    def get_searchers_for_query(self, query: SearchQuery) -> List[str]:
+    def get_searchers_for_query(self, query: SearchQuery) -> list[str]:
         """Get appropriate searchers for a given query."""
         applicable_searchers = []
 
@@ -193,7 +193,7 @@ class SearcherRegistry:
 
         return True
 
-    def get_performance_estimate(self, searcher_names: List[str]) -> Dict[str, Any]:
+    def get_performance_estimate(self, searcher_names: list[str]) -> dict[str, Any]:
         """Get performance estimate for a set of searchers."""
         total_cost = 0
         total_memory = 0
@@ -235,7 +235,7 @@ class SearcherRegistry:
             return True
         return False
 
-    def get_registry_stats(self) -> Dict[str, Any]:
+    def get_registry_stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         enabled_count = sum(1 for m in self._metadata.values() if m.enabled)
         advanced_count = sum(1 for m in self._metadata.values() if m.requires_advanced)
@@ -255,7 +255,7 @@ class SearcherRegistry:
             "cached_instances": len(self._instances),
         }
 
-    def validate_dependencies(self) -> Dict[str, List[str]]:
+    def validate_dependencies(self) -> dict[str, list[str]]:
         """Validate that all searcher dependencies are available."""
         issues = {}
 
@@ -275,7 +275,7 @@ class SearcherRegistry:
 
 
 # Global registry instance
-_global_registry: Optional[SearcherRegistry] = None
+_global_registry: SearcherRegistry | None = None
 
 
 def get_global_registry() -> SearcherRegistry:

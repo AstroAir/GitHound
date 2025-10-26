@@ -37,7 +37,7 @@ class MockAuthProvider(AuthProvider):
 class TestCreateAuthProvider:
     """Test authentication provider creation."""
 
-    @patch("githound.mcp.auth.providers.jwt.JWTVerifier")
+    @patch("githound.mcp.auth.factory.JWTVerifier")
     def test_create_jwt_provider(self, mock_jwt) -> None:
         """Test creating JWT provider."""
         mock_jwt.return_value = MockAuthProvider()
@@ -56,7 +56,7 @@ class TestCreateAuthProvider:
             audience="test-audience",
         )
 
-    @patch("githound.mcp.auth.providers.github.GitHubProvider")
+    @patch("githound.mcp.auth.factory.GitHubProvider")
     def test_create_github_provider(self, mock_github) -> None:
         """Test creating GitHub provider."""
         mock_github.return_value = MockAuthProvider()
@@ -70,7 +70,7 @@ class TestCreateAuthProvider:
             client_id="test-client-id", client_secret="test-client-secret"
         )
 
-    @patch("githound.mcp.auth.providers.google.GoogleProvider")
+    @patch("githound.mcp.auth.factory.GoogleProvider")
     def test_create_google_provider(self, mock_google) -> None:
         """Test creating Google provider."""
         mock_google.return_value = MockAuthProvider()

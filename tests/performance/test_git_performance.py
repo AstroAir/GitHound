@@ -8,7 +8,7 @@ for various repository sizes and operation types.
 import asyncio
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -16,6 +16,14 @@ try:
     import psutil
 except ImportError:
     psutil = None  #
+
+# Check if pytest-benchmark is available
+try:
+    import pytest_benchmark
+
+    BENCHMARK_AVAILABLE = True
+except ImportError:
+    BENCHMARK_AVAILABLE = False
 
 from githound.git_blame import get_author_statistics, get_file_blame
 from githound.git_diff import compare_commits
@@ -375,6 +383,7 @@ class TestConcurrentOperations:
 
 
 @pytest.mark.benchmark
+@pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark not installed")
 class TestBenchmarkOperations:
     """Benchmark tests for git operations using pytest-benchmark."""
 

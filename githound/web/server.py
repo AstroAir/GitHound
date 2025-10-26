@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Web Server
 
@@ -17,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 app = typer.Typer()
 
 
-@app.command()
+@app.command()  # type: ignore[misc]
 def serve(
     host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind to"),
@@ -82,7 +81,7 @@ def serve(
         sys.exit(1)
 
 
-@app.command()
+@app.command()  # type: ignore[misc]
 def dev() -> None:
     """
     Start the development server with auto-reload and debug logging.
@@ -94,7 +93,7 @@ def dev() -> None:
     serve(host="127.0.0.1", port=8000, reload=True, log_level="debug", workers=1)
 
 
-@app.command()
+@app.command()  # type: ignore[misc]
 def prod(
     host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind to"),
@@ -112,7 +111,7 @@ def prod(
     serve(host=host, port=port, reload=False, log_level="info", workers=workers)
 
 
-@app.command()
+@app.command()  # type: ignore[misc]
 def health(
     host: str = typer.Option("127.0.0.1", "--host", "-h", help="Server host"),
     port: int = typer.Option(8000, "--port", "-p", help="Server port"),

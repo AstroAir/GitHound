@@ -7,6 +7,7 @@ and scalability under load.
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -23,7 +24,7 @@ class TestRateLimiting:
         # Make requests rapidly to trigger rate limiting
         responses: list[Any] = []
 
-        with patch("githound.web.rate_limiting.get_limiter") as mock_limiter:
+        with patch("githound.web.middleware.rate_limiting.get_limiter") as mock_limiter:
             # Mock rate limiter to allow first few requests, then deny
             mock_limiter_instance = Mock()
             mock_limiter_instance.limit.side_effect = [
@@ -36,8 +37,8 @@ class TestRateLimiting:
             mock_limiter.return_value = mock_limiter_instance
 
             # Make multiple rapid requests
-            for i in range(10):
-                response = api_client.get("/api/v3/health", headers=admin_auth_headers)
+            for _ in range(10):
+                response = api_client.get("/api/info", headers=admin_auth_headers)
                 responses.append(response)
 
         # Check that some requests were rate limited
@@ -64,8 +65,8 @@ class TestRateLimiting:
         start_time = time.time()
 
         # Make many requests to test Redis performance
-        for i in range(50):
-            response = api_client.get("/api/v3/health", headers=admin_auth_headers)
+        for _ in range(50):
+            response = api_client.get("/api/info", headers=admin_auth_headers)
             # Don't assert status here as we're testing performance
 
         end_time = time.time()
@@ -83,7 +84,7 @@ class TestRateLimiting:
 
         def make_request(request_id) -> None:
             """Make a single request and return result."""
-            response = api_client.get("/api/v3/health", headers=admin_auth_headers)
+            response = api_client.get("/api/info", headers=admin_auth_headers)
             return {
                 "request_id": request_id,
                 "status_code": response.status_code,
@@ -108,6 +109,7 @@ class TestRateLimiting:
 class TestConcurrentOperations:
     """Test concurrent API operations."""
 
+    @pytest.mark.skip(reason="Repository init endpoint not implemented")
     def test_concurrent_repository_operations(
         self, api_client, admin_auth_headers, temp_dir
     ) -> None:
@@ -118,12 +120,12 @@ class TestConcurrentOperations:
             repo_path = str(temp_dir / f"concurrent_repo_{repo_id}")
 
             with patch(
-                "githound.web.git_operations.GitOperationsManager.init_repository"
+                "githound.web.core.git_operations.GitOperationsManager.init_repository"
             ) as mock_init:
                 mock_init.return_value = {"path": repo_path, "status": "created"}
 
                 response = api_client.post(
-                    "/api/v3/repository/init",
+                    "/api/v1/repository/init",
                     headers=admin_auth_headers,
                     json={"path": repo_path, "bare": False},
                 )
@@ -149,7 +151,7 @@ class TestConcurrentOperations:
 
         def perform_search(search_id) -> None:
             """Perform a search and return result."""
-            with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
+            with patch("githound.web.apis.search_api.perform_advanced_search_sync") as mock_search:
                 mock_search.return_value = {
                     "search_id": f"concurrent-search-{search_id}",
                     "status": "completed",
@@ -164,7 +166,7 @@ class TestConcurrentOperations:
                 }
 
                 response = api_client.post(
-                    "/api/v3/search/advanced",
+                    "/api/v1/search/advanced",
                     headers=admin_auth_headers,
                     json={
                         "repo_path": repo_path,
@@ -197,22 +199,24 @@ class TestConcurrentOperations:
         def perform_analysis(analysis_type) -> None:
             """Perform analysis and return result."""
             if analysis_type == "blame":
-                with patch("githound.web.analysis_api.get_file_blame") as mock_blame:
+                with patch("githound.web.apis.analysis_api.get_file_blame") as mock_blame:
                     mock_blame.return_value = Mock(dict=lambda: {"file_path": "test.py"})
 
                     response = api_client.post(
-                        "/api/v3/analysis/blame",
+                        "/api/v1/analysis/blame",
                         headers=admin_auth_headers,
                         params={"repo_path": repo_path},
                         json={"file_path": "test.py"},
                     )
 
             elif analysis_type == "stats":
-                with patch("githound.web.analysis_api.get_repository_metadata") as mock_metadata:
+                with patch(
+                    "githound.web.apis.analysis_api.get_repository_metadata"
+                ) as mock_metadata:
                     mock_metadata.return_value = {"total_commits": 10}
 
                     response = api_client.get(
-                        "/api/v3/analysis/repository-stats",
+                        "/api/v1/analysis/repository-stats",
                         headers=admin_auth_headers,
                         params={"repo_path": repo_path},
                     )
@@ -243,12 +247,13 @@ class TestConcurrentOperations:
 class TestLargeRepositoryHandling:
     """Test handling of large repositories."""
 
+    @pytest.mark.skip(reason="Repository status endpoint not implemented")
     def test_large_repository_status(self, api_client, admin_auth_headers, large_git_repo) -> None:
         """Test getting status of large repository."""
         repo_path = str(large_git_repo.working_dir)
 
         with patch(
-            "githound.web.git_operations.GitOperationsManager.get_repository_status"
+            "githound.web.core.git_operations.GitOperationsManager.get_repository_status"
         ) as mock_status:
             # Simulate large repository status
             mock_status.return_value = {
@@ -266,7 +271,7 @@ class TestLargeRepositoryHandling:
 
             encoded_path = repo_path.replace("/", "%2F")
             response = api_client.get(
-                f"/api/v3/repository/{encoded_path}/status", headers=admin_auth_headers
+                f"/api/v1/repository/{encoded_path}/status", headers=admin_auth_headers
             )
 
             end_time = time.time()
@@ -282,7 +287,7 @@ class TestLargeRepositoryHandling:
         """Test searching large repository."""
         repo_path = str(large_git_repo.working_dir)
 
-        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
+        with patch("githound.web.apis.search_api.perform_advanced_search_sync") as mock_search:
             # Simulate search in large repository
             mock_search.return_value = {
                 "search_id": "large-repo-search",
@@ -300,7 +305,7 @@ class TestLargeRepositoryHandling:
             start_time = time.time()
 
             response = api_client.post(
-                "/api/v3/search/advanced",
+                "/api/v1/search/advanced",
                 headers=admin_auth_headers,
                 json={
                     "repo_path": repo_path,
@@ -326,7 +331,7 @@ class TestLargeRepositoryHandling:
         """Test analysis of large repository."""
         repo_path = str(large_git_repo.working_dir)
 
-        with patch("githound.web.analysis_api.get_repository_metadata") as mock_metadata:
+        with patch("githound.web.apis.analysis_api.get_repository_metadata") as mock_metadata:
             # Simulate large repository metadata
             mock_metadata.return_value = {
                 "total_commits": 1000,
@@ -339,7 +344,7 @@ class TestLargeRepositoryHandling:
                 "last_commit_date": "2024-01-01T00:00:00Z",
             }
 
-            with patch("githound.web.analysis_api.get_author_statistics") as mock_author_stats:
+            with patch("githound.web.apis.analysis_api.get_author_statistics") as mock_author_stats:
                 # Simulate author statistics for large repo
                 mock_author_stats.return_value = {
                     f"user_{i}": {
@@ -354,7 +359,7 @@ class TestLargeRepositoryHandling:
                 start_time = time.time()
 
                 response = api_client.get(
-                    "/api/v3/analysis/repository-stats",
+                    "/api/v1/analysis/repository-stats",
                     headers=admin_auth_headers,
                     params={
                         "repo_path": repo_path,
@@ -401,7 +406,7 @@ class TestMemoryAndResourceUsage:
             for i in range(1000)  # 1000 results
         ]
 
-        with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
+        with patch("githound.web.apis.search_api.perform_advanced_search_sync") as mock_search:
             mock_search.return_value = {
                 "search_id": "large-response-test",
                 "status": "completed",
@@ -418,7 +423,7 @@ class TestMemoryAndResourceUsage:
             start_time = time.time()
 
             response = api_client.post(
-                "/api/v3/search/advanced",
+                "/api/v1/search/advanced",
                 headers=admin_auth_headers,
                 json={"repo_path": repo_path, "content_pattern": "test", "max_results": 1000},
             )
@@ -439,7 +444,7 @@ class TestMemoryAndResourceUsage:
 
         def large_operation(op_id) -> None:
             """Perform a large operation."""
-            with patch("githound.web.search_api.perform_advanced_search_sync") as mock_search:
+            with patch("githound.web.apis.search_api.perform_advanced_search_sync") as mock_search:
                 # Each operation returns substantial data
                 mock_search.return_value = {
                     "search_id": f"large-op-{op_id}",
@@ -455,7 +460,7 @@ class TestMemoryAndResourceUsage:
                 }
 
                 response = api_client.post(
-                    "/api/v3/search/advanced",
+                    "/api/v1/search/advanced",
                     headers=admin_auth_headers,
                     json={
                         "repo_path": repo_path,

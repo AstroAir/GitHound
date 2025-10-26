@@ -5,17 +5,17 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   release:
-    types: [ published ]
-  workflow_dispatch:  # Allow manual triggering
+    types: [published]
+  workflow_dispatch: # Allow manual triggering
 
 env:
   PYTHON_VERSION: "3.11"
   POETRY_VERSION: "1.7.1"
-  FORCE_COLOR: "1"  # Force colored output in CI
+  FORCE_COLOR: "1" # Force colored output in CI
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_PYTHON_VERSION_WARNING: "1"
 
@@ -75,8 +75,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache tool caches
         uses: actions/cache@v4
@@ -138,8 +138,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache test dependencies
         uses: actions/cache@v4
@@ -164,7 +164,7 @@ jobs:
       - name: Run integration tests
         run: |
           pytest tests/integration/ -v --tb=short --maxfail=3
-        continue-on-error: true  # Integration tests may fail due to environment
+        continue-on-error: true # Integration tests may fail due to environment
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -190,8 +190,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache coverage dependencies
         uses: actions/cache@v4
@@ -251,8 +251,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache benchmark dependencies
         uses: actions/cache@v4
@@ -287,12 +287,12 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
-          tool: 'pytest'
+          tool: "pytest"
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           comment-on-alert: true
-          alert-threshold: '150%'
+          alert-threshold: "150%"
           fail-on-alert: false
 
   # Security checks
@@ -313,8 +313,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache security tools
         uses: actions/cache@v4
@@ -415,8 +415,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache build dependencies
         uses: actions/cache@v4
@@ -570,8 +570,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Cache documentation dependencies
         uses: actions/cache@v4
@@ -681,7 +681,7 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'published'
     environment: production
     permissions:
-      id-token: write  # For trusted publishing
+      id-token: write # For trusted publishing
       contents: read
     steps:
       - name: Download build artifacts
@@ -715,7 +715,7 @@ jobs:
         if: env.SLACK_WEBHOOK_URL != ''
         with:
           status: ${{ job.status }}
-          channel: '#ci-cd'
+          channel: "#ci-cd"
           fields: repo,message,commit,author,action,eventName,ref,workflow
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

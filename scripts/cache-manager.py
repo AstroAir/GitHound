@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Cache Manager
 
@@ -15,7 +14,14 @@ Commands:
     optimize    - Optimize caches
 """
 
+import sys
+from pathlib import Path
+
+import typer
+from rich.table import Table
 from utils import (
+    StatusContext,
+    confirm,
     console,
     format_bytes,
     get_directory_size,
@@ -29,16 +35,7 @@ from utils import (
     print_warning,
     safe_remove_directory,
     safe_remove_file,
-    StatusContext,
-    confirm,
 )
-import shutil
-import sys
-from pathlib import Path
-from typing import Dict, List, Tuple
-
-import typer
-from rich.table import Table
 
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -84,7 +81,6 @@ class CacheManager:
                 "type": "directory",
                 "safe_to_delete": True,
             },
-
             # Build artifacts
             "build": {
                 "description": "Build artifacts",
@@ -104,7 +100,6 @@ class CacheManager:
                 "type": "directory",
                 "safe_to_delete": True,
             },
-
             # Test and coverage
             "coverage": {
                 "description": "Coverage data",
@@ -118,7 +113,6 @@ class CacheManager:
                 "type": "directory",
                 "safe_to_delete": True,
             },
-
             # Documentation
             "docs_build": {
                 "description": "Documentation build",
@@ -126,7 +120,6 @@ class CacheManager:
                 "type": "directory",
                 "safe_to_delete": True,
             },
-
             # Application caches
             "app_cache": {
                 "description": "Application cache",
@@ -146,7 +139,6 @@ class CacheManager:
                 "type": "directory",
                 "safe_to_delete": True,
             },
-
             # IDE and editor caches
             "vscode": {
                 "description": "VS Code settings",
@@ -162,7 +154,7 @@ class CacheManager:
             },
         }
 
-    def find_cache_items(self, cache_type: str) -> List[Path]:
+    def find_cache_items(self, cache_type: str) -> list[Path]:
         """Find cache items of a specific type."""
         if cache_type not in self.cache_locations:
             return []
@@ -177,7 +169,7 @@ class CacheManager:
             # Direct pattern
             return list(self.project_root.glob(pattern))
 
-    def get_cache_info(self, cache_type: str) -> Dict:
+    def get_cache_info(self, cache_type: str) -> dict:
         """Get information about a cache type."""
         config = self.cache_locations[cache_type]  # [attr-defined]
         items = self.find_cache_items(cache_type)
@@ -203,14 +195,11 @@ class CacheManager:
             "safe_to_delete": config["safe_to_delete"],
         }
 
-    def get_all_cache_info(self) -> Dict[str, Dict]:
+    def get_all_cache_info(self) -> dict[str, dict]:
         """Get information about all caches."""
-        return {
-            cache_type: self.get_cache_info(cache_type)
-            for cache_type in self.cache_locations
-        }
+        return {cache_type: self.get_cache_info(cache_type) for cache_type in self.cache_locations}
 
-    def clean_cache(self, cache_type: str, force: bool = False) -> Tuple[bool, int, int]:
+    def clean_cache(self, cache_type: str, force: bool = False) -> tuple[bool, int, int]:
         """
         Clean a specific cache type.
 
@@ -224,8 +213,7 @@ class CacheManager:
 
         # Safety check
         if not config["safe_to_delete"] and not force:
-            print_warning(
-                f"Cache '{cache_type}' is not safe to delete automatically")
+            print_warning(f"Cache '{cache_type}' is not safe to delete automatically")
             if not confirm(f"Delete {config['description']} anyway?"):
                 return False, 0, 0
 
@@ -253,7 +241,7 @@ class CacheManager:
 
         return True, files_removed, bytes_freed
 
-    def clean_all_safe_caches(self) -> Tuple[int, int]:
+    def clean_all_safe_caches(self) -> tuple[int, int]:
         """Clean all caches that are safe to delete."""
         total_files = 0
         total_bytes = 0
@@ -267,12 +255,12 @@ class CacheManager:
                     if files > 0:
                         print_step(
                             f"Cleaned {config['description']}: {files} items, {format_bytes(bytes_freed)}",
-                            "success"
+                            "success",
                         )
 
         return total_files, total_bytes
 
-    def analyze_cache_usage(self) -> Dict:
+    def analyze_cache_usage(self) -> dict:
         """Analyze cache usage patterns."""
         all_info = self.get_all_cache_info()
 
@@ -281,36 +269,38 @@ class CacheManager:
             "total_size": sum(info["total_size"] for info in all_info.values()),
             "total_items": sum(info["item_count"] for info in all_info.values()),
             "safe_to_delete_size": sum(
-                info["total_size"] for info in all_info.values()
-                if info["safe_to_delete"]
+                info["total_size"] for info in all_info.values() if info["safe_to_delete"]
             ),
             "largest_caches": sorted(
-                all_info.items(),
-                key=lambda x: x[1]["total_size"],
-                reverse=True
+                all_info.items(), key=lambda x: x[1]["total_size"], reverse=True
             )[:5],
             "by_category": {
                 "build": sum(
-                    info["total_size"] for cache_type, info in all_info.items()
+                    info["total_size"]
+                    for cache_type, info in all_info.items()
                     if cache_type in ["build", "dist", "egg_info"]
                 ),
                 "python": sum(
-                    info["total_size"] for cache_type, info in all_info.items()
+                    info["total_size"]
+                    for cache_type, info in all_info.items()
                     if cache_type in ["__pycache__", "mypy_cache", "ruff_cache"]
                 ),
                 "test": sum(
-                    info["total_size"] for cache_type, info in all_info.items()
+                    info["total_size"]
+                    for cache_type, info in all_info.items()
                     if cache_type in ["pytest_cache", "coverage", "htmlcov"]
                 ),
                 "docs": sum(
-                    info["total_size"] for cache_type, info in all_info.items()
+                    info["total_size"]
+                    for cache_type, info in all_info.items()
                     if cache_type in ["docs_build"]
                 ),
                 "app": sum(
-                    info["total_size"] for cache_type, info in all_info.items()
+                    info["total_size"]
+                    for cache_type, info in all_info.items()
                     if cache_type in ["app_cache", "logs", "temp"]
                 ),
-            }
+            },
         }
 
         return analysis
@@ -319,11 +309,10 @@ class CacheManager:
 @app.command()
 def clean(
     cache_type: str = typer.Argument(
-        None, help="Specific cache to clean (or 'all' for safe caches)"),
-    force: bool = typer.Option(
-        False, "--force", "-f", help="Force clean even unsafe caches"),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", "-n", help="Show what would be cleaned"),
+        None, help="Specific cache to clean (or 'all' for safe caches)"
+    ),
+    force: bool = typer.Option(False, "--force", "-f", help="Force clean even unsafe caches"),
+    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Show what would be cleaned"),
 ) -> None:
     """Clean caches."""
     manager = CacheManager()
@@ -333,8 +322,7 @@ def clean(
 
         if cache_type == "all" or cache_type is None:
             all_info = manager.get_all_cache_info()
-            safe_caches = {k: v for k, v in all_info.items()
-                           if v["safe_to_delete"]}
+            safe_caches = {k: v for k, v in all_info.items() if v["safe_to_delete"]}
         else:
             if cache_type not in manager.cache_locations:
                 print_error(f"Unknown cache type: {cache_type}")
@@ -352,7 +340,7 @@ def clean(
             if info["item_count"] > 0:
                 print_step(
                     f"{info['description']}: {info['item_count']} items, {format_bytes(info['total_size'])}",
-                    "running"
+                    "running",
                 )
 
         return
@@ -364,8 +352,7 @@ def clean(
         with StatusContext("Cleaning safe caches"):
             total_files, total_bytes = manager.clean_all_safe_caches()
 
-        print_success(
-            f"Cleaned {total_files} items, freed {format_bytes(total_bytes)}")
+        print_success(f"Cleaned {total_files} items, freed {format_bytes(total_bytes)}")
 
     else:
         # Clean specific cache
@@ -379,12 +366,10 @@ def clean(
         config = manager.cache_locations[cache_type]  # [attr-defined]
 
         with StatusContext(f"Cleaning {config['description']}"):
-            success, files_removed, bytes_freed = manager.clean_cache(
-                cache_type, force)
+            success, files_removed, bytes_freed = manager.clean_cache(cache_type, force)
 
         if success:
-            print_success(
-                f"Cleaned {files_removed} items, freed {format_bytes(bytes_freed)}")
+            print_success(f"Cleaned {files_removed} items, freed {format_bytes(bytes_freed)}")
         else:
             print_error("Cache cleaning failed or was cancelled")
             sys.exit(1)
@@ -392,8 +377,7 @@ def clean(
 
 @app.command()
 def info(
-    cache_type: str = typer.Argument(
-        None, help="Specific cache to show info for"),
+    cache_type: str = typer.Argument(None, help="Specific cache to show info for"),
 ) -> None:
     """Show cache information."""
     manager = CacheManager()
@@ -411,14 +395,13 @@ def info(
         print_section(f"{info['description']} ({cache_type})")
         print_info(f"Items: {info['item_count']}")
         print_info(f"Size: {format_bytes(info['total_size'])}")
-        print_info(
-            f"Safe to delete: {'Yes' if info['safe_to_delete'] else 'No'}")
+        print_info(f"Safe to delete: {'Yes' if info['safe_to_delete'] else 'No'}")
 
-        if info['items']:
+        if info["items"]:
             print_info("Locations:")
-            for item in info['items'][:10]:  # Show first 10
+            for item in info["items"][:10]:  # Show first 10
                 print_info(f"  - {item}")
-            if len(info['items']) > 10:
+            if len(info["items"]) > 10:
                 print_info(f"  ... and {len(info['items']) - 10} more")
 
     else:
@@ -444,7 +427,7 @@ def info(
                 info["description"],
                 str(info["item_count"]),
                 format_bytes(info["total_size"]),
-                "✅" if info["safe_to_delete"] else "⚠️"
+                "✅" if info["safe_to_delete"] else "⚠️",
             )
 
         console.print(table)
@@ -469,17 +452,15 @@ def analyze() -> None:
     print_info(f"Total caches: {analysis['total_caches']}")
     print_info(f"Total items: {analysis['total_items']}")
     print_info(f"Total size: {format_bytes(analysis['total_size'])}")
-    print_info(
-        f"Safe to delete: {format_bytes(analysis['safe_to_delete_size'])}")
+    print_info(f"Safe to delete: {format_bytes(analysis['safe_to_delete_size'])}")
 
     print_section("Largest Caches")
-    for cache_type, info in analysis['largest_caches']:
-        if info['total_size'] > 0:
-            print_info(
-                f"{info['description']}: {format_bytes(info['total_size'])}")
+    for cache_type, info in analysis["largest_caches"]:
+        if info["total_size"] > 0:
+            print_info(f"{info['description']}: {format_bytes(info['total_size'])}")
 
     print_section("By Category")
-    for category, size in analysis['by_category'].items():
+    for category, size in analysis["by_category"].items():
         if size > 0:
             print_info(f"{category.title()}: {format_bytes(size)}")
 
@@ -496,16 +477,16 @@ def optimize() -> None:
 
     analysis = manager.analyze_cache_usage()
 
-    if analysis['safe_to_delete_size'] > 1024 * 1024:  # > 1MB
+    if analysis["safe_to_delete_size"] > 1024 * 1024:  # > 1MB
         print_info(
-            f"Found {format_bytes(analysis['safe_to_delete_size'])} of safe-to-delete caches")
+            f"Found {format_bytes(analysis['safe_to_delete_size'])} of safe-to-delete caches"
+        )
 
         if confirm("Clean safe caches to optimize performance?"):
             with StatusContext("Optimizing caches"):
                 total_files, total_bytes = manager.clean_all_safe_caches()
 
-            print_success(
-                f"Optimization complete: freed {format_bytes(total_bytes)}")
+            print_success(f"Optimization complete: freed {format_bytes(total_bytes)}")
         else:
             print_info("Optimization cancelled")
     else:

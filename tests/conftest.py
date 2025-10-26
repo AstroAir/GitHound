@@ -1,14 +1,13 @@
-from typing import Optional
-
 """Shared test fixtures and configuration for GitHound tests."""
 
 import asyncio
 import shutil
 import tempfile
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
 import pytest_asyncio
@@ -32,6 +31,7 @@ except ImportError:
 
 try:
     from githound.mcp_server import get_mcp_server, mcp
+
     MCP_SERVER_AVAILABLE = True
 except (ImportError, TypeError, AttributeError):
     # Handle various import errors including Pydantic compatibility issues
@@ -54,8 +54,12 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 @pytest.fixture
 def temp_dir() -> Generator[Path, None, None]:
     """Create a temporary directory for tests."""
+    import os
+
     temp_dir = tempfile.mkdtemp()
-    yield Path(temp_dir)
+    # Normalize path to handle Windows 8.3 short names
+    normalized_path = Path(os.path.realpath(temp_dir))
+    yield normalized_path
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
@@ -93,6 +97,9 @@ def temp_repo(temp_dir: Path) -> Generator[Repo, None, None]:
 
     yield repo
 
+    # Cleanup: Close the repository to release file handles
+    repo.close()
+
 
 @pytest.fixture
 def temp_repo_with_commits(temp_dir: Path) -> Generator[tuple, None, None]:
@@ -124,9 +131,12 @@ def temp_repo_with_commits(temp_dir: Path) -> Generator[tuple, None, None]:
         "# Test Repository\n\nThis is a test repository for GitHound tests.\n\n## Features\n- Testing\n- Git operations"
     )
     repo.index.add([str(test_file)])
-    third_commit = repo.index.commit("Update README with features")
+    repo.index.commit("Update README with features")
 
     yield (repo, temp_dir, initial_commit, second_commit)
+
+    # Cleanup: Close the repository to release file handles
+    repo.close()
 
 
 @pytest.fixture
@@ -184,9 +194,8 @@ async def mcp_server() -> None:
     This fixture provides a clean server instance for in-memory testing
     following FastMCP best practices.
     """
-    if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE:
+    if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE or mcp is None:
         pytest.skip("FastMCP or MCP server not available")
-    from githound.mcp_server import mcp
 
     return mcp
 
@@ -348,7 +357,6 @@ def mock_external_dependencies() -> None:
         patch("githound.search_engine.SearchOrchestrator") as mock_orchestrator,
         patch("pathlib.Path.exists") as mock_path_exists,
     ):
-
         mock_path_exists.return_value = True
         mock_get_repo.return_value = Mock()
         mock_orchestrator.return_value = Mock()
@@ -392,13 +400,49 @@ def error_scenarios() -> None:
 
 
 @pytest.fixture
+def unauthenticated_client() -> None:
+    """FastAPI test client WITHOUT authentication bypass (for security tests)."""
+    from fastapi.testclient import TestClient
+
+    from githound.web.main import app
+
+    client = TestClient(app)
+    yield client
+
+    # Clean up any overrides
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
 def api_client() -> None:
     """FastAPI test client for the enhanced API."""
     from fastapi.testclient import TestClient
 
-    from githound.web.enhanced_main_api import app
+    from githound.web.main import app
+    from githound.web.services import auth_service
 
-    return TestClient(app)
+    # Override auth dependencies to bypass authentication in tests
+    async def override_get_current_user():
+        return {
+            "user_id": "test_admin",
+            "username": "test_admin",
+            "email": "test@example.com",
+            "roles": ["admin", "user"],
+            "is_active": True,
+            "created_at": "2024-01-01T00:00:00",
+            "last_login": None,
+        }
+
+    # Override the dependency functions
+    app.dependency_overrides[auth_service.get_current_user] = override_get_current_user
+    app.dependency_overrides[auth_service.require_admin] = override_get_current_user
+    app.dependency_overrides[auth_service.require_user] = override_get_current_user
+
+    client = TestClient(app)
+    yield client
+
+    # Clean up overrides
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -406,7 +450,7 @@ async def async_api_client() -> None:
     """Async FastAPI test client for the enhanced API."""
     from httpx import AsyncClient
 
-    from githound.web.enhanced_main_api import app
+    from githound.web.main import app
 
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
@@ -415,7 +459,7 @@ async def async_api_client() -> None:
 @pytest.fixture
 def auth_manager() -> None:
     """Authentication manager for testing."""
-    from githound.web.auth import AuthManager
+    from githound.web.services.auth_service import AuthManager
 
     return AuthManager()
 
@@ -423,9 +467,34 @@ def auth_manager() -> None:
 @pytest.fixture
 def admin_token(auth_manager) -> None:
     """Generate admin JWT token for testing."""
-    token_data = auth_manager.create_access_token(
-        data={"sub": "test_admin", "username": "test_admin", "roles": ["admin", "user"]}
+    # Create the admin user first
+    from githound.web.services.auth_service import UserCreate
+
+    admin_user = UserCreate(
+        username="test_admin",
+        email="admin@example.com",
+        password="admin123",
+        roles=["admin", "user"],
     )
+
+    try:
+        auth_manager.create_user(admin_user)
+    except Exception:
+        # User might already exist, which is fine
+        pass
+
+    # Get the created user to get the proper user_id
+    user = auth_manager.get_user("test_admin")
+    if user:
+        token_data = auth_manager.create_access_token(
+            data={"sub": user.user_id, "username": user.username, "roles": user.roles}
+        )
+    else:
+        # Fallback if user creation failed
+        token_data = auth_manager.create_access_token(
+            data={"sub": "test_admin", "username": "test_admin", "roles": ["admin", "user"]}
+        )
+
     return token_data
 
 
@@ -441,9 +510,34 @@ def user_token(auth_manager) -> None:
 @pytest.fixture
 def readonly_token(auth_manager) -> None:
     """Generate read-only JWT token for testing."""
-    token_data = auth_manager.create_access_token(
-        data={"sub": "test_readonly", "username": "test_readonly", "roles": ["read_only"]}
+    # Create the readonly user first
+    from githound.web.services.auth_service import UserCreate
+
+    readonly_user = UserCreate(
+        username="test_readonly",
+        email="readonly@example.com",
+        password="readonly123",
+        roles=["read_only"],
     )
+
+    try:
+        auth_manager.create_user(readonly_user)
+    except Exception:
+        # User might already exist, which is fine
+        pass
+
+    # Get the created user to get the proper user_id
+    user = auth_manager.get_user("test_readonly")
+    if user:
+        token_data = auth_manager.create_access_token(
+            data={"sub": user.user_id, "username": user.username, "roles": user.roles}
+        )
+    else:
+        # Fallback if user creation failed
+        token_data = auth_manager.create_access_token(
+            data={"sub": "test_readonly", "username": "test_readonly", "roles": ["read_only"]}
+        )
+
     return token_data
 
 
@@ -479,22 +573,6 @@ def redis_client() -> None:
         client.close()
     except (ImportError, redis.ConnectionError):
         pytest.skip("Redis not available for testing")
-
-
-@pytest.fixture
-def webhook_manager() -> None:
-    """Webhook manager for testing."""
-    from githound.web.webhooks import WebhookManager
-
-    return WebhookManager()
-
-
-@pytest.fixture
-def git_operations_manager() -> None:
-    """Git operations manager for testing."""
-    from githound.web.git_operations import GitOperationsManager
-
-    return GitOperationsManager()
 
 
 @pytest.fixture
@@ -635,22 +713,6 @@ def large_git_repo(temp_dir) -> None:
         repo.index.commit(f"Commit {commit_num}: Add batch of files", author=author)
 
     yield repo
-
-
-@pytest.fixture
-def mock_webhook_server() -> None:
-    """Mock webhook server for testing webhook deliveries."""
-    mock_server = Mock()
-    mock_server.received_webhooks = []
-
-    def receive_webhook(payload, headers) -> None:
-        mock_server.received_webhooks.append(
-            {"payload": payload, "headers": headers, "timestamp": datetime.now()}
-        )
-        return {"status": "received"}
-
-    mock_server.receive_webhook = receive_webhook
-    return mock_server
 
 
 # Test utilities

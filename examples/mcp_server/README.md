@@ -89,12 +89,14 @@ examples/mcp_server/
 ## 🔧 FastMCP 2.x Features Demonstrated
 
 ### Core Operations
+
 - **Client Setup**: Modern `Client` class with automatic transport detection
 - **Tool Operations**: Discovery, execution, structured data handling
 - **Resource Operations**: Static and templated resource access with proper URI handling
 - **Prompt Operations**: Template usage with type conversion and argument serialization
 
 ### FastMCP 2.x Advanced Features
+
 - **Authentication**: Bearer token and OAuth 2.1 support (FastMCP 2.6+)
 - **Server Composition**: Multi-server client configuration and failover patterns
 - **Modern Transports**: StreamableHttpTransport, FastMCPTransport for testing
@@ -103,6 +105,7 @@ examples/mcp_server/
 - **In-Memory Testing**: FastMCPTransport for deterministic testing patterns
 
 ### Transport Examples
+
 - **PythonStdioTransport**: Local Python process communication
 - **StreamableHttpTransport**: Modern HTTP transport (FastMCP 2.3+)
 - **SSETransport**: Server-sent events for real-time updates
@@ -111,19 +114,23 @@ examples/mcp_server/
 ## 📚 Example Categories
 
 ### 1. Basic Client Examples
+
 - `basic_client.py` - FastMCP client initialization and basic operations
 - `transport_examples.py` - Different transport layer configurations
 
 ### 2. Core Operations
+
 - `tool_operations.py` - Tool discovery, execution, and data handling
 - `resource_operations.py` - Static and templated resource access
 - `prompt_operations.py` - Prompt templates and argument serialization
 
 ### 3. GitHound Integration
+
 - `githound_server.py` - Complete MCP server using GitHound functionality
 - `githound_client.py` - Client for GitHound-specific git operations
 
 ### 4. Advanced Features
+
 - `advanced_features.py` - Progress monitoring, logging, retry strategies
 - `authentication_examples.py` - Bearer token & OAuth 2.1 authentication
 - `multi_server_client.py` - Multi-server client configuration and failover
@@ -133,21 +140,25 @@ examples/mcp_server/
 The GitHound MCP server provides comprehensive git metadata analysis tools:
 
 ### Repository Analysis
+
 - `analyze_repository` - Complete repository metadata and statistics
 - `get_repository_summary` - High-level repository overview
 - `get_author_stats` - Contributor statistics and analysis
 
 ### Commit Operations
+
 - `analyze_commit` - Detailed commit analysis with metadata
 - `get_commit_history` - Filtered commit history retrieval
 - `compare_commits` - Diff analysis between commits
 
 ### File Analysis
+
 - `get_file_history` - Complete file change history
 - `get_file_blame` - Line-by-line authorship information
 - `get_line_history` - Individual line change tracking
 
 ### Branch Operations
+
 - `compare_branches` - Branch comparison and analysis
 - `get_branch_stats` - Branch statistics and metadata
 
@@ -164,6 +175,7 @@ GitHound exposes structured data through MCP resources:
 ## 🎯 Usage Examples
 
 ### Basic Tool Execution
+
 ```python
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
@@ -181,6 +193,7 @@ async with Client(PythonStdioTransport("servers/githound_server.py")) as client:
 ```
 
 ### Resource Access
+
 ```python
 async with Client(transport) as client:
     # Read repository summary
@@ -192,6 +205,7 @@ async with Client(transport) as client:
 ```
 
 ### Error Handling
+
 ```python
 from fastmcp.exceptions import ToolError, McpError
 

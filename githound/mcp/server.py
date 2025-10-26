@@ -7,20 +7,22 @@ from typing import Any
 # Handle FastMCP import gracefully for Pydantic v1 compatibility
 try:
     from fastmcp import Context, FastMCP
+
     FASTMCP_AVAILABLE = True
 except ImportError:
     FASTMCP_AVAILABLE = False
+
     # Create dummy classes for type checking
     class Context:  # type: ignore
-        async def info(self, message: str) -> None: ...
-        async def error(self, message: str) -> None: ...
+        async def info(self, message: str) -> None:
+            ...
+
+        async def error(self, message: str) -> None:
+            ...
+
     FastMCP = None  # type: ignore
 
-from .config import (
-    configure_logging,
-    get_server_config,
-    is_authentication_enabled,
-)
+from .config import configure_logging, get_server_config, is_authentication_enabled
 from .direct_wrappers import MockContext
 from .prompts import analyze_performance_regression, investigate_bug, prepare_code_review
 from .resources import (
@@ -42,7 +44,7 @@ from .tools import (
 )
 
 # Import auth module dynamically to avoid circular import with auth directory
-auth_module = importlib.import_module(".auth", package="githound.mcp")
+auth_module = importlib.import_module(".auth_manager", package="githound.mcp")
 
 
 def get_mcp_server() -> Any:
@@ -84,19 +86,24 @@ def mcp_tool(func: Any) -> Any:
         return mcp.tool(func)
     return func
 
+
 def mcp_resource(uri: str) -> Any:
     """Decorator that conditionally registers MCP resources."""
+
     def decorator(func: Any) -> Any:
         if FASTMCP_AVAILABLE and mcp is not None:
             return mcp.resource(uri)(func)
         return func
+
     return decorator
+
 
 def mcp_prompt(func: Any) -> Any:
     """Decorator that conditionally registers MCP prompts."""
     if FASTMCP_AVAILABLE and mcp is not None:
         return mcp.prompt(func)
     return func
+
 
 # Register all MCP tools
 @mcp_tool

@@ -1,23 +1,19 @@
 """Tests for GitHound core models."""
 
 from datetime import datetime
-from pathlib import Path
 
 from githound.models import (
     BlameLineInfo,
-    BranchInfo,
     CommitInfo,
     FileBlameInfo,
     FileChangeInfo,
     OutputFormat,
-    RemoteInfo,
     RepositoryInfo,
     SearchConfig,
     SearchMetrics,
     SearchQuery,
     SearchResult,
     SearchType,
-    TagInfo,
 )
 
 

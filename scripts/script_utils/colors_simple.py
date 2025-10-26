@@ -2,8 +2,6 @@
 Simple console output utilities without external dependencies.
 """
 
-from typing import Optional
-
 
 def print_info(message: str, **kwargs) -> None:
     """Print an info message."""
@@ -25,7 +23,7 @@ def print_error(message: str, **kwargs) -> None:
     print(f"❌ {message}")
 
 
-def print_header(title: str, subtitle: Optional[str] = None) -> None:
+def print_header(title: str, subtitle: str | None = None) -> None:
     """Print a formatted header."""
     print(f"\n{'='*60}")
     print(f"  {title}")
@@ -77,10 +75,10 @@ def confirm(message: str, default: bool = True) -> bool:
     if not response:
         return default
 
-    return response.lower().startswith('y')
+    return response.lower().startswith("y")
 
 
-def prompt(message: str, default: Optional[str] = None) -> str:
+def prompt(message: str, default: str | None = None) -> str:
     """Prompt user for input."""
     if default:
         response = input(f"❓ {message} [{default}]: ")

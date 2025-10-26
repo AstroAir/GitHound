@@ -2,12 +2,12 @@
 
 import json
 import subprocess
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest  # Added missing import
 
 # [attr-defined]
-from githound.models import SearchConfig, SearchResult, SearchType
+from githound.models import SearchConfig, SearchType
 from githound.searcher import search_blob_content
 
 

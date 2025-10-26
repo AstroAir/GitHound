@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Version management script for GitHound.
 
 This script provides utilities for managing versions across the project,
@@ -6,25 +5,16 @@ including updating configuration files and creating releases.
 """
 
 import argparse
-import json
-import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
-def run_command(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
+def run_command(cmd: list[str], cwd: Path | None = None) -> tuple[int, str, str]:
     """Run a command and return exit code, stdout, stderr."""
     try:
-        result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=30)
         return result.returncode, result.stdout.strip(), result.stderr.strip()
     except subprocess.TimeoutExpired:
         return 1, "", "Command timed out"
@@ -32,7 +22,7 @@ def run_command(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, s
         return 1, "", f"Command not found: {cmd[0]}"
 
 
-def get_git_info(repo_root: Path) -> Dict[str, Optional[str]]:
+def get_git_info(repo_root: Path) -> dict[str, str | None]:
     """Get git information from repository."""
     info = {
         "commit": None,
@@ -64,7 +54,7 @@ def get_git_info(repo_root: Path) -> Dict[str, Optional[str]]:
     return info
 
 
-def get_current_version(repo_root: Path) -> Optional[str]:
+def get_current_version(repo_root: Path) -> str | None:
     """Get current version from git tags."""
     # Try to get version from git describe
     code, stdout, _ = run_command(["git", "describe", "--tags", "--abbrev=0"], repo_root)
@@ -74,25 +64,22 @@ def get_current_version(repo_root: Path) -> Optional[str]:
     # Fallback: look for version tags
     code, stdout, _ = run_command(["git", "tag", "--sort=-version:refname"], repo_root)
     if code == 0 and stdout:
-        tags = stdout.split('\n')
+        tags = stdout.split("\n")
         for tag in tags:
-            if re.match(r'^v?\d+\.\d+\.\d+', tag):
+            if re.match(r"^v?\d+\.\d+\.\d+", tag):
                 return tag
 
     return None
 
 
-def create_version_tag(repo_root: Path, version: str, message: Optional[str] = None) -> bool:
+def create_version_tag(repo_root: Path, version: str, message: str | None = None) -> bool:
     """Create a version tag."""
-    if not version.startswith('v'):
-        version = f'v{version}'
+    if not version.startswith("v"):
+        version = f"v{version}"
 
     tag_message = message or f"Release {version}"
 
-    code, _, stderr = run_command(
-        ["git", "tag", "-a", version, "-m", tag_message],
-        repo_root
-    )
+    code, _, stderr = run_command(["git", "tag", "-a", version, "-m", tag_message], repo_root)
 
     if code != 0:
         print(f"Error creating tag: {stderr}")
@@ -115,15 +102,12 @@ def update_environment_files(repo_root: Path, version: str) -> None:
 
             # Update GITHOUND_VERSION if it exists
             content = re.sub(
-                r'^GITHOUND_VERSION=.*$',
-                f'GITHOUND_VERSION={version}',
-                content,
-                flags=re.MULTILINE
+                r"^GITHOUND_VERSION=.*$", f"GITHOUND_VERSION={version}", content, flags=re.MULTILINE
             )
 
             # Add GITHOUND_VERSION if it doesn't exist
-            if 'GITHOUND_VERSION=' not in content:
-                content += f'\n# Version\nGITHOUND_VERSION={version}\n'
+            if "GITHOUND_VERSION=" not in content:
+                content += f"\n# Version\nGITHOUND_VERSION={version}\n"
 
             env_file.write_text(content)
             print(f"Updated {env_file}")
@@ -145,7 +129,7 @@ def update_docker_files(repo_root: Path, version: str) -> None:
             content = re.sub(
                 r'GITHOUND_VERSION: "\${GITHOUND_VERSION:-[^}]*}"',
                 f'GITHOUND_VERSION: "${{GITHOUND_VERSION:-{version}}}"',
-                content
+                content,
             )
 
             compose_file.write_text(content)
@@ -165,9 +149,7 @@ def update_ci_files(repo_root: Path, version: str) -> None:
 
             # Update version references in CI files
             content = re.sub(
-                r'GITHOUND_VERSION: ["\']?[^"\']*["\']?',
-                f'GITHOUND_VERSION: "{version}"',
-                content
+                r'GITHOUND_VERSION: ["\']?[^"\']*["\']?', f'GITHOUND_VERSION: "{version}"', content
             )
 
             ci_file.write_text(content)

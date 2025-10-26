@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Basic FastMCP Client Example
 
@@ -22,22 +21,20 @@ This example covers:
 import asyncio
 import logging
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
 from fastmcp.exceptions import ToolError
-import mcp.types as mcp_types
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-async def basic_client_setup() -> Dict[str, Any]:
+async def basic_client_setup() -> dict[str, Any]:
     """
     Demonstrate basic FastMCP client setup and initialization.
 
@@ -65,9 +62,13 @@ async def basic_client_setup() -> Dict[str, Any]:
 
             # Get server information using tool call
             server_info_result = await client.call_tool("get_server_info", {})
-            server_info = server_info_result.content[0].text if server_info_result.content else "Unknown"
+            server_info = (
+                server_info_result.content[0].text if server_info_result.content else "Unknown"
+            )
             logger.info(f"Connected to server: {server_info}")
-            logger.info(f"Server response type: {type(server_info_result.content[0].text) if server_info_result.content else 'None'}")
+            logger.info(
+                f"Server response type: {type(server_info_result.content[0].text) if server_info_result.content else 'None'}"
+            )
 
             # Test basic connectivity
             tools = await client.list_tools()
@@ -78,22 +79,20 @@ async def basic_client_setup() -> Dict[str, Any]:
 
             return {
                 "status": "success",
-                "server_info": str(server_info)[:100] + "..." if len(str(server_info)) > 100 else str(server_info),
+                "server_info": str(server_info)[:100] + "..."
+                if len(str(server_info)) > 100
+                else str(server_info),
                 "tools_count": len(tools),
                 "resources_count": len(resources),
-                "transport_type": "stdio"
+                "transport_type": "stdio",
             }
 
     except Exception as e:
         logger.error(f"Client setup failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e),
-            "transport_type": "stdio"
-        }
+        return {"status": "failed", "error": str(e), "transport_type": "stdio"}
 
 
-async def demonstrate_tool_operations() -> Dict[str, Any]:
+async def demonstrate_tool_operations() -> dict[str, Any]:
     """
     Demonstrate basic tool discovery and execution patterns.
 
@@ -120,11 +119,13 @@ async def demonstrate_tool_operations() -> Dict[str, Any]:
             tool_info: list[Any] = []
             for tool in tools:
                 logger.info(f"  - {tool.name}: {tool.description}")
-                tool_info.append({
-                    "name": tool.name,
-                    "description": tool.description,
-                    "has_schema": tool.inputSchema is not None
-                })
+                tool_info.append(
+                    {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "has_schema": tool.inputSchema is not None,
+                    }
+                )
 
             # 2. Tool Execution - Simple tool without arguments
             if tools:
@@ -141,7 +142,7 @@ async def demonstrate_tool_operations() -> Dict[str, Any]:
 
                     # Access traditional content blocks
                     for i, content in enumerate(result.content):
-                        if hasattr(content, 'text'):
+                        if hasattr(content, "text"):
                             logger.info(f"Content {i}: {content.text[:100]}...")
 
                 except ToolError as e:
@@ -151,18 +152,15 @@ async def demonstrate_tool_operations() -> Dict[str, Any]:
                 "status": "success",
                 "tools_discovered": len(tools),
                 "tool_info": tool_info,
-                "execution_attempted": len(tools) > 0
+                "execution_attempted": len(tools) > 0,
             }
 
     except Exception as e:
         logger.error(f"Tool operations failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_resource_access() -> Dict[str, Any]:
+async def demonstrate_resource_access() -> dict[str, Any]:
     """
     Demonstrate basic resource discovery and access patterns.
 
@@ -189,12 +187,14 @@ async def demonstrate_resource_access() -> Dict[str, Any]:
             resource_info: list[Any] = []
             for resource in resources:
                 logger.info(f"  - {resource.uri}: {resource.description}")
-                resource_info.append({
-                    "uri": resource.uri,
-                    "name": resource.name,
-                    "description": resource.description,
-                    "mime_type": getattr(resource, 'mimeType', None)
-                })
+                resource_info.append(
+                    {
+                        "uri": resource.uri,
+                        "name": resource.name,
+                        "description": resource.description,
+                        "mime_type": getattr(resource, "mimeType", None),
+                    }
+                )
 
             # 2. Resource Access
             if resources:
@@ -206,9 +206,9 @@ async def demonstrate_resource_access() -> Dict[str, Any]:
                     logger.info(f"Resource content blocks: {len(content)}")
 
                     for i, block in enumerate(content):
-                        if hasattr(block, 'text'):
+                        if hasattr(block, "text"):
                             logger.info(f"Text content {i}: {block.text[:100]}...")
-                        elif hasattr(block, 'blob'):
+                        elif hasattr(block, "blob"):
                             logger.info(f"Binary content {i}: {len(block.blob)} bytes")
 
                 except Exception as e:
@@ -218,18 +218,15 @@ async def demonstrate_resource_access() -> Dict[str, Any]:
                 "status": "success",
                 "resources_discovered": len(resources),
                 "resource_info": resource_info,
-                "access_attempted": len(resources) > 0
+                "access_attempted": len(resources) > 0,
             }
 
     except Exception as e:
         logger.error(f"Resource access failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_error_handling() -> Dict[str, Any]:
+async def demonstrate_error_handling() -> dict[str, Any]:
     """
     Demonstrate comprehensive error handling patterns.
 
@@ -248,7 +245,7 @@ async def demonstrate_error_handling() -> Dict[str, Any]:
         "connection_error_handled": False,
         "tool_error_handled": False,
         "resource_error_handled": False,
-        "cleanup_successful": False
+        "cleanup_successful": False,
     }
 
     # 1. Connection Error Handling
@@ -289,7 +286,7 @@ async def demonstrate_error_handling() -> Dict[str, Any]:
     return results
 
 
-async def main() -> Dict[str, Any]:
+async def main() -> dict[str, Any]:
     """
     Main function demonstrating comprehensive basic FastMCP client usage.
 

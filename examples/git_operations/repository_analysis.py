@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Git Repository Analysis Examples
 
@@ -17,25 +16,24 @@ This example covers:
 - Performance considerations
 """
 
-import sys
 import json
 import logging
-from pathlib import Path
+import sys
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from pathlib import Path
+from typing import Any
 
-from githound.git_handler import (
-    get_repository, get_repository_metadata, extract_commit_metadata,
-    get_commits_with_filters
-)
 from githound.git_blame import get_author_statistics
-from githound.models import CommitInfo
-
+from githound.git_handler import (
+    extract_commit_metadata,
+    get_commits_with_filters,
+    get_repository,
+    get_repository_metadata,
+)
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -47,9 +45,9 @@ class RepositoryAnalyzer:
         """Initialize analyzer with repository path."""
         self.repo_path = Path(repo_path)
         self.repo = None
-        self.analysis_results: Dict[str, Any] = {
+        self.analysis_results: dict[str, Any] = {
             "repository_path": str(repo_path),
-            "analysis_timestamp": datetime.now().isoformat()
+            "analysis_timestamp": datetime.now().isoformat(),
         }
 
     def load_repository(self) -> bool:
@@ -65,7 +63,7 @@ class RepositoryAnalyzer:
             self.analysis_results["error"] = str(e)
             return False
 
-    def analyze_repository_metadata(self) -> Dict[str, Any]:
+    def analyze_repository_metadata(self) -> dict[str, Any]:
         """Analyze basic repository metadata."""
         logger.info("\n=== Repository Metadata Analysis ===")
 
@@ -75,38 +73,56 @@ class RepositoryAnalyzer:
         try:
             metadata = get_repository_metadata(self.repo)
 
-            logger.info(f"Repository Name: {metadata.get if metadata is not None else None('name', 'N/A')}")
-            logger.info(f"Total Commits: {metadata.get if metadata is not None else None('total_commits', 0)}")
-            logger.info(f"Total Branches: {metadata.get if metadata is not None else None('total_branches', 0)}")
-            logger.info(f"Total Tags: {metadata.get if metadata is not None else None('total_tags', 0)}")
-            logger.info(f"Contributors: {len(metadata.get if metadata is not None else None('contributors', []))}")
+            logger.info(
+                f"Repository Name: {metadata.get if metadata is not None else None('name', 'N/A')}"
+            )
+            logger.info(
+                f"Total Commits: {metadata.get if metadata is not None else None('total_commits', 0)}"
+            )
+            logger.info(
+                f"Total Branches: {metadata.get if metadata is not None else None('total_branches', 0)}"
+            )
+            logger.info(
+                f"Total Tags: {metadata.get if metadata is not None else None('total_tags', 0)}"
+            )
+            logger.info(
+                f"Contributors: {len(metadata.get if metadata is not None else None('contributors', []))}"
+            )
 
             # Latest commit info
-            latest_commit = metadata.get('latest_commit')
+            latest_commit = metadata.get("latest_commit")
             if latest_commit:
-                logger.info(f"Latest Commit: {latest_commit.get if latest_commit is not None else None('hash', 'N/A')[:8]}")
-                logger.info(f"Latest Author: {latest_commit.get if latest_commit is not None else None('author_name', 'N/A')}")
-                logger.info(f"Latest Date: {latest_commit.get if latest_commit is not None else None('date', 'N/A')}")
+                logger.info(
+                    f"Latest Commit: {latest_commit.get if latest_commit is not None else None('hash', 'N/A')[:8]}"
+                )
+                logger.info(
+                    f"Latest Author: {latest_commit.get if latest_commit is not None else None('author_name', 'N/A')}"
+                )
+                logger.info(
+                    f"Latest Date: {latest_commit.get if latest_commit is not None else None('date', 'N/A')}"
+                )
 
             # Repository age
-            creation_date = metadata.get('creation_date')
+            creation_date = metadata.get("creation_date")
             if creation_date:
                 try:
-                    created = datetime.fromisoformat(creation_date.replace if creation_date is not None else None('Z', '+00:00'))
+                    created = datetime.fromisoformat(
+                        creation_date.replace if creation_date is not None else None("Z", "+00:00")
+                    )
                     age_days = (datetime.now().replace(tzinfo=created.tzinfo) - created).days
                     logger.info(f"Repository Age: {age_days} days")
-                    metadata['age_days'] = age_days
-                except:
+                    metadata["age_days"] = age_days
+                except Exception:
                     pass
 
-            self.analysis_results['metadata'] = metadata
+            self.analysis_results["metadata"] = metadata
             return metadata
 
         except Exception as e:
             logger.error(f"✗ Metadata analysis failed: {e}")
             return {"error": str(e)}
 
-    def analyze_commit_history(self, max_commits: int = 100) -> Dict[str, Any]:
+    def analyze_commit_history(self, max_commits: int = 100) -> dict[str, Any]:
         """Analyze commit history patterns."""
         logger.info(f"\n=== Commit History Analysis (last {max_commits} commits) ===")
 
@@ -115,10 +131,7 @@ class RepositoryAnalyzer:
 
         try:
             # Get recent commits
-            commits = get_commits_with_filters(
-                repo=self.repo,
-                max_count=max_commits
-            )
+            commits = get_commits_with_filters(repo=self.repo, max_count=max_commits)
 
             commit_list: list[Any] = []
             commit_stats = {
@@ -128,7 +141,7 @@ class RepositoryAnalyzer:
                 "total_insertions": 0,
                 "total_deletions": 0,
                 "commit_messages": [],
-                "dates": []
+                "dates": [],
             }
 
             for commit in commits:
@@ -159,8 +172,12 @@ class RepositoryAnalyzer:
 
             # Calculate additional metrics
             if commit_stats["total_analyzed"] > 0:
-                commit_stats["avg_insertions"] = commit_stats["total_insertions"] / commit_stats["total_analyzed"]
-                commit_stats["avg_deletions"] = commit_stats["total_deletions"] / commit_stats["total_analyzed"]
+                commit_stats["avg_insertions"] = (
+                    commit_stats["total_insertions"] / commit_stats["total_analyzed"]
+                )
+                commit_stats["avg_deletions"] = (
+                    commit_stats["total_deletions"] / commit_stats["total_analyzed"]
+                )
                 commit_stats["unique_authors"] = len(commit_stats["authors"])
                 commit_stats["unique_files"] = len(commit_stats["files_changed"])
 
@@ -170,7 +187,7 @@ class RepositoryAnalyzer:
             logger.info(f"Total Insertions: {commit_stats['total_insertions']}")
             logger.info(f"Total Deletions: {commit_stats['total_deletions']}")
 
-            if commit_stats['total_analyzed'] > 0:
+            if commit_stats["total_analyzed"] > 0:
                 logger.info(f"Avg Insertions/Commit: {commit_stats['avg_insertions']:.1f}")
                 logger.info(f"Avg Deletions/Commit: {commit_stats['avg_deletions']:.1f}")
 
@@ -178,19 +195,16 @@ class RepositoryAnalyzer:
             commit_frequency = self._analyze_commit_frequency(commit_stats["dates"])
             commit_stats.update(commit_frequency)
 
-            result = {
-                "commits": commit_list,
-                "statistics": commit_stats
-            }
+            result = {"commits": commit_list, "statistics": commit_stats}
 
-            self.analysis_results['commit_history'] = result
+            self.analysis_results["commit_history"] = result
             return result
 
         except Exception as e:
             logger.error(f"✗ Commit history analysis failed: {e}")
             return {"error": str(e)}
 
-    def _analyze_commit_frequency(self, commit_dates: List[str]) -> Dict[str, Any]:
+    def _analyze_commit_frequency(self, commit_dates: list[str]) -> dict[str, Any]:
         """Analyze commit frequency patterns."""
         if not commit_dates:
             return {}
@@ -201,12 +215,14 @@ class RepositoryAnalyzer:
             for date_str in commit_dates:
                 try:
                     # Handle different date formats
-                    if 'T' in date_str:
-                        date = datetime.fromisoformat(date_str.replace if date_str is not None else None('Z', '+00:00'))
+                    if "T" in date_str:
+                        date = datetime.fromisoformat(
+                            date_str.replace if date_str is not None else None("Z", "+00:00")
+                        )
                     else:
                         date = datetime.fromisoformat(date_str)
                     parsed_dates.append(date)
-                except:
+                except Exception:
                     continue
 
             if not parsed_dates:
@@ -231,7 +247,7 @@ class RepositoryAnalyzer:
                 "date_range": {
                     "start": date_range[0].isoformat(),
                     "end": date_range[1].isoformat(),
-                    "total_days": total_days
+                    "total_days": total_days,
                 },
                 "commits_per_day": len(parsed_dates) / max(total_days, 1),
                 "weekday_distribution": {
@@ -241,19 +257,26 @@ class RepositoryAnalyzer:
                     "Thursday": weekday_counts[3],
                     "Friday": weekday_counts[4],
                     "Saturday": weekday_counts[5],
-                    "Sunday": weekday_counts[6]
+                    "Sunday": weekday_counts[6],
                 },
                 "hour_distribution": dict(enumerate(hour_counts)),
-                "most_active_weekday": ["Monday", "Tuesday", "Wednesday", "Thursday",
-                                       "Friday", "Saturday", "Sunday"][weekday_counts.index(max(weekday_counts))],
-                "most_active_hour": hour_counts.index(max(hour_counts))
+                "most_active_weekday": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday",
+                ][weekday_counts.index(max(weekday_counts))],
+                "most_active_hour": hour_counts.index(max(hour_counts)),
             }
 
         except Exception as e:
             logger.warning(f"Failed to analyze commit frequency: {e}")
             return {}
 
-    def analyze_author_contributions(self) -> Dict[str, Any]:
+    def analyze_author_contributions(self) -> dict[str, Any]:
         """Analyze author contributions and statistics."""
         logger.info("\n=== Author Contribution Analysis ===")
 
@@ -265,9 +288,7 @@ class RepositoryAnalyzer:
 
             # Sort authors by commit count
             sorted_authors = sorted(
-                author_stats.items(),
-                key=lambda x: x[1].get('total_commits', 0),
-                reverse=True
+                author_stats.items(), key=lambda x: x[1].get("total_commits", 0), reverse=True
             )
 
             logger.info(f"Total Authors: {len(author_stats)}")
@@ -275,42 +296,46 @@ class RepositoryAnalyzer:
             # Show top contributors
             logger.info("Top Contributors:")
             for i, (author, stats) in enumerate(sorted_authors[:10]):
-                commits = stats.get('total_commits', 0)
-                files = stats.get('total_files', 0)
+                commits = stats.get("total_commits", 0)
+                files = stats.get("total_files", 0)
                 logger.info(f"  {i+1:2d}. {author}: {commits} commits, {files} files")
 
             # Calculate contribution distribution
-            total_commits = sum(stats.get('total_commits', 0) for stats in author_stats.values())
+            total_commits = sum(stats.get("total_commits", 0) for stats in author_stats.values())
 
             contribution_analysis = {
                 "total_authors": len(author_stats),
                 "total_commits": total_commits,
-                "top_contributors": []
+                "top_contributors": [],
             }
 
             for author, stats in sorted_authors[:10]:
-                commits = stats.get('total_commits', 0)
+                commits = stats.get("total_commits", 0)
                 percentage = (commits / total_commits * 100) if total_commits > 0 else 0
 
-                contribution_analysis["top_contributors"].append({
-                    "author": author,
-                    "commits": commits,
-                    "files": stats.get('total_files', 0),
-                    "percentage": round(percentage, 2)
-                })
+                contribution_analysis["top_contributors"].append(
+                    {
+                        "author": author,
+                        "commits": commits,
+                        "files": stats.get("total_files", 0),
+                        "percentage": round(percentage, 2),
+                    }
+                )
 
             # Analyze contribution patterns
             if len(sorted_authors) > 1:
-                top_contributor_commits = sorted_authors[0][1].get('total_commits', 0)
-                contribution_analysis["top_contributor_dominance"] = round(
-                    (top_contributor_commits / total_commits * 100), 2
-                ) if total_commits > 0 else 0
+                top_contributor_commits = sorted_authors[0][1].get("total_commits", 0)
+                contribution_analysis["top_contributor_dominance"] = (
+                    round((top_contributor_commits / total_commits * 100), 2)
+                    if total_commits > 0
+                    else 0
+                )
 
                 # Bus factor (simplified): number of contributors needed for 50% of commits
                 cumulative_commits = 0
                 bus_factor = 0
-                for author, stats in sorted_authors:
-                    cumulative_commits += stats.get('total_commits', 0)
+                for _author, stats in sorted_authors:
+                    cumulative_commits += stats.get("total_commits", 0)
                     bus_factor += 1
                     if cumulative_commits >= total_commits * 0.5:
                         break
@@ -319,58 +344,57 @@ class RepositoryAnalyzer:
 
             result = {
                 "author_statistics": author_stats,
-                "contribution_analysis": contribution_analysis
+                "contribution_analysis": contribution_analysis,
             }
 
-            self.analysis_results['author_contributions'] = result
+            self.analysis_results["author_contributions"] = result
             return result
 
         except Exception as e:
             logger.error(f"✗ Author contribution analysis failed: {e}")
             return {"error": str(e)}
 
-    def analyze_repository_health(self) -> Dict[str, Any]:
+    def analyze_repository_health(self) -> dict[str, Any]:
         """Analyze repository health metrics."""
         logger.info("\n=== Repository Health Analysis ===")
 
-        health_metrics = {
-            "overall_score": 0,
-            "factors": {}
-        }
+        health_metrics = {"overall_score": 0, "factors": {}}
 
         try:
             # Factor 1: Recent activity (last 30 days)
             recent_date = datetime.now() - timedelta(days=30)
             recent_commits = list(self.repo.iter_commits(since=recent_date))
 
-            recent_activity_score = min(len(recent_commits) / 10, 1.0) * 100  # Max 100 for 10+ commits
+            recent_activity_score = (
+                min(len(recent_commits) / 10, 1.0) * 100
+            )  # Max 100 for 10+ commits
             health_metrics["factors"]["recent_activity"] = {
                 "score": round(recent_activity_score, 1),
                 "commits_last_30_days": len(recent_commits),
-                "description": "Recent development activity"
+                "description": "Recent development activity",
             }
 
             # Factor 2: Contributor diversity
-            metadata = self.analysis_results.get('metadata', {})
-            contributors_count = len(metadata.get('contributors', []))
+            metadata = self.analysis_results.get("metadata", {})
+            contributors_count = len(metadata.get("contributors", []))
 
             diversity_score = min(contributors_count / 5, 1.0) * 100  # Max 100 for 5+ contributors
             health_metrics["factors"]["contributor_diversity"] = {
                 "score": round(diversity_score, 1),
                 "total_contributors": contributors_count,
-                "description": "Number of different contributors"
+                "description": "Number of different contributors",
             }
 
             # Factor 3: Commit frequency consistency
-            commit_history = self.analysis_results.get('commit_history', {})
-            commit_stats = commit_history.get('statistics', {})
-            commits_per_day = commit_stats.get('commits_per_day', 0)
+            commit_history = self.analysis_results.get("commit_history", {})
+            commit_stats = commit_history.get("statistics", {})
+            commits_per_day = commit_stats.get("commits_per_day", 0)
 
             frequency_score = min(commits_per_day * 50, 100)  # Max 100 for 2+ commits/day
             health_metrics["factors"]["commit_frequency"] = {
                 "score": round(frequency_score, 1),
                 "commits_per_day": round(commits_per_day, 2),
-                "description": "Consistency of development activity"
+                "description": "Consistency of development activity",
             }
 
             # Calculate overall score
@@ -389,12 +413,16 @@ class RepositoryAnalyzer:
 
             health_metrics["status"] = health_status
 
-            logger.info(f"Overall Health Score: {health_metrics['overall_score']}/100 ({health_status})")
+            logger.info(
+                f"Overall Health Score: {health_metrics['overall_score']}/100 ({health_status})"
+            )
             logger.info("Health Factors:")
             for factor_name, factor_data in health_metrics["factors"].items():
-                logger.info(f"  {factor_name}: {factor_data['score']}/100 - {factor_data['description']}")
+                logger.info(
+                    f"  {factor_name}: {factor_data['score']}/100 - {factor_data['description']}"
+                )
 
-            self.analysis_results['repository_health'] = health_metrics
+            self.analysis_results["repository_health"] = health_metrics
             return health_metrics
 
         except Exception as e:
@@ -409,47 +437,53 @@ class RepositoryAnalyzer:
             "# GitHound Repository Analysis Report",
             f"**Repository:** {self.repo_path}",
             f"**Analysis Date:** {self.analysis_results['analysis_timestamp']}",
-            ""
+            "",
         ]
 
         # Metadata summary
-        metadata = self.analysis_results.get('metadata', {})
-        if metadata and 'error' not in metadata:
-            report_lines.extend([
-                "## Repository Overview",
-                f"- **Total Commits:** {metadata.get if metadata is not None else None('total_commits', 'N/A')}",
-                f"- **Branches:** {metadata.get('total_branches', 'N/A')}",
-                f"- **Tags:** {metadata.get('total_tags', 'N/A')}",
-                f"- **Contributors:** {len(metadata.get('contributors', []))}",
-                f"- **Age:** {metadata.get('age_days', 'N/A')} days",
-                ""
-            ])
+        metadata = self.analysis_results.get("metadata", {})
+        if metadata and "error" not in metadata:
+            report_lines.extend(
+                [
+                    "## Repository Overview",
+                    f"- **Total Commits:** {metadata.get if metadata is not None else None('total_commits', 'N/A')}",
+                    f"- **Branches:** {metadata.get('total_branches', 'N/A')}",
+                    f"- **Tags:** {metadata.get('total_tags', 'N/A')}",
+                    f"- **Contributors:** {len(metadata.get('contributors', []))}",
+                    f"- **Age:** {metadata.get('age_days', 'N/A')} days",
+                    "",
+                ]
+            )
 
         # Health summary
-        health = self.analysis_results.get('repository_health', {})
-        if health and 'error' not in health:
-            report_lines.extend([
-                "## Repository Health",
-                f"- **Overall Score:** {health.get if health is not None else None('overall_score', 'N/A')}/100",
-                f"- **Status:** {health.get('status', 'N/A')}",
-                ""
-            ])
+        health = self.analysis_results.get("repository_health", {})
+        if health and "error" not in health:
+            report_lines.extend(
+                [
+                    "## Repository Health",
+                    f"- **Overall Score:** {health.get if health is not None else None('overall_score', 'N/A')}/100",
+                    f"- **Status:** {health.get('status', 'N/A')}",
+                    "",
+                ]
+            )
 
         # Author contributions
-        contributions = self.analysis_results.get('author_contributions', {})
-        if contributions and 'error' not in contributions:
-            analysis = contributions.get('contribution_analysis', {})
-            top_contributors = analysis.get('top_contributors', [])
+        contributions = self.analysis_results.get("author_contributions", {})
+        if contributions and "error" not in contributions:
+            analysis = contributions.get("contribution_analysis", {})
+            top_contributors = analysis.get("top_contributors", [])
 
             if top_contributors:
-                report_lines.extend([
-                    "## Top Contributors",
-                ])
+                report_lines.extend(
+                    [
+                        "## Top Contributors",
+                    ]
+                )
 
                 for i, contributor in enumerate(top_contributors[:5]):
-                    author = contributor.get('author', 'N/A')
-                    commits = contributor.get('commits', 0)
-                    percentage = contributor.get('percentage', 0)
+                    author = contributor.get("author", "N/A")
+                    commits = contributor.get("commits", 0)
+                    percentage = contributor.get("percentage", 0)
                     report_lines.append(f"{i+1}. **{author}:** {commits} commits ({percentage}%)")
 
                 report_lines.append("")
@@ -501,12 +535,12 @@ async def main() -> None:
 
         # Save results
         output_file = f"repository_analysis_{Path(repo_path).name}.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(analyzer.analysis_results, f, indent=2, default=str)
 
         # Save summary report
         report_file = f"repository_summary_{Path(repo_path).name}.md"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             f.write(summary_report)
 
         print(f"\nDetailed results saved to: {output_file}")
@@ -519,4 +553,5 @@ async def main() -> None:
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

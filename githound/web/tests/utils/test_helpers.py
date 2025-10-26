@@ -3,9 +3,8 @@ Test helper utilities for GitHound web tests.
 """
 
 import asyncio
-import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     from playwright.async_api import Locator, Page, expect
@@ -13,10 +12,13 @@ except ImportError:
     # Mock for type checking when playwright is not available
     class MockLocator:
         pass
+
     class MockPage:
         pass
+
     def mock_expect(*args: Any, **kwargs: Any) -> Any:
         pass
+
     Locator = MockLocator
     Page = MockPage
     expect = mock_expect
@@ -37,7 +39,7 @@ class TestHelpers:
     @staticmethod
     async def wait_for_api_call(
         page: Page, url_pattern: str, timeout: int = 10000
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Wait for a specific API call and return request details."""
         api_call = {}
 
@@ -127,7 +129,7 @@ class TestHelpers:
         return int(count)
 
     @staticmethod
-    async def get_search_result_data(page: Page, index: int = 0) -> Dict[str, str]:
+    async def get_search_result_data(page: Page, index: int = 0) -> dict[str, str]:
         """Get data from a specific search result."""
         result_card = page.locator('[data-testid="result-card"]').nth(index)
 
@@ -144,7 +146,7 @@ class TestHelpers:
         }
 
     @staticmethod
-    async def check_accessibility_violations(page: Page) -> List[Dict[str, Any]]:
+    async def check_accessibility_violations(page: Page) -> list[dict[str, Any]]:
         """Check for accessibility violations using axe-core."""
         try:
             # Inject axe-core
@@ -174,7 +176,7 @@ class TestHelpers:
         return filename
 
     @staticmethod
-    async def get_console_errors(page: Page) -> List[str]:
+    async def get_console_errors(page: Page) -> list[str]:
         """Get console errors from the page."""
         errors = []
 
@@ -188,7 +190,7 @@ class TestHelpers:
     @staticmethod
     async def wait_for_websocket_message(
         page: Page, message_type: str, timeout: int = 10000
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Wait for a specific WebSocket message type."""
         message_received = {}
 
@@ -231,7 +233,7 @@ class TestHelpers:
             # This would need to be implemented with a proxy or browser flags
 
     @staticmethod
-    async def verify_responsive_layout(page: Page, viewport_width: int) -> Dict[str, bool]:
+    async def verify_responsive_layout(page: Page, viewport_width: int) -> dict[str, bool]:
         """Verify responsive layout at given viewport width."""
         await page.set_viewport_size({"width": viewport_width, "height": 720})
 
@@ -265,7 +267,7 @@ class TestHelpers:
         return checks
 
     @staticmethod
-    async def measure_performance_metrics(page: Page) -> Dict[str, float]:
+    async def measure_performance_metrics(page: Page) -> dict[str, float]:
         """Measure page performance metrics."""
         metrics = await page.evaluate(
             """
@@ -288,8 +290,8 @@ class TestHelpers:
 
     @staticmethod
     async def verify_form_validation(
-        page: Page, form_selector: str, required_fields: List[str]
-    ) -> Dict[str, bool]:
+        page: Page, form_selector: str, required_fields: list[str]
+    ) -> dict[str, bool]:
         """Verify form validation for required fields."""
         validation_results = {}
 

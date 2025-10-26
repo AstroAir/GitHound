@@ -1,7 +1,7 @@
 """MCP tools module for GitHound Model Context Protocol server.
 
 This module contains all MCP tool implementations organized by functionality,
-providing 25+ tools for comprehensive Git repository analysis and search.
+providing 29 tools for comprehensive Git repository analysis and search.
 
 Tool Categories:
     - analysis_tools: Repository analysis, commit history, and statistics

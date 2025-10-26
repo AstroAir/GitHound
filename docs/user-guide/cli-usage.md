@@ -19,6 +19,18 @@ githound [GLOBAL_OPTIONS] COMMAND [COMMAND_OPTIONS] [ARGUMENTS]
 
 ## Commands Overview
 
+| Command | Description |
+|---------|-------------|
+| `search` | Search for patterns across Git history |
+| `analyze` | Analyze repository metadata and statistics |
+| `blame` | Analyze file authorship line by line |
+| `diff` | Compare commits, branches, or files |
+| `web` | Start the web interface server |
+| `mcp-server` | Start the MCP server for AI integration |
+| `quickstart` | Interactive quickstart guide |
+| `cleanup` | Clean cache and temporary files |
+| `version` | Show version and build information |
+
 ### Search Command
 
 Search for patterns across Git history:
@@ -37,32 +49,44 @@ githound search --repo-path . --content "function"
 githound search --repo-path . --content "Function" --case-sensitive
 
 # Search in specific file types
-githound search --repo-path . --content "class" --file-extensions py
+githound search --repo-path . --content "class" --ext py
 ```
 
 #### Search Options
 
-- `--repo-path PATH`: Repository path (required)
-- `--content PATTERN`: Content search pattern
-- `--author PATTERN`: Filter by author name/email
-- `--message PATTERN`: Filter by commit message
-- `--date-from DATE`: Start date (YYYY-MM-DD or relative like "7 days ago")
-- `--date-to DATE`: End date
-- `--file-path-pattern PATTERN`: Filter by file path pattern
-- `--file-extensions EXT [EXT ...]`: Filter by file extensions
-- `--branch BRANCH`: Search specific branch
-- `--case-sensitive`: Enable case-sensitive search
-- `--fuzzy-search`: Enable fuzzy matching
-- `--fuzzy-threshold FLOAT`: Fuzzy matching threshold (0.0-1.0)
-- `--max-results INT`: Maximum results to return
-- `--include-globs PATTERN [PATTERN ...]`: Include file patterns
-- `--exclude-globs PATTERN [PATTERN ...]`: Exclude file patterns
-- `--max-results N`: Limit number of results
-- `--fuzzy`: Enable fuzzy search
-- `--fuzzy-threshold FLOAT`: Fuzzy search threshold (0.0-1.0)
-- `--case-sensitive`: Enable case-sensitive search
-- `--export FILE`: Export results to file
-- `--format FORMAT`: Output format (json, yaml, csv, xml, text)
+**Required:**
+
+- `--repo-path, -p PATH`: Repository path (required)
+
+**Search Criteria:**
+
+- `--content, -c PATTERN`: Content search pattern (regex)
+- `--commit HASH`: Search for specific commit hash
+- `--author, -a PATTERN`: Filter by author name/email
+- `--message, -m PATTERN`: Filter by commit message
+- `--date-from DATE`: Start date (YYYY-MM-DD)
+- `--date-to DATE`: End date (YYYY-MM-DD)
+- `--file-path, -f PATTERN`: Filter by file path pattern
+- `--ext EXTENSION`: File extensions to include (e.g., py, js)
+- `--branch, -b BRANCH`: Search specific branch
+
+**Search Behavior:**
+
+- `--fuzzy`: Enable fuzzy matching
+- `--fuzzy-threshold FLOAT`: Fuzzy matching threshold (0.0-1.0, default: 0.8)
+- `--case-sensitive, -s`: Enable case-sensitive search
+- `--include, -i PATTERN`: Glob patterns to include
+- `--exclude, -e PATTERN`: Glob patterns to exclude
+- `--max-file-size BYTES`: Maximum file size in bytes
+- `--max-results INT`: Maximum number of results to return
+
+**Output Options:**
+
+- `--format FORMAT`: Output format (json, yaml, csv, xml, text, default: text)
+- `--output, -o PATH`: Output file path
+- `--details`: Show detailed information in text output
+- `--metadata`: Include commit metadata in JSON output
+- `--no-progress`: Disable progress indicators
 
 ### Analyze Command
 
@@ -79,7 +103,7 @@ githound analyze [OPTIONS] REPOSITORY_PATH
 githound analyze .
 
 # Export analysis results
-githound analyze . --export analysis.json --format json
+githound analyze . --output analysis.json --format json
 
 # Include detailed statistics
 githound analyze . --detailed
@@ -87,18 +111,17 @@ githound analyze . --detailed
 
 #### Analyze Options
 
-- `--detailed`: Include detailed statistics
-- `--export FILE`: Export results to file
-- `--format FORMAT`: Output format
-- `--include-branches`: Include branch analysis
-- `--include-tags`: Include tag analysis
+- `--detailed/--basic`: Include detailed statistics (default: detailed)
+- `--author-stats/--no-author-stats`: Include author statistics (default: enabled)
+- `--output, -o FILE`: Output file path
+- `--format, -f FORMAT`: Output format (text, json, yaml, csv, xml)
 
 ### Blame Command
 
 Analyze file authorship line by line:
 
 ```bash
-githound blame [OPTIONS] REPOSITORY_PATH FILE_PATH
+githound blame [OPTIONS] [REPO_PATH] FILE_PATH
 ```
 
 #### Examples
@@ -107,26 +130,26 @@ githound blame [OPTIONS] REPOSITORY_PATH FILE_PATH
 # Basic blame analysis
 githound blame . src/main.py
 
-# Show author statistics
-githound blame . src/main.py --stats
+# Blame specific commit
+githound blame . src/main.py --commit abc123
 
 # Export blame information
-githound blame . src/main.py --export blame.json
+githound blame . src/main.py --output blame.json --format json
 ```
 
 #### Blame Options
 
-- `--stats`: Show author statistics
-- `--line-range START:END`: Analyze specific line range
-- `--export FILE`: Export results to file
-- `--format FORMAT`: Output format
+- `--commit, -c HASH`: Specific commit to blame (default: HEAD)
+- `--format, -f FORMAT`: Output format (json, yaml, csv, xml, text, default: text)
+- `--output, -o PATH`: Output file path
+- `--line-numbers / --no-line-numbers`: Show line numbers (default: enabled)
 
 ### Diff Command
 
 Compare commits or branches:
 
 ```bash
-githound diff REPOSITORY_PATH FROM_REF TO_REF [OPTIONS]
+githound diff [OPTIONS] [REPO_PATH] FROM_REF TO_REF
 ```
 
 #### Examples
@@ -156,7 +179,7 @@ githound diff . abc123 def456 --file src/main.py
 Start the web interface:
 
 ```bash
-githound web [OPTIONS]
+githound web [OPTIONS] [REPO_PATH]
 ```
 
 #### Examples
@@ -168,26 +191,33 @@ githound web
 # Start on specific host and port
 githound web --host 0.0.0.0 --port 9000
 
-# Start with auto-open browser
+# Start with auto-open browser (default behavior)
 githound web --open
+
+# Start in development mode
+githound web --dev
+
+# Interactive configuration
+githound web --interactive
 ```
 
 #### Web Options
 
-- `--host HOST`: Server host (default: localhost)
-- `--port PORT`: Server port (default: 8000)
-- `--open`: Auto-open browser
-- `--no-reload`: Disable auto-reload
+- `--host, -h HOST`: Host to bind the server (default: localhost)
+- `--port, -p PORT`: Port to bind the server (default: 8000)
+- `--open / --no-open`: Automatically open browser (default: open)
+- `--dev`: Enable development mode with auto-reload
+- `--interactive, -i`: Interactive configuration mode
 
 ### MCP Server Command
 
 Start the MCP (Model Context Protocol) server:
 
 ```bash
-githound mcp-server [OPTIONS]
+githound mcp-server [OPTIONS] [REPO_PATH]
 ```
 
-#### Examples
+#### MCP Server Examples
 
 ```bash
 # Start MCP server on default port
@@ -196,14 +226,15 @@ githound mcp-server
 # Start on specific port
 githound mcp-server --port 4000
 
-# Start MCP server
-githound mcp-server --host localhost --port 3000
+# Start with custom host and logging
+githound mcp-server --host 0.0.0.0 --port 3000 --log-level DEBUG
 ```
 
 #### MCP Server Options
 
-- `--host HOST`: Server host (default: localhost)
-- `--port PORT`: Server port (default: 3000)
+- `--port, -p PORT`: Port to bind the MCP server (default: 3000)
+- `--host, -h HOST`: Host to bind the server (default: localhost)
+- `--log-level LEVEL`: Logging level (default: INFO)
 
 ### Authentication Configuration
 
@@ -444,6 +475,76 @@ githound analyze . --export "health_${DATE}.json"
 githound search "bug\|error\|fix" . --date-from "1 day ago" --export "recent_fixes_${DATE}.json"
 ```
 
+### Quickstart Command
+
+Interactive quickstart guide for new users:
+
+```bash
+githound quickstart [OPTIONS] [REPO_PATH]
+```
+
+#### Quickstart Examples
+
+```bash
+# Run interactive quickstart in current repository
+githound quickstart
+
+# Run quickstart in specific repository
+githound quickstart /path/to/repo
+```
+
+The quickstart command provides a guided tour of GitHound's capabilities and helps you get
+started with common tasks. It includes interactive menus for repository analysis, search,
+blame analysis, diff comparison, and web interface setup.
+
+### Cleanup Command
+
+Clean cache and temporary files:
+
+```bash
+githound cleanup [OPTIONS] [REPO_PATH]
+```
+
+#### Cleanup Examples
+
+```bash
+# Interactive cleanup (default behavior)
+githound cleanup
+
+# Only clean cache files
+githound cleanup --cache-only
+
+# Skip confirmation prompts
+githound cleanup --force
+```
+
+#### Cleanup Options
+
+- `--cache-only`: Only clean cache files, leave other temporary files
+- `--force, -f`: Skip confirmation prompts
+
+### Version Command
+
+Show version and build information:
+
+```bash
+githound version [OPTIONS]
+```
+
+#### Version Examples
+
+```bash
+# Show basic version information
+githound version
+
+# Show detailed build information
+githound version --build-info
+```
+
+#### Version Options
+
+- `--build-info, -b`: Show detailed build information including dependencies and build environment
+
 ## Getting Help
 
 ### Command Help
@@ -456,6 +557,12 @@ githound --help
 githound search --help
 githound analyze --help
 githound blame --help
+githound diff --help
+githound web --help
+githound mcp-server --help
+githound quickstart --help
+githound cleanup --help
+githound version --help
 ```
 
 ### Version Information
@@ -490,7 +597,6 @@ githound --version --verbose
 
 ### Configuration
 
-- **[Configuration Guide](../getting-started/configuration.md)** - Environment setup
 - **[Configuration Guide](../getting-started/configuration.md)** - Complete configuration reference
 
 ### Need Help

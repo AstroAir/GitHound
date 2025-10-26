@@ -293,6 +293,65 @@ Configuration validation includes:
 - **Environment variable parsing**: Proper type conversion and validation
 - **Path validation**: File and directory existence checks
 
+## Authentication Configuration
+
+GitHound MCP Server supports advanced authentication providers for fine-grained access control.
+
+### Permit.io Integration
+
+Configure Role-Based Access Control (RBAC) with Permit.io:
+
+```json
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "GITHOUND_AUTH_PROVIDER": "permit",
+        "PERMIT_API_KEY": "your-permit-api-key",
+        "PERMIT_PROJECT_ID": "your-project-id",
+        "PERMIT_ENVIRONMENT": "production"
+      }
+    }
+  }
+}
+```
+
+### Eunomia Authorization
+
+Configure Attribute-Based Access Control (ABAC) with Eunomia:
+
+```json
+{
+  "mcpServers": {
+    "githound": {
+      "command": "python",
+      "args": ["-m", "githound.mcp_server"],
+      "env": {
+        "GITHOUND_AUTH_PROVIDER": "eunomia",
+        "EUNOMIA_API_ENDPOINT": "https://your-eunomia-instance.com",
+        "EUNOMIA_API_KEY": "your-eunomia-api-key",
+        "EUNOMIA_POLICY_SET": "githound-policies"
+      }
+    }
+  }
+}
+```
+
+### Authentication Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GITHOUND_AUTH_PROVIDER` | Authentication provider (permit/eunomia/none) | `none` |
+| `GITHOUND_AUTH_REQUIRED` | Require authentication for all operations | `false` |
+| `PERMIT_API_KEY` | Permit.io API key | - |
+| `PERMIT_PROJECT_ID` | Permit.io project identifier | - |
+| `PERMIT_ENVIRONMENT` | Permit.io environment (dev/staging/production) | `dev` |
+| `EUNOMIA_API_ENDPOINT` | Eunomia authorization service endpoint | - |
+| `EUNOMIA_API_KEY` | Eunomia API key | - |
+| `EUNOMIA_POLICY_SET` | Eunomia policy set identifier | - |
+
 ## Best Practices
 
 1. **Use MCP.json for client compatibility** - Ensures your configuration works across different MCP clients

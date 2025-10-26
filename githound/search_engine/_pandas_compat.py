@@ -2,17 +2,17 @@
 
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 
 class MockSeries:
     """Mock pandas Series for basic functionality."""
 
-    def __init__(self, data: List[Any], index: Optional[List[Any]] = None) -> None:
+    def __init__(self, data: list[Any], index: list[Any] | None = None) -> None:
         self.data = data
         self.index = index or list(range(len(data)))
 
-    def value_counts(self) -> Dict[Any, int]:
+    def value_counts(self) -> dict[Any, int]:
         """Return value counts as a dictionary."""
         return dict(Counter(self.data))
 
@@ -22,12 +22,12 @@ class MockSeries:
 
     def mean(self) -> float:
         """Calculate mean of numeric data."""
-        numeric_data = [x for x in self.data if isinstance(x, (int, float))]
+        numeric_data = [x for x in self.data if isinstance(x, int | float)]
         return sum(numeric_data) / len(numeric_data) if numeric_data else 0.0
 
     def median(self) -> float:
         """Calculate median of numeric data."""
-        numeric_data = sorted([x for x in self.data if isinstance(x, (int, float))])
+        numeric_data = sorted([x for x in self.data if isinstance(x, int | float)])
         n = len(numeric_data)
         if n == 0:
             return 0.0
@@ -37,7 +37,7 @@ class MockSeries:
 
     def std(self) -> float:
         """Calculate standard deviation."""
-        numeric_data = [x for x in self.data if isinstance(x, (int, float))]
+        numeric_data = [x for x in self.data if isinstance(x, int | float)]
         if len(numeric_data) < 2:
             return 0.0
         mean_val = sum(numeric_data) / len(numeric_data)
@@ -46,12 +46,12 @@ class MockSeries:
 
     def min(self) -> Any:
         """Return minimum value."""
-        numeric_data = [x for x in self.data if isinstance(x, (int, float))]
+        numeric_data = [x for x in self.data if isinstance(x, int | float)]
         return min(numeric_data) if numeric_data else None
 
     def max(self) -> Any:
         """Return maximum value."""
-        numeric_data = [x for x in self.data if isinstance(x, (int, float))]
+        numeric_data = [x for x in self.data if isinstance(x, int | float)]
         return max(numeric_data) if numeric_data else None
 
     def nunique(self) -> int:
@@ -62,7 +62,7 @@ class MockSeries:
         """Return boolean series indicating non-null values."""
         return MockSeries([x is not None for x in self.data])
 
-    def sum(self) -> Union[int, float]:
+    def sum(self) -> int | float:
         """Sum of values."""
         return sum(1 for x in self.data if x)
 
@@ -75,15 +75,15 @@ class MockSeries:
         """Return True if any value is True."""
         return any(self.data)
 
-    def to_dict(self) -> Dict[Any, Any]:
+    def to_dict(self) -> dict[Any, Any]:
         """Convert to dictionary."""
-        return dict(zip(self.index, self.data))
+        return dict(zip(self.index, self.data, strict=False))
 
 
 class MockDataFrame:
     """Mock pandas DataFrame for basic functionality."""
 
-    def __init__(self, data: Optional[List[Dict[str, Any]]] = None) -> None:
+    def __init__(self, data: list[dict[str, Any]] | None = None) -> None:
         self.data = data or []
         self._columns = list(self.data[0].keys()) if self.data else []
 
@@ -100,7 +100,7 @@ class MockDataFrame:
         """Check if DataFrame is empty."""
         return len(self.data) == 0
 
-    def groupby(self, by: Union[str, List[str]]) -> "MockGroupBy":
+    def groupby(self, by: str | list[str]) -> "MockGroupBy":
         """Group by column(s)."""
         return MockGroupBy(self, by)
 
@@ -108,7 +108,7 @@ class MockDataFrame:
 class MockGroupBy:
     """Mock pandas GroupBy for basic functionality."""
 
-    def __init__(self, df: MockDataFrame, by: Union[str, List[str]]) -> None:
+    def __init__(self, df: MockDataFrame, by: str | list[str]) -> None:
         self.df = df
         self.by = by if isinstance(by, list) else [by]
 
@@ -120,15 +120,15 @@ class MockGroupBy:
             groups[key] += 1
         return MockSeries(list(groups.values()), list(groups.keys()))
 
-    def agg(self, agg_dict: Dict[str, str]) -> MockDataFrame:
+    def agg(self, agg_dict: dict[str, str]) -> MockDataFrame:
         """Aggregate using dictionary."""
         # Simplified aggregation - just return the original data
         return self.df
 
 
-def to_datetime(data: List[Any]) -> MockSeries:
+def to_datetime(data: list[Any]) -> MockSeries:
     """Mock pandas to_datetime function."""
-    converted: List[Optional[datetime]] = []
+    converted: list[datetime | None] = []
     for item in data:
         if isinstance(item, datetime):
             converted.append(item)
@@ -138,7 +138,7 @@ def to_datetime(data: List[Any]) -> MockSeries:
             # Try to convert string to datetime
             try:
                 converted.append(datetime.fromisoformat(str(item)))
-            except:
+            except Exception:
                 converted.append(None)
     return MockSeries(converted)
 

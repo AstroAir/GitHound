@@ -8,12 +8,11 @@ from fastmcp import Context
 from git import GitCommandError
 
 from ...git_handler import get_repository
-from ...models import SearchQuery, SearchResult
+from ...models import SearchQuery
 from ...search_engine import (
     SearchEngineFactory,
     SearchOrchestrator,
     create_search_orchestrator,
-    get_global_analytics,
     get_global_registry,
 )
 from ..models import (
@@ -86,15 +85,16 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
             max_commit_size=input_data.max_commit_size,
         )
 
-        # Perform search
+        # Perform search with progress reporting
         results: list[Any] = []
         result_count = 0
+        max_results = input_data.max_results
 
         async for result in orchestrator.search(
             repo=repo,
             query=query,
             branch=input_data.branch,
-            max_results=input_data.max_results,
+            max_results=max_results,
         ):
             results.append(
                 {
@@ -127,7 +127,13 @@ async def advanced_search(input_data: AdvancedSearchInput, ctx: Context) -> dict
             )
             result_count += 1
 
+            # Report progress with FastMCP 2.x context
             if result_count % 10 == 0:
+                await ctx.report_progress(
+                    progress=result_count,
+                    total=max_results,
+                    message=f"Found {result_count} results",
+                )
                 await ctx.info(f"Found {result_count} results so far...")
 
         await ctx.info(f"Advanced search complete: {len(results)} results found")
@@ -438,42 +444,37 @@ async def get_search_analytics(
     try:
         await ctx.info("Retrieving search analytics data")
 
-        analytics = get_global_analytics()
-
-        # Get performance metrics
-        from datetime import timedelta
-
-        time_range = timedelta(hours=input_data.time_range_hours)
-
+        # Note: Global analytics functionality not yet implemented
+        # Returning basic placeholder data
         result = {
             "status": "success",
             "query_timestamp": datetime.now().isoformat(),
             "time_range_hours": input_data.time_range_hours,
+            "message": "Analytics feature is not yet fully implemented",
         }
 
         if input_data.include_performance:
-            performance_metrics = await analytics.get_performance_metrics(time_range)
             result["performance_metrics"] = {
-                "total_searches": performance_metrics.total_searches,
-                "avg_duration_ms": performance_metrics.avg_duration_ms,
-                "median_duration_ms": performance_metrics.median_duration_ms,
-                "p95_duration_ms": performance_metrics.p95_duration_ms,
-                "avg_results_per_search": performance_metrics.avg_results_per_search,
-                "cache_hit_rate": performance_metrics.cache_hit_rate,
-                "error_rate": performance_metrics.error_rate,
-                "avg_memory_usage_mb": performance_metrics.avg_memory_usage_mb,
-                "peak_concurrent_searches": performance_metrics.peak_concurrent_searches,
+                "total_searches": 0,
+                "avg_duration_ms": 0.0,
+                "median_duration_ms": 0.0,
+                "p95_duration_ms": 0.0,
+                "avg_results_per_search": 0.0,
+                "cache_hit_rate": 0.0,
+                "error_rate": 0.0,
+                "avg_memory_usage_mb": 0.0,
+                "peak_concurrent_searches": 0,
             }
 
         if input_data.include_usage_patterns:
-            usage_patterns = await analytics.get_usage_patterns()
-            result["usage_patterns"] = usage_patterns
+            result["usage_patterns"] = {}
 
         # Get optimization recommendations
-        recommendations = await analytics.get_optimization_recommendations()
-        result["optimization_recommendations"] = recommendations
+        result["optimization_recommendations"] = []
 
-        await ctx.info(f"Analytics retrieved for {input_data.time_range_hours} hour period")
+        await ctx.info(
+            f"Analytics placeholder returned for {input_data.time_range_hours} hour period"
+        )
 
         return result
 
@@ -723,8 +724,8 @@ async def analyze_statistics(input_data: StatisticalAnalysisInput, ctx: Context)
             # result_dict is already dict[str, Any] from the search results
             if input_data.group_by == "author" and result_dict.get("commit_info"):
                 commit_info = result_dict.get("commit_info")
-                if isinstance(commit_info, dict) and commit_info.get('author_name'):
-                    key = commit_info.get('author_name') or "unknown"
+                if isinstance(commit_info, dict) and commit_info.get("author_name"):
+                    key = commit_info.get("author_name") or "unknown"
                 else:
                     key = "unknown"
             elif input_data.group_by == "file" and result_dict.get("file_path"):

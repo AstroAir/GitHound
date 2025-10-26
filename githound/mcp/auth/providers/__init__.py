@@ -1,5 +1,3 @@
-from typing import Optional
-
 """Authentication providers for GitHound MCP server."""
 
 from .base import AuthProvider

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Script to validate links and cross-references in GitHound documentation.
 
@@ -11,11 +10,11 @@ Note: This script is now integrated with the comprehensive validation script
 
 import re
 import sys
-import urllib.parse
-from pathlib import Path
-from typing import List, Dict, Set, Tuple
-import urllib.request
 import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
 
 class LinkValidator:
     """Validates links and cross-references in documentation."""
@@ -27,7 +26,7 @@ class LinkValidator:
         self.checked_links = 0
         self.external_cache = {}  # Cache for external URL checks
 
-    def find_markdown_files(self) -> List[Path]:
+    def find_markdown_files(self) -> list[Path]:
         """Find all markdown files in the project."""
         markdown_files = []
 
@@ -37,14 +36,14 @@ class LinkValidator:
         for doc_dir in doc_dirs:
             doc_path = self.project_root / doc_dir
             if doc_path.exists():
-                if doc_path.is_file() and doc_path.suffix == '.md':
+                if doc_path.is_file() and doc_path.suffix == ".md":
                     markdown_files.append(doc_path)
                 elif doc_path.is_dir():
                     markdown_files.extend(doc_path.rglob("*.md"))
 
         return list(set(markdown_files))  # Remove duplicates
 
-    def extract_links(self, file_path: Path) -> List[Tuple[str, str, int]]:
+    def extract_links(self, file_path: Path) -> list[tuple[str, str, int]]:
         """
         Extract links from a markdown file.
 
@@ -54,18 +53,18 @@ class LinkValidator:
         links = []
 
         try:
-            content = file_path.read_text(encoding='utf-8')
+            content = file_path.read_text(encoding="utf-8")
         except Exception as e:
             self.warnings.append(f"Could not read {file_path}: {e}")
             return links
 
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Patterns for different link types
         patterns = [
-            r'\[([^\]]*)\]\(([^)]+)\)',  # [text](url)
-            r'<([^>]+)>',               # <url>
-            r'href=["\']([^"\']+)["\']', # href="url"
+            r"\[([^\]]*)\]\(([^)]+)\)",  # [text](url)
+            r"<([^>]+)>",  # <url>
+            r'href=["\']([^"\']+)["\']',  # href="url"
         ]
 
         for line_num, line in enumerate(lines, 1):
@@ -86,21 +85,21 @@ class LinkValidator:
 
     def is_external_url(self, url: str) -> bool:
         """Check if URL is external (starts with http/https)."""
-        return url.startswith(('http://', 'https://'))
+        return url.startswith(("http://", "https://"))
 
     def is_anchor_link(self, url: str) -> bool:
         """Check if URL is an anchor link (starts with #)."""
-        return url.startswith('#')
+        return url.startswith("#")
 
     def is_email_link(self, url: str) -> bool:
         """Check if URL is an email link (starts with mailto:)."""
-        return url.startswith('mailto:')
+        return url.startswith("mailto:")
 
     def resolve_relative_path(self, base_file: Path, relative_url: str) -> Path:
         """Resolve relative path from base file."""
         # Remove anchor if present
-        if '#' in relative_url:
-            relative_url = relative_url.split('#')[0]
+        if "#" in relative_url:
+            relative_url = relative_url.split("#")[0]
 
         if not relative_url:  # Just an anchor
             return base_file
@@ -122,7 +121,7 @@ class LinkValidator:
 
             # Check if it's a directory with index file
             if resolved_path.is_dir():
-                index_files = ['index.md', 'README.md', 'index.html']
+                index_files = ["index.md", "README.md", "index.html"]
                 for index_file in index_files:
                     if (resolved_path / index_file).exists():
                         return True
@@ -140,10 +139,7 @@ class LinkValidator:
 
         try:
             # Create request with user agent
-            req = urllib.request.Request(
-                url,
-                headers={'User-Agent': 'GitHound Link Validator'}
-            )
+            req = urllib.request.Request(url, headers={"User-Agent": "GitHound Link Validator"})
 
             with urllib.request.urlopen(req, timeout=10) as response:
                 success = response.getcode() < 400
@@ -167,19 +163,23 @@ class LinkValidator:
             if self.is_email_link(link_url):
                 continue  # Skip email links
 
-            if link_url.startswith('javascript:'):
+            if link_url.startswith("javascript:"):
                 continue  # Skip JavaScript links
 
             # Check anchor links (just validate format)
             if self.is_anchor_link(link_url):
-                if not re.match(r'^#[a-zA-Z0-9_-]+$', link_url):
-                    self.warnings.append(f"Malformed anchor link '{link_url}' in {file_path}:{line_num}")
+                if not re.match(r"^#[a-zA-Z0-9_-]+$", link_url):
+                    self.warnings.append(
+                        f"Malformed anchor link '{link_url}' in {file_path}:{line_num}"
+                    )
                 continue
 
             # Check external URLs
             if self.is_external_url(link_url):
                 if not self.check_external_url(link_url):
-                    self.warnings.append(f"External URL not accessible: '{link_url}' in {file_path}:{line_num}")
+                    self.warnings.append(
+                        f"External URL not accessible: '{link_url}' in {file_path}:{line_num}"
+                    )
                 continue
 
             # Check internal links
@@ -195,18 +195,18 @@ class LinkValidator:
         for file_path in markdown_files:
             relative_path = file_path.relative_to(self.project_root)
             available_files.add(str(relative_path))
-            available_files.add(str(relative_path).replace('\\', '/'))  # Windows compatibility
+            available_files.add(str(relative_path).replace("\\", "/"))  # Windows compatibility
 
         # Check for references to documentation sections
         common_refs = [
-            'docs/getting-started/installation.md',
-            'docs/getting-started/configuration.md',
-            'docs/user-guide/cli-usage.md',
-            'docs/api-reference/rest-api.md',
-            'docs/mcp-server/README.md',
-            'docs/development/contributing.md',
-            'README.md',
-            'CHANGELOG.md'
+            "docs/getting-started/installation.md",
+            "docs/getting-started/configuration.md",
+            "docs/user-guide/cli-usage.md",
+            "docs/api-reference/rest-api.md",
+            "docs/mcp-server/README.md",
+            "docs/development/contributing.md",
+            "README.md",
+            "CHANGELOG.md",
         ]
 
         for ref in common_refs:
@@ -233,18 +233,18 @@ class LinkValidator:
         self.check_cross_references()
 
         # Print results
-        print(f"\n📊 Validation Results:")
+        print("\n📊 Validation Results:")
         print(f"   Links checked: {self.checked_links}")
         print(f"   Errors: {len(self.errors)}")
         print(f"   Warnings: {len(self.warnings)}")
 
         if self.errors:
-            print(f"\n❌ Errors:")
+            print("\n❌ Errors:")
             for error in self.errors:
                 print(f"   {error}")
 
         if self.warnings:
-            print(f"\n⚠️  Warnings:")
+            print("\n⚠️  Warnings:")
             for warning in self.warnings:
                 print(f"   {warning}")
 

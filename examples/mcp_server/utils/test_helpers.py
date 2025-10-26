@@ -8,12 +8,12 @@ common testing patterns.
 
 import asyncio
 import json
-import tempfile
+import logging
 import subprocess
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, cast, Tuple, Any
-import logging
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +34,13 @@ class MockGitRepository:
         self.authors = [
             {"name": "Alice Developer", "email": "alice@example.com"},
             {"name": "Bob Coder", "email": "bob@example.com"},
-            {"name": "Carol Contributor", "email": "carol@example.com"}
+            {"name": "Carol Contributor", "email": "carol@example.com"},
         ]
         self.files = ["README.md", "src/main.py", "tests/test_main.py", "setup.py"]
         self.branches = ["main", "develop", "feature/new-feature"]
         self.tags = ["v1.0.0", "v1.1.0", "v2.0.0"]
 
-    def generate_commits(self) -> List[Dict[str, Any]]:
+    def generate_commits(self) -> list[dict[str, Any]]:
         """Generate mock commit data."""
         commits: list[Any] = []
         base_date = datetime.now() - timedelta(days=self.commit_count)
@@ -49,20 +49,22 @@ class MockGitRepository:
             author = self.authors[i % len(self.authors)]
             commit_date = base_date + timedelta(days=i)
 
-            commits.append({
-                "hash": f"commit_hash_{i:03d}",
-                "author": author["name"],
-                "author_email": author["email"],
-                "date": commit_date.isoformat if commit_date is not None else None(),
-                "message": f"Commit message {i}",
-                "files_changed": min(3, len(self.files)),
-                "insertions": 10 + (i * 2),
-                "deletions": 2 + i
-            })
+            commits.append(
+                {
+                    "hash": f"commit_hash_{i:03d}",
+                    "author": author["name"],
+                    "author_email": author["email"],
+                    "date": commit_date.isoformat if commit_date is not None else None(),
+                    "message": f"Commit message {i}",
+                    "files_changed": min(3, len(self.files)),
+                    "insertions": 10 + (i * 2),
+                    "deletions": 2 + i,
+                }
+            )
 
         return commits
 
-    def generate_author_stats(self) -> Dict[str, Any]:
+    def generate_author_stats(self) -> dict[str, Any]:
         """Generate mock author statistics."""
         commits = self.generate_commits()
         author_stats: dict[str, Any] = {}
@@ -76,33 +78,32 @@ class MockGitRepository:
                     "commits": 0,
                     "insertions": 0,
                     "deletions": 0,
-                    "files_modified": set()
+                    "files_modified": set(),
                 }
 
             stats = author_stats[author_key]
             stats["commits"] += 1
             stats["insertions"] += commit["insertions"]
             stats["deletions"] += commit["deletions"]
-            stats["files_modified"].update(self.files[:commit["files_changed"]])
+            stats["files_modified"].update(self.files[: commit["files_changed"]])
 
         # Convert sets to counts
         authors: list[Any] = []
         for stats in author_stats.values():
-            authors.append({
-                "name": stats["name"],
-                "email": stats["email"],
-                "commits": stats["commits"],
-                "insertions": stats["insertions"],
-                "deletions": stats["deletions"],
-                "files_modified": len(stats["files_modified"])
-            })
+            authors.append(
+                {
+                    "name": stats["name"],
+                    "email": stats["email"],
+                    "commits": stats["commits"],
+                    "insertions": stats["insertions"],
+                    "deletions": stats["deletions"],
+                    "files_modified": len(stats["files_modified"]),
+                }
+            )
 
-        return {
-            "total_authors": len(authors),
-            "authors": authors
-        }
+        return {"total_authors": len(authors), "authors": authors}
 
-    def generate_repository_info(self) -> Dict[str, Any]:
+    def generate_repository_info(self) -> dict[str, Any]:
         """Generate mock repository information."""
         commits = self.generate_commits()
 
@@ -115,14 +116,14 @@ class MockGitRepository:
             "branches": self.branches,
             "tags": self.tags,
             "first_commit_date": commits[0]["date"] if commits else None,
-            "last_commit_date": commits[-1]["date"] if commits else None
+            "last_commit_date": commits[-1]["date"] if commits else None,
         }
 
 
 class MockMCPClient:
     """Mock MCP client for testing."""
 
-    def __init__(self, mock_data: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, mock_data: dict[str, Any] | None = None) -> None:
         """
         Initialize mock MCP client.
 
@@ -130,7 +131,7 @@ class MockMCPClient:
             mock_data: Optional mock data to return
         """
         self.mock_data = mock_data or {}
-        self.call_history: List[Tuple[str, Dict[str, Any]]] = []
+        self.call_history: list[tuple[str, dict[str, Any]]] = []
         self.connected = False
 
     async def __aenter__(self) -> None:
@@ -142,17 +143,23 @@ class MockMCPClient:
         """Async context manager exit."""
         self.connected = False
 
-    async def list_tools(self) -> List[Dict[str, Any]]:
+    async def list_tools(self) -> list[dict[str, Any]]:
         """Mock list_tools implementation."""
         self.call_history.append(("list_tools", {}))
 
-        return cast(List[Dict[str, Any]], self.mock_data.get("tools", [
-            {"name": "echo", "description": "Echo a message"},
-            {"name": "add_numbers", "description": "Add two numbers"},
-            {"name": "get_server_info", "description": "Get server information"}
-        ]))
+        return cast(
+            list[dict[str, Any]],
+            self.mock_data.get(
+                "tools",
+                [
+                    {"name": "echo", "description": "Echo a message"},
+                    {"name": "add_numbers", "description": "Add two numbers"},
+                    {"name": "get_server_info", "description": "Get server information"},
+                ],
+            ),
+        )
 
-    async def call_tool(self, name: str, args: Dict[str, Any]) -> Any:
+    async def call_tool(self, name: str, args: dict[str, Any]) -> Any:
         """Mock call_tool implementation."""
         self.call_history.append(("call_tool", {"name": name, "args": args}))
 
@@ -168,16 +175,22 @@ class MockMCPClient:
         else:
             raise ValueError(f"Unknown tool: {name}")
 
-    async def list_resources(self) -> List[Dict[str, Any]]:
+    async def list_resources(self) -> list[dict[str, Any]]:
         """Mock list_resources implementation."""
         self.call_history.append(("list_resources", {}))
 
-        return cast(List[Dict[str, Any]], self.mock_data.get("resources", [
-            {"uri": "mock://server/info", "name": "Server Info"},
-            {"uri": "mock://config/settings", "name": "Configuration"}
-        ]))
+        return cast(
+            list[dict[str, Any]],
+            self.mock_data.get(
+                "resources",
+                [
+                    {"uri": "mock://server/info", "name": "Server Info"},
+                    {"uri": "mock://config/settings", "name": "Configuration"},
+                ],
+            ),
+        )
 
-    async def read_resource(self, uri: str) -> List[Dict[str, Any]]:
+    async def read_resource(self, uri: str) -> list[dict[str, Any]]:
         """Mock read_resource implementation."""
         self.call_history.append(("read_resource", {"uri": uri}))
 
@@ -196,7 +209,7 @@ class MockMCPClient:
 class MockToolResult:
     """Mock tool result object."""
 
-    def __init__(self, data: Any, content: Optional[List[Any]] = None) -> None:
+    def __init__(self, data: Any, content: list[Any] | None = None) -> None:
         """
         Initialize mock tool result.
 
@@ -225,7 +238,7 @@ class TestDataGenerator:
     """Generate test data for various scenarios."""
 
     @staticmethod
-    def generate_large_commit_history(count: int = 1000) -> List[Dict[str, Any]]:
+    def generate_large_commit_history(count: int = 1000) -> list[dict[str, Any]]:
         """
         Generate large commit history for performance testing.
 
@@ -242,28 +255,30 @@ class TestDataGenerator:
             "Bob Coder <bob@example.com>",
             "Carol Contributor <carol@example.com>",
             "Dave Designer <dave@example.com>",
-            "Eve Engineer <eve@example.com>"
+            "Eve Engineer <eve@example.com>",
         ]
 
         for i in range(count):
             author = authors[i % len(authors)]
             commit_date = base_date + timedelta(hours=i * 2)
 
-            commits.append({
-                "hash": f"large_commit_{i:06d}",
-                "author": author.split if author is not None else None(" <")[0],
-                "author_email": author.split(" <")[1].rstrip(">"),
-                "date": commit_date.isoformat(),
-                "message": f"Large test commit {i}: Implement feature {i % 10}",
-                "files_changed": (i % 5) + 1,
-                "insertions": (i % 50) + 10,
-                "deletions": (i % 20) + 2
-            })
+            commits.append(
+                {
+                    "hash": f"large_commit_{i:06d}",
+                    "author": author.split if author is not None else None(" <")[0],
+                    "author_email": author.split(" <")[1].rstrip(">"),
+                    "date": commit_date.isoformat(),
+                    "message": f"Large test commit {i}: Implement feature {i % 10}",
+                    "files_changed": (i % 5) + 1,
+                    "insertions": (i % 50) + 10,
+                    "deletions": (i % 20) + 2,
+                }
+            )
 
         return commits
 
     @staticmethod
-    def generate_complex_repository_structure() -> Dict[str, Any]:
+    def generate_complex_repository_structure() -> dict[str, Any]:
         """
         Generate complex repository structure for testing.
 
@@ -277,12 +292,23 @@ class TestDataGenerator:
             "total_files": 150,
             "total_authors": 25,
             "branches": [
-                "main", "develop", "release/v2.0", "feature/authentication",
-                "feature/api-redesign", "hotfix/security-patch", "experimental/ml-integration"
+                "main",
+                "develop",
+                "release/v2.0",
+                "feature/authentication",
+                "feature/api-redesign",
+                "hotfix/security-patch",
+                "experimental/ml-integration",
             ],
             "tags": [
-                "v1.0.0", "v1.1.0", "v1.2.0", "v1.3.0", "v2.0.0-alpha",
-                "v2.0.0-beta", "v2.0.0-rc1", "v2.0.0"
+                "v1.0.0",
+                "v1.1.0",
+                "v1.2.0",
+                "v1.3.0",
+                "v2.0.0-alpha",
+                "v2.0.0-beta",
+                "v2.0.0-rc1",
+                "v2.0.0",
             ],
             "languages": {
                 "Python": 45.2,
@@ -290,13 +316,22 @@ class TestDataGenerator:
                 "TypeScript": 15.3,
                 "HTML": 8.1,
                 "CSS": 3.9,
-                "Shell": 1.7
+                "Shell": 1.7,
             },
             "directories": [
-                "src/", "tests/", "docs/", "scripts/", "config/",
-                "src/api/", "src/frontend/", "src/backend/", "src/shared/",
-                "tests/unit/", "tests/integration/", "tests/e2e/"
-            ]
+                "src/",
+                "tests/",
+                "docs/",
+                "scripts/",
+                "config/",
+                "src/api/",
+                "src/frontend/",
+                "src/backend/",
+                "src/shared/",
+                "tests/unit/",
+                "tests/integration/",
+                "tests/e2e/",
+            ],
         }
 
 
@@ -311,8 +346,8 @@ class PerformanceTimer:
             name: Name of the operation being timed
         """
         self.name = name
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
 
     def __enter__(self) -> "PerformanceTimer":
         """Context manager entry."""
@@ -323,7 +358,7 @@ class PerformanceTimer:
         self,
         _exc_type: type[BaseException] | None,
         _exc_val: BaseException | None,
-        _exc_tb: object | None
+        _exc_tb: object | None,
     ) -> None:
         """Context manager exit."""
         self.end_time = asyncio.get_event_loop().time()
@@ -349,7 +384,7 @@ class PerformanceTimer:
 class GitRepositoryBuilder:
     """Builder for creating test Git repositories."""
 
-    def __init__(self, temp_dir: Optional[Path] = None) -> None:
+    def __init__(self, temp_dir: Path | None = None) -> None:
         """
         Initialize Git repository builder.
 
@@ -357,9 +392,9 @@ class GitRepositoryBuilder:
             temp_dir: Optional temporary directory to use
         """
         self.temp_dir = temp_dir or Path(tempfile.mkdtemp())
-        self.repo_path: Optional[Path] = None
-        self.commits: List[Dict[str, Any]] = []
-        self.files: List[str] = []
+        self.repo_path: Path | None = None
+        self.commits: list[dict[str, Any]] = []
+        self.files: list[str] = []
 
     def create_repository(self, name: str = "test-repo") -> "GitRepositoryBuilder":
         """
@@ -376,8 +411,12 @@ class GitRepositoryBuilder:
 
         # Initialize Git repository
         subprocess.run(["git", "init"], cwd=self.repo_path, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], cwd=self.repo_path, check=True)  # [attr-defined]
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.repo_path, check=True)  # [attr-defined]
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"], cwd=self.repo_path, check=True
+        )  # [attr-defined]
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"], cwd=self.repo_path, check=True
+        )  # [attr-defined]
 
         return self
 
@@ -403,7 +442,7 @@ class GitRepositoryBuilder:
         self.files.append(file_path)
         return self
 
-    def commit(self, message: str, author: Optional[str] = None) -> "GitRepositoryBuilder":
+    def commit(self, message: str, author: str | None = None) -> "GitRepositoryBuilder":
         """
         Create a commit with current changes.
 
@@ -434,15 +473,17 @@ class GitRepositoryBuilder:
             cwd=self.repo_path,
             check=True,
             capture_output=True,
-            text=True
+            text=True,
         )
         commit_hash = result.stdout.strip()
 
-        self.commits.append({
-            "hash": commit_hash,
-            "message": message,
-            "author": author or "Test User <test@example.com>"
-        })
+        self.commits.append(
+            {
+                "hash": commit_hash,
+                "message": message,
+                "author": author or "Test User <test@example.com>",
+            }
+        )
 
         return self
 
@@ -460,7 +501,12 @@ class GitRepositoryBuilder:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
 
-        subprocess.run(["git", "checkout", "-b", branch_name], cwd=self.repo_path, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "checkout", "-b", branch_name],
+            cwd=self.repo_path,
+            check=True,
+            capture_output=True,
+        )
         return self
 
     def checkout_branch(self, branch_name: str) -> "GitRepositoryBuilder":
@@ -477,10 +523,12 @@ class GitRepositoryBuilder:
             raise ValueError("Repository not created. Call create_repository() first.")
         assert self.repo_path is not None
 
-        subprocess.run(["git", "checkout", branch_name], cwd=self.repo_path, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "checkout", branch_name], cwd=self.repo_path, check=True, capture_output=True
+        )
         return self
 
-    def create_tag(self, tag_name: str, message: Optional[str] = None) -> "GitRepositoryBuilder":
+    def create_tag(self, tag_name: str, message: str | None = None) -> "GitRepositoryBuilder":
         """
         Create a Git tag.
 
@@ -526,20 +574,24 @@ def create_sample_repository() -> Path:
     """
     builder = GitRepositoryBuilder()
 
-    repo_path = (builder
-                 .create_repository("sample-repo")
-                 .add_file("README.md", "# Sample Repository\n\nThis is a sample repository for testing.")
-                 .add_file("src/main.py", "#!/usr/bin/env python3\nprint('Hello, World!')\n")
-                 .commit("Initial commit")
-                 .add_file("src/utils.py", "def helper_function() -> None:\n    return 'helper'\n")
-                 .commit("Add utility functions")
-                 .add_file("tests/test_main.py", "import unittest\n\nclass TestMain(unittest.TestCase):\n    pass\n")
-                 .commit("Add tests")
-                 .create_branch("feature/new-feature")
-                 .add_file("src/feature.py", "def new_feature() -> None:\n    return 'new feature'\n")
-                 .commit("Implement new feature")
-                 .checkout_branch("main")
-                 .create_tag("v1.0.0", "Version 1.0.0 release")
-                 .get_path())
+    repo_path = (
+        builder.create_repository("sample-repo")
+        .add_file("README.md", "# Sample Repository\n\nThis is a sample repository for testing.")
+        .add_file("src/main.py", "#!/usr/bin/env python3\nprint('Hello, World!')\n")
+        .commit("Initial commit")
+        .add_file("src/utils.py", "def helper_function() -> None:\n    return 'helper'\n")
+        .commit("Add utility functions")
+        .add_file(
+            "tests/test_main.py",
+            "import unittest\n\nclass TestMain(unittest.TestCase):\n    pass\n",
+        )
+        .commit("Add tests")
+        .create_branch("feature/new-feature")
+        .add_file("src/feature.py", "def new_feature() -> None:\n    return 'new feature'\n")
+        .commit("Implement new feature")
+        .checkout_branch("main")
+        .create_tag("v1.0.0", "Version 1.0.0 release")
+        .get_path()
+    )
 
     return repo_path

@@ -1,7 +1,5 @@
 """Temporal and historical analysis searchers for GitHound."""
 
-import asyncio
-from collections import defaultdict
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -15,9 +13,9 @@ except ImportError:
     HAS_PANDAS = False
     from ._pandas_compat import mock_pd
 
-    pd = mock_pd  # type: ignore[assignment]
+    pd = mock_pd  # type: ignore[assignment]  # MockPandas provides pandas-like interface
 
-from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
+from ..models import SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
 
 
@@ -103,9 +101,15 @@ class HistorySearcher(CacheableSearcher):
         until = query.date_to
 
         commits_processed = 0
+        max_commits = min(query.max_results or 3000, 3000)  # Use query limit if available
+
+        # Optimize: Use streaming approach - process commits in batches
+        batch_size = 100
+        current_batch = []
+
         for commit in context.repo.iter_commits(branch, since=since, until=until):
             commits_processed += 1
-            if commits_processed > 3000:  # Limit for performance
+            if commits_processed > max_commits:
                 break
 
             commit_date = datetime.fromtimestamp(commit.committed_date)
@@ -127,7 +131,16 @@ class HistorySearcher(CacheableSearcher):
                 "year": commit_date.year,
                 "quarter": (commit_date.month - 1) // 3 + 1,
             }
-            commits_data.append(commit_info)
+            current_batch.append(commit_info)
+
+            # Process in batches to reduce memory pressure
+            if len(current_batch) >= batch_size:
+                commits_data.extend(current_batch)
+                current_batch = []
+
+        # Add remaining commits
+        if current_batch:
+            commits_data.extend(current_batch)
 
         # Collect tag information for release analysis
         try:

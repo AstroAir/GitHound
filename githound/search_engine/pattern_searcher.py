@@ -170,17 +170,35 @@ class CodePatternSearcher(CacheableSearcher):
         commits_processed = 0
         files_analyzed = 0
 
+        # Optimization: Build set of supported file extensions once
+        supported_extensions = set()
+        for pattern_info in self._pattern_definitions.values():
+            supported_extensions.update(pattern_info.get("file_types", []))
+
+        # Optimization: Add max results limit
+        max_results = context.query.max_results if context.query.max_results else 1000
+
         for commit in context.repo.iter_commits(branch):
+            # Optimization: Early termination on max results
+            if len(results) >= max_results:
+                break
+
             commits_processed += 1
             if commits_processed > 1000:  # Limit for performance
                 break
 
             # Analyze files in this commit
             for file_path in commit.stats.files:
-                if self._should_analyze_file(file_path):
+                # Optimization: Use pre-built set for faster lookup
+                file_ext = Path(file_path).suffix.lower()
+                if file_ext in supported_extensions:
                     file_results = await self._analyze_file_patterns(commit, file_path, context)
                     results.extend(file_results)
                     files_analyzed += 1
+
+                    # Optimization: Early termination check
+                    if len(results) >= max_results:
+                        break
 
         self._update_metrics(
             total_commits_searched=commits_processed, total_files_searched=files_analyzed
@@ -189,7 +207,11 @@ class CodePatternSearcher(CacheableSearcher):
         return results
 
     def _should_analyze_file(self, file_path: str) -> bool:
-        """Determine if a file should be analyzed for patterns."""
+        """Determine if a file should be analyzed for patterns.
+
+        Note: This method is kept for backward compatibility but is less efficient
+        than the optimized version in _scan_for_patterns.
+        """
         file_ext = Path(file_path).suffix.lower()
 
         # Check if any pattern supports this file type

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Quick Start
 
@@ -15,10 +14,16 @@ Commands:
     examples    - Run example workflows
 """
 
+import sys
+from pathlib import Path
+
+import typer
 from utils import (
+    StatusContext,
     check_command_exists,
     check_python_version,
     check_virtual_env,
+    confirm,
     console,
     get_project_root,
     print_error,
@@ -28,18 +33,10 @@ from utils import (
     print_step,
     print_success,
     print_warning,
+    prompt,
     run_command,
     run_command_with_output,
-    StatusContext,
-    confirm,
-    prompt,
 )
-import sys
-import time
-from pathlib import Path
-from typing import Optional
-
-import typer
 
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -102,15 +99,14 @@ class QuickStartManager:
         try:
             # Install package in editable mode
             with StatusContext("Installing GitHound with all dependencies"):
-                run_command([
-                    "pip", "install", "-e", ".[dev,test,docs,build]"
-                ], cwd=self.project_root)
+                run_command(
+                    ["pip", "install", "-e", ".[dev,test,docs,build]"], cwd=self.project_root
+                )
 
             # Install pre-commit hooks if available
             if check_command_exists("pre-commit"):
                 with StatusContext("Setting up pre-commit hooks"):
-                    run_command(["pre-commit", "install"],
-                                cwd=self.project_root)
+                    run_command(["pre-commit", "install"], cwd=self.project_root)
 
             # Create necessary directories
             dirs_to_create = ["logs", ".cache", "temp"]
@@ -121,10 +117,10 @@ class QuickStartManager:
 
             # Run a quick test
             with StatusContext("Running quick validation test"):
-                run_command([
-                    "python", "-c",
-                    "from githound import GitHound; print('✅ Setup successful!')"
-                ], cwd=self.project_root)
+                run_command(
+                    ["python", "-c", "from githound import GitHound; print('✅ Setup successful!')"],
+                    cwd=self.project_root,
+                )
 
             print_success("Development environment setup completed! 🎉")
             return True
@@ -139,9 +135,7 @@ class QuickStartManager:
 
         # Check if GitHound is available
         try:
-            run_command([
-                "python", "-c", "import githound"
-            ], cwd=self.project_root)
+            run_command(["python", "-c", "import githound"], cwd=self.project_root)
         except Exception:
             print_error("GitHound not installed. Run setup first.")
             return
@@ -157,8 +151,11 @@ class QuickStartManager:
         print_info("Analyzing the current repository...")
 
         try:
-            result = run_command_with_output([
-                "python", "-c", """
+            result = run_command_with_output(
+                [
+                    "python",
+                    "-c",
+                    """
 from githound import GitHound
 from pathlib import Path
 import json
@@ -171,15 +168,16 @@ print(json.dumps({
     'contributors': len(info.get('contributors', [])),
     'branches': len(info.get('branches', []))
 }, indent=2))
-"""
-            ], cwd=self.project_root)
+""",
+                ],
+                cwd=self.project_root,
+            )
 
             if result[0] == 0:
                 print_success("Repository analysis completed!")
                 console.print(result[1])
             else:
-                print_warning(
-                    "Analysis demo skipped (repository may be empty)")
+                print_warning("Analysis demo skipped (repository may be empty)")
 
         except Exception as e:
             print_warning(f"Demo failed: {e}")
@@ -187,14 +185,16 @@ print(json.dumps({
         # Demo 2: Search functionality
         print_section("Demo 2: Search Functionality")
 
-        search_term = prompt(
-            "Enter a search term (or press Enter for 'function')", "function")
+        search_term = prompt("Enter a search term (or press Enter for 'function')", "function")
 
         print_info(f"Searching for '{search_term}' in the repository...")
 
         try:
-            result = run_command_with_output([
-                "python", "-c", f"""
+            result = run_command_with_output(
+                [
+                    "python",
+                    "-c",
+                    f"""
 from githound import GitHound
 from githound.models import SearchQuery
 from pathlib import Path
@@ -207,8 +207,10 @@ results = list(gh.search_advanced(query))[:5]  # Limit to 5 results
 print(f"Found {{len(results)}} results (showing first 5):")
 for i, result in enumerate(results, 1):
     print(f"{{i}}. {{result.file_path}} ({{result.commit_hash[:8]}})")
-"""
-            ], cwd=self.project_root)
+""",
+                ],
+                cwd=self.project_root,
+            )
 
             if result[0] == 0:
                 print_success("Search completed!")
@@ -242,7 +244,8 @@ for i, result in enumerate(results, 1):
         print_header("GitHound Getting Started Guide")
 
         print_section("1. Installation")
-        console.print("""
+        console.print(
+            """
 GitHound can be installed in several ways:
 
 [cyan]# Development installation (recommended for contributors)[/cyan]
@@ -252,10 +255,12 @@ python scripts/quick-start.py setup
 
 [cyan]# Or using pip (when available)[/cyan]
 pip install githound
-""")
+"""
+        )
 
         print_section("2. Basic Usage")
-        console.print("""
+        console.print(
+            """
 [cyan]# Analyze a repository[/cyan]
 githound analyze /path/to/repo
 
@@ -267,10 +272,12 @@ githound blame /path/to/repo src/main.py
 
 [cyan]# Compare commits[/cyan]
 githound diff --commit1 HEAD~1 --commit2 HEAD /path/to/repo
-""")
+"""
+        )
 
         print_section("3. Web Interface")
-        console.print("""
+        console.print(
+            """
 [cyan]# Start web server[/cyan]
 githound web --port 8000
 
@@ -278,10 +285,12 @@ githound web --port 8000
 python scripts/services.py start web --port 8000
 
 Then open http://localhost:8000 in your browser.
-""")
+"""
+        )
 
         print_section("4. MCP Server (AI Integration)")
-        console.print("""
+        console.print(
+            """
 [cyan]# Start MCP server[/cyan]
 githound mcp-server --port 3000
 
@@ -289,10 +298,12 @@ githound mcp-server --port 3000
 python scripts/services.py start mcp --port 3000
 
 This enables AI tools to interact with GitHound.
-""")
+"""
+        )
 
         print_section("5. Development Scripts")
-        console.print("""
+        console.print(
+            """
 GitHound includes several utility scripts:
 
 [cyan]# Development environment[/cyan]
@@ -309,15 +320,18 @@ python scripts/cache-manager.py info
 
 [cyan]# Health checks[/cyan]
 python scripts/health-check.py check
-""")
+"""
+        )
 
         print_section("6. Next Steps")
-        console.print("""
+        console.print(
+            """
 • Check out the examples/ directory for more usage patterns
 • Read the documentation in docs/
 • Run the interactive demo: python scripts/quick-start.py demo
 • Join the community and contribute!
-""")
+"""
+        )
 
         print_success("Happy coding with GitHound! 🐕")
 
@@ -347,7 +361,8 @@ python scripts/health-check.py check
 
     def _workflow_bug_investigation(self) -> None:
         """Bug investigation workflow example."""
-        console.print("""
+        console.print(
+            """
 [bold]Bug Investigation Workflow[/bold]
 
 When investigating a bug, follow these steps:
@@ -366,11 +381,13 @@ githound search --content "error_message" .
 
 [cyan]5. Find similar issues in commit history[/cyan]
 githound search --message "fix" --message "bug" .
-""")
+"""
+        )
 
     def _workflow_code_review(self) -> None:
         """Code review preparation workflow example."""
-        console.print("""
+        console.print(
+            """
 [bold]Code Review Preparation Workflow[/bold]
 
 Before a code review:
@@ -386,11 +403,13 @@ githound diff --commit1 main --commit2 feature-branch .
 
 [cyan]4. Review test coverage[/cyan]
 githound search --file-path "test_*.py" --author "developer_name" .
-""")
+"""
+        )
 
     def _workflow_repo_analysis(self) -> None:
         """Repository analysis workflow example."""
-        console.print("""
+        console.print(
+            """
 [bold]Repository Analysis Workflow[/bold]
 
 For comprehensive repository analysis:
@@ -409,11 +428,13 @@ githound search --content "TODO\\|FIXME\\|HACK" .
 
 [cyan]5. Generate reports[/cyan]
 githound analyze . --export report.yaml --format yaml
-""")
+"""
+        )
 
     def _workflow_performance(self) -> None:
         """Performance monitoring workflow example."""
-        console.print("""
+        console.print(
+            """
 [bold]Performance Monitoring Workflow[/bold]
 
 For performance analysis:
@@ -432,13 +453,15 @@ python scripts/cache-manager.py analyze
 
 [cyan]5. Optimize if needed[/cyan]
 python scripts/cache-manager.py optimize
-""")
+"""
+        )
 
 
 @app.command()
 def setup(
     force: bool = typer.Option(
-        False, "--force", "-f", help="Force setup even if already configured"),
+        False, "--force", "-f", help="Force setup even if already configured"
+    ),
 ) -> None:
     """Complete project setup."""
     manager = QuickStartManager()
@@ -446,8 +469,7 @@ def setup(
     if not force:
         # Check if already set up
         try:
-            run_command(["python", "-c", "import githound"],
-                        cwd=manager.project_root)
+            run_command(["python", "-c", "import githound"], cwd=manager.project_root)
             if not confirm("GitHound appears to be already set up. Continue anyway?"):
                 print_info("Setup cancelled")
                 return
@@ -458,14 +480,10 @@ def setup(
 
     if success:
         print_section("What's Next?")
-        print_info(
-            "• Run 'python scripts/quick-start.py demo' for an interactive demo")
-        print_info(
-            "• Run 'python scripts/quick-start.py guide' for detailed usage guide")
-        print_info(
-            "• Check 'python scripts/quick-start.py examples' for workflow examples")
-        print_info(
-            "• Start the web interface: 'python scripts/services.py start web'")
+        print_info("• Run 'python scripts/quick-start.py demo' for an interactive demo")
+        print_info("• Run 'python scripts/quick-start.py guide' for detailed usage guide")
+        print_info("• Check 'python scripts/quick-start.py examples' for workflow examples")
+        print_info("• Start the web interface: 'python scripts/services.py start web'")
 
     sys.exit(0 if success else 1)
 

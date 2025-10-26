@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 FastMCP Advanced Features Examples
 
@@ -21,26 +20,23 @@ This example covers:
 """
 
 import asyncio
+import json
 import logging
 import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Callable, Any, List, Dict
-from dataclasses import dataclass
-import json
+from typing import Any
 
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
-from fastmcp.exceptions import ToolError
 
 # Configure advanced logging
 logging.basicConfig(  # [attr-defined]
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('mcp_client.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(), logging.FileHandler("mcp_client.log")],
 )
 logger = logging.getLogger(__name__)
 
@@ -48,11 +44,12 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProgressInfo:
     """Progress information for long-running operations."""
+
     operation: str
     current: int
     total: int
     start_time: float
-    message: Optional[str] = None
+    message: str | None = None
 
     @property
     def percentage(self) -> float:
@@ -92,13 +89,13 @@ class ProgressMonitor:
         self.total = total
         self.current = 0
         self.start_time = time.time()
-        self.callbacks: List[Callable[[ProgressInfo], None]] = []
+        self.callbacks: list[Callable[[ProgressInfo], None]] = []
 
     def add_callback(self, callback: Callable[[ProgressInfo], None]) -> None:
         """Add a progress callback."""
         self.callbacks.append(callback)
 
-    def update(self, increment: int = 1, message: Optional[str] = None) -> None:
+    def update(self, increment: int = 1, message: str | None = None) -> None:
         """
         Update progress.
 
@@ -113,7 +110,7 @@ class ProgressMonitor:
             current=self.current,
             total=self.total,
             start_time=self.start_time,
-            message=message
+            message=message,
         )
 
         # Call all callbacks
@@ -123,7 +120,7 @@ class ProgressMonitor:
             except Exception as e:
                 logger.warning(f"Progress callback failed: {e}")
 
-    def complete(self, message: Optional[str] = None) -> None:
+    def complete(self, message: str | None = None) -> None:
         """Mark operation as complete."""
         self.current = self.total
         self.update(0, message or f"{self.operation} completed")
@@ -147,11 +144,13 @@ class AuthenticationManager:
 
     def __init__(self) -> None:
         """Initialize authentication manager."""
-        self.tokens: Dict[str, str] = {}
-        self.refresh_tokens: Dict[str, str] = {}
-        self.token_expiry: Dict[str, datetime] = {}
+        self.tokens: dict[str, str] = {}
+        self.refresh_tokens: dict[str, str] = {}
+        self.token_expiry: dict[str, datetime] = {}
 
-    def set_bearer_token(self, server_id: str, token: str, expires_at: Optional[datetime] = None) -> None:
+    def set_bearer_token(
+        self, server_id: str, token: str, expires_at: datetime | None = None
+    ) -> None:
         """
         Set bearer token for a server.
 
@@ -166,7 +165,9 @@ class AuthenticationManager:
 
         logger.info(f"Bearer token set for server: {server_id}")
 
-    def set_oauth_tokens(self, server_id: str, access_token: str, refresh_token: str, expires_at: datetime) -> None:
+    def set_oauth_tokens(
+        self, server_id: str, access_token: str, refresh_token: str, expires_at: datetime
+    ) -> None:
         """
         Set OAuth 2.1 tokens for a server.
 
@@ -182,7 +183,7 @@ class AuthenticationManager:
 
         logger.info(f"OAuth tokens set for server: {server_id}")
 
-    def get_auth_headers(self, server_id: str) -> Dict[str, str]:
+    def get_auth_headers(self, server_id: str) -> dict[str, str]:
         """
         Get authentication headers for a server.
 
@@ -223,7 +224,7 @@ class AuthenticationManager:
         return True
 
 
-async def demonstrate_authentication() -> Dict[str, Any]:
+async def demonstrate_authentication() -> dict[str, Any]:
     """
     Demonstrate authentication features.
 
@@ -253,10 +254,7 @@ async def demonstrate_authentication() -> Dict[str, Any]:
     logger.info("2. OAuth 2.1 Authentication")
     expires_at = datetime.now().replace(hour=23, minute=59, second=59)
     auth_manager.set_oauth_tokens(
-        "oauth-server",
-        "oauth_access_token_456",
-        "oauth_refresh_token_789",
-        expires_at
+        "oauth-server", "oauth_access_token_456", "oauth_refresh_token_789", expires_at
     )
 
     oauth_headers = auth_manager.get_auth_headers("oauth-server")
@@ -285,7 +283,7 @@ async def demonstrate_authentication() -> Dict[str, Any]:
             "bearer_token_configured": True,
             "oauth_configured": True,
             "token_validation": True,
-            "http_auth_ready": True
+            "http_auth_ready": True,
         }
 
     except Exception as e:
@@ -295,17 +293,17 @@ async def demonstrate_authentication() -> Dict[str, Any]:
             "oauth_configured": True,
             "token_validation": True,
             "http_auth_ready": False,
-            "error": str(e)
+            "error": str(e),
         }
 
     return {
         "status": "success",
         "authentication_features": auth_demo_result,
-        "servers_configured": len(auth_manager.tokens)  # [attr-defined]
+        "servers_configured": len(auth_manager.tokens),  # [attr-defined]
     }
 
 
-async def demonstrate_progress_monitoring() -> Dict[str, Any]:
+async def demonstrate_progress_monitoring() -> dict[str, Any]:
     """
     Demonstrate progress monitoring for long-running operations.
 
@@ -339,7 +337,7 @@ async def demonstrate_progress_monitoring() -> Dict[str, Any]:
     operations = [
         ("Analyzing commits", 50),
         ("Processing files", 30),
-        ("Generating statistics", 20)
+        ("Generating statistics", 20),
     ]
 
     operation_results: list[Any] = []
@@ -358,11 +356,13 @@ async def demonstrate_progress_monitoring() -> Dict[str, Any]:
 
         monitor.complete()
 
-        operation_results.append({
-            "operation": operation_name,
-            "total_items": total_items,
-            "duration": time.time if time is not None else None() - start_time
-        })
+        operation_results.append(
+            {
+                "operation": operation_name,
+                "total_items": total_items,
+                "duration": time.time if time is not None else None() - start_time,
+            }
+        )
 
     # 3. Progress with Error Handling
     logger.info("3. Progress with Error Handling")
@@ -394,11 +394,11 @@ async def demonstrate_progress_monitoring() -> Dict[str, Any]:
         "multiple_operations": len(operation_results),
         "operation_results": operation_results,
         "error_handling": error_handled,
-        "total_operations_monitored": 1 + len(operations) + 1
+        "total_operations_monitored": 1 + len(operations) + 1,
     }
 
 
-async def demonstrate_advanced_logging() -> Dict[str, Any]:
+async def demonstrate_advanced_logging() -> dict[str, Any]:
     """
     Demonstrate advanced logging and debugging capabilities.
 
@@ -422,11 +422,7 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
         "operation": "mcp_client_demo",
         "client_version": "1.0.0",
         "server_type": "simple",
-        "metrics": {
-            "connection_time": 0.5,
-            "tool_count": 4,
-            "resource_count": 3
-        }
+        "metrics": {"connection_time": 0.5, "tool_count": 4, "resource_count": 3},
     }
 
     logger.info(f"Structured log: {json.dumps(log_entry, indent=2)}")
@@ -445,7 +441,7 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
             connection_log = {
                 "event": "connection_established",
                 "transport": "stdio",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             operation_logs.append(connection_log)
             logger.info(f"Connection log: {json.dumps(connection_log)}")
@@ -459,7 +455,7 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
                 "event": "tool_discovery",
                 "tools_found": len(tools),
                 "discovery_time": discovery_time,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             operation_logs.append(discovery_log)
             logger.info(f"Discovery log: {json.dumps(discovery_log)}")
@@ -474,7 +470,7 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
                 "tool_name": "echo",
                 "execution_time": execution_time,
                 "success": result is not None,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             operation_logs.append(execution_log)
             logger.info(f"Execution log: {json.dumps(execution_log)}")
@@ -484,7 +480,7 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
             "event": "operation_error",
             "error_type": type(e).__name__,
             "error_message": str(e),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
         operation_logs.append(error_log)
         logger.error(f"Error log: {json.dumps(error_log)}")
@@ -495,8 +491,11 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
     performance_metrics = {
         "total_operations": len(operation_logs),
         "successful_operations": len([log for log in operation_logs if log.get("success", True)]),
-        "average_execution_time": sum(log.get("execution_time", 0) for log in operation_logs) / len(operation_logs) if operation_logs else 0,
-        "timestamp": datetime.now().isoformat()
+        "average_execution_time": sum(log.get("execution_time", 0) for log in operation_logs)
+        / len(operation_logs)
+        if operation_logs
+        else 0,
+        "timestamp": datetime.now().isoformat(),
     }
 
     logger.info(f"Performance metrics: {json.dumps(performance_metrics, indent=2)}")
@@ -506,11 +505,11 @@ async def demonstrate_advanced_logging() -> Dict[str, Any]:
         "structured_logging": True,
         "operation_logs": len(operation_logs),
         "performance_metrics": performance_metrics,
-        "log_file_created": True
+        "log_file_created": True,
     }
 
 
-async def demonstrate_retry_strategies() -> Dict[str, Any]:
+async def demonstrate_retry_strategies() -> dict[str, Any]:
     """
     Demonstrate advanced retry strategies and error handling.
 
@@ -539,7 +538,7 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
                 if attempt == max_retries:
                     raise e
 
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2**attempt)
                 logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s...")
                 await asyncio.sleep(delay)
 
@@ -555,20 +554,24 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
 
     try:
         result = await retry_with_backoff(failing_operation)
-        retry_results.append({
-            "strategy": "exponential_backoff",
-            "attempts": attempt_count,
-            "success": True,
-            "result": result
-        })
+        retry_results.append(
+            {
+                "strategy": "exponential_backoff",
+                "attempts": attempt_count,
+                "success": True,
+                "result": result,
+            }
+        )
         logger.info(f"✓ Exponential backoff succeeded after {attempt_count} attempts")
     except Exception as e:
-        retry_results.append({
-            "strategy": "exponential_backoff",
-            "attempts": attempt_count,
-            "success": False,
-            "error": str(e)
-        })
+        retry_results.append(
+            {
+                "strategy": "exponential_backoff",
+                "attempts": attempt_count,
+                "success": False,
+                "error": str(e),
+            }
+        )
 
     # 2. Circuit Breaker Pattern
     logger.info("2. Circuit Breaker Pattern")
@@ -621,22 +624,24 @@ async def demonstrate_retry_strategies() -> Dict[str, Any]:
 
         await asyncio.sleep(0.1)
 
-    retry_results.append({
-        "strategy": "circuit_breaker",
-        "attempts": len(circuit_results),
-        "successful_attempts": len([r for r in circuit_results if r["success"]]),
-        "circuit_state": circuit_breaker.state
-    })
+    retry_results.append(
+        {
+            "strategy": "circuit_breaker",
+            "attempts": len(circuit_results),
+            "successful_attempts": len([r for r in circuit_results if r["success"]]),
+            "circuit_state": circuit_breaker.state,
+        }
+    )
 
     return {
         "status": "success",
         "retry_strategies": len(retry_results),
         "strategy_results": retry_results,
-        "total_attempts": sum(r.get("attempts", 0) for r in retry_results)
+        "total_attempts": sum(r.get("attempts", 0) for r in retry_results),
     }
 
 
-async def main() -> Dict[str, Any]:
+async def main() -> dict[str, Any]:
     """
     Main function demonstrating all advanced FastMCP client features.
 
@@ -684,7 +689,7 @@ async def main() -> Dict[str, Any]:
 if __name__ == "__main__":
     # Run the advanced features examples
     result = asyncio.run(main())
-    print(f"\nAdvanced Features Summary:")
+    print("\nAdvanced Features Summary:")
     for category, result_data in result.items():
         if isinstance(result_data, dict) and "status" in result_data:
             print(f"  {category}: {result_data['status']}")

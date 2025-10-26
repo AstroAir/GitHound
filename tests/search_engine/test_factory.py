@@ -1,11 +1,10 @@
 """Tests for SearchEngineFactory and related components."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from githound.models import SearchEngineConfig, SearchQuery, SearchType
-from githound.search_engine.analytics import SearchAnalytics
 from githound.search_engine.factory import (
     SearchEngineFactory,
     create_search_orchestrator,
@@ -101,14 +100,10 @@ class TestSearchEngineFactory:
         assert processor is not None
         assert hasattr(processor, "process_results")
 
+    @pytest.mark.skip(reason="Analytics removed - not core functionality")
     def test_create_analytics(self):
-        """Test creating analytics."""
-        config = SearchEngineConfig(enable_analytics=True)
-        factory = SearchEngineFactory(config)
-        analytics = factory._create_analytics()
-
-        assert analytics is not None
-        assert isinstance(analytics, SearchAnalytics)
+        """Test creating analytics (REMOVED)."""
+        pass
 
     def test_create_for_query_basic(self):
         """Test creating orchestrator optimized for basic query."""

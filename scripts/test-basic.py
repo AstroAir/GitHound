@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Basic test script to verify the utility infrastructure works.
 This script uses only standard library modules.
@@ -14,8 +13,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 def test_utils_import() -> None:
     """Test that utils can be imported."""
     try:
-        from utils.common import get_project_root, check_python_version
-        from utils.platform import is_windows, get_platform_info
+        from utils.common import check_python_version, get_project_root
+        from utils.platform import get_platform_info, is_windows
+
         print("✅ Utils modules imported successfully")
         return True
     except ImportError as e:
@@ -27,6 +27,7 @@ def test_project_root() -> None:
     """Test project root detection."""
     try:
         from utils.common import get_project_root
+
         root = get_project_root()
         print(f"✅ Project root detected: {root}")
 
@@ -45,9 +46,9 @@ def test_project_root() -> None:
 def test_platform_detection() -> None:
     """Test platform detection."""
     try:
-        from utils.platform import is_windows, get_platform_info
+        from utils.platform import get_platform_info, is_windows
 
-        print(f"✅ Platform detection works")
+        print("✅ Platform detection works")
         print(f"   Windows: {is_windows()}")
 
         info = get_platform_info()

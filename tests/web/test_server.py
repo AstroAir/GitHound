@@ -1,12 +1,10 @@
 """Tests for GitHound web server."""
 
-import sys
-from unittest.mock import Mock, call, patch
+from unittest.mock import patch
 
-import pytest
 from typer.testing import CliRunner
 
-from githound.web.server import app, dev, prod, serve
+from githound.web.server import app
 
 
 class TestWebServer:

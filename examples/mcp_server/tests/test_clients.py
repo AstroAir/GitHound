@@ -5,23 +5,20 @@ This module contains comprehensive tests for all FastMCP client implementations,
 ensuring functionality, error handling, and performance requirements.
 """
 
-import asyncio
-import json
-import pytest
-import time
-from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, patch
-
-from fastmcp import Client
-from fastmcp.client.transports import PythonStdioTransport
-from fastmcp.exceptions import ToolError, McpError
 
 # Import client modules to test
 import sys
+import time
+from pathlib import Path
+
+import pytest
+from fastmcp import Client
+from fastmcp.client.transports import PythonStdioTransport
+from fastmcp.exceptions import McpError, ToolError
+
 sys.path.append(str(Path(__file__).parent.parent))
 
-from clients import basic_client, transport_examples, tool_operations, resource_operations
+from clients import basic_client, resource_operations, tool_operations, transport_examples
 
 
 class TestBasicClient:
@@ -248,10 +245,7 @@ class TestToolOperations:
         from tool_operations import ToolExecutionResult
 
         result = ToolExecutionResult(
-            tool_name="test_tool",
-            success=True,
-            data={"key": "value"},
-            execution_time=0.5
+            tool_name="test_tool", success=True, data={"key": "value"}, execution_time=0.5
         )
 
         assert result.tool_name == "test_tool"
@@ -424,11 +418,9 @@ class TestClientErrorHandling:
         # Test with very short timeout
         try:
             result = await simple_mcp_client.call_tool(
-                "simulate_error",
-                {"error_type": "timeout"},
-                timeout=0.1  # Very short timeout
+                "simulate_error", {"error_type": "timeout"}, timeout=0.1  # Very short timeout
             )
-        except (ToolError, asyncio.TimeoutError):
+        except (TimeoutError, ToolError):
             # Expected to timeout or fail
             pass
 
@@ -460,7 +452,7 @@ class TestClientConfiguration:
         transport = PythonStdioTransport(
             str(server_script),
             env={"TEST_ENV": "test_value"},
-            cwd=str(Path(__file__).parent.parent)
+            cwd=str(Path(__file__).parent.parent),
         )
 
         assert transport is not None

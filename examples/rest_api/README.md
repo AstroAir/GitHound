@@ -15,20 +15,24 @@ This directory contains comprehensive examples for using GitHound's REST API end
 ## API Endpoints
 
 ### Health and Status
+
 - `GET /health` - API health check
 - `GET /api/searches` - List active searches
 
 ### Search Operations
+
 - `POST /api/search` - Start new search
 - `GET /api/search/{search_id}` - Get search results
 - `GET /api/search/{search_id}/status` - Get search status
 - `DELETE /api/search/{search_id}` - Cancel search
 
 ### Export Operations
+
 - `POST /api/export` - Export search results
 - `GET /api/export/{export_id}` - Download exported data
 
 ### WebSocket Endpoints
+
 - `WS /ws/{search_id}` - Real-time search progress
 
 ## Running Examples
@@ -36,7 +40,7 @@ This directory contains comprehensive examples for using GitHound's REST API end
 Start the GitHound API server:
 
 ```bash
-uvicorn githound.web.api:app --reload
+uvicorn githound.web.main:app --reload
 ```
 
 Then run examples:
@@ -62,6 +66,7 @@ headers = {"Authorization": "Bearer your-token"}
 ## Example Request/Response Patterns
 
 ### Search Request
+
 ```json
 {
   "query": "bug fix",
@@ -76,6 +81,7 @@ headers = {"Authorization": "Bearer your-token"}
 ```
 
 ### Search Response
+
 ```json
 {
   "results": [...],
@@ -89,6 +95,7 @@ headers = {"Authorization": "Bearer your-token"}
 ```
 
 ### Error Response
+
 ```json
 {
   "error": "Invalid repository path",

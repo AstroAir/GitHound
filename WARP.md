@@ -2,260 +2,119 @@
 
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
-## Project Overview
+## Commands you’ll use often
 
-GitHound is a comprehensive Git repository analysis tool built in Python 3.11+ that provides advanced search capabilities, detailed metadata extraction, blame analysis, diff comparison, and multiple integration options including MCP (Model Context Protocol) server support and REST API.
-
-## Architecture
-
-### Core Components
-
-- **GitHound Main Class** (`githound/__init__.py`): Central orchestrator providing unified interface for all functionality
-- **Search Engine** (`githound/search_engine/`): Modular search system with specialized searchers:
-  - `orchestrator.py`: Coordinates multiple search strategies
-  - `commit_searcher.py`, `file_searcher.py`: Specialized search implementations
-  - `fuzzy_searcher.py`: Fuzzy matching capabilities
-- **Git Operations** (`githound/git_*.py`): Core Git interaction modules:
-  - `git_handler.py`: Repository metadata and commit processing
-  - `git_blame.py`: Line-by-line authorship tracking
-  - `git_diff.py`: Commit and branch comparison
-- **MCP Server** (`githound/mcp/`): Model Context Protocol implementation for AI integration
-- **Web Interface** (`githound/web/`): FastAPI-based REST API and web interface
-- **CLI** (`githound/cli.py`): Typer-based command-line interface
-
-### Key Entry Points
-
-- **CLI**: `githound/cli.py` - Main command-line interface using Typer
-- **MCP Server**: `githound/mcp_server.py` - MCP protocol server for AI integration
-- **Web API**: `githound/web/api.py` - FastAPI REST endpoints
-- **Python API**: `githound/__init__.py` - Main GitHound class for programmatic use
-
-### Data Models
-
-- **Core Models** (`githound/models.py`): SearchQuery, SearchResult, GitHoundConfig
-- **Export Schemas** (`githound/schemas.py`): ExportOptions, OutputFormat definitions
-- **MCP Models** (`githound/mcp/models.py`): MCP-specific data structures
-
-## Development Commands
-
-### Environment Setup
-
-```bash
-# Install development dependencies (recommended)
-pip install -e ".[dev,test,docs,build]"
-# Or use Make
+- Install (editable) with extras
+```bash path=null start=null
+pip install -e . --dependency-groups dev,test,docs,build
+# or with uv
+uv pip install -e . --dependency-groups dev,test,docs,build
+# or via Make
 make install-dev
-
-# Set up pre-commit hooks
-pre-commit install
 ```
 
-### Code Quality
-
-```bash
-# Run all quality checks (format, lint, type-check)
-make quality
-
-# Individual checks
-make format      # Black + isort formatting
-make lint        # Ruff linting
-make type-check  # mypy type checking
+- Lint, format, type-check
+```bash path=null start=null
+make quality                     # black + isort + ruff + mypy + docs quick-validate
+make lint                        # ruff
+make lint-fix                    # ruff --fix
+make format                      # black + isort
+make type-check                  # mypy (strict per pyproject)
 ```
 
-### Testing
-
-```bash
-# Fast unit tests only
-make test-unit
-pytest -m "unit and not slow" -v
-
-# All tests including integration/performance
-make test-all
-pytest -v
-
-# Test with coverage
-make test-cov
-pytest --cov=githound --cov-report=html
-
-# Specific test categories
-pytest -m integration    # Integration tests
-pytest -m performance    # Performance tests
-pytest -m mcp           # MCP server tests
-pytest -m api           # API tests
-
-# Single test file
-pytest tests/test_git_handler.py -v
+- Tests (pytest configured in pyproject; coverage threshold 85%)
+```bash path=null start=null
+pytest                           # run all tests
+pytest -m "unit and not slow" -v # fast feedback
+pytest -m integration -v         # integration tests only
+pytest --cov=githound --cov-report=term-missing --cov-report=html
+# Single file / single test
+pytest tests/test_cli.py -q
+pytest tests/test_cli.py::test_search_command -q
+# Parallel (requires pytest-xdist)
+pytest -n auto -v
 ```
 
-### Build and Documentation
-
-```bash
-# Build package
-make build
-python -m build
-
-# Build documentation
-make docs
-cd docs && mkdocs build
-
-# Serve docs locally
-make docs-serve
-cd docs && mkdocs serve
+- Frontend (web static assets)
+```bash path=null start=null
+cd githound/web/static
+npm install
+npm test                         # jest unit tests
+npm run lint && npm run format:check
 ```
 
-### Development Workflow
-
-```bash
-# Quick check before committing
-make check  # Runs quality + unit tests
-
-# Full CI pipeline
-make ci     # Runs quality + all tests + build
+- Web UI E2E (Playwright harness)
+```bash path=null start=null
+make test-web-install            # install Python + Node E2E deps
+make test-web                    # run all Playwright suites via run_tests.py
+# or directly
+cd githound/web/tests && npm install && npx playwright test
 ```
 
-## Running GitHound
-
-### CLI Usage
-
-```bash
-# Repository analysis
-githound analyze .
-
-# Advanced search
-githound search --repo-path . --content "function" --author "john"
-
-# File blame analysis
-githound blame . src/main.py
-
-# Commit comparison
-githound diff HEAD~1 HEAD
-
-# Start web interface
-githound web --port 8080
+- Run the web/API server
+```bash path=null start=null
+uvicorn githound.web.main:app --reload --port 8000
+# API docs: http://localhost:8000/docs, ReDoc: /redoc
 ```
 
-### MCP Server
-
-```bash
-# Start MCP server (stdio transport)
+- Run the MCP server
+```bash path=null start=null
 githound mcp-server
-
-# Start with custom host/port
-githound mcp-server --host 0.0.0.0 --port 3000
-
-# Or run directly
-python -m githound.mcp_server
+# options: --host 0.0.0.0 --port 3000 --log-level DEBUG
+# alt: python -m githound.mcp_server
 ```
 
-### Python API
-
-```python
-from githound import GitHound
-from githound.models import SearchQuery
-from pathlib import Path
-
-# Initialize and analyze repository
-gh = GitHound(Path("."))
-repo_info = gh.analyze_repository()
-
-# Advanced search
-query = SearchQuery(content_pattern="function", fuzzy_search=True)
-results = gh.search_advanced_sync(query)
-
-# Blame analysis
-blame_info = gh.analyze_blame("src/main.py")
+- Build artifacts
+```bash path=null start=null
+make build                       # sdist + wheel via python -m build
+make clean                       # remove build/test caches
 ```
 
-## Testing Guidelines
-
-### Test Structure
-
-- **Unit Tests**: `tests/test_*.py` - Core functionality testing
-- **Integration Tests**: `tests/integration/` - End-to-end workflow testing
-- **Performance Tests**: `tests/performance/` - Benchmarks and performance limits
-- **MCP Tests**: Tests marked with `@pytest.mark.mcp`
-- **API Tests**: Tests marked with `@pytest.mark.api`
-
-### Test Requirements
-
-- All tests must pass both pytest and mypy type checking
-- Maintain >85% test coverage (CI enforced)
-- Use appropriate test markers for different test categories
-- Integration tests may require Docker services (Redis, etc.)
-
-### Running Specific Tests
-
-```bash
-# Skip slow tests for faster development
-pytest -m "not slow" -v
-
-# Test specific modules
-pytest tests/test_search_engine.py
-pytest tests/mcp/ -v
-
-# Performance benchmarks
-pytest tests/performance/ --benchmark-only
+- Docs
+```bash path=null start=null
+make docs                        # mkdocs build
+make docs-serve                  # mkdocs serve (local preview)
+make docs-validate-quick        # fast validator used in CI quality target
 ```
 
-## Code Style
-
-- **Python Version**: 3.11+ required
-- **Formatting**: Black (line length 100) + isort (profile=black)
-- **Linting**: Ruff with comprehensive rule set
-- **Type Checking**: mypy with strict settings for core modules
-- **Naming Conventions**:
-  - Files/modules: `snake_case.py`
-  - Classes: `PascalCase`
-  - Functions/variables: `snake_case`
-  - Constants: `UPPER_CASE`
-
-## Important Configuration
-
-### Environment Variables
-
-- `GITHOUND_*`: Application-specific configuration
-- `REDIS_URL`: Redis connection for caching (optional)
-
-### Docker Support
-
-```bash
-# Start required services
-docker compose up -d redis
-
-# Development environment
-docker compose -f docker-compose.yml up
+- Pre-commit
+```bash path=null start=null
+pre-commit install
+pre-commit run --all-files
 ```
 
-## Key Architecture Patterns
+## High-level architecture (big picture)
 
-### Search Engine Architecture
+- Core packages (under `githound/`)
+  - CLI: Typer-based entry at `githound/cli.py` (exposed as `githound` via project.scripts)
+  - Web/API: FastAPI app at `githound/web/main.py` with modular routers in `githound/web/apis/`, services, middleware (rate limiting), models, and static assets in `githound/web/static/` (served at `/static`). WebSocket support for live progress.
+  - MCP: FastMCP 2.x integration; entry `githound/mcp_server.py` wraps `githound/mcp/server.py` tools/resources/prompts for Model Context Protocol clients.
+  - Search engine: Modular orchestrator in `githound/search_engine/` with base classes, multiple searchers (commit, author, message, date, path, type, content, fuzzy), optional ripgrep acceleration, result ranking, caching, and parallelism.
+  - Git operations: Consolidated helpers in `git_handler.py`, `git_diff.py`, `git_blame.py` built on GitPython.
+  - Utilities: `githound/utils/` provides `ExportManager` (JSON/YAML/CSV/Excel/text, streaming) and `ProgressManager` (multi-task progress, cancellation, rich display).
 
-The search engine uses a modular orchestrator pattern where specialized searchers handle different search types (content, author, commit hash, etc.). The `SearchOrchestrator` coordinates multiple searchers and aggregates results.
+- Data flow
+  - GitPython Repo → Search Orchestrator → Searchers (parallel) → Ranking/Caching → `SearchResult`/metrics → CLI/Web/MCP output and export utilities.
 
-### MCP Integration
+- Testing and quality
+  - Pytest configured in `pyproject.toml` with markers: unit, integration, performance, api, mcp, cli, search. Coverage collected (term/html/xml) with `--cov-fail-under=85` enforced in CI.
+  - Type checking is strict via mypy (with pydantic plugin). Ruff handles linting; Black + isort for formatting/imports. Pre-commit hooks mirror these checks.
+  - Web UI tests use Playwright harness under `githound/web/tests/` with npm scripts; Python wrapper `githound/web/tests/run_tests.py` and Make targets are provided.
 
-GitHound provides 25+ MCP tools, 7 resources, and 3 structured prompts for AI integration. The MCP server uses FastMCP 2.0 for protocol compliance and supports both stdio and HTTP transports.
+- Frontend
+  - `githound/web/static/` is a lightweight ES module setup tested with Jest (no heavy bundling). Quality scripts: `npm run quality`, `quality:fix`, and jest coverage.
 
-### Async/Sync Patterns
+## Cross-component rules (from project AI guidelines)
 
-The codebase supports both async and sync operations. Core search operations are async for performance, with sync wrappers provided for convenience (e.g., `search_advanced_sync()`).
+- Always construct search via the factory/orchestrator
+```python path=null start=null
+from githound.search_engine import create_search_orchestrator
+orchestrator = create_search_orchestrator()
+```
+- Route Git access through handlers in `git_handler.py` rather than ad-hoc GitPython calls.
+- Web routes should return schema objects from `githound/web/models/api_models.py` or `githound/schemas.py`; apply rate limiting decorators where appropriate.
+- Prefer `ExportManager` for output formatting and file exports; avoid duplicating serialization logic.
 
-### Error Handling
+## CI signals to mirror locally
 
-- Use `GitCommandError` for Git-related failures
-- Implement retry logic with exponential backoff for transient failures
-- Provide detailed error messages with context
-
-## Performance Considerations
-
-- Search operations use streaming results to handle large repositories
-- Built-in caching with Redis support for expensive operations
-- Progress reporting for long-running operations
-- Memory-efficient processing of large Git histories
-
-## Export and Integration
-
-- Multiple export formats: JSON, YAML, CSV, XML, Excel
-- REST API with OpenAPI documentation at `/api/v2/docs`
-- WebSocket support for real-time progress updates
-- MCP protocol for AI model integration
+- GitHub Actions run: formatting (black/isort), lint (ruff), mypy, pytest (unit + integration), coverage report, docs validation, CodeQL/Semgrep, package build checks, and Playwright where applicable. Use `make check` (quality + unit tests) or `make ci` (quality + all tests + build) before opening PRs.

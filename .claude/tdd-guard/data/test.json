@@ -1,0 +1,529 @@
+{
+  "testModules": [
+    {
+      "moduleId": "tests/auth/providers/test_oauth_providers.py",
+      "tests": [
+        {
+          "name": "test_github_provider_creation",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGitHubProvider::test_github_provider_creation",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_oauth_metadata",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGitHubProvider::test_github_oauth_metadata",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_dcr_support",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGitHubProvider::test_github_dcr_support",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_authentication_success",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGitHubProvider::test_github_authentication_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_authentication_token_failure",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGitHubProvider::test_github_authentication_token_failure",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_client_registration",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGitHubProvider::test_github_client_registration",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_provider_creation",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGoogleProvider::test_google_provider_creation",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_oauth_metadata",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGoogleProvider::test_google_oauth_metadata",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_authentication_success",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestGoogleProvider::test_google_authentication_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_creation",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestOAuthProxy::test_oauth_proxy_creation",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_metadata",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestOAuthProxy::test_oauth_proxy_metadata",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_client_registration",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestOAuthProxy::test_oauth_proxy_client_registration",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_authentication",
+          "fullName": "tests/auth/providers/test_oauth_providers.py::TestOAuthProxy::test_oauth_proxy_authentication",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/auth/test_auth_providers.py",
+      "tests": [
+        {
+          "name": "test_jwt_verifier_basic",
+          "fullName": "tests/auth/test_auth_providers.py::TestJWTVerifier::test_jwt_verifier_basic",
+          "state": "passed"
+        },
+        {
+          "name": "test_jwt_verifier_authentication",
+          "fullName": "tests/auth/test_auth_providers.py::TestJWTVerifier::test_jwt_verifier_authentication",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_provider_creation",
+          "fullName": "tests/auth/test_auth_providers.py::TestGitHubProvider::test_github_provider_creation",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_oauth_metadata",
+          "fullName": "tests/auth/test_auth_providers.py::TestGitHubProvider::test_github_oauth_metadata",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_dcr_support",
+          "fullName": "tests/auth/test_auth_providers.py::TestGitHubProvider::test_github_dcr_support",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_authentication_flow",
+          "fullName": "tests/auth/test_auth_providers.py::TestGitHubProvider::test_github_authentication_flow",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_provider_creation",
+          "fullName": "tests/auth/test_auth_providers.py::TestGoogleProvider::test_google_provider_creation",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_oauth_metadata",
+          "fullName": "tests/auth/test_auth_providers.py::TestGoogleProvider::test_google_oauth_metadata",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_dcr_support",
+          "fullName": "tests/auth/test_auth_providers.py::TestGoogleProvider::test_google_dcr_support",
+          "state": "passed"
+        },
+        {
+          "name": "test_google_authentication_flow",
+          "fullName": "tests/auth/test_auth_providers.py::TestGoogleProvider::test_google_authentication_flow",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_creation",
+          "fullName": "tests/auth/test_auth_providers.py::TestOAuthProxy::test_oauth_proxy_creation",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_metadata",
+          "fullName": "tests/auth/test_auth_providers.py::TestOAuthProxy::test_oauth_proxy_metadata",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_dcr_support",
+          "fullName": "tests/auth/test_auth_providers.py::TestOAuthProxy::test_oauth_proxy_dcr_support",
+          "state": "passed"
+        },
+        {
+          "name": "test_oauth_proxy_client_registration",
+          "fullName": "tests/auth/test_auth_providers.py::TestOAuthProxy::test_oauth_proxy_client_registration",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/auth/test_factory.py",
+      "tests": [
+        {
+          "name": "test_create_jwt_provider",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthProvider::test_create_jwt_provider",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_github_provider",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthProvider::test_create_github_provider",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_google_provider",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthProvider::test_create_google_provider",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_unknown_provider",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthProvider::test_create_unknown_provider",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_provider_with_exception",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthProvider::test_create_provider_with_exception",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_eunomia_provider_not_available",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthorizationProvider::test_create_eunomia_provider_not_available",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_permit_provider_not_available",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthorizationProvider::test_create_permit_provider_not_available",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_eunomia_provider_available",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthorizationProvider::test_create_eunomia_provider_available",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_permit_provider_available",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthorizationProvider::test_create_permit_provider_available",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_unknown_authorization_provider",
+          "fullName": "tests/auth/test_factory.py::TestCreateAuthorizationProvider::test_create_unknown_authorization_provider",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_provider_auth_only",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromConfig::test_create_provider_auth_only",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_provider_with_authorization",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromConfig::test_create_provider_with_authorization",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_provider_no_auth_type",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromConfig::test_create_provider_no_auth_type",
+          "state": "passed"
+        },
+        {
+          "name": "test_create_provider_no_auth_section",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromConfig::test_create_provider_no_auth_section",
+          "state": "passed"
+        },
+        {
+          "name": "test_no_auth_type_environment",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromEnvironment::test_no_auth_type_environment",
+          "state": "passed"
+        },
+        {
+          "name": "test_jwt_from_environment",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromEnvironment::test_jwt_from_environment",
+          "state": "passed"
+        },
+        {
+          "name": "test_github_with_eunomia_from_environment",
+          "fullName": "tests/auth/test_factory.py::TestCreateProviderFromEnvironment::test_github_with_eunomia_from_environment",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_available_providers",
+          "fullName": "tests/auth/test_factory.py::TestGetAvailableProviders::test_get_available_providers",
+          "state": "passed"
+        },
+        {
+          "name": "test_validate_valid_config",
+          "fullName": "tests/auth/test_factory.py::TestValidateProviderConfig::test_validate_valid_config",
+          "state": "passed"
+        },
+        {
+          "name": "test_validate_config_with_authorization",
+          "fullName": "tests/auth/test_factory.py::TestValidateProviderConfig::test_validate_config_with_authorization",
+          "state": "passed"
+        },
+        {
+          "name": "test_validate_config_missing_auth",
+          "fullName": "tests/auth/test_factory.py::TestValidateProviderConfig::test_validate_config_missing_auth",
+          "state": "passed"
+        },
+        {
+          "name": "test_validate_config_missing_auth_type",
+          "fullName": "tests/auth/test_factory.py::TestValidateProviderConfig::test_validate_config_missing_auth_type",
+          "state": "passed"
+        },
+        {
+          "name": "test_validate_config_invalid_auth_type",
+          "fullName": "tests/auth/test_factory.py::TestValidateProviderConfig::test_validate_config_invalid_auth_type",
+          "state": "passed"
+        },
+        {
+          "name": "test_validate_config_invalid_authorization_type",
+          "fullName": "tests/auth/test_factory.py::TestValidateProviderConfig::test_validate_config_invalid_authorization_type",
+          "state": "passed"
+        },
+        {
+          "name": "test_environment_variable_parsing",
+          "fullName": "tests/auth/test_factory.py::TestEnvironmentVariableHandling::test_environment_variable_parsing",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/e2e/test_complete_workflows.py",
+      "tests": [
+        {
+          "name": "test_fuzzy_search_workflow",
+          "fullName": "tests/e2e/test_complete_workflows.py::TestSearchWorkflow::test_fuzzy_search_workflow",
+          "state": "passed"
+        },
+        {
+          "name": "test_historical_search_workflow",
+          "fullName": "tests/e2e/test_complete_workflows.py::TestSearchWorkflow::test_historical_search_workflow",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/integration/test_analysis_api.py",
+      "tests": [
+        {
+          "name": "test_analyze_file_blame_success",
+          "fullName": "tests/integration/test_analysis_api.py::TestBlameAnalysis::test_analyze_file_blame_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_analyze_file_blame_with_line_range",
+          "fullName": "tests/integration/test_analysis_api.py::TestBlameAnalysis::test_analyze_file_blame_with_line_range",
+          "state": "passed"
+        },
+        {
+          "name": "test_analyze_file_blame_invalid_file",
+          "fullName": "tests/integration/test_analysis_api.py::TestBlameAnalysis::test_analyze_file_blame_invalid_file",
+          "state": "passed"
+        },
+        {
+          "name": "test_compare_commits_success",
+          "fullName": "tests/integration/test_analysis_api.py::TestDiffAnalysis::test_compare_commits_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_compare_branches_success",
+          "fullName": "tests/integration/test_analysis_api.py::TestDiffAnalysis::test_compare_branches_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_compare_commits_invalid_hash",
+          "fullName": "tests/integration/test_analysis_api.py::TestDiffAnalysis::test_compare_commits_invalid_hash",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_filtered_commits_success",
+          "fullName": "tests/integration/test_analysis_api.py::TestCommitFiltering::test_get_filtered_commits_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_filtered_commits_no_results",
+          "fullName": "tests/integration/test_analysis_api.py::TestCommitFiltering::test_get_filtered_commits_no_results",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_file_history_success",
+          "fullName": "tests/integration/test_analysis_api.py::TestFileHistory::test_get_file_history_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_file_history_nonexistent_file",
+          "fullName": "tests/integration/test_analysis_api.py::TestFileHistory::test_get_file_history_nonexistent_file",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_repository_statistics_success",
+          "fullName": "tests/integration/test_analysis_api.py::TestRepositoryStatistics::test_get_repository_statistics_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_repository_statistics_minimal",
+          "fullName": "tests/integration/test_analysis_api.py::TestRepositoryStatistics::test_get_repository_statistics_minimal",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/integration/test_end_to_end_workflows.py",
+      "tests": [
+        {
+          "name": "test_complete_repository_analysis_workflow",
+          "fullName": "tests/integration/test_end_to_end_workflows.py::TestCompleteWorkflows::test_complete_repository_analysis_workflow",
+          "state": "passed"
+        },
+        {
+          "name": "test_error_handling_workflow",
+          "fullName": "tests/integration/test_end_to_end_workflows.py::TestCompleteWorkflows::test_error_handling_workflow",
+          "state": "passed"
+        },
+        {
+          "name": "test_concurrent_operations_workflow",
+          "fullName": "tests/integration/test_end_to_end_workflows.py::TestCompleteWorkflows::test_concurrent_operations_workflow",
+          "state": "passed"
+        },
+        {
+          "name": "test_export_workflow_multiple_formats",
+          "fullName": "tests/integration/test_end_to_end_workflows.py::TestCompleteWorkflows::test_export_workflow_multiple_formats",
+          "state": "passed"
+        },
+        {
+          "name": "test_resource_access_workflow",
+          "fullName": "tests/integration/test_end_to_end_workflows.py::TestResourceIntegration::test_resource_access_workflow",
+          "state": "passed"
+        },
+        {
+          "name": "test_data_consistency_across_operations",
+          "fullName": "tests/integration/test_end_to_end_workflows.py::TestDataConsistency::test_data_consistency_across_operations",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/integration/test_search_api.py",
+      "tests": [
+        {
+          "name": "test_advanced_search_synchronous",
+          "fullName": "tests/integration/test_search_api.py::TestAdvancedSearch::test_advanced_search_synchronous",
+          "state": "passed"
+        },
+        {
+          "name": "test_advanced_search_background",
+          "fullName": "tests/integration/test_search_api.py::TestAdvancedSearch::test_advanced_search_background",
+          "state": "passed"
+        },
+        {
+          "name": "test_advanced_search_with_filters",
+          "fullName": "tests/integration/test_search_api.py::TestAdvancedSearch::test_advanced_search_with_filters",
+          "state": "passed"
+        },
+        {
+          "name": "test_advanced_search_invalid_repo",
+          "fullName": "tests/integration/test_search_api.py::TestAdvancedSearch::test_advanced_search_invalid_repo",
+          "state": "passed"
+        },
+        {
+          "name": "test_fuzzy_search_success",
+          "fullName": "tests/integration/test_search_api.py::TestFuzzySearch::test_fuzzy_search_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_fuzzy_search_with_file_types",
+          "fullName": "tests/integration/test_search_api.py::TestFuzzySearch::test_fuzzy_search_with_file_types",
+          "state": "passed"
+        },
+        {
+          "name": "test_historical_search_synchronous",
+          "fullName": "tests/integration/test_search_api.py::TestHistoricalSearch::test_historical_search_synchronous",
+          "state": "passed"
+        },
+        {
+          "name": "test_historical_search_background",
+          "fullName": "tests/integration/test_search_api.py::TestHistoricalSearch::test_historical_search_background",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_search_status_success",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_get_search_status_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_search_status_not_found",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_get_search_status_not_found",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_search_status_access_denied",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_get_search_status_access_denied",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_search_results_success",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_get_search_results_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_get_search_results_not_completed",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_get_search_results_not_completed",
+          "state": "passed"
+        },
+        {
+          "name": "test_cancel_search_success",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_cancel_search_success",
+          "state": "passed"
+        },
+        {
+          "name": "test_cancel_search_already_completed",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_cancel_search_already_completed",
+          "state": "passed"
+        },
+        {
+          "name": "test_list_active_searches",
+          "fullName": "tests/integration/test_search_api.py::TestSearchManagement::test_list_active_searches",
+          "state": "passed"
+        },
+        {
+          "name": "test_advanced_search_missing_repo_path",
+          "fullName": "tests/integration/test_search_api.py::TestSearchValidation::test_advanced_search_missing_repo_path",
+          "state": "passed"
+        },
+        {
+          "name": "test_fuzzy_search_invalid_threshold",
+          "fullName": "tests/integration/test_search_api.py::TestSearchValidation::test_fuzzy_search_invalid_threshold",
+          "state": "passed"
+        },
+        {
+          "name": "test_advanced_search_invalid_max_results",
+          "fullName": "tests/integration/test_search_api.py::TestSearchValidation::test_advanced_search_invalid_max_results",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "moduleId": "tests/performance/test_git_performance.py",
+      "tests": [
+        {
+          "name": "test_repository_loading_performance",
+          "fullName": "tests/performance/test_git_performance.py::TestGitOperationPerformance::test_repository_loading_performance",
+          "state": "passed"
+        },
+        {
+          "name": "test_commit_history_performance_small",
+          "fullName": "tests/performance/test_git_performance.py::TestGitOperationPerformance::test_commit_history_performance_small",
+          "state": "passed"
+        },
+        {
+          "name": "test_commit_history_performance_large",
+          "fullName": "tests/performance/test_git_performance.py::TestGitOperationPerformance::test_commit_history_performance_large",
+          "state": "passed"
+        },
+        {
+          "name": "test_file_blame_performance",
+          "fullName": "tests/performance/test_git_performance.py::TestGitOperationPerformance::test_file_blame_performance",
+          "state": "passed"
+        },
+        {
+          "name": "test_author_statistics_performance",
+          "fullName": "tests/performance/test_git_performance.py::TestGitOperationPerformance::test_author_statistics_performance",
+          "state": "passed"
+        },
+        {
+          "name": "test_commit_comparison_performance",
+          "fullName": "tests/performance/test_git_performance.py::TestGitOperationPerformance::test_commit_comparison_performance",
+          "state": "passed"
+        }
+      ]
+    }
+  ]
+}

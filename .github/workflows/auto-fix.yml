@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to auto-fix'
+        description: "PR number to auto-fix"
         required: false
         type: string
 
@@ -60,9 +60,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Install dependencies
         run: |
@@ -188,9 +188,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
 
       - name: Install dependencies
         run: |

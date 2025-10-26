@@ -3,14 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-# Handle Pydantic v1/v2 compatibility
-from pydantic import BaseModel, Field, root_validator, validator
-
-# Use Pydantic v1 approach since that's what's installed
-field_validator = validator
-model_validator = root_validator
-class_validator = root_validator
-PYDANTIC_V2 = False
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Authentication and Configuration Models
 
@@ -48,7 +41,7 @@ class MCPServerConfig(BaseModel):
 class MCPJsonConfig(BaseModel):
     """Configuration structure for MCP.json files."""  # [attr-defined]
 
-    mcpServers: dict[str, MCPServerConfig] = Field(
+    mcpServers: dict[str, MCPServerConfig] = Field(  # noqa: N815
         ..., description="Dictionary of MCP server configurations keyed by server name"
     )
 
@@ -280,7 +273,8 @@ class AdvancedSearchInput(BaseModel):
             raise ValueError("max_file_size must be positive")
         return v
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_search_criteria(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Validate that at least one search criterion is provided."""
         search_fields = [

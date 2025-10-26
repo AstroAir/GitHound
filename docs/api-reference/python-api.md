@@ -34,7 +34,7 @@ For development installation:
 ```bash
 git clone https://github.com/AstroAir/GitHound.git
 cd GitHound
-pip install -e ".[dev]"
+pip install -e . --dependency-groups dev,test
 ```
 
 ## Quick Start
@@ -57,8 +57,8 @@ results = gh.search_advanced_sync(query)
 print(f"Found {len(results)} matches")
 
 # Analyze file blame
-blame_info = gh.analyze_blame("src/main.py")
-print(f"File has {blame_info.total_lines} lines")
+blame_result = gh.analyze_blame("src/main.py")
+print(f"File has {blame_result.total_lines} lines with {len(blame_result.contributors)} contributors")
 ```
 
 ## GitHound Class
@@ -390,14 +390,14 @@ print(f"Total lines: {blame_info.total_lines}")
 print(f"Contributors: {len(blame_info.contributors)}")
 
 # Access line-by-line information
-for line in blame_info.lines[:10]:  # First 10 lines
-    print(f"Line {line.line_number}: {line.author} ({line.commit_hash[:8]})")
+for line in blame_info.blame_info[:10]:  # First 10 lines
+    print(f"Line {line.line_number}: {line.author_name} ({line.commit_hash[:8]})")
     print(f"  Date: {line.commit_date}")
     print(f"  Content: {line.content}")
 
 # Contributor statistics
 for contributor in blame_info.contributors:
-    print(f"{contributor.name}: {contributor.lines} lines ({contributor.percentage:.1f}%)")
+    print(f"{contributor}")
 
 # Analyze blame for specific commit
 historical_blame = gh.analyze_blame("src/main.py", commit="abc123")
@@ -1015,7 +1015,6 @@ documentation or the GitHound source code.
 ### Advanced Topics
 
 - **[Architecture Overview](../architecture/overview.md)** - System design
-- **[Configuration Guide](../getting-started/configuration.md)** - Environment setup and configuration
 
 ### Need Help
 

@@ -2,7 +2,8 @@
 
 import threading
 import time
-from unittest.mock import MagicMock, Mock, patch
+from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
 

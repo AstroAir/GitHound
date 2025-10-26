@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 FastMCP Resource Operations Examples
 
@@ -24,22 +23,20 @@ import asyncio
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Union, Any
+from typing import Any
 
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport
 from fastmcp.exceptions import ResourceError
-import mcp.types as mcp_types
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 
-async def discover_resources() -> Dict[str, Any]:
+async def discover_resources() -> dict[str, Any]:
     """
     Demonstrate comprehensive resource discovery and metadata inspection.
 
@@ -71,9 +68,11 @@ async def discover_resources() -> Dict[str, Any]:
                     "uri": resource.uri,
                     "name": resource.name,
                     "description": resource.description,
-                    "mime_type": getattr(resource, 'mimeType', None),
-                    "uri_scheme": str(resource.uri).split('://')[0] if '://' in str(resource.uri) else 'unknown',
-                    "is_templated": '{' in str(resource.uri) and '}' in str(resource.uri)
+                    "mime_type": getattr(resource, "mimeType", None),
+                    "uri_scheme": str(resource.uri).split("://")[0]
+                    if "://" in str(resource.uri)
+                    else "unknown",
+                    "is_templated": "{" in str(resource.uri) and "}" in str(resource.uri),
                 }
 
                 resource_analysis.append(analysis)
@@ -99,18 +98,15 @@ async def discover_resources() -> Dict[str, Any]:
                 "templated_resources": len(templated_resources),
                 "uri_schemes": list(schemes),
                 "resource_details": resource_analysis,
-                "discovery_method": "list_resources"
+                "discovery_method": "list_resources",
             }
 
     except Exception as e:
         logger.error(f"Resource discovery failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def access_static_resources() -> Dict[str, Any]:
+async def access_static_resources() -> dict[str, Any]:
     """
     Demonstrate access to static resources.
 
@@ -134,7 +130,9 @@ async def access_static_resources() -> Dict[str, Any]:
         async with Client(transport) as client:
             # Get available resources
             resources = await client.list_resources()
-            static_resources = [r for r in resources if not ('{' in str(r.uri) and '}' in str(r.uri))]
+            static_resources = [
+                r for r in resources if not ("{" in str(r.uri) and "}" in str(r.uri))
+            ]
 
             logger.info(f"Found {len(static_resources)} static resources")
 
@@ -153,26 +151,30 @@ async def access_static_resources() -> Dict[str, Any]:
                             "blocks": len(content),
                             "content_types": [],
                             "total_size": 0,
-                            "parsed_data": None
+                            "parsed_data": None,
                         }
 
                         for i, block in enumerate(content):
-                            if hasattr(block, 'text') and block.text:
+                            if hasattr(block, "text") and block.text:
                                 content_info["content_types"].append("text")
                                 content_info["total_size"] += len(block.text)
 
                                 # Try to parse as JSON
-                                if str(resource.uri).endswith('/info') or 'config' in str(resource.uri):  # [attr-defined]
+                                if str(resource.uri).endswith("/info") or "config" in str(
+                                    resource.uri
+                                ):  # [attr-defined]
                                     try:
                                         parsed = json.loads(block.text)
                                         content_info["parsed_data"] = parsed
                                         logger.info(f"  ✓ Parsed JSON data with {len(parsed)} keys")
                                     except json.JSONDecodeError:
-                                        logger.info(f"  ✓ Text content: {len(block.text)} characters")
+                                        logger.info(
+                                            f"  ✓ Text content: {len(block.text)} characters"
+                                        )
                                 else:
                                     logger.info(f"  ✓ Text content: {len(block.text)} characters")
 
-                            elif hasattr(block, 'blob') and block.blob:
+                            elif hasattr(block, "blob") and block.blob:
                                 content_info["content_types"].append("binary")
                                 content_info["total_size"] += len(block.blob)
                                 logger.info(f"  ✓ Binary content: {len(block.blob)} bytes")
@@ -182,12 +184,14 @@ async def access_static_resources() -> Dict[str, Any]:
 
                 except ResourceError as e:
                     logger.warning(f"  ✗ Resource access failed: {e}")
-                    access_results.append({
-                        "uri": resource.uri,
-                        "name": resource.name,
-                        "error": str(e),
-                        "status": "failed"
-                    })
+                    access_results.append(
+                        {
+                            "uri": resource.uri,
+                            "name": resource.name,
+                            "error": str(e),
+                            "status": "failed",
+                        }
+                    )
 
             successful_accesses = [r for r in access_results if "error" not in r]
             failed_accesses = [r for r in access_results if "error" in r]
@@ -198,18 +202,15 @@ async def access_static_resources() -> Dict[str, Any]:
                 "successful": len(successful_accesses),
                 "failed": len(failed_accesses),
                 "total_content_size": sum(r.get("total_size", 0) for r in successful_accesses),
-                "access_results": access_results
+                "access_results": access_results,
             }
 
     except Exception as e:
         logger.error(f"Static resource access failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_templated_resources() -> Dict[str, Any]:
+async def demonstrate_templated_resources() -> dict[str, Any]:
     """
     Demonstrate templated resource usage patterns.
 
@@ -239,7 +240,7 @@ async def demonstrate_templated_resources() -> Dict[str, Any]:
         async with Client(transport) as client:
             # Get available resources
             resources = await client.list_resources()
-            templated_resources = [r for r in resources if '{' in str(r.uri) and '}' in str(r.uri)]
+            templated_resources = [r for r in resources if "{" in str(r.uri) and "}" in str(r.uri)]
 
             logger.info(f"Found {len(templated_resources)} templated resources")
 
@@ -250,13 +251,14 @@ async def demonstrate_templated_resources() -> Dict[str, Any]:
 
                 # Extract template parameters
                 import re
-                template_params = re.findall(r'\{([^}]+)\}', resource.uri)
+
+                template_params = re.findall(r"\{([^}]+)\}", resource.uri)
                 logger.info(f"  Template parameters: {template_params}")
 
                 # Try to access with sample parameters
-                if 'repo_path' in template_params:
+                if "repo_path" in template_params:
                     # Use current directory as repo path
-                    sample_uri = resource.uri.replace('{repo_path}', '.')
+                    sample_uri = resource.uri.replace("{repo_path}", ".")
 
                     try:
                         logger.info(f"  Accessing: {sample_uri}")
@@ -266,45 +268,57 @@ async def demonstrate_templated_resources() -> Dict[str, Any]:
                             # Try to parse as JSON
                             try:
                                 data = json.loads(content[0].text)
-                                logger.info(f"  ✓ Retrieved templated resource with {len(data)} keys")
+                                logger.info(
+                                    f"  ✓ Retrieved templated resource with {len(data)} keys"
+                                )
 
-                                template_results.append({
-                                    "original_uri": resource.uri,
-                                    "resolved_uri": sample_uri,
-                                    "template_params": template_params,
-                                    "status": "success",
-                                    "content_size": len(content[0].text),
-                                    "data_keys": list(data.keys()) if isinstance(data, dict) else None
-                                })
+                                template_results.append(
+                                    {
+                                        "original_uri": resource.uri,
+                                        "resolved_uri": sample_uri,
+                                        "template_params": template_params,
+                                        "status": "success",
+                                        "content_size": len(content[0].text),
+                                        "data_keys": list(data.keys())
+                                        if isinstance(data, dict)
+                                        else None,
+                                    }
+                                )
 
                             except json.JSONDecodeError:
-                                logger.info(f"  ✓ Retrieved templated resource (non-JSON)")
-                                template_results.append({
-                                    "original_uri": resource.uri,
-                                    "resolved_uri": sample_uri,
-                                    "template_params": template_params,
-                                    "status": "success",
-                                    "content_size": len(content[0].text),
-                                    "content_type": "text"
-                                })
+                                logger.info("  ✓ Retrieved templated resource (non-JSON)")
+                                template_results.append(
+                                    {
+                                        "original_uri": resource.uri,
+                                        "resolved_uri": sample_uri,
+                                        "template_params": template_params,
+                                        "status": "success",
+                                        "content_size": len(content[0].text),
+                                        "content_type": "text",
+                                    }
+                                )
 
                     except Exception as e:
                         logger.warning(f"  ✗ Templated resource access failed: {e}")
-                        template_results.append({
-                            "original_uri": resource.uri,
-                            "resolved_uri": sample_uri,
-                            "template_params": template_params,
-                            "status": "failed",
-                            "error": str(e)
-                        })
+                        template_results.append(
+                            {
+                                "original_uri": resource.uri,
+                                "resolved_uri": sample_uri,
+                                "template_params": template_params,
+                                "status": "failed",
+                                "error": str(e),
+                            }
+                        )
                 else:
                     # Unknown template parameters
-                    template_results.append({
-                        "original_uri": resource.uri,
-                        "template_params": template_params,
-                        "status": "skipped",
-                        "reason": "Unknown template parameters"
-                    })
+                    template_results.append(
+                        {
+                            "original_uri": resource.uri,
+                            "template_params": template_params,
+                            "status": "skipped",
+                            "reason": "Unknown template parameters",
+                        }
+                    )
 
             successful_templates = [r for r in template_results if r.get("status") == "success"]
 
@@ -313,18 +327,15 @@ async def demonstrate_templated_resources() -> Dict[str, Any]:
                 "templated_resources_found": len(templated_resources),
                 "template_attempts": len(template_results),
                 "successful_accesses": len(successful_templates),
-                "template_results": template_results
+                "template_results": template_results,
             }
 
     except Exception as e:
         logger.error(f"Templated resource demonstration failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_content_types() -> Dict[str, Any]:
+async def demonstrate_content_types() -> dict[str, Any]:
     """
     Demonstrate handling of different content types.
 
@@ -350,54 +361,65 @@ async def demonstrate_content_types() -> Dict[str, Any]:
                 "text_content": [],
                 "json_content": [],
                 "binary_content": [],
-                "unknown_content": []
+                "unknown_content": [],
             }
 
             for resource in resources:
-                if '{' in str(resource.uri) and '}' in str(resource.uri):
+                if "{" in str(resource.uri) and "}" in str(resource.uri):
                     continue  # Skip templated resources for this demo
 
                 try:
                     content = await client.read_resource(resource.uri)
 
                     for block in content:
-                        if hasattr(block, 'text') and block.text:
+                        if hasattr(block, "text") and block.text:
                             # Text content
                             try:
                                 # Try to parse as JSON
                                 json_data = json.loads(block.text)
-                                content_type_results["json_content"].append({
-                                    "uri": resource.uri,
-                                    "size": len(block.text),
-                                    "keys": list(json_data.keys()) if isinstance(json_data, dict) else None,
-                                    "type": type(json_data).__name__
-                                })
-                                logger.info(f"  JSON content from {resource.uri}: {len(json_data)} items")
+                                content_type_results["json_content"].append(
+                                    {
+                                        "uri": resource.uri,
+                                        "size": len(block.text),
+                                        "keys": list(json_data.keys())
+                                        if isinstance(json_data, dict)
+                                        else None,
+                                        "type": type(json_data).__name__,
+                                    }
+                                )
+                                logger.info(
+                                    f"  JSON content from {resource.uri}: {len(json_data)} items"
+                                )
 
                             except json.JSONDecodeError:
                                 # Plain text
-                                content_type_results["text_content"].append({
-                                    "uri": resource.uri,
-                                    "size": len(block.text),
-                                    "preview": block.text[:100] + "..." if len(block.text) > 100 else block.text
-                                })
-                                logger.info(f"  Text content from {resource.uri}: {len(block.text)} chars")
+                                content_type_results["text_content"].append(
+                                    {
+                                        "uri": resource.uri,
+                                        "size": len(block.text),
+                                        "preview": block.text[:100] + "..."
+                                        if len(block.text) > 100
+                                        else block.text,
+                                    }
+                                )
+                                logger.info(
+                                    f"  Text content from {resource.uri}: {len(block.text)} chars"
+                                )
 
-                        elif hasattr(block, 'blob') and block.blob:
+                        elif hasattr(block, "blob") and block.blob:
                             # Binary content
-                            content_type_results["binary_content"].append({
-                                "uri": resource.uri,
-                                "size": len(block.blob),
-                                "type": "binary"
-                            })
-                            logger.info(f"  Binary content from {resource.uri}: {len(block.blob)} bytes")
+                            content_type_results["binary_content"].append(
+                                {"uri": resource.uri, "size": len(block.blob), "type": "binary"}
+                            )
+                            logger.info(
+                                f"  Binary content from {resource.uri}: {len(block.blob)} bytes"
+                            )
 
                         else:
                             # Unknown content type
-                            content_type_results["unknown_content"].append({
-                                "uri": resource.uri,
-                                "block_type": type(block).__name__
-                            })
+                            content_type_results["unknown_content"].append(
+                                {"uri": resource.uri, "block_type": type(block).__name__}
+                            )
                             logger.info(f"  Unknown content type from {resource.uri}")
 
                 except Exception as e:
@@ -409,23 +431,26 @@ async def demonstrate_content_types() -> Dict[str, Any]:
                     "text_files": len(content_type_results["text_content"]),
                     "json_files": len(content_type_results["json_content"]),
                     "binary_files": len(content_type_results["binary_content"]),
-                    "unknown_files": len(content_type_results["unknown_content"])
+                    "unknown_files": len(content_type_results["unknown_content"]),
                 },
-                "total_text_size": sum(item["size"] for item in content_type_results["text_content"]),
-                "total_json_size": sum(item["size"] for item in content_type_results["json_content"]),
-                "total_binary_size": sum(item["size"] for item in content_type_results["binary_content"]),
-                "content_details": content_type_results
+                "total_text_size": sum(
+                    item["size"] for item in content_type_results["text_content"]
+                ),
+                "total_json_size": sum(
+                    item["size"] for item in content_type_results["json_content"]
+                ),
+                "total_binary_size": sum(
+                    item["size"] for item in content_type_results["binary_content"]
+                ),
+                "content_details": content_type_results,
             }
 
     except Exception as e:
         logger.error(f"Content type demonstration failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_resource_patterns() -> Dict[str, Any]:
+async def demonstrate_resource_patterns() -> dict[str, Any]:
     """
     Demonstrate common resource URI patterns and conventions.
 
@@ -451,43 +476,49 @@ async def demonstrate_resource_patterns() -> Dict[str, Any]:
                 "schemes": {},
                 "hierarchies": {},
                 "naming_patterns": [],
-                "template_patterns": []
+                "template_patterns": [],
             }
 
             for resource in resources:
                 uri = str(resource.uri)
 
                 # Analyze URI scheme
-                if '://' in uri:
-                    scheme = uri.split('://')[0]
-                    pattern_analysis["schemes"][scheme] = pattern_analysis["schemes"].get(scheme, 0) + 1
+                if "://" in uri:
+                    scheme = uri.split("://")[0]
+                    pattern_analysis["schemes"][scheme] = (
+                        pattern_analysis["schemes"].get(scheme, 0) + 1
+                    )
 
                 # Analyze hierarchy (path segments)
-                if '://' in uri:
-                    path = uri.split('://', 1)[1]
-                    segments = path.split('/')
+                if "://" in uri:
+                    path = uri.split("://", 1)[1]
+                    segments = path.split("/")
                     depth = len(segments)
-                    pattern_analysis["hierarchies"][depth] = pattern_analysis["hierarchies"].get(depth, 0) + 1
+                    pattern_analysis["hierarchies"][depth] = (
+                        pattern_analysis["hierarchies"].get(depth, 0) + 1
+                    )
 
                 # Analyze naming patterns
                 if resource.name:
-                    pattern_analysis["naming_patterns"].append({
-                        "name": resource.name,
-                        "uri": uri,
-                        "has_extension": '.' in uri.split('/')[-1],
-                        "is_config": 'config' in uri.lower() or 'settings' in uri.lower(),  # [attr-defined]
-                        "is_info": 'info' in uri.lower() or 'status' in uri.lower()
-                    })
+                    pattern_analysis["naming_patterns"].append(
+                        {
+                            "name": resource.name,
+                            "uri": uri,
+                            "has_extension": "." in uri.split("/")[-1],
+                            "is_config": "config" in uri.lower()
+                            or "settings" in uri.lower(),  # [attr-defined]
+                            "is_info": "info" in uri.lower() or "status" in uri.lower(),
+                        }
+                    )
 
                 # Analyze template patterns
-                if '{' in str(uri) and '}' in str(uri):
+                if "{" in str(uri) and "}" in str(uri):
                     import re
-                    params = re.findall(r'\{([^}]+)\}', uri)
-                    pattern_analysis["template_patterns"].append({
-                        "uri": uri,
-                        "parameters": params,
-                        "parameter_count": len(params)
-                    })
+
+                    params = re.findall(r"\{([^}]+)\}", uri)
+                    pattern_analysis["template_patterns"].append(
+                        {"uri": uri, "parameters": params, "parameter_count": len(params)}
+                    )
 
             logger.info("Resource pattern analysis:")
             logger.info(f"  URI schemes: {list(pattern_analysis['schemes'].keys())}")
@@ -499,21 +530,29 @@ async def demonstrate_resource_patterns() -> Dict[str, Any]:
                 "total_resources": len(resources),
                 "pattern_analysis": pattern_analysis,
                 "recommendations": {
-                    "most_common_scheme": max(pattern_analysis["schemes"].items(), key=lambda x: x[1])[0] if pattern_analysis["schemes"] else None,
-                    "average_hierarchy_depth": sum(k * v for k, v in pattern_analysis["hierarchies"].items()) / sum(pattern_analysis["hierarchies"].values()) if pattern_analysis["hierarchies"] else 0,
-                    "template_usage": len(pattern_analysis["template_patterns"]) / len(resources) if resources else 0
-                }
+                    "most_common_scheme": max(
+                        pattern_analysis["schemes"].items(), key=lambda x: x[1]
+                    )[0]
+                    if pattern_analysis["schemes"]
+                    else None,
+                    "average_hierarchy_depth": sum(
+                        k * v for k, v in pattern_analysis["hierarchies"].items()
+                    )
+                    / sum(pattern_analysis["hierarchies"].values())
+                    if pattern_analysis["hierarchies"]
+                    else 0,
+                    "template_usage": len(pattern_analysis["template_patterns"]) / len(resources)
+                    if resources
+                    else 0,
+                },
             }
 
     except Exception as e:
         logger.error(f"Resource pattern analysis failed: {e}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return {"status": "failed", "error": str(e)}
 
 
-async def main() -> Dict[str, Any]:
+async def main() -> dict[str, Any]:
     """
     Main function demonstrating comprehensive resource operations.
 
@@ -566,7 +605,7 @@ async def main() -> Dict[str, Any]:
 if __name__ == "__main__":
     # Run the resource operations examples
     result = asyncio.run(main())
-    print(f"\nResource Operations Summary:")
+    print("\nResource Operations Summary:")
     for category, result_data in result.items():
         if isinstance(result_data, dict) and "status" in result_data:
             print(f"  {category}: {result_data['status']}")

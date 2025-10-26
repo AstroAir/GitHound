@@ -61,8 +61,8 @@ def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> Fil
 
         line_number = 1
         # GitPython blame data structure is complex, use type ignore for now
-        for commit_info, lines in blame_data:  # type: ignore
-            for line in lines:  # type: ignore
+        for commit_info, lines in blame_data:  # type: ignore[misc]
+            for line in lines:  # type: ignore[misc]
                 blame_entry = BlameInfo(
                     line_number=line_number,
                     content=str(line).rstrip("\n\r"),
@@ -90,7 +90,7 @@ def get_file_blame(repo: Repo, file_path: str, commit: str | None = None) -> Fil
         )
 
     except Exception as e:
-        raise GitCommandError(f"Failed to get blame for '{file_path}': {str(e)}")
+        raise GitCommandError(f"Failed to get blame for '{file_path}': {str(e)}") from e
 
 
 def get_line_history(
@@ -148,7 +148,9 @@ def get_line_history(
                 continue
 
     except GitCommandError as e:
-        raise GitCommandError(f"Error getting line history for '{file_path}:{line_number}': {e}")
+        raise GitCommandError(
+            f"Error getting line history for '{file_path}:{line_number}': {e}"
+        ) from e
 
     return history
 
@@ -231,7 +233,7 @@ def get_author_statistics(
                                 stats["files"].add(diff.b_path)
 
     except Exception as e:
-        raise GitCommandError(f"Error getting author statistics: {str(e)}")
+        raise GitCommandError(f"Error getting author statistics: {str(e)}") from e
 
     # Convert sets to counts for final output
     for author, stats in author_stats.items():

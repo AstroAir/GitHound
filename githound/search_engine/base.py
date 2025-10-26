@@ -1,19 +1,23 @@
 """Base classes for the search engine architecture."""
 
 import asyncio
+import os
 import time
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, Awaitable, Callable
 
 # Forward declaration to avoid circular imports
-from typing import TYPE_CHECKING, Any, Union
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
 from ..models import SearchMetrics, SearchQuery, SearchResult
 
-if TYPE_CHECKING:
+# Import SearchCache for runtime use in Pydantic models
+try:
     from .cache import SearchCache
+except ImportError:
+    SearchCache = None  # type: ignore[misc, assignment]
 
 
 class SearchContext(BaseModel):
@@ -25,7 +29,9 @@ class SearchContext(BaseModel):
     query: SearchQuery
     branch: str | None = None
     progress_callback: Callable[[str, float], None] | None = None
-    cache: Union[dict[str, Any], "SearchCache", None] = None
+    cache: dict[
+        str, Any
+    ] | Any | None = None  # Changed from "SearchCache" to Any to avoid forward ref issues
 
 
 class BaseSearcher(ABC):
@@ -74,7 +80,7 @@ class BaseSearcher(ABC):
         for key, value in kwargs.items():
             if hasattr(self._metrics, key):
                 current_value = getattr(self._metrics, key)
-                if isinstance(current_value, (int, float)) and isinstance(value, (int, float)):
+                if isinstance(current_value, int | float) and isinstance(value, int | float):
                     setattr(self._metrics, key, current_value + value)
                 else:
                     setattr(self._metrics, key, value)
@@ -105,11 +111,11 @@ class CacheableSearcher(BaseSearcher):
 
         try:
             # Handle both dict and SearchCache
-            if hasattr(context.cache, "get") and callable(getattr(context.cache, "get")):
+            if hasattr(context.cache, "get") and callable(context.cache.get):
                 # SearchCache or similar async cache
-                get_method = getattr(context.cache, "get")
+                get_method = context.cache.get
                 if asyncio.iscoroutinefunction(get_method):
-                    value = await get_method(key)
+                    value = await get_method(key)  # type: ignore[misc]
                 else:
                     value = get_method(key)
             else:
@@ -134,9 +140,9 @@ class CacheableSearcher(BaseSearcher):
 
         try:
             # Handle both dict and SearchCache
-            if hasattr(context.cache, "set") and callable(getattr(context.cache, "set")):
+            if hasattr(context.cache, "set") and callable(context.cache.set):
                 # SearchCache or similar async cache
-                set_method = getattr(context.cache, "set")
+                set_method = context.cache.set
                 if asyncio.iscoroutinefunction(set_method):
                     await set_method(value, key, ttl=ttl)
                 else:
@@ -150,10 +156,13 @@ class CacheableSearcher(BaseSearcher):
 
 
 class ParallelSearcher(BaseSearcher):
-    """Base class for searchers that can run operations in parallel."""
+    """Base class for searchers that can run operations in parallel with dynamic worker sizing."""
 
     def __init__(self, name: str, max_workers: int = 4) -> None:
         super().__init__(name)
+        # Optimize: Use dynamic worker count based on CPU cores if not specified
+        if max_workers <= 0:
+            max_workers = min(32, (os.cpu_count() or 1) + 4)
         self.max_workers = max_workers
         self._semaphore = asyncio.Semaphore(max_workers)
 
@@ -161,11 +170,32 @@ class ParallelSearcher(BaseSearcher):
         self,
         tasks: list[Callable[[], Awaitable[Any]]],
         context: SearchContext,
+        batch_size: int | None = None,
     ) -> list[Any]:
-        """Run tasks in parallel with concurrency control."""
+        """Run tasks in parallel with concurrency control and optional batching.
+
+        Args:
+            tasks: List of async tasks to execute
+            context: Search context
+            batch_size: Optional batch size for processing tasks in chunks
+                       (useful for very large task lists to reduce memory pressure)
+
+        Returns:
+            List of results from all tasks
+        """
 
         async def _run_task(task: Callable[[], Awaitable[Any]]) -> Any:
             async with self._semaphore:
                 return await task()
 
-        return await asyncio.gather(*[_run_task(task) for task in tasks])
+        # If batch_size is specified and we have many tasks, process in batches
+        if batch_size and len(tasks) > batch_size:
+            all_results = []
+            for i in range(0, len(tasks), batch_size):
+                batch = tasks[i : i + batch_size]
+                batch_results = await asyncio.gather(*[_run_task(task) for task in batch])
+                all_results.extend(batch_results)
+            return all_results
+        else:
+            # Process all tasks at once
+            return await asyncio.gather(*[_run_task(task) for task in tasks])

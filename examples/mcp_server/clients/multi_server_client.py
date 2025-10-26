@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Multi-Server FastMCP Client Example
 
@@ -19,19 +18,16 @@ This example covers:
 import asyncio
 import json
 import logging
-from pathlib import Path
-from typing import Optional, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
-from fastmcp import Client
-from fastmcp.client.transports import PythonStdioTransport, FastMCPTransport
-from fastmcp.exceptions import ToolError, McpError
-from fastmcp import FastMCP
+from fastmcp import Client, FastMCP
+from fastmcp.client.transports import FastMCPTransport, PythonStdioTransport
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -39,6 +35,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ServerConfig:
     """Configuration for an MCP server."""
+
     name: str
     transport_type: str
     connection_string: str
@@ -47,7 +44,7 @@ class ServerConfig:
     enabled: bool = True
 
 
-async def create_mock_servers() -> Dict[str, FastMCP]:
+async def create_mock_servers() -> dict[str, FastMCP]:
     """
     Create mock MCP servers for demonstration.
 
@@ -85,7 +82,7 @@ async def create_mock_servers() -> Dict[str, FastMCP]:
         return text.upper()
 
     @text_server.tool
-    def word_count(text: str) -> Dict[str, int]:
+    def word_count(text: str) -> dict[str, int]:
         """Count words in text."""
         words = text.split()
         return {"word_count": len(words), "character_count": len(text)}
@@ -100,7 +97,7 @@ async def create_mock_servers() -> Dict[str, FastMCP]:
     return servers
 
 
-async def demonstrate_multi_server_setup() -> Dict[str, Any]:
+async def demonstrate_multi_server_setup() -> dict[str, Any]:
     """
     Demonstrate setting up connections to multiple MCP servers.
 
@@ -118,20 +115,20 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
             name="simple",
             transport_type="stdio",
             connection_string=str(Path(__file__).parent.parent / "servers" / "simple_server.py"),
-            description="Simple demonstration server"
+            description="Simple demonstration server",
         ),
         ServerConfig(
             name="math",
             transport_type="inmemory",
             connection_string="math_server",
-            description="Mathematical operations server"
+            description="Mathematical operations server",
         ),
         ServerConfig(
             name="text",
             transport_type="inmemory",
             connection_string="text_server",
-            description="Text processing server"
-        )
+            description="Text processing server",
+        ),
     ]
 
     # Connect to servers
@@ -156,7 +153,9 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
                     logger.warning(f"Mock server {config.name} not found")  # [attr-defined]
                     continue
             else:
-                logger.warning(f"Unsupported transport type: {config.transport_type}")  # [attr-defined]
+                logger.warning(
+                    f"Unsupported transport type: {config.transport_type}"
+                )  # [attr-defined]
                 continue
 
             # Test connection
@@ -169,10 +168,12 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
                     "client": client,
                     "tools": len(tools),
                     "resources": len(resources),
-                    "status": "connected"
+                    "status": "connected",
                 }
 
-                logger.info(f"✓ Connected to {config.name}: {len(tools)} tools, {len(resources)} resources")  # [attr-defined]
+                logger.info(
+                    f"✓ Connected to {config.name}: {len(tools)} tools, {len(resources)} resources"
+                )  # [attr-defined]
 
         except Exception as e:
             logger.error(f"Failed to connect to {config.name}: {e}")  # [attr-defined]
@@ -180,18 +181,20 @@ async def demonstrate_multi_server_setup() -> Dict[str, Any]:
                 "config": config,
                 "client": None,
                 "status": "failed",
-                "error": str(e)
+                "error": str(e),
             }
 
     return {
         "status": "success",
         "servers_configured": len(server_configs),
-        "servers_connected": len([s for s in connected_servers.values() if s["status"] == "connected"]),
-        "server_details": connected_servers
+        "servers_connected": len(
+            [s for s in connected_servers.values() if s["status"] == "connected"]
+        ),
+        "server_details": connected_servers,
     }
 
 
-async def demonstrate_cross_server_operations() -> Dict[str, Any]:
+async def demonstrate_cross_server_operations() -> dict[str, Any]:
     """
     Demonstrate operations across multiple servers.
 
@@ -203,28 +206,22 @@ async def demonstrate_cross_server_operations() -> Dict[str, Any]:
     # Create mock servers for this demo
     mock_servers = await create_mock_servers()
 
-    results = {
-        "math_operations": [],
-        "text_operations": [],
-        "combined_operations": []
-    }
+    results = {"math_operations": [], "text_operations": [], "combined_operations": []}
 
     try:
         # Connect to math server
         math_transport = FastMCPTransport(mock_servers["math"])
         async with Client(math_transport) as math_client:
-
             # Connect to text server
             text_transport = FastMCPTransport(mock_servers["text"])
             async with Client(text_transport) as text_client:
-
                 # Math operations
                 add_result = await math_client.call_tool("add", {"a": 10, "b": 5})
                 multiply_result = await math_client.call_tool("multiply", {"a": 3, "b": 4})
 
                 results["math_operations"] = [
                     {"operation": "add", "result": add_result.data},
-                    {"operation": "multiply", "result": multiply_result.data}
+                    {"operation": "multiply", "result": multiply_result.data},
                 ]
 
                 # Text operations
@@ -234,18 +231,20 @@ async def demonstrate_cross_server_operations() -> Dict[str, Any]:
 
                 results["text_operations"] = [
                     {"operation": "uppercase", "result": upper_result.data},
-                    {"operation": "word_count", "result": count_result.data}
+                    {"operation": "word_count", "result": count_result.data},
                 ]
 
                 # Combined operation: process math result with text server
                 math_result_text = f"The result is {add_result.data}"
-                combined_result = await text_client.call_tool("word_count", {"text": math_result_text})
+                combined_result = await text_client.call_tool(
+                    "word_count", {"text": math_result_text}
+                )
 
                 results["combined_operations"] = [
                     {
                         "description": "Math result processed by text server",
                         "input": math_result_text,
-                        "result": combined_result.data
+                        "result": combined_result.data,
                     }
                 ]
 
@@ -255,13 +254,10 @@ async def demonstrate_cross_server_operations() -> Dict[str, Any]:
         logger.error(f"Cross-server operations failed: {e}")
         return {"status": "failed", "error": str(e)}
 
-    return {
-        "status": "success",
-        "operations": results
-    }
+    return {"status": "success", "operations": results}
 
 
-async def demonstrate_server_failover() -> Dict[str, Any]:
+async def demonstrate_server_failover() -> dict[str, Any]:
     """
     Demonstrate failover patterns when servers are unavailable.
 
@@ -274,7 +270,7 @@ async def demonstrate_server_failover() -> Dict[str, Any]:
     server_priorities = [
         {"name": "primary", "available": False},
         {"name": "secondary", "available": True},
-        {"name": "tertiary", "available": True}
+        {"name": "tertiary", "available": True},
     ]
 
     failover_results: list[Any] = []
@@ -284,38 +280,31 @@ async def demonstrate_server_failover() -> Dict[str, Any]:
             if server["available"]:
                 # Simulate successful connection
                 logger.info(f"✓ Connected to {server['name']} server")
-                failover_results.append({
-                    "server": server["name"],
-                    "status": "connected",
-                    "selected": True
-                })
+                failover_results.append(
+                    {"server": server["name"], "status": "connected", "selected": True}
+                )
                 break
             else:
                 # Simulate failed connection
                 logger.warning(f"✗ {server['name']} server unavailable")
-                failover_results.append({
-                    "server": server["name"],
-                    "status": "unavailable",
-                    "selected": False
-                })
+                failover_results.append(
+                    {"server": server["name"], "status": "unavailable", "selected": False}
+                )
 
         except Exception as e:
             logger.error(f"Connection to {server['name']} failed: {e}")
-            failover_results.append({
-                "server": server["name"],
-                "status": "failed",
-                "error": str(e),
-                "selected": False
-            })
+            failover_results.append(
+                {"server": server["name"], "status": "failed", "error": str(e), "selected": False}
+            )
 
     return {
         "status": "success",
         "failover_sequence": failover_results,
-        "final_server": next((r["server"] for r in failover_results if r.get("selected")), None)
+        "final_server": next((r["server"] for r in failover_results if r.get("selected")), None),
     }
 
 
-async def main() -> Dict[str, Any]:
+async def main() -> dict[str, Any]:
     """
     Main function demonstrating multi-server FastMCP client usage.
 

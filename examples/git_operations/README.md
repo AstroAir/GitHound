@@ -15,6 +15,7 @@ This directory contains comprehensive examples for GitHound's git repository ana
 ## Git Operations Categories
 
 ### Repository Analysis
+
 - Repository metadata extraction
 - Branch and tag enumeration
 - Remote repository information
@@ -22,6 +23,7 @@ This directory contains comprehensive examples for GitHound's git repository ana
 - Contributor statistics
 
 ### Commit Operations
+
 - Commit metadata extraction
 - Commit history filtering
 - Commit message analysis
@@ -29,6 +31,7 @@ This directory contains comprehensive examples for GitHound's git repository ana
 - Parent/child relationships
 
 ### Blame and History
+
 - Line-by-line blame information
 - Author attribution
 - Change timeline tracking
@@ -36,6 +39,7 @@ This directory contains comprehensive examples for GitHound's git repository ana
 - Code ownership patterns
 
 ### Diff Analysis
+
 - Commit-to-commit differences
 - Branch comparison
 - File-level diff analysis
@@ -43,6 +47,7 @@ This directory contains comprehensive examples for GitHound's git repository ana
 - Merge conflict detection
 
 ### File Operations
+
 - File history tracking
 - Rename detection
 - Content evolution
@@ -62,6 +67,7 @@ python examples/git_operations/commit_analysis.py /path/to/repo commit-hash
 ## Common Patterns
 
 ### Repository Setup
+
 ```python
 from githound.git_handler import get_repository
 from pathlib import Path
@@ -70,6 +76,7 @@ repo = get_repository(Path("/path/to/repository"))
 ```
 
 ### Commit Analysis
+
 ```python
 from githound.git_handler import extract_commit_metadata
 
@@ -81,15 +88,17 @@ print(f"Message: {metadata.message}")
 ```
 
 ### Blame Operations
+
 ```python
 from githound.git_blame import get_file_blame
 
-blame_info = get_file_blame(repo, "src/main.py")
-for line_num, blame_data in blame_info.line_blame.items():
-    print(f"Line {line_num}: {blame_data.author} - {blame_data.commit_hash}")
+blame_result = get_file_blame(repo, "src/main.py")
+for blame_line in blame_result.blame_info:
+    print(f"Line {blame_line.line_number}: {blame_line.author_name} - {blame_line.commit_hash}")
 ```
 
 ### Diff Analysis
+
 ```python
 from githound.git_diff import compare_commits
 
@@ -106,6 +115,7 @@ print(f"Lines deleted: {diff_result.total_deletions}")
 ## Output Examples
 
 ### Repository Metadata
+
 ```json
 {
   "total_commits": 1250,
@@ -119,6 +129,7 @@ print(f"Lines deleted: {diff_result.total_deletions}")
 ```
 
 ### Commit Information
+
 ```json
 {
   "hash": "abc123def456...",
@@ -134,6 +145,7 @@ print(f"Lines deleted: {diff_result.total_deletions}")
 ```
 
 ### Blame Information
+
 ```json
 {
   "file_path": "src/auth.py",

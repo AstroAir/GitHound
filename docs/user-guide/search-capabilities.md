@@ -19,12 +19,15 @@ GitHound provides powerful and flexible search capabilities that allow you to fi
 
 GitHound's search engine is built on a modular architecture with specialized searchers that can work independently or in combination. The system supports:
 
-- **8 Specialized Searchers**: Each optimized for specific search types
+- **12+ Specialized Searchers**: Each optimized for specific search types and patterns
 - **Multi-modal Queries**: Combine multiple search criteria in a single query
-- **Fuzzy Matching**: Find approximate matches with configurable similarity
+- **Fuzzy Matching**: Find approximate matches with configurable similarity thresholds
+- **Pattern Detection**: Identify code patterns and anti-patterns automatically
+- **Statistical Analysis**: Advanced analytics and search performance metrics
 - **Real-time Progress**: Track search progress for large repositories
 - **Flexible Filtering**: Advanced filtering by file type, size, date, and patterns
 - **Relevance Scoring**: Results ranked by relevance and quality
+- **Caching & Analytics**: Intelligent caching with search analytics
 
 ## Search Engine Architecture
 
@@ -41,6 +44,12 @@ graph TB
     Orchestrator --> FileType[File Type Searcher]
     Orchestrator --> Content[Content Searcher]
     Orchestrator --> Fuzzy[Fuzzy Searcher]
+    Orchestrator --> Pattern[Pattern Searcher]
+    Orchestrator --> Statistical[Statistical Searcher]
+    Orchestrator --> Branch[Branch Searcher]
+    Orchestrator --> Tag[Tag Searcher]
+    Orchestrator --> Diff[Diff Searcher]
+    Orchestrator --> History[History Searcher]
 
     CommitHash --> Results[Search Results]
     Author --> Results
@@ -57,7 +66,7 @@ graph TB
 
 ## Search Types
 
-GitHound provides 8 specialized searchers, each optimized for different types of queries:
+GitHound provides 12+ specialized searchers, each optimized for different types of queries:
 
 ### 1. Content Searcher
 
@@ -491,6 +500,93 @@ query = SearchQuery(
 )
 ```
 
+### 9. Pattern Searcher
+
+Detects common code patterns and anti-patterns automatically.
+
+**Features:**
+
+- Code pattern recognition
+- Anti-pattern detection
+- Configurable pattern libraries
+- Severity scoring
+- Pattern categorization
+
+**Use Cases:**
+
+- Code quality analysis
+- Technical debt identification
+- Security vulnerability detection
+- Best practice enforcement
+
+**CLI Examples:**
+
+```bash
+# Detect all patterns
+githound search --detect-patterns /path/to/repo
+
+# Specific pattern types
+githound search --detect-patterns --pattern-types security,performance /path/to/repo
+
+# With severity threshold
+githound search --detect-patterns --severity-threshold high /path/to/repo
+```
+
+### 10. Statistical Searcher
+
+Performs statistical analysis of repository data and search patterns.
+
+**Features:**
+
+- Repository statistics
+- Search analytics
+- Trend analysis
+- Performance metrics
+- Usage pattern detection
+
+**Use Cases:**
+
+- Repository health monitoring
+- Search optimization
+- Development pattern analysis
+- Performance tracking
+
+### 11. Branch Searcher
+
+Searches across repository branches with branch-specific filtering.
+
+**Features:**
+
+- Multi-branch search
+- Branch comparison
+- Merge analysis
+- Branch metadata
+
+**Use Cases:**
+
+- Cross-branch code search
+- Feature branch analysis
+- Merge conflict detection
+- Branch health assessment
+
+### 12. Tag Searcher
+
+Searches repository content by Git tags and releases.
+
+**Features:**
+
+- Tag-based filtering
+- Version comparison
+- Release analysis
+- Semantic versioning support
+
+**Use Cases:**
+
+- Version-specific searches
+- Release comparison
+- Change tracking between versions
+- Version history analysis
+
 ## Search Orchestrator
 
 The Search Orchestrator coordinates multiple searchers and provides unified result ranking:
@@ -715,6 +811,58 @@ query = SearchQuery(
     min_commit_size=50
 )
 ```
+
+### 5. Search Analytics
+
+GitHound provides comprehensive search analytics to track performance and usage patterns:
+
+**Features:**
+
+- Search performance metrics
+- Query pattern analysis
+- Result quality scoring
+- Usage statistics
+- Performance optimization suggestions
+
+**CLI Examples:**
+
+```bash
+# Enable analytics for search
+githound search --enable-analytics "function" /path/to/repo
+
+# Get search analytics report
+githound analytics --repo /path/to/repo --time-range 24h
+
+# Performance analysis
+githound analytics --performance --repo /path/to/repo
+```
+
+**Python API:**
+
+```python
+from githound.search_engine import SearchAnalytics
+
+# Get search analytics
+analytics = SearchAnalytics()
+report = analytics.get_search_report(
+    repo_path="/path/to/repo",
+    time_range_hours=24
+)
+
+# Performance metrics
+performance = analytics.get_performance_metrics(
+    include_trends=True,
+    include_optimization_suggestions=True
+)
+```
+
+**Analytics Data:**
+
+- Search execution times
+- Result relevance scores
+- Query complexity metrics
+- Cache hit rates
+- Resource usage patterns
 
 ## Performance Optimization
 

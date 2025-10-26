@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Build Integration Example
 
@@ -15,23 +14,22 @@ Workflows:
     release-prep      - Release preparation workflow
 """
 
+import sys
+from pathlib import Path
+
+import typer
 from utils import (
+    StatusContext,
     console,
     get_project_root,
+    is_windows,
     print_header,
     print_info,
     print_section,
     print_step,
     print_success,
     run_command,
-    StatusContext,
-    is_windows,
 )
-import sys
-from pathlib import Path
-from typing import List
-
-import typer
 
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -51,7 +49,7 @@ class IntegrationWorkflows:
         self.project_root = get_project_root()
         self.build_script = "build.ps1" if is_windows() else "build.sh"
 
-    def run_command_safe(self, command: List[str], description: str) -> bool:
+    def run_command_safe(self, command: list[str], description: str) -> bool:
         """Run a command safely with error handling."""
         try:
             with StatusContext(description):
@@ -65,39 +63,50 @@ class IntegrationWorkflows:
     def full_development_setup(self) -> None:
         """Complete development setup workflow."""
         print_header("Full Development Setup Workflow")
-        print_info(
-            "This workflow combines new utility scripts with existing build tools")
+        print_info("This workflow combines new utility scripts with existing build tools")
 
         steps = [
             # Step 1: Environment validation
-            (["python", "scripts/health-check.py", "check"],
-             "Checking system health"),
-
+            (["python", "scripts/health-check.py", "check"], "Checking system health"),
             # Step 2: Development environment setup
-            (["python", "scripts/dev-env.py", "setup"],
-             "Setting up development environment"),
-
+            (["python", "scripts/dev-env.py", "setup"], "Setting up development environment"),
             # Step 3: Use existing build script for dependencies
-            ([f"./{self.build_script}", "install-dev"] if not is_windows()
-             else ["powershell", "-ExecutionPolicy", "Bypass", "-File", self.build_script, "install-dev"],
-             "Installing development dependencies (existing build script)"),
-
+            (
+                [f"./{self.build_script}", "install-dev"]
+                if not is_windows()
+                else [
+                    "powershell",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    self.build_script,
+                    "install-dev",
+                ],
+                "Installing development dependencies (existing build script)",
+            ),
             # Step 4: Clean any existing artifacts
-            (["python", "scripts/cache-manager.py", "clean", "all"],
-             "Cleaning build artifacts"),
-
+            (["python", "scripts/cache-manager.py", "clean", "all"], "Cleaning build artifacts"),
             # Step 5: Run quality checks with existing tools
-            ([f"./{self.build_script}", "quality"] if not is_windows()
-             else ["powershell", "-ExecutionPolicy", "Bypass", "-File", self.build_script, "quality"],
-             "Running code quality checks (existing build script)"),
-
+            (
+                [f"./{self.build_script}", "quality"]
+                if not is_windows()
+                else [
+                    "powershell",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    self.build_script,
+                    "quality",
+                ],
+                "Running code quality checks (existing build script)",
+            ),
             # Step 6: Start services for development
-            (["python", "scripts/services.py", "start", "web", "--port", "8080"],
-             "Starting web server for development"),
-
+            (
+                ["python", "scripts/services.py", "start", "web", "--port", "8080"],
+                "Starting web server for development",
+            ),
             # Step 7: Final health check
-            (["python", "scripts/health-check.py", "check"],
-             "Final health validation"),
+            (["python", "scripts/health-check.py", "check"], "Final health validation"),
         ]
 
         success_count = 0
@@ -124,29 +133,31 @@ class IntegrationWorkflows:
 
         steps = [
             # CI Setup
-            (["python", "scripts/dev-env.py", "setup", "--force"],
-             "CI: Setting up environment"),
-
+            (["python", "scripts/dev-env.py", "setup", "--force"], "CI: Setting up environment"),
             # Health check
-            (["python", "scripts/health-check.py", "check", "--save"],
-             "CI: System health check"),
-
+            (["python", "scripts/health-check.py", "check", "--save"], "CI: System health check"),
             # Clean environment
-            (["python", "scripts/cache-manager.py", "clean", "all"],
-             "CI: Cleaning build environment"),
-
+            (
+                ["python", "scripts/cache-manager.py", "clean", "all"],
+                "CI: Cleaning build environment",
+            ),
             # Use existing build script for main CI tasks
-            ([f"./{self.build_script}", "ci"] if not is_windows()
-             else ["powershell", "-ExecutionPolicy", "Bypass", "-File", self.build_script, "ci"],
-             "CI: Running main CI pipeline (existing build script)"),
-
+            (
+                [f"./{self.build_script}", "ci"]
+                if not is_windows()
+                else ["powershell", "-ExecutionPolicy", "Bypass", "-File", self.build_script, "ci"],
+                "CI: Running main CI pipeline (existing build script)",
+            ),
             # Performance benchmarks
-            (["python", "scripts/benchmark.py", "run", "--save"],
-             "CI: Running performance benchmarks"),
-
+            (
+                ["python", "scripts/benchmark.py", "run", "--save"],
+                "CI: Running performance benchmarks",
+            ),
             # Generate reports
-            (["python", "scripts/health-check.py", "report", "--format", "json"],
-             "CI: Generating health report"),
+            (
+                ["python", "scripts/health-check.py", "report", "--format", "json"],
+                "CI: Generating health report",
+            ),
         ]
 
         success_count = 0
@@ -158,8 +169,7 @@ class IntegrationWorkflows:
         if success_count == len(steps):
             print_success("✅ CI pipeline completed successfully!")
         else:
-            print_info(
-                f"⚠️  CI pipeline completed with {len(steps) - success_count} failures")
+            print_info(f"⚠️  CI pipeline completed with {len(steps) - success_count} failures")
 
     def daily_development_workflow(self) -> None:
         """Daily development workflow."""
@@ -168,14 +178,12 @@ class IntegrationWorkflows:
 
         print_section("Morning Setup")
         morning_steps = [
-            (["python", "scripts/health-check.py", "check"],
-             "Morning health check"),
-
-            (["python", "scripts/services.py", "start", "web", "--port", "8000"],
-             "Starting web server"),
-
-            (["python", "scripts/cache-manager.py", "info"],
-             "Checking cache status"),
+            (["python", "scripts/health-check.py", "check"], "Morning health check"),
+            (
+                ["python", "scripts/services.py", "start", "web", "--port", "8000"],
+                "Starting web server",
+            ),
+            (["python", "scripts/cache-manager.py", "info"], "Checking cache status"),
         ]
 
         for command, description in morning_steps:
@@ -192,11 +200,8 @@ class IntegrationWorkflows:
 
         print_section("End of Day Cleanup")
         cleanup_steps = [
-            (["python", "scripts/cache-manager.py", "optimize"],
-             "Optimizing caches"),
-
-            (["python", "scripts/services.py", "stop", "all"],
-             "Stopping all services"),
+            (["python", "scripts/cache-manager.py", "optimize"], "Optimizing caches"),
+            (["python", "scripts/services.py", "stop", "all"], "Stopping all services"),
         ]
 
         for command, description in cleanup_steps:
@@ -211,29 +216,52 @@ class IntegrationWorkflows:
 
         steps = [
             # Pre-release checks
-            (["python", "scripts/health-check.py", "check", "--verbose"],
-             "Comprehensive health check"),
-
+            (
+                ["python", "scripts/health-check.py", "check", "--verbose"],
+                "Comprehensive health check",
+            ),
             # Clean everything
-            (["python", "scripts/cache-manager.py", "clean", "all"],
-             "Cleaning all caches and artifacts"),
-
+            (
+                ["python", "scripts/cache-manager.py", "clean", "all"],
+                "Cleaning all caches and artifacts",
+            ),
             # Use existing build script for main build
-            ([f"./{self.build_script}", "clean"] if not is_windows()
-             else ["powershell", "-ExecutionPolicy", "Bypass", "-File", self.build_script, "clean"],
-             "Deep clean with existing build script"),
-
-            ([f"./{self.build_script}", "build"] if not is_windows()
-             else ["powershell", "-ExecutionPolicy", "Bypass", "-File", self.build_script, "build"],
-             "Building release packages"),
-
+            (
+                [f"./{self.build_script}", "clean"]
+                if not is_windows()
+                else [
+                    "powershell",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    self.build_script,
+                    "clean",
+                ],
+                "Deep clean with existing build script",
+            ),
+            (
+                [f"./{self.build_script}", "build"]
+                if not is_windows()
+                else [
+                    "powershell",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    self.build_script,
+                    "build",
+                ],
+                "Building release packages",
+            ),
             # Performance baseline
-            (["python", "scripts/benchmark.py", "run", "--baseline"],
-             "Setting performance baseline"),
-
+            (
+                ["python", "scripts/benchmark.py", "run", "--baseline"],
+                "Setting performance baseline",
+            ),
             # Final validation
-            (["python", "scripts/health-check.py", "report", "--output", "release-health.json"],
-             "Generating release health report"),
+            (
+                ["python", "scripts/health-check.py", "report", "--output", "release-health.json"],
+                "Generating release health report",
+            ),
         ]
 
         success_count = 0
@@ -247,7 +275,8 @@ class IntegrationWorkflows:
             print_info("Release artifacts and reports are ready")
         else:
             print_info(
-                f"⚠️  Release preparation completed with {len(steps) - success_count} issues")
+                f"⚠️  Release preparation completed with {len(steps) - success_count} issues"
+            )
 
 
 @app.command()
@@ -296,7 +325,8 @@ def main(ctx: typer.Context) -> None:
         print_info("  • release-prep    - Release preparation workflow")
 
         print_section("Integration Philosophy")
-        console.print("""
+        console.print(
+            """
 The new utility scripts are designed to [bold]complement[/bold], not replace,
 the existing build infrastructure:
 
@@ -310,10 +340,12 @@ the existing build infrastructure:
   → Use both together for comprehensive development experience
   → New scripts call existing build scripts when appropriate
   → Existing scripts can call new utilities for enhanced functionality
-""")
+"""
+        )
 
         print_section("Quick Examples")
-        console.print("""
+        console.print(
+            """
 [cyan]# Use new scripts for environment setup[/cyan]
 python scripts/quick-start.py setup
 
@@ -328,7 +360,8 @@ python scripts/services.py start web
 
 [cyan]# Use new scripts for monitoring[/cyan]
 python scripts/health-check.py check
-""")
+"""
+        )
 
 
 if __name__ == "__main__":

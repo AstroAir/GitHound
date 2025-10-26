@@ -99,7 +99,7 @@ class AuthorSearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 100  # Default estimate
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -400,12 +400,22 @@ class DateRangeSearcher(CacheableSearcher):
             if context.query.date_from or context.query.date_to:
                 # Rough estimate: assume 10 commits per day
                 if context.query.date_from and context.query.date_to:
-                    days = (context.query.date_to - context.query.date_from).days
+                    # Handle timezone differences by normalizing both datetimes
+                    date_from = context.query.date_from
+                    date_to = context.query.date_to
+
+                    # Convert timezone-aware to timezone-naive if needed
+                    if date_from.tzinfo is not None and date_to.tzinfo is None:
+                        date_to = date_to.replace(tzinfo=date_from.tzinfo)
+                    elif date_to.tzinfo is not None and date_from.tzinfo is None:
+                        date_from = date_from.replace(tzinfo=date_to.tzinfo)
+
+                    days = (date_to - date_from).days
                     return min(days * 10, 1000)
 
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 100
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:

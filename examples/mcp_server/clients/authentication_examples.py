@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 FastMCP Client - Authentication Examples
 
@@ -19,19 +18,17 @@ This example covers:
 import asyncio
 import json
 import logging
-from pathlib import Path
-from typing import Optional, Any
 from dataclasses import dataclass
+from typing import Any
 
 from fastmcp import Client, FastMCP
-from fastmcp.client.transports import StreamableHttpTransport, FastMCPTransport
 from fastmcp.client.auth import BearerAuth, OAuth
-from fastmcp.exceptions import ClientError, McpError
+from fastmcp.client.transports import FastMCPTransport
+from fastmcp.exceptions import ClientError
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -39,6 +36,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AuthConfig:
     """Configuration for authentication examples."""
+
     bearer_token: str = "demo_token_12345"
     oauth_client_id: str = "demo_client_id"
     oauth_client_secret: str = "demo_client_secret"
@@ -56,49 +54,47 @@ async def create_authenticated_server() -> FastMCP:
     server = FastMCP("Authenticated Server")
 
     @server.tool
-    def public_info() -> Dict[str, str]:
+    def public_info() -> dict[str, str]:
         """Get public information (no auth required)."""
-        return {
-            "server": "Authenticated Server",
-            "version": "1.0.0",
-            "public": True
-        }
+        return {"server": "Authenticated Server", "version": "1.0.0", "public": True}
 
     @server.tool
-    def protected_data(user_id: str = "anonymous") -> Dict[str, Any]:
+    def protected_data(user_id: str = "anonymous") -> dict[str, Any]:
         """Get protected user data (auth required)."""
         return {
             "user_id": user_id,
             "account_type": "premium",
             "last_login": "2024-01-15T10:30:00Z",
             "permissions": ["read", "write", "admin"],
-            "protected": True
+            "protected": True,
         }
 
     @server.tool
-    def admin_operation(action: str) -> Dict[str, str]:
+    def admin_operation(action: str) -> dict[str, str]:
         """Perform admin operation (high-level auth required)."""
         return {
             "action": action,
             "status": "completed",
             "admin": True,
-            "timestamp": "2024-01-15T10:30:00Z"
+            "timestamp": "2024-01-15T10:30:00Z",
         }
 
     @server.resource("auth://user/{user_id}/profile")
     def get_user_profile(user_id: str) -> str:
         """Get user profile (auth required)."""
-        return json.dumps({
-            "user_id": user_id,
-            "name": f"User {user_id}",
-            "email": f"user{user_id}@example.com",
-            "created": "2024-01-01T00:00:00Z"
-        })
+        return json.dumps(
+            {
+                "user_id": user_id,
+                "name": f"User {user_id}",
+                "email": f"user{user_id}@example.com",
+                "created": "2024-01-01T00:00:00Z",
+            }
+        )
 
     return server
 
 
-async def demonstrate_bearer_auth() -> Dict[str, Any]:
+async def demonstrate_bearer_auth() -> dict[str, Any]:
     """
     Demonstrate Bearer token authentication.
 
@@ -113,7 +109,7 @@ async def demonstrate_bearer_auth() -> Dict[str, Any]:
     results = {
         "unauthenticated_access": None,
         "authenticated_access": None,
-        "invalid_token_access": None
+        "invalid_token_access": None,
     }
 
     try:
@@ -127,14 +123,11 @@ async def demonstrate_bearer_auth() -> Dict[str, Any]:
                 results["unauthenticated_access"] = {
                     "status": "success",
                     "result": public_result.data,
-                    "message": "Public endpoint accessible without auth"
+                    "message": "Public endpoint accessible without auth",
                 }
                 logger.info("✓ Unauthenticated access to public endpoint successful")
             except Exception as e:
-                results["unauthenticated_access"] = {
-                    "status": "failed",
-                    "error": str(e)
-                }
+                results["unauthenticated_access"] = {"status": "failed", "error": str(e)}
 
         # Test 2: Authenticated access with valid Bearer token
         logger.info("Testing authenticated access with Bearer token...")
@@ -151,14 +144,11 @@ async def demonstrate_bearer_auth() -> Dict[str, Any]:
                 results["authenticated_access"] = {
                     "status": "success",
                     "result": protected_result.data,
-                    "message": "Protected endpoint accessible with valid token"
+                    "message": "Protected endpoint accessible with valid token",
                 }
                 logger.info("✓ Authenticated access successful")
             except Exception as e:
-                results["authenticated_access"] = {
-                    "status": "failed",
-                    "error": str(e)
-                }
+                results["authenticated_access"] = {"status": "failed", "error": str(e)}
 
         # Test 3: Invalid token access
         logger.info("Testing access with invalid Bearer token...")
@@ -169,26 +159,20 @@ async def demonstrate_bearer_auth() -> Dict[str, Any]:
             results["invalid_token_access"] = {
                 "status": "simulated",
                 "message": "Invalid token would be rejected by real server",
-                "expected_error": "401 Unauthorized"
+                "expected_error": "401 Unauthorized",
             }
             logger.info("✓ Invalid token handling simulated")
         except Exception as e:
-            results["invalid_token_access"] = {
-                "status": "failed",
-                "error": str(e)
-            }
+            results["invalid_token_access"] = {"status": "failed", "error": str(e)}
 
-        return {
-            "status": "success",
-            "bearer_auth_tests": results
-        }
+        return {"status": "success", "bearer_auth_tests": results}
 
     except Exception as e:
         logger.error(f"Bearer auth demonstration failed: {e}")
         return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_oauth_flow() -> Dict[str, Any]:
+async def demonstrate_oauth_flow() -> dict[str, Any]:
     """
     Demonstrate OAuth 2.1 authentication flow.
 
@@ -211,15 +195,17 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
             "redirect_uri": config.oauth_redirect_uri,  # [attr-defined]
             "scope": config.oauth_scope,  # [attr-defined]
             "authorization_url": "https://auth.example.com/oauth/authorize",
-            "token_url": "https://auth.example.com/oauth/token"
+            "token_url": "https://auth.example.com/oauth/token",
         }
 
-        oauth_steps.append({
-            "step": 1,
-            "description": "OAuth configuration initialized",
-            "status": "success",
-            "config": {k: v for k, v in oauth_config.items() if k != "client_secret"}
-        })
+        oauth_steps.append(
+            {
+                "step": 1,
+                "description": "OAuth configuration initialized",
+                "status": "success",
+                "config": {k: v for k, v in oauth_config.items() if k != "client_secret"},
+            }
+        )
 
         # Step 2: Generate authorization URL
         logger.info("Step 2: Generating authorization URL...")
@@ -234,12 +220,14 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
             f"&state=random_state_123"
         )
 
-        oauth_steps.append({
-            "step": 2,
-            "description": "Authorization URL generated",
-            "status": "success",
-            "auth_url": auth_url
-        })
+        oauth_steps.append(
+            {
+                "step": 2,
+                "description": "Authorization URL generated",
+                "status": "success",
+                "auth_url": auth_url,
+            }
+        )
 
         # Step 3: Simulate authorization code exchange
         logger.info("Step 3: Simulating authorization code exchange...")
@@ -253,20 +241,22 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
             "token_type": "Bearer",
             "expires_in": 3600,
             "refresh_token": "refresh_token_def789",
-            "scope": config.oauth_scope  # [attr-defined]
+            "scope": config.oauth_scope,  # [attr-defined]
         }
 
-        oauth_steps.append({
-            "step": 3,
-            "description": "Authorization code exchanged for tokens",
-            "status": "simulated",
-            "auth_code": simulated_auth_code,
-            "token_info": {
-                "token_type": simulated_token_response["token_type"],
-                "expires_in": simulated_token_response["expires_in"],
-                "scope": simulated_token_response["scope"]
+        oauth_steps.append(
+            {
+                "step": 3,
+                "description": "Authorization code exchanged for tokens",
+                "status": "simulated",
+                "auth_code": simulated_auth_code,
+                "token_info": {
+                    "token_type": simulated_token_response["token_type"],
+                    "expires_in": simulated_token_response["expires_in"],
+                    "scope": simulated_token_response["scope"],
+                },
             }
-        })
+        )
 
         # Step 4: Use access token for API calls
         logger.info("Step 4: Using access token for authenticated API calls...")
@@ -275,15 +265,17 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
         oauth_auth = OAuth(
             mcp_url="https://api.example.com/mcp",
             scopes=config.oauth_scope,  # [attr-defined]
-            client_name="FastMCP Demo Client"
+            client_name="FastMCP Demo Client",
         )
 
-        oauth_steps.append({
-            "step": 4,
-            "description": "OAuth authentication object created",
-            "status": "success",
-            "message": "Ready for authenticated API calls"
-        })
+        oauth_steps.append(
+            {
+                "step": 4,
+                "description": "OAuth authentication object created",
+                "status": "success",
+                "message": "Ready for authenticated API calls",
+            }
+        )
 
         # Step 5: Simulate token refresh
         logger.info("Step 5: Simulating token refresh...")
@@ -292,33 +284,31 @@ async def demonstrate_oauth_flow() -> Dict[str, Any]:
             "access_token": "new_access_token_ghi789",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "scope": config.oauth_scope  # [attr-defined]
+            "scope": config.oauth_scope,  # [attr-defined]
         }
 
-        oauth_steps.append({
-            "step": 5,
-            "description": "Access token refreshed",
-            "status": "simulated",
-            "new_token_info": {
-                "token_type": refreshed_token_response["token_type"],
-                "expires_in": refreshed_token_response["expires_in"]
+        oauth_steps.append(
+            {
+                "step": 5,
+                "description": "Access token refreshed",
+                "status": "simulated",
+                "new_token_info": {
+                    "token_type": refreshed_token_response["token_type"],
+                    "expires_in": refreshed_token_response["expires_in"],
+                },
             }
-        })
+        )
 
         logger.info("✓ OAuth 2.1 flow demonstration completed")
 
-        return {
-            "status": "success",
-            "oauth_flow": oauth_steps,
-            "total_steps": len(oauth_steps)
-        }
+        return {"status": "success", "oauth_flow": oauth_steps, "total_steps": len(oauth_steps)}
 
     except Exception as e:
         logger.error(f"OAuth demonstration failed: {e}")
         return {"status": "failed", "error": str(e)}
 
 
-async def demonstrate_auth_error_handling() -> Dict[str, Any]:
+async def demonstrate_auth_error_handling() -> dict[str, Any]:
     """
     Demonstrate authentication error handling patterns.
 
@@ -337,13 +327,15 @@ async def demonstrate_auth_error_handling() -> Dict[str, Any]:
             # Simulate call to protected endpoint without auth
             raise ClientError("Authentication required for this endpoint")
         except ClientError as e:
-            error_scenarios.append({
-                "scenario": "missing_auth",
-                "status": "handled",
-                "error_type": "ClientError",
-                "message": str(e),
-                "recommended_action": "Provide valid authentication credentials"
-            })
+            error_scenarios.append(
+                {
+                    "scenario": "missing_auth",
+                    "status": "handled",
+                    "error_type": "ClientError",
+                    "message": str(e),
+                    "recommended_action": "Provide valid authentication credentials",
+                }
+            )
             logger.info("✓ Missing auth error handled correctly")
 
         # Scenario 2: Expired token
@@ -353,13 +345,15 @@ async def demonstrate_auth_error_handling() -> Dict[str, Any]:
             # Simulate expired token error
             raise ClientError("Token has expired")
         except ClientError as e:
-            error_scenarios.append({
-                "scenario": "expired_token",
-                "status": "handled",
-                "error_type": "ClientError",
-                "message": str(e),
-                "recommended_action": "Refresh the access token"
-            })
+            error_scenarios.append(
+                {
+                    "scenario": "expired_token",
+                    "status": "handled",
+                    "error_type": "ClientError",
+                    "message": str(e),
+                    "recommended_action": "Refresh the access token",
+                }
+            )
             logger.info("✓ Expired token error handled correctly")
 
         # Scenario 3: Insufficient permissions
@@ -369,13 +363,15 @@ async def demonstrate_auth_error_handling() -> Dict[str, Any]:
             # Simulate insufficient permissions error
             raise ClientError("Insufficient permissions for this operation")
         except ClientError as e:
-            error_scenarios.append({
-                "scenario": "insufficient_permissions",
-                "status": "handled",
-                "error_type": "ClientError",
-                "message": str(e),
-                "recommended_action": "Request elevated permissions or contact administrator"
-            })
+            error_scenarios.append(
+                {
+                    "scenario": "insufficient_permissions",
+                    "status": "handled",
+                    "error_type": "ClientError",
+                    "message": str(e),
+                    "recommended_action": "Request elevated permissions or contact administrator",
+                }
+            )
             logger.info("✓ Insufficient permissions error handled correctly")
 
         # Scenario 4: Invalid token format
@@ -385,19 +381,21 @@ async def demonstrate_auth_error_handling() -> Dict[str, Any]:
             # Simulate invalid token format error
             raise ClientError("Invalid token format")
         except ClientError as e:
-            error_scenarios.append({
-                "scenario": "invalid_token_format",
-                "status": "handled",
-                "error_type": "ClientError",
-                "message": str(e),
-                "recommended_action": "Verify token format and regenerate if necessary"
-            })
+            error_scenarios.append(
+                {
+                    "scenario": "invalid_token_format",
+                    "status": "handled",
+                    "error_type": "ClientError",
+                    "message": str(e),
+                    "recommended_action": "Verify token format and regenerate if necessary",
+                }
+            )
             logger.info("✓ Invalid token format error handled correctly")
 
         return {
             "status": "success",
             "error_scenarios": error_scenarios,
-            "scenarios_tested": len(error_scenarios)
+            "scenarios_tested": len(error_scenarios),
         }
 
     except Exception as e:
@@ -405,7 +403,7 @@ async def demonstrate_auth_error_handling() -> Dict[str, Any]:
         return {"status": "failed", "error": str(e)}
 
 
-async def main() -> Dict[str, Any]:
+async def main() -> dict[str, Any]:
     """
     Main function demonstrating FastMCP authentication features.
 

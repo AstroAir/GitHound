@@ -2,20 +2,36 @@
 Authentication flow tests for GitHound web interface.
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-try:
+if TYPE_CHECKING:
     import pytest
     from playwright.async_api import Page, expect
-except ImportError:
-    # Mock for type checking when libraries are not available
-    class MockPage:
-        pass
-    def mock_expect(*args: Any, **kwargs: Any) -> Any:
-        pass
-    Page = MockPage  # type: ignore[misc]
-    expect = mock_expect  # type: ignore[misc]
-    pytest = None  # type: ignore[misc]
+else:
+    try:
+        import pytest
+        from playwright.async_api import Page, expect
+    except ImportError:
+        # Mock for when libraries are not available at runtime
+        class MockPage:
+            pass
+
+        def mock_expect(*args: Any, **kwargs: Any) -> Any:
+            pass
+
+        class MockPytest:
+            class mark:
+                @staticmethod
+                def auth(func: Any) -> Any:
+                    return func
+
+                @staticmethod
+                def e2e(func: Any) -> Any:
+                    return func
+
+        Page = MockPage  # type: ignore[misc,assignment]
+        expect = mock_expect  # type: ignore[misc,assignment]
+        pytest = MockPytest()  # type: ignore[misc,assignment]
 
 
 @pytest.mark.auth
@@ -226,7 +242,9 @@ class TestAuthentication:
         # Verify password mismatch error
         await expect(page.locator('[data-testid="password-mismatch-error"]')).to_be_visible()
 
-    async def test_duplicate_username_registration(self, page: Page, authenticated_user: Any) -> None:
+    async def test_duplicate_username_registration(
+        self, page: Page, authenticated_user: Any
+    ) -> None:
         """Test registration with duplicate username."""
         # Navigate to registration page
         await page.goto("/")

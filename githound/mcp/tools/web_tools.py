@@ -29,7 +29,7 @@ async def start_web_server(input_data: WebServerInput, ctx: Context) -> dict[str
 
             import uvicorn
 
-            from ...web.api import app  # type: ignore[import-not-found]
+            from ...web.api import app
         except ImportError as e:
             return {"status": "error", "error": f"Web server dependencies not available: {str(e)}"}
 

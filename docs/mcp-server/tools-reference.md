@@ -1,6 +1,6 @@
 # MCP Tools Reference
 
-Comprehensive reference for all 25+ tools exposed by the GitHound MCP server.
+Comprehensive reference for all 29 tools exposed by the GitHound MCP server.
 
 ## Advanced Search Tools
 
@@ -84,6 +84,50 @@ Search repository content by Git tags and releases.
 
 **Returns:** Search results organized by tags and releases
 
+### `create_search_engine`
+
+Create and configure a custom search engine with specific capabilities.
+
+**Parameters:**
+
+- `enable_advanced_searchers` (optional): Enable advanced search capabilities (default: true)
+- `enable_basic_searchers` (optional): Enable basic search capabilities (default: true)
+- `enable_caching` (optional): Enable search result caching (default: true)
+- `enable_ranking` (optional): Enable result ranking (default: true)
+- `enable_analytics` (optional): Enable search analytics (default: true)
+- `enable_fuzzy_search` (optional): Enable fuzzy search capabilities (default: true)
+- `enable_pattern_detection` (optional): Enable pattern detection (default: true)
+- `max_workers` (optional): Maximum worker threads (default: 4)
+- `cache_backend` (optional): Cache backend type (memory/redis, default: memory)
+
+**Returns:** Search engine configuration and capabilities
+
+### `query_searcher_registry`
+
+Query the searcher registry for available searchers and their capabilities.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `search_types` (optional): Filter by specific search types
+- `capabilities` (optional): Filter by searcher capabilities
+- `enabled_only` (optional): Only return enabled searchers (default: true)
+
+**Returns:** Available searchers with their metadata and capabilities
+
+### `get_search_analytics`
+
+Retrieve search performance analytics and usage patterns.
+
+**Parameters:**
+
+- `repo_path` (optional): Path to Git repository for repo-specific analytics
+- `time_range_hours` (optional): Time range for analytics in hours (default: 24)
+- `include_performance` (optional): Include performance metrics (default: true)
+- `include_usage_patterns` (optional): Include usage pattern analysis (default: true)
+
+**Returns:** Search analytics including performance metrics and usage patterns
+
 ## Repository Analysis Tools
 
 ### `analyze_repository`
@@ -119,6 +163,61 @@ Retrieve commits with advanced filtering options.
 - `max_commits` (optional): Maximum commits to return (default: 100)
 
 **Returns:** Filtered commit list with metadata
+
+### `analyze_branches`
+
+Perform comprehensive branch analysis including metrics and comparisons.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `branch_name` (optional): Specific branch to analyze
+- `compare_with` (optional): Branch to compare against
+- `include_metrics` (optional): Include branch metrics (default: true)
+- `max_commits` (optional): Maximum commits to analyze (default: 100)
+
+**Returns:** Branch analysis with metrics, commit history, and comparison data
+
+### `analyze_diffs`
+
+Perform detailed diff analysis between references.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `from_ref` (required): Source reference (commit, branch, tag)
+- `to_ref` (required): Target reference (commit, branch, tag)
+- `file_patterns` (optional): File patterns to include in analysis
+- `include_stats` (optional): Include diff statistics (default: true)
+
+**Returns:** Detailed diff analysis with file changes, statistics, and impact assessment
+
+### `analyze_statistics`
+
+Perform statistical analysis of repository data.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `analysis_types` (optional): Types of analysis to perform
+- `time_range_days` (optional): Time range for analysis in days (default: 90)
+- `include_trends` (optional): Include trend analysis (default: true)
+- `group_by` (optional): Group results by author, date, or file type (default: author)
+
+**Returns:** Statistical analysis including trends, patterns, and insights
+
+### `analyze_tags`
+
+Analyze repository tags and version information.
+
+**Parameters:**
+
+- `repo_path` (required): Path to Git repository
+- `tag_pattern` (optional): Pattern to filter tags
+- `include_releases` (optional): Include release information (default: true)
+- `compare_versions` (optional): Compare version differences (default: true)
+
+**Returns:** Tag analysis with version information and release comparisons
 
 ### `list_branches`
 
@@ -435,7 +534,7 @@ Performance regression analysis prompt for:
 - Performance optimization
 - Error handling and diagnostics
 
-**Total: 25+ Tools** providing comprehensive Git repository analysis and search capabilities.
+**Total: 29 Tools** providing comprehensive Git repository analysis and search capabilities.
 
 ## Usage Patterns
 

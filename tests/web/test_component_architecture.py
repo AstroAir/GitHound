@@ -2,7 +2,6 @@
 Tests for the new component-based frontend architecture.
 """
 
-import json
 import re
 from pathlib import Path
 
@@ -75,7 +74,7 @@ class TestComponentArchitecture:
             assert full_path.exists(), f"Component file {file_path} should exist"
 
             # Check that the file contains the expected class
-            content = full_path.read_text()
+            content = full_path.read_text(encoding="utf-8")
             assert (
                 f"class {class_name}" in content
             ), f"File {file_path} should contain class {class_name}"
@@ -100,8 +99,11 @@ class TestComponentArchitecture:
         main_js = static_dir / "main.js"
         assert main_js.exists(), "Main entry point main.js should exist"
 
-        content = main_js.read_text()
-        assert "import GitHoundApp" in content, "main.js should import GitHoundApp"
+        content = main_js.read_text(encoding="utf-8")
+        # Check for both old and new import syntax
+        assert (
+            "import GitHoundApp" in content or "import { GitHoundApp }" in content
+        ), "main.js should import GitHoundApp"
         assert (
             "document.addEventListener('DOMContentLoaded'" in content
         ), "main.js should have DOM ready handler"
@@ -111,7 +113,7 @@ class TestComponentArchitecture:
         js_files = list(components_dir.rglob("*.js"))
 
         for js_file in js_files:
-            content = js_file.read_text()
+            content = js_file.read_text(encoding="utf-8")
 
             # Check for ES6 import/export syntax
             if "class" in content:
@@ -140,7 +142,7 @@ class TestComponentArchitecture:
 
         for file_path in component_files:
             full_path = components_dir / file_path
-            content = full_path.read_text()
+            content = full_path.read_text(encoding="utf-8")
 
             # Check that it imports Component
             assert (
@@ -153,7 +155,7 @@ class TestComponentArchitecture:
     def test_css_variables_defined(self, styles_dir):
         """Test that CSS variables are properly defined."""
         variables_css = styles_dir / "base" / "variables.css"
-        content = variables_css.read_text()
+        content = variables_css.read_text(encoding="utf-8")
 
         # Check for essential CSS variables
         essential_vars = [
@@ -170,7 +172,7 @@ class TestComponentArchitecture:
     def test_html_updated_for_modules(self, static_dir):
         """Test that HTML file is updated to use the new module system."""
         html_file = static_dir / "index.html"
-        content = html_file.read_text()
+        content = html_file.read_text(encoding="utf-8")
 
         # Check for module script tag
         assert 'type="module"' in content, "HTML should include module script tag"
@@ -179,7 +181,7 @@ class TestComponentArchitecture:
     def test_backward_compatibility(self, static_dir):
         """Test that backward compatibility is maintained."""
         html_file = static_dir / "index.html"
-        content = html_file.read_text()
+        content = html_file.read_text(encoding="utf-8")
 
         # Check that legacy app.js is still referenced for fallback
         assert 'src="app.js"' in content, "HTML should still reference legacy app.js for fallback"
@@ -197,7 +199,7 @@ class TestComponentArchitecture:
 
         for readme in expected_readmes:
             if readme.exists():
-                content = readme.read_text()
+                content = readme.read_text(encoding="utf-8")
                 assert len(content) > 100, f"README {readme} should have substantial content"
 
     def test_no_syntax_errors_in_js(self, static_dir):
@@ -205,7 +207,10 @@ class TestComponentArchitecture:
         js_files = list(static_dir.rglob("*.js"))
 
         for js_file in js_files:
-            content = js_file.read_text()
+            # Skip if it's a directory or in node_modules
+            if not js_file.is_file() or "node_modules" in str(js_file):
+                continue
+            content = js_file.read_text(encoding="utf-8")
 
             # Basic syntax checks
             open_braces = content.count("{")
@@ -221,7 +226,7 @@ class TestComponentArchitecture:
         css_files = list(styles_dir.rglob("*.css"))
 
         for css_file in css_files:
-            content = css_file.read_text()
+            content = css_file.read_text(encoding="utf-8")
 
             # Basic CSS syntax checks
             open_braces = content.count("{")

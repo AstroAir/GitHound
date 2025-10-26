@@ -3,7 +3,6 @@
 import json
 import os
 import tempfile
-from typing import Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -30,7 +29,7 @@ class MockBaseProvider(AuthProvider):
             return AuthResult(success=True, user=self.users[username], token=token)
         return AuthResult(success=False, error="Invalid token")
 
-    async def validate_token(self, token: str) -> Optional[TokenInfo]:
+    async def validate_token(self, token: str) -> TokenInfo | None:
         """Mock token validation."""
         username = token.replace("Bearer ", "").replace("token_", "")
         if username in self.users:
@@ -43,7 +42,7 @@ class MockBaseProvider(AuthProvider):
             )
         return None
 
-    def get_oauth_metadata(self) -> Optional[dict]:
+    def get_oauth_metadata(self) -> dict | None:
         return None
 
     def supports_dynamic_client_registration(self) -> bool:
@@ -196,7 +195,6 @@ class TestEunomiaAuthorizationProvider:
                     patch("os.path.exists", return_value=True),
                     patch("githound.mcp.auth.providers.eunomia.create_eunomia_middleware"),
                 ):
-
                     provider = EunomiaAuthorizationProvider(mock_base_provider)
 
                     assert provider.config.policy_file == "custom_policies.json"  # [attr-defined]
@@ -379,7 +377,7 @@ class TestAuthorizationIntegration:
     @pytest.mark.asyncio
     async def test_auth_wrapper_environment_detection(self) -> None:
         """Test that authorization wrappers are applied based on environment."""
-        from githound.mcp.auth import _wrap_with_authorization_provider
+        from githound.mcp.auth_manager import _wrap_with_authorization_provider
 
         mock_provider = MockBaseProvider()
 
@@ -390,7 +388,7 @@ class TestAuthorizationIntegration:
 
         # Test with Eunomia enabled but not available
         with patch.dict(os.environ, {"EUNOMIA_ENABLE": "true"}):
-            with patch("githound.mcp.auth.logger") as mock_logger:
+            with patch("githound.mcp.auth_manager.logger") as mock_logger:
                 wrapped = _wrap_with_authorization_provider(mock_provider)
                 assert wrapped == mock_provider  # Should be unchanged
                 mock_logger.warning.assert_called()
@@ -405,7 +403,11 @@ class TestAuthorizationIntegration:
     @pytest.mark.asyncio
     async def test_enhanced_permission_checking(self) -> None:
         """Test enhanced permission checking with context."""
-        from githound.mcp.auth import check_permission, check_tool_permission, set_auth_provider
+        from githound.mcp.auth_manager import (
+            check_permission,
+            check_tool_permission,
+            set_auth_provider,
+        )
 
         # Create a mock provider that supports enhanced permission checking
         mock_provider = Mock()

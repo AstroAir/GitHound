@@ -1,11 +1,15 @@
 """Git diff analysis functionality for comparing commits, branches, and files."""
 
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import Any, cast
 
 from git import Diff, GitCommandError, Repo
 from pydantic import BaseModel, Field
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 
 class ChangeType(str, Enum):
@@ -240,7 +244,7 @@ def compare_commits(
     except Exception as e:
         raise GitCommandError(
             f"Error comparing commits '{from_commit}' and '{to_commit}': {str(e)}"
-        )
+        ) from e
 
 
 def compare_branches(
@@ -265,11 +269,11 @@ def compare_branches(
         return compare_commits(repo, from_commit.hexsha, to_commit.hexsha, file_patterns)
 
     except KeyError as e:
-        raise GitCommandError(f"Branch not found: {str(e)}")
+        raise GitCommandError(f"Branch not found: {str(e)}") from e
     except Exception as e:
         raise GitCommandError(
             f"Error comparing branches '{from_branch}' and '{to_branch}': {str(e)}"
-        )
+        ) from e
 
 
 def get_file_diff_history(
@@ -326,6 +330,6 @@ def get_file_diff_history(
                     continue
 
     except GitCommandError as e:
-        raise GitCommandError(f"Error getting diff history for '{file_path}': {e}")
+        raise GitCommandError(f"Error getting diff history for '{file_path}': {e}") from e
 
     return history

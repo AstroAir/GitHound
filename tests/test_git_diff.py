@@ -22,8 +22,12 @@ from githound.git_diff import (
 @pytest.fixture
 def temp_repo() -> None:
     """Create a temporary Git repository for testing."""
+    import os
+
     temp_dir = tempfile.mkdtemp()
-    repo = Repo.init(temp_dir)
+    # Normalize path to handle Windows 8.3 short names
+    normalized_temp_dir = os.path.realpath(temp_dir)
+    repo = Repo.init(normalized_temp_dir)
 
     # Configure user for commits
     with repo.config_writer() as config:  # [attr-defined]
@@ -31,7 +35,7 @@ def temp_repo() -> None:
         config.set_value("user", "email", "test@example.com")  # [attr-defined]
 
     # Create initial commit
-    test_file = Path(temp_dir) / "test.py"
+    test_file = Path(normalized_temp_dir) / "test.py"
     test_file.write_text("def hello() -> None:\n    print('Hello, World!')\n")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
@@ -44,14 +48,15 @@ def temp_repo() -> None:
     second_commit = repo.index.commit("Update hello and add goodbye")
 
     # Create third commit with new file
-    new_file = Path(temp_dir) / "utils.py"
+    new_file = Path(normalized_temp_dir) / "utils.py"
     new_file.write_text("def utility_function() -> None:\n    return 'utility'\n")
     repo.index.add([str(new_file)])
     third_commit = repo.index.commit("Add utility file")
 
-    yield repo, temp_dir, initial_commit, second_commit, third_commit
+    yield repo, normalized_temp_dir, initial_commit, second_commit, third_commit
 
-    # Cleanup
+    # Cleanup: Close repository to release file handles
+    repo.close()
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 

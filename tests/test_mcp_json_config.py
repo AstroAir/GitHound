@@ -15,7 +15,7 @@ from githound.mcp.config import (  # [attr-defined]
 )
 
 # [attr-defined]
-from githound.mcp.models import MCPJsonConfig, MCPServerConfig, ServerConfig
+from githound.mcp.models import MCPJsonConfig, MCPServerConfig
 
 
 class TestMCPJsonModels:

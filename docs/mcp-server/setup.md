@@ -22,7 +22,7 @@ git clone https://github.com/AstroAir/GitHound.git
 cd GitHound
 
 # Install in development mode
-pip install -e .[mcp]
+pip install -e . --dependency-groups mcp
 ```
 
 ## Quick Start

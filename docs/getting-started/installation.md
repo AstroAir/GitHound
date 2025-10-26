@@ -21,7 +21,7 @@ python --version
 
 ```bash
 git --version
-# Should show git version 2.0 or higher
+# Should show git version 2.30 or higher
 ```
 
 ## Installation Methods
@@ -85,13 +85,13 @@ For development work, install with additional dependencies:
 git clone https://github.com/AstroAir/GitHound.git
 cd GitHound
 
-# Install with development dependencies (modern syntax)
+# Install with development dependencies (recommended modern syntax)
 pip install -e . --dependency-groups dev,test
 
 # Or install all dependency groups
 pip install -e . --dependency-groups dev,test,docs,build
 
-# Alternative: Legacy syntax (still supported)
+# Legacy syntax (still supported but not recommended)
 pip install -e ".[dev,test,docs,build]"
 ```
 
@@ -156,6 +156,9 @@ python -c "import fastmcp; print('FastMCP:', fastmcp.__version__)"
 # Check optional dependencies (if installed)
 python -c "import redis; print('Redis:', redis.__version__)" 2>/dev/null || echo "Redis not available"
 python -c "import pandas; print('Pandas:', pandas.__version__)" 2>/dev/null || echo "Pandas not available"
+python -c "import rapidfuzz; print('RapidFuzz:', rapidfuzz.__version__)" 2>/dev/null || echo "RapidFuzz not available"
+python -c "import slowapi; print('SlowAPI:', slowapi.__version__)" 2>/dev/null || echo "SlowAPI not available"
+python -c "import openpyxl; print('OpenPyXL:', openpyxl.__version__)" 2>/dev/null || echo "OpenPyXL not available"
 ```
 
 ## Optional Dependencies
@@ -179,13 +182,44 @@ The MCP server functionality requires:
 For advanced export formats:
 
 - pandas (included by default)
-- openpyxl (for Excel export)
+- openpyxl (for Excel export, included by default)
 
-Install additional export dependencies:
+### For Caching and Performance
+
+For enhanced caching and rate limiting:
+
+- redis (for Redis backend)
+- slowapi (for rate limiting, included by default)
+
+Install Redis support:
 
 ```bash
-pip install openpyxl
+pip install redis
 ```
+
+### For Authentication
+
+For advanced authentication providers:
+
+- permit-sdk (for Permit.io RBAC)
+- eunomia-client (for Eunomia ABAC)
+
+Install authentication providers:
+
+```bash
+# For Permit.io
+pip install permit-sdk
+
+# For Eunomia
+pip install eunomia-client
+```
+
+### For Search Enhancement
+
+For enhanced search capabilities:
+
+- rapidfuzz (for fuzzy search, included by default)
+- diskcache (for disk-based caching, included by default)
 
 ## Configuration
 

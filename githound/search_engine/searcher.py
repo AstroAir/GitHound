@@ -1,10 +1,10 @@
 """Advanced multi-criteria searchers for GitHound."""
 
-import asyncio
 import re
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Literal, Pattern
+from re import Pattern
+from typing import Any
 
 try:
     from rapidfuzz import fuzz

@@ -6,7 +6,6 @@ Provides common validation functions and request ID generation.
 
 import uuid
 from pathlib import Path
-from typing import Any
 
 from fastapi import HTTPException, status
 from git import InvalidGitRepositoryError
@@ -27,13 +26,16 @@ async def validate_repo_path(repo_path: str) -> Path:
         repo_path: Path to the repository
 
     Returns:
-        Path: Validated repository path
+        Path: Validated repository path (normalized to handle Windows 8.3 short names)
 
     Raises:
         HTTPException: If path is invalid or not a Git repository
     """
     try:
-        path = Path(repo_path)
+        # Normalize path to handle Windows 8.3 short names (e.g., MAXQIA~1)
+        import os
+
+        path = Path(os.path.realpath(repo_path))
 
         # Check if path exists
         if not path.exists():
@@ -52,11 +54,11 @@ async def validate_repo_path(repo_path: str) -> Path:
         # Try to open as Git repository
         try:
             get_repository(path)
-        except InvalidGitRepositoryError:
+        except InvalidGitRepositoryError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Path is not a valid Git repository: {repo_path}",
-            )
+            ) from e
 
         return path
 
@@ -66,7 +68,7 @@ async def validate_repo_path(repo_path: str) -> Path:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to validate repository path: {str(e)}",
-        )
+        ) from e
 
 
 def validate_file_path(repo_path: Path, file_path: str) -> Path:
@@ -100,13 +102,19 @@ def validate_file_path(repo_path: Path, file_path: str) -> Path:
             )
 
         # Ensure file is within repository (security check)
+        # Normalize paths to handle Windows 8.3 short names (e.g., MAXQIA~1)
+        import os
+
         try:
-            full_path.resolve().relative_to(repo_path.resolve())
-        except ValueError:
+            # Use os.path.realpath to resolve Windows short paths
+            resolved_full = Path(os.path.realpath(full_path))
+            resolved_repo = Path(os.path.realpath(repo_path))
+            resolved_full.relative_to(resolved_repo)
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"File path is outside repository: {file_path}",
-            )
+            ) from e
 
         return full_path
 
@@ -116,7 +124,7 @@ def validate_file_path(repo_path: Path, file_path: str) -> Path:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to validate file path: {str(e)}",
-        )
+        ) from e
 
 
 def validate_commit_hash(commit_hash: str) -> str:

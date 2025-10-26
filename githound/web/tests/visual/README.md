@@ -5,6 +5,7 @@ This directory contains visual regression tests for the GitHound web interface. 
 ## Overview
 
 Visual regression testing helps catch:
+
 - Unintended UI changes
 - Layout issues across browsers
 - Responsive design problems
@@ -53,11 +54,13 @@ Visual regression testing helps catch:
 ## Running Visual Tests
 
 ### Run All Visual Tests
+
 ```bash
 npx playwright test --grep "@visual"
 ```
 
 ### Run Specific Visual Test Categories
+
 ```bash
 # Homepage tests only
 npx playwright test --grep "@visual @homepage"
@@ -70,6 +73,7 @@ npx playwright test --grep "@visual @responsive"
 ```
 
 ### Update Visual Baselines
+
 When UI changes are intentional, update the baseline screenshots:
 
 ```bash
@@ -83,6 +87,7 @@ npx playwright test visual-regression.spec.js --update-snapshots
 ## Screenshot Configuration
 
 Visual tests are configured with:
+
 - **Threshold**: 0.2% difference tolerance
 - **Mode**: Percentage-based comparison
 - **Animations**: Disabled for consistency
@@ -91,7 +96,9 @@ Visual tests are configured with:
 ## Best Practices
 
 ### 1. Hide Dynamic Content
+
 Always hide elements that change between test runs:
+
 ```javascript
 await page.addStyleTag({
   content: `
@@ -105,14 +112,18 @@ await page.addStyleTag({
 ```
 
 ### 2. Wait for Stability
+
 Ensure page is fully loaded before capturing:
+
 ```javascript
 await page.waitForLoadState('networkidle');
 await page.waitForTimeout(500); // Additional stability wait
 ```
 
 ### 3. Consistent Test Data
+
 Use deterministic test data to ensure consistent visuals:
+
 ```javascript
 const testUser = {
   username: `visual_${Date.now()}`,
@@ -122,7 +133,9 @@ const testUser = {
 ```
 
 ### 4. Cross-Browser Testing
+
 Visual tests run across all configured browsers:
+
 - Chromium
 - Firefox
 - WebKit (Safari)
@@ -131,10 +144,12 @@ Visual tests run across all configured browsers:
 ## Screenshot Storage
 
 Screenshots are stored in:
+
 - `test-results/` - Test run artifacts
 - `tests/visual/visual-regression.spec.js-snapshots/` - Baseline images
 
 ### Baseline Management
+
 - **Initial Run**: Creates baseline screenshots
 - **Subsequent Runs**: Compares against baselines
 - **Failures**: Generates diff images showing changes
@@ -166,16 +181,19 @@ Screenshots are stored in:
 ### Debugging Failed Tests
 
 1. **View Diff Images**
+
    ```bash
    npx playwright show-report
    ```
 
 2. **Run in Headed Mode**
+
    ```bash
    npx playwright test --grep "@visual" --headed
    ```
 
 3. **Debug Specific Test**
+
    ```bash
    npx playwright test --grep "should match homepage layout" --debug
    ```
@@ -183,12 +201,14 @@ Screenshots are stored in:
 ## Integration with CI/CD
 
 Visual tests are configured to:
+
 - Run on all pull requests
 - Generate artifacts for review
 - Fail builds on visual regressions
 - Store baseline images in version control
 
 ### CI Configuration
+
 ```yaml
 - name: Run Visual Tests
   run: npx playwright test --grep "@visual"

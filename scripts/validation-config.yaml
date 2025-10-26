@@ -102,12 +102,12 @@ code_validation:
   # YAML validation
   yaml:
     check_syntax: true
-    validate_schema: false  # Set to true if you have schemas
+    validate_schema: false # Set to true if you have schemas
 
   # JSON validation
   json:
     check_syntax: true
-    validate_schema: false  # Set to true if you have schemas
+    validate_schema: false # Set to true if you have schemas
 
 # Link validation settings
 link_validation:
@@ -136,11 +136,11 @@ content_validation:
   # Check for placeholder content
   check_placeholders: true
   placeholder_patterns:
-    - "\\[.*\\]"  # [placeholder text]
+    - "\\[.*\\]" # [placeholder text]
     - "TODO"
     - "FIXME"
     - "XXX"
-    - "your-.*"  # your-username, your-repo, etc.
+    - "your-.*" # your-username, your-repo, etc.
 
   # Check for outdated information
   check_dates: true
@@ -161,8 +161,8 @@ exclude_files:
   - "*.pyc"
 
 exclude_patterns:
-  - "^#.*"  # Comments
-  - "^<!--.*-->"  # HTML comments
+  - "^#.*" # Comments
+  - "^<!--.*-->" # HTML comments
 
 # Output settings
 output:

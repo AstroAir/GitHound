@@ -7,6 +7,7 @@ This comprehensive testing suite ensures the GitHound web frontend works correct
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 # From project root
 make test-web-install
@@ -17,6 +18,7 @@ playwright install
 ```
 
 ### 2. Start Required Services
+
 ```bash
 # Start Redis (required for WebSocket tests)
 docker run -d -p 6379:6379 redis:7-alpine
@@ -26,6 +28,7 @@ export REDIS_URL=redis://localhost:6379/15
 ```
 
 ### 3. Run Tests
+
 ```bash
 # Run all web tests
 make test-web
@@ -49,9 +52,11 @@ make test-web-headed
 ## 📋 Test Categories
 
 ### 🔐 Authentication Tests
+
 **Location**: `auth/test_authentication.py`
 
 **Coverage**:
+
 - ✅ User registration with validation
 - ✅ Login/logout functionality
 - ✅ Password change and validation
@@ -61,6 +66,7 @@ make test-web-headed
 - ✅ Form validation and error handling
 
 **Key Test Cases**:
+
 ```python
 test_user_registration_flow()
 test_user_login_flow()
@@ -70,9 +76,11 @@ test_token_refresh_flow()
 ```
 
 ### 🔍 Search Tests
+
 **Location**: `search/test_search_interface.py`, `search/test_websocket_updates.py`
 
 **Coverage**:
+
 - ✅ Advanced search with filters (file types, authors, dates)
 - ✅ Fuzzy search with typo tolerance
 - ✅ Historical search across commit ranges
@@ -82,6 +90,7 @@ test_token_refresh_flow()
 - ✅ Search history and quick re-run
 
 **Key Test Cases**:
+
 ```python
 test_advanced_search_form()
 test_fuzzy_search_functionality()
@@ -91,9 +100,11 @@ test_search_progress_updates()
 ```
 
 ### 🔌 API Integration Tests
+
 **Location**: `api/test_api_integration.py`
 
 **Coverage**:
+
 - ✅ All API endpoints through frontend interface
 - ✅ Authentication headers and JWT tokens
 - ✅ Error handling and user feedback
@@ -102,6 +113,7 @@ test_search_progress_updates()
 - ✅ API caching and performance
 
 **Key Test Cases**:
+
 ```python
 test_search_api_through_frontend()
 test_authentication_api_calls()
@@ -111,9 +123,11 @@ test_export_api_integration()
 ```
 
 ### 🎨 UI/UX Tests
+
 **Location**: `ui/test_responsive_design.py`, `ui/test_accessibility.py`
 
 **Coverage**:
+
 - ✅ Responsive design (mobile, tablet, desktop)
 - ✅ Cross-browser compatibility (Chrome, Firefox, Safari)
 - ✅ Accessibility compliance (WCAG 2.1)
@@ -123,6 +137,7 @@ test_export_api_integration()
 - ✅ Color contrast and readability
 
 **Key Test Cases**:
+
 ```python
 test_mobile_layout()
 test_tablet_layout()
@@ -133,9 +148,11 @@ test_color_contrast()
 ```
 
 ### ⚡ Performance Tests
+
 **Location**: `performance/test_performance.py`
 
 **Coverage**:
+
 - ✅ Page load times and rendering performance
 - ✅ Search operation performance
 - ✅ WebSocket connection and message latency
@@ -145,6 +162,7 @@ test_color_contrast()
 - ✅ Resource loading optimization
 
 **Key Test Cases**:
+
 ```python
 test_page_load_performance()
 test_search_performance()
@@ -156,6 +174,7 @@ test_concurrent_user_simulation()
 ## 🛠️ Test Infrastructure
 
 ### Test Fixtures
+
 - **Test Server**: Automatic startup/shutdown of GitHound web server
 - **Test Users**: Pre-created users with different roles
 - **Test Repositories**: Sample Git repositories with known content
@@ -163,6 +182,7 @@ test_concurrent_user_simulation()
 - **Browser Management**: Automatic browser lifecycle management
 
 ### Test Utilities
+
 - **Helper Functions**: Common operations like login, search, navigation
 - **Wait Utilities**: Reliable waiting for elements and conditions
 - **Accessibility Checks**: Automated WCAG compliance verification
@@ -170,6 +190,7 @@ test_concurrent_user_simulation()
 - **Screenshot/Video**: Automatic capture on test failures
 
 ### Configuration
+
 - **Multi-browser**: Chrome, Firefox, Safari support
 - **Multi-device**: Desktop, tablet, mobile viewports
 - **Environment Variables**: Configurable test settings
@@ -179,6 +200,7 @@ test_concurrent_user_simulation()
 ## 📊 Test Reports
 
 ### Generated Reports
+
 ```bash
 # View Playwright HTML report
 playwright show-report
@@ -195,6 +217,7 @@ open test-results/performance-test-report.html
 ```
 
 ### CI/CD Integration
+
 - **GitHub Actions**: Automated testing on pull requests
 - **Multi-platform**: Ubuntu, Windows, macOS testing
 - **Artifact Collection**: Screenshots, videos, reports
@@ -204,6 +227,7 @@ open test-results/performance-test-report.html
 ## 🐛 Debugging
 
 ### Debug Mode
+
 ```bash
 # Run single test with debug
 playwright test auth/test_authentication.py::TestAuthentication::test_user_login_flow --debug
@@ -218,6 +242,7 @@ PLAYWRIGHT_DEBUG=1 make test-web
 ### Common Issues
 
 #### Browser Not Found
+
 ```bash
 # Reinstall browsers
 playwright install --force
@@ -225,6 +250,7 @@ playwright install-deps
 ```
 
 #### Server Connection Issues
+
 ```bash
 # Check server status
 curl http://localhost:8000/health
@@ -234,6 +260,7 @@ redis-cli ping
 ```
 
 #### Test Data Issues
+
 ```bash
 # Clean test data
 rm -rf test-results/
@@ -243,6 +270,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 ## 📈 Performance Benchmarks
 
 ### Target Metrics
+
 - **Page Load**: <3 seconds initial load
 - **Search Response**: <30 seconds for complex queries
 - **WebSocket Latency**: <100ms for real-time updates
@@ -250,6 +278,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 - **Test Coverage**: >90% code coverage
 
 ### Monitoring
+
 - **Load Time Tracking**: Automated performance regression detection
 - **Memory Leak Detection**: Long-running test scenarios
 - **Cross-browser Performance**: Consistent behavior verification
@@ -258,6 +287,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 ## 🔒 Security Testing
 
 ### Security Checks
+
 - **Authentication**: JWT token security and expiration
 - **Authorization**: Role-based access control verification
 - **Input Validation**: XSS and injection prevention
@@ -265,6 +295,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 - **HTTPS Enforcement**: Secure communication verification
 
 ### Privacy Compliance
+
 - **Data Handling**: User data protection verification
 - **Session Management**: Secure session handling
 - **Cookie Security**: Secure cookie configuration
@@ -273,6 +304,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 ## 🤝 Contributing
 
 ### Adding New Tests
+
 1. **Choose Category**: Place tests in appropriate directory
 2. **Follow Conventions**: Use `test_*.py` naming and `@pytest.mark.*` markers
 3. **Add Test IDs**: Use `data-testid` attributes for reliable element selection
@@ -280,6 +312,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 5. **Update CI**: Add new test categories to GitHub Actions workflow
 
 ### Test Review Checklist
+
 - [ ] Tests are independent and isolated
 - [ ] Appropriate test markers are used (`@pytest.mark.auth`, etc.)
 - [ ] Error scenarios are covered

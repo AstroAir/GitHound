@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Development Environment Manager
 
@@ -16,13 +15,21 @@ Commands:
     clean       - Clean development artifacts
     reset       - Reset development environment
 """
+import sys
+from pathlib import Path
 
+import typer
 from utils import (
+    StatusContext,
     check_command_exists,
     check_python_version,
     check_virtual_env,
+    confirm,
     console,
+    get_git_info,
+    get_platform_info,
     get_project_root,
+    get_python_info,
     print_error,
     print_header,
     print_info,
@@ -32,18 +39,7 @@ from utils import (
     print_warning,
     run_command,
     run_command_with_output,
-    get_python_info,
-    get_git_info,
-    get_platform_info,
-    confirm,
-    StatusContext,
 )
-import sys
-from pathlib import Path
-from typing import Optional
-
-import typer
-from rich.table import Table
 
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -61,15 +57,11 @@ class DevEnvironmentManager:
 
     def __init__(self) -> None:
         self.project_root = get_project_root()
-        self.required_commands = [
-            "git", "python", "pip"
-        ]
-        self.optional_commands = [
-            "rg", "ripgrep", "pre-commit", "mkdocs"
-        ]
+        self.required_commands = ["git", "python", "pip"]
+        self.optional_commands = ["rg", "ripgrep", "pre-commit", "mkdocs"]
         self.required_python_version = (3, 11)
 
-    def check_system_requirements(self) -> Dict[str, bool]:
+    def check_system_requirements(self) -> dict[str, bool]:
         """Check system requirements."""
         results: dict[str, Any] = {}
 
@@ -79,39 +71,30 @@ class DevEnvironmentManager:
         python_ok = check_python_version(self.required_python_version)
         print_step(
             f"Python {self.required_python_version[0]}.{self.required_python_version[1]}+",
-            "success" if python_ok else "error"
+            "success" if python_ok else "error",
         )
         results["python_version"] = python_ok
 
         # Virtual environment
         venv_ok = check_virtual_env()
-        print_step(
-            "Virtual environment",
-            "success" if venv_ok else "error"
-        )
+        print_step("Virtual environment", "success" if venv_ok else "error")
         results["virtual_env"] = venv_ok
 
         # Required commands
         for cmd in self.required_commands:
             cmd_ok = check_command_exists(cmd)
-            print_step(
-                f"Command: {cmd}",
-                "success" if cmd_ok else "error"
-            )
+            print_step(f"Command: {cmd}", "success" if cmd_ok else "error")
             results[f"cmd_{cmd}"] = cmd_ok
 
         # Optional commands
         for cmd in self.optional_commands:
             cmd_ok = check_command_exists(cmd)
-            print_step(
-                f"Optional: {cmd}",
-                "success" if cmd_ok else "skip"
-            )
+            print_step(f"Optional: {cmd}", "success" if cmd_ok else "skip")
             results[f"opt_{cmd}"] = cmd_ok
 
         return results
 
-    def check_dependencies(self) -> Dict[str, bool]:
+    def check_dependencies(self) -> dict[str, bool]:
         """Check Python dependencies."""
         results: dict[str, Any] = {}
 
@@ -119,8 +102,7 @@ class DevEnvironmentManager:
 
         # Check if package is installed in development mode
         exit_code, stdout, stderr = run_command_with_output(
-            ["pip", "show", "githound"],
-            cwd=self.project_root
+            ["pip", "show", "githound"], cwd=self.project_root
         )
 
         if exit_code == 0 and "editable" in stdout.lower():
@@ -132,25 +114,28 @@ class DevEnvironmentManager:
 
         # Check development dependencies
         dev_deps = [
-            "pytest", "black", "isort", "ruff", "mypy",
-            "pre-commit", "mkdocs", "rich", "typer"
+            "pytest",
+            "black",
+            "isort",
+            "ruff",
+            "mypy",
+            "pre-commit",
+            "mkdocs",
+            "rich",
+            "typer",
         ]
 
         for dep in dev_deps:
             exit_code, _, _ = run_command_with_output(
-                ["python", "-c", f"import {dep}"],
-                cwd=self.project_root
+                ["python", "-c", f"import {dep}"], cwd=self.project_root
             )
             dep_ok = exit_code == 0
-            print_step(
-                f"Dependency: {dep}",
-                "success" if dep_ok else "error"
-            )
+            print_step(f"Dependency: {dep}", "success" if dep_ok else "error")
             results[f"dep_{dep}"] = dep_ok
 
         return results
 
-    def check_git_configuration(self) -> Dict[str, bool]:
+    def check_git_configuration(self) -> dict[str, bool]:
         """Check Git configuration."""
         results: dict[str, Any] = {}
 
@@ -177,7 +162,8 @@ class DevEnvironmentManager:
 
         # Check git user configuration
         exit_code, stdout, _ = run_command_with_output(
-            ["git", "config", "user.name"])  # [attr-defined]
+            ["git", "config", "user.name"]
+        )  # [attr-defined]
         if exit_code == 0 and stdout.strip():
             print_step("Git user.name configured", "success")  # [attr-defined]
             results["git_user_name"] = True
@@ -186,7 +172,8 @@ class DevEnvironmentManager:
             results["git_user_name"] = False
 
         exit_code, stdout, _ = run_command_with_output(
-            ["git", "config", "user.email"])  # [attr-defined]
+            ["git", "config", "user.email"]
+        )  # [attr-defined]
         if exit_code == 0 and stdout.strip():
             print_step("Git user.email configured", "success")  # [attr-defined]
             results["git_user_email"] = True
@@ -196,7 +183,7 @@ class DevEnvironmentManager:
 
         return results
 
-    def check_pre_commit_hooks(self) -> Dict[str, bool]:
+    def check_pre_commit_hooks(self) -> dict[str, bool]:
         """Check pre-commit hooks."""
         results: dict[str, Any] = {}
 
@@ -231,18 +218,16 @@ class DevEnvironmentManager:
         try:
             # Install package in editable mode with all dependencies
             with StatusContext("Installing GitHound in editable mode"):
-                run_command([
-                    "pip", "install", "-e", ".[dev,test,docs,build]"
-                ], cwd=self.project_root)
+                run_command(
+                    ["pip", "install", "-e", ".[dev,test,docs,build]"], cwd=self.project_root
+                )
 
             # Install pre-commit hooks
             if check_command_exists("pre-commit"):
                 with StatusContext("Installing pre-commit hooks"):
-                    run_command(["pre-commit", "install"],
-                                cwd=self.project_root)
+                    run_command(["pre-commit", "install"], cwd=self.project_root)
             else:
-                print_warning(
-                    "pre-commit not available, skipping hook installation")
+                print_warning("pre-commit not available, skipping hook installation")
 
             # Create necessary directories
             directories = [
@@ -285,6 +270,7 @@ class DevEnvironmentManager:
                 for path in paths:
                     if path.is_dir():
                         import shutil
+
                         shutil.rmtree(path, ignore_errors=True)
                         print_info(f"Removed directory: {path}")
                     elif path.is_file():
@@ -310,7 +296,8 @@ class DevEnvironmentManager:
 @app.command()
 def setup(
     force: bool = typer.Option(
-        False, "--force", "-f", help="Force setup even if already configured")
+        False, "--force", "-f", help="Force setup even if already configured"
+    )
 ) -> None:
     """Set up the development environment."""
     manager = DevEnvironmentManager()
@@ -341,8 +328,7 @@ def check() -> None:
     precommit_results = manager.check_pre_commit_hooks()
 
     # Summary
-    all_results = {**system_results, **dep_results,
-                   **git_results, **precommit_results}
+    all_results = {**system_results, **dep_results, **git_results, **precommit_results}
     total_checks = len(all_results)
     passed_checks = sum(1 for result in all_results.values() if result)
 
@@ -351,8 +337,7 @@ def check() -> None:
         print_success(f"All {total_checks} checks passed! ✨")
     else:
         failed_checks = total_checks - passed_checks
-        print_warning(
-            f"{passed_checks}/{total_checks} checks passed ({failed_checks} failed)")
+        print_warning(f"{passed_checks}/{total_checks} checks passed ({failed_checks} failed)")
         print_info("Run 'python scripts/dev-env.py setup' to fix issues")
 
 
@@ -366,7 +351,8 @@ def info() -> None:
     print_section("Python Environment")
     for key, value in python_info.items():
         console.print(
-            f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}")
+            f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}"
+        )
 
     # Git info
     git_info = get_git_info()
@@ -374,14 +360,16 @@ def info() -> None:
         print_section("Git Repository")
         for key, value in git_info.items():
             console.print(
-                f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}")
+                f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}"
+            )
 
     # Platform info
     platform_info = get_platform_info()
     print_section("Platform Information")
     for key, value in platform_info.items():
         console.print(
-            f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}")
+            f"  [cyan]{key.replace if key is not None else None('_', ' ').title()}:[/cyan] {value}"
+        )
 
 
 @app.command()
@@ -407,10 +395,14 @@ def validate() -> None:
     with StatusContext("Running validation tests"):
         # Quick test of core functionality
         try:
-            run_command([
-                "python", "-c",
-                "from githound import GitHound; print('✅ Core import successful')"
-            ], cwd=manager.project_root)
+            run_command(
+                [
+                    "python",
+                    "-c",
+                    "from githound import GitHound; print('✅ Core import successful')",
+                ],
+                cwd=manager.project_root,
+            )
         except Exception as e:
             print_error(f"Core import failed: {e}")
             sys.exit(1)

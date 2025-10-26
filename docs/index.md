@@ -17,14 +17,16 @@ integration options.
 
 ### Integration Options
 
-- **MCP Server**: Full Model Context Protocol server implementation for AI integration
-- **REST API**: Comprehensive API with OpenAPI documentation
-- **WebSocket Support**: Real-time updates and streaming results
+- **MCP Server**: Model Context Protocol server with 29 tools for AI integration
+- **REST API**: Comprehensive API with OpenAPI documentation and authentication
+- **WebSocket Support**: Real-time updates and streaming results with rate limiting
 - **CLI Interface**: Powerful command-line interface with rich output formatting
+- **Web Interface**: Modern browser-based interface with interactive features
 
 ### Data Export & Formats
 
-- **Multiple Formats**: JSON, YAML, CSV, XML, Excel, and text formats
+- **Core Formats**: JSON, YAML, CSV, and text formats
+- **Optional Formats**: Excel (requires pandas/openpyxl), XML (planned)
 - **Structured Schemas**: Standardized data formats with comprehensive type information
 - **Advanced Filtering**: Filter and sort results with flexible criteria
 - **Progress Tracking**: Real-time progress reporting with cancellation support
@@ -49,7 +51,7 @@ integration options.
 
 - **Training Data**: Extract structured git data for ML models
 - **Code Understanding**: Provide context for AI code assistants
-- **Automated Analysis**: Integrate with AI workflows via MCP server
+- **Automated Analysis**: Integrate with AI workflows via MCP Server
 - **Pattern Recognition**: Identify development patterns and anomalies
 
 ## 🏗️ Architecture Overview
@@ -58,10 +60,9 @@ GitHound is built with a modular architecture that separates concerns and enable
 
 ```mermaid
 graph TB
-    CLI[CLI Interface] --> Core[Core Engine]
-    Web[Web Interface] --> Core
-    MCP[MCP Server] --> Core
-    API[REST API] --> Core
+    CLI[CLI Interface<br/>Typer + Rich] --> Core[GitHound Core]
+    Web[Web Interface<br/>FastAPI + WebSocket] --> Core
+    MCP[MCP Server<br/>FastMCP 2.0] --> Core
 
     Core --> SearchEngine[Search Engine]
     Core --> GitHandler[Git Handler]
@@ -69,17 +70,21 @@ graph TB
     Core --> Utils[Utilities]
 
     SearchEngine --> Orchestrator[Search Orchestrator]
-    SearchEngine --> Searchers[Individual Searchers]
+    SearchEngine --> ContentSearch[Content Searcher]
+    SearchEngine --> FuzzySearch[Fuzzy Searcher]
+    SearchEngine --> PatternDetect[Pattern Detection]
 
-    GitHandler --> Blame[Git Blame]
-    GitHandler --> Diff[Git Diff]
-    GitHandler --> Metadata[Metadata Extraction]
+    GitHandler --> Blame[Git Blame Analysis]
+    GitHandler --> Diff[Git Diff Comparison]
+    GitHandler --> Metadata[Repository Metadata]
 
     Models --> Schemas[Pydantic Schemas]
-    Models --> Types[Type Definitions]
+    Models --> SearchModels[Search Models]
+    Models --> ResultModels[Result Models]
 
-    Utils --> Export[Export Manager]
+    Utils --> Export[Export Manager<br/>JSON/YAML/CSV]
     Utils --> Progress[Progress Tracking]
+    Utils --> Auth[Authentication<br/>JWT + Rate Limiting]
 ```
 
 ## 📚 Documentation Navigation
@@ -142,21 +147,24 @@ Get help when things go wrong:
 ## 🔧 Technology Stack
 
 - **Python 3.11+**: Modern Python with full type annotation support
-- **FastAPI**: High-performance web framework for APIs
-- **Pydantic**: Data validation and serialization with type safety
-- **GitPython**: Comprehensive Git repository interaction
-- **FastMCP**: Model Context Protocol server implementation
-- **Typer**: Modern CLI framework with rich formatting
-- **MyPy**: Static type checking for code quality
+- **FastAPI**: High-performance web framework for REST APIs and WebSocket support
+- **Pydantic**: Data validation and serialization with comprehensive type safety
+- **GitPython**: Comprehensive Git repository interaction and analysis
+- **FastMCP 2.0**: Model Context Protocol server implementation for AI integration
+- **Typer**: Modern CLI framework with rich console output and formatting
+- **Hatch**: Modern Python build system with VCS versioning
+- **MyPy**: Static type checking for enhanced code quality and reliability
 
 ## 📈 Performance & Scalability
 
 GitHound is designed for performance and can handle large repositories efficiently:
 
-- **Parallel Processing**: Multi-threaded search operations
-- **Caching**: Intelligent caching of expensive operations
-- **Streaming**: Memory-efficient processing of large datasets
-- **Progress Tracking**: Real-time feedback for long-running operations
+- **Async Operations**: Non-blocking I/O for better concurrency and responsiveness
+- **Search Orchestration**: Unified search coordination with optimized query execution
+- **Streaming Export**: Memory-efficient processing of large datasets with streaming CSV export
+- **Progress Tracking**: Real-time feedback for long-running operations via WebSocket
+- **Rate Limiting**: Built-in protection against API abuse with Redis-backed limiting
+- **Caching**: Intelligent caching of repository metadata and search results
 
 ## 🤝 Community & Support
 

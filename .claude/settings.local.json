@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest:*)",
+      "Bash(python3:*)",
+      "Bash(where:*)",
+      "Bash(C:UsersMax QianAppDataLocalProgramsPythonPython311python.exe -m pytest tests/ -v --tb=short)",
+      "Bash(source:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(python -m githound.cli:*)",
+      "Bash(dir /B:*)",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Read(//d/**)",
+      "Bash(cd:*)",
+      "Bash(python:*)",
+      "Bash(\"C:\\Users\\Max Qian\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/ -v --tb=short -k \"test_\" --co -q)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,15 +1,14 @@
 """Test fixtures specifically for CLI testing."""
 
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import Mock, patch
 
 import pytest
 from git import Repo
 from typer.testing import CliRunner
 
-from githound.cli import app
 from githound.models import OutputFormat, SearchQuery
 
 
@@ -23,7 +22,10 @@ def cli_runner() -> CliRunner:
 def temp_git_repo() -> Generator[Path, None, None]:
     """Create a temporary Git repository with sample content for CLI testing."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        repo_path = Path(temp_dir)
+        import os
+
+        # Normalize path to handle Windows 8.3 short names
+        repo_path = Path(os.path.realpath(temp_dir))
         repo = Repo.init(repo_path)
 
         # Configure user for commits
@@ -100,7 +102,7 @@ if __name__ == "__main__":
 class FeatureClass:
     def __init__(self, name: str) -> None:
         self.name = name
-    
+
     def process(self) -> str:
         return f"Processing {self.name}"
 """
@@ -115,6 +117,9 @@ class FeatureClass:
         repo.create_tag("v1.0.0", message="Version 1.0.0")
 
         yield repo_path
+
+        # Cleanup: Close repository to release file handles
+        repo.close()
 
 
 @pytest.fixture
@@ -200,7 +205,6 @@ def mock_file_operations():
         patch("pathlib.Path.write_text") as mock_write_text,
         patch("pathlib.Path.exists") as mock_exists,
     ):
-
         mock_exists.return_value = True
         mock_file = Mock()
         mock_open.return_value.__enter__.return_value = mock_file
@@ -232,7 +236,6 @@ def mock_external_services():
         patch("webbrowser.open") as mock_browser,
         patch("githound.mcp_server.run_mcp_server") as mock_mcp,
     ):
-
         yield {"uvicorn": mock_uvicorn, "browser": mock_browser, "mcp_server": mock_mcp}
 
 

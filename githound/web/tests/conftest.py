@@ -6,11 +6,11 @@ import asyncio
 import os
 import tempfile
 import uuid
+from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
-from typing import Any, AsyncGenerator, Generator
+from typing import Any
 
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
@@ -21,8 +21,7 @@ from .fixtures.test_data import TestDataManager
 from .fixtures.test_repository import TestRepositoryManager
 from .fixtures.test_server import TestServerManager
 
-# Configure pytest-asyncio
-pytest_asyncio.auto_mode = True
+# Note: pytest-asyncio auto mode is configured in pytest.ini via asyncio_mode = auto
 
 
 @pytest.fixture(scope="session")
@@ -127,10 +126,13 @@ def test_admin_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-async def authenticated_user(page: Page, test_user_data: dict[str, Any], test_server: TestServerManager) -> None:
+async def authenticated_user(
+    page: Page, test_user_data: dict[str, Any], test_server: TestServerManager
+) -> None:
     """Create and authenticate a test user."""
     # Create user
     from ..services.auth_service import UserCreate
+
     user_create_data = UserCreate(
         username=test_user_data["username"],
         email=test_user_data["email"],
@@ -153,10 +155,13 @@ async def authenticated_user(page: Page, test_user_data: dict[str, Any], test_se
 
 
 @pytest.fixture
-async def authenticated_admin(page: Page, test_admin_data: dict[str, Any], test_server: TestServerManager) -> None:
+async def authenticated_admin(
+    page: Page, test_admin_data: dict[str, Any], test_server: TestServerManager
+) -> None:
     """Create and authenticate a test admin user."""
     # Create admin user
     from ..services.auth_service import UserCreate
+
     user_create_data = UserCreate(
         username=test_admin_data["username"],
         email=test_admin_data["email"],
@@ -193,10 +198,4 @@ async def cleanup_after_test() -> AsyncGenerator[None, None]:
     pass
 
 
-# Markers for different test categories
-pytest.mark.auth = pytest.mark.auth
-pytest.mark.search = pytest.mark.search
-pytest.mark.api = pytest.mark.api
-pytest.mark.ui = pytest.mark.ui
-pytest.mark.performance = pytest.mark.performance
-pytest.mark.e2e = pytest.mark.e2e
+# Note: Test markers (auth, search, api, ui, performance, e2e) are defined in pytest.ini

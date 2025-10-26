@@ -5,7 +5,7 @@ import logging
 import os
 import urllib.error
 import urllib.request
-from typing import Any, cast
+from typing import Any
 
 from .oauth_proxy import OAuthProxy, TokenInfo
 

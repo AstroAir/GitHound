@@ -9,16 +9,16 @@ Based on: https://gofastmcp.com/deployment/testing
 import shutil
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-import pytest_asyncio
 from git import Repo
 
 # Skip FastMCP tests due to Pydantic v1/v2 compatibility issues
 try:
     from fastmcp import Client, FastMCP
     from fastmcp.exceptions import McpError, ToolError
+
     FASTMCP_AVAILABLE = True
 except ImportError:
     FASTMCP_AVAILABLE = False
@@ -31,6 +31,7 @@ except ImportError:
 # Handle MCP server import gracefully
 try:
     from githound.mcp_server import get_mcp_server, mcp
+
     MCP_SERVER_AVAILABLE = True
 except (ImportError, TypeError, AttributeError):
     # Handle various import errors including Pydantic compatibility issues
@@ -42,8 +43,12 @@ except (ImportError, TypeError, AttributeError):
 @pytest.fixture
 def temp_repo() -> None:
     """Create a temporary Git repository for testing."""
+    import os
+
     temp_dir = tempfile.mkdtemp()
-    repo = Repo.init(temp_dir)
+    # Normalize path to handle Windows 8.3 short names
+    normalized_temp_dir = os.path.realpath(temp_dir)
+    repo = Repo.init(normalized_temp_dir)
 
     # Configure user for commits
     with repo.config_writer() as config:  # [attr-defined]
@@ -51,7 +56,7 @@ def temp_repo() -> None:
         config.set_value("user", "email", "test@example.com")  # [attr-defined]
 
     # Create initial commit
-    test_file = Path(temp_dir) / "test.py"
+    test_file = Path(normalized_temp_dir) / "test.py"
     test_file.write_text("def hello() -> None:\n    print('Hello, World!')\n")
     repo.index.add([str(test_file)])
     initial_commit = repo.index.commit("Initial commit")
@@ -63,21 +68,25 @@ def temp_repo() -> None:
     repo.index.add([str(test_file)])
     second_commit = repo.index.commit("Add goodbye function")
 
-    yield repo, temp_dir, initial_commit, second_commit
+    yield repo, normalized_temp_dir, initial_commit, second_commit
 
-    # Cleanup
+    # Cleanup: Close repository to release file handles
+    repo.close()
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture
 def mcp_client():
     """Create an MCP client for testing."""
-    if not FASTMCP_AVAILABLE:
-        pytest.skip("FastMCP not available due to Pydantic compatibility issues")
+    if not FASTMCP_AVAILABLE or not MCP_SERVER_AVAILABLE or mcp is None:
+        pytest.skip("FastMCP or MCP server not available due to Pydantic compatibility issues")
     return Client(mcp)
 
 
-@pytest.mark.skipif(not (FASTMCP_AVAILABLE and MCP_SERVER_AVAILABLE), reason="FastMCP or MCP server not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not (FASTMCP_AVAILABLE and MCP_SERVER_AVAILABLE),
+    reason="FastMCP or MCP server not available due to Pydantic compatibility issues",
+)
 class TestMCPRepositoryAnalysis:
     """Tests for MCP repository analysis tools."""
 
@@ -176,7 +185,9 @@ class TestMCPRepositoryAnalysis:
             assert response["file_path"] == "test.py"
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPBlameAndDiff:
     """Tests for MCP blame and diff analysis tools."""
 
@@ -255,7 +266,9 @@ class TestMCPBlameAndDiff:
             assert author_key in response["author_statistics"]
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPResources:
     """Tests for MCP resources."""
 
@@ -309,7 +322,9 @@ class TestMCPResources:
             assert "Test User" in content
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPExport:
     """Tests for MCP export functionality."""
 
@@ -355,7 +370,9 @@ class TestMCPExport:
                 Path(output_file).unlink()
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPErrorHandling:
     """Tests for MCP error handling."""
 
@@ -420,7 +437,9 @@ class TestMCPErrorHandling:
             assert "error" in response
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPAdvancedSearch:
     """Tests for advanced MCP search functionality."""
 
@@ -507,7 +526,9 @@ class TestMCPAdvancedSearch:
             assert response["pattern"] == "def"
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPRepositoryManagement:
     """Tests for repository management MCP tools."""
 
@@ -596,13 +617,19 @@ class TestMCPRepositoryManagement:
             assert "contributors" in report
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not (FASTMCP_AVAILABLE and MCP_SERVER_AVAILABLE),
+    reason="FastMCP or MCP not available due to Pydantic compatibility issues",
+)
 class TestMCPInputValidation:
     """Tests for MCP input validation."""
 
     def test_advanced_search_input_validation(self, temp_repo) -> None:
         """Test AdvancedSearchInput validation."""
-        from githound.mcp_server import AdvancedSearchInput
+        try:
+            from githound.mcp_server import AdvancedSearchInput
+        except (ImportError, AttributeError):
+            pytest.skip("MCP models not available")
 
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -622,7 +649,10 @@ class TestMCPInputValidation:
 
     def test_fuzzy_search_input_validation(self, temp_repo) -> None:
         """Test FuzzySearchInput validation."""
-        from githound.mcp_server import FuzzySearchInput
+        try:
+            from githound.mcp_server import FuzzySearchInput
+        except (ImportError, AttributeError):
+            pytest.skip("MCP models not available")
 
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -640,7 +670,10 @@ class TestMCPInputValidation:
 
     def test_web_server_input_validation(self, temp_repo) -> None:
         """Test WebServerInput validation."""
-        from githound.mcp_server import WebServerInput
+        try:
+            from githound.mcp_server import WebServerInput
+        except (ImportError, AttributeError):
+            pytest.skip("MCP models not available")
 
         repo, temp_dir, initial_commit, second_commit = temp_repo
 
@@ -653,7 +686,9 @@ class TestMCPInputValidation:
             WebServerInput(repo_path=temp_dir, port=80)
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPServerConfiguration:
     """Tests for MCP server configuration."""
 
@@ -666,7 +701,9 @@ class TestMCPServerConfiguration:
         # Note: FastMCP doesn't have a description attribute
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestFastMCPInMemoryPatterns:
     """Test FastMCP in-memory testing patterns following latest documentation."""
 
@@ -794,7 +831,9 @@ class TestFastMCPInMemoryPatterns:
         assert orchestrator is orchestrator2
 
 
-@pytest.mark.skipif(not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues")
+@pytest.mark.skipif(
+    not FASTMCP_AVAILABLE, reason="FastMCP not available due to Pydantic compatibility issues"
+)
 class TestMCPAdvancedErrorHandling:
     """Tests for advanced MCP error handling scenarios."""
 

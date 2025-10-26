@@ -29,8 +29,8 @@ def get_repository(path: Path) -> Repo:
     """
     try:
         return Repo(path)
-    except git.InvalidGitRepositoryError as e:
-        raise GitCommandError(f"Invalid Git repository at '{path}': {e}")
+    except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
+        raise GitCommandError(f"Invalid Git repository at '{path}': {e}") from e
 
 
 def walk_history(repo: Repo, config: GitHoundConfig) -> Generator[Commit, None, None]:
@@ -44,12 +44,21 @@ def walk_history(repo: Repo, config: GitHoundConfig) -> Generator[Commit, None, 
     Yields:
         Commit objects from the history.
     """
-    branch = config.branch or repo.active_branch.name  # [attr-defined]
+    try:
+        branch = config.branch or repo.active_branch.name  # [attr-defined]
+    except (TypeError, ValueError):
+        # Empty repo has no active branch
+        return
+
     try:
         for commit in repo.iter_commits(branch):
             yield commit
-    except GitCommandError:
-        raise GitCommandError(f"Branch '{branch}' not found.")
+    except GitCommandError as e:
+        # Handle empty repo or invalid branch gracefully
+        if "bad revision" in str(e).lower() or "does not have any commits yet" in str(e).lower():
+            # Empty repo - no commits to iterate
+            return
+        raise GitCommandError(f"Branch '{branch}' not found.") from e
 
 
 def process_commit(commit: Commit, config: GitHoundConfig) -> list[SearchResult]:
@@ -323,7 +332,7 @@ def get_commits_with_filters(
 
             if message_pattern:
                 commit_message = commit.message
-                if isinstance(commit_message, (bytes, bytearray, memoryview)):
+                if isinstance(commit_message, bytes | bytearray | memoryview):
                     commit_message = bytes(commit_message).decode("utf-8", errors="ignore")
 
                 if (
@@ -335,7 +344,7 @@ def get_commits_with_filters(
             yield commit
 
     except GitCommandError as e:
-        raise GitCommandError(f"Error filtering commits: {e}")
+        raise GitCommandError(f"Error filtering commits: {e}") from e
 
 
 def get_file_history(
@@ -399,7 +408,7 @@ def get_file_history(
                 continue
 
     except GitCommandError as e:
-        raise GitCommandError(f"Error getting file history for '{file_path}': {e}")
+        raise GitCommandError(f"Error getting file history for '{file_path}': {e}") from e
 
     return history
 
@@ -423,7 +432,7 @@ def get_changed_files(repo: Repo, commit: Commit) -> list[str]:
         # Get files changed compared to first parent
         return [str(f) for f in commit.stats.files.keys()]
 
-    except Exception as e:
+    except Exception:
         # Return empty list on error
         return []
 

@@ -19,14 +19,7 @@
   "MD012": {
     "maximum": 2
   },
-  "MD013": {
-    "line_length": 100,
-    "heading_line_length": 120,
-    "code_block_line_length": 120,
-    "code_blocks": false,
-    "tables": false,
-    "headers": false
-  },
+  "MD013": false,
   "MD022": {
     "lines_above": 1,
     "lines_below": 1

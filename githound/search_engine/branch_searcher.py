@@ -1,9 +1,8 @@
 """Branch-specific searchers for GitHound."""
 
-import asyncio
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -49,7 +48,7 @@ class BranchSearcher(CacheableSearcher):
             return
 
         # Perform branch analysis
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         # Analyze branch structure
         self._report_progress(context, "Analyzing branch structure...", 0.2)
@@ -75,9 +74,9 @@ class BranchSearcher(CacheableSearcher):
 
         self._report_progress(context, "Branch analysis completed", 1.0)
 
-    async def _analyze_branches(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_branches(self, context: SearchContext) -> list[SearchResult]:
         """Analyze branch structure and information."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             branches = list(context.repo.branches)
@@ -176,9 +175,9 @@ class BranchSearcher(CacheableSearcher):
 
         return results
 
-    async def _analyze_branch_relationships(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_branch_relationships(self, context: SearchContext) -> list[SearchResult]:
         """Analyze relationships between branches."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             branches = list(context.repo.branches)
@@ -238,9 +237,9 @@ class BranchSearcher(CacheableSearcher):
 
         return results
 
-    async def _analyze_branch_activity(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_branch_activity(self, context: SearchContext) -> list[SearchResult]:
         """Analyze branch activity and freshness."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             branches = list(context.repo.branches)
@@ -254,6 +253,11 @@ class BranchSearcher(CacheableSearcher):
                 try:
                     last_commit = branch.commit
                     commit_date = datetime.fromtimestamp(last_commit.committed_date)
+                    # Ensure both datetimes are timezone-compatible
+                    if now.tzinfo is not None and commit_date.tzinfo is None:
+                        commit_date = commit_date.replace(tzinfo=now.tzinfo)
+                    elif now.tzinfo is None and commit_date.tzinfo is not None:
+                        now = now.replace(tzinfo=commit_date.tzinfo)
                     days_old = (now - commit_date).days
 
                     if days_old <= 30:
@@ -309,7 +313,7 @@ class BranchSearcher(CacheableSearcher):
 
         return results
 
-    def _get_ahead_behind_info(self, repo: Any, branch: Any) -> Dict[str, int]:
+    def _get_ahead_behind_info(self, repo: Any, branch: Any) -> dict[str, int]:
         """Get ahead/behind information for a branch relative to main/master."""
         try:
             # Try to find main or master branch

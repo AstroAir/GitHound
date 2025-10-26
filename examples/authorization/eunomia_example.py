@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Example: GitHound MCP Server with Eunomia Authorization
 
@@ -13,11 +12,14 @@ Usage:
     python eunomia_example.py
 """
 
-import os
-import json
 import asyncio
+import json
 import logging
-from pathlib import Path
+import os
+
+from githound.mcp.auth.providers import EunomiaAuthorizationProvider
+from githound.mcp.auth_manager import check_permission, check_tool_permission, set_auth_provider
+from githound.mcp.models import User
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)  # [attr-defined]
@@ -28,11 +30,6 @@ os.environ["EUNOMIA_ENABLE"] = "true"
 os.environ["EUNOMIA_POLICY_FILE"] = "githound_eunomia_policies.json"
 os.environ["EUNOMIA_SERVER_NAME"] = "githound-demo"
 os.environ["EUNOMIA_ENABLE_AUDIT_LOGGING"] = "true"
-
-# Import GitHound components
-from githound.mcp.auth import set_auth_provider, check_permission, check_tool_permission
-from githound.mcp.auth.providers import JWTVerifier, EunomiaAuthorizationProvider
-from githound.mcp.models import User
 
 
 def create_demo_policy_file() -> None:
@@ -47,7 +44,7 @@ def create_demo_policy_file() -> None:
                 "subjects": ["role:admin"],
                 "resources": ["*"],
                 "actions": ["*"],
-                "effect": "allow"
+                "effect": "allow",
             },
             {
                 "id": "developer_code_access",
@@ -58,31 +55,26 @@ def create_demo_policy_file() -> None:
                     "githound-demo:search:*",
                     "githound-demo:blame:*",
                     "githound-demo:diff:*",
-                    "githound-demo:tools:list"
+                    "githound-demo:tools:list",
                 ],
                 "actions": ["read", "search", "analyze", "list"],
-                "effect": "allow"
+                "effect": "allow",
             },
             {
                 "id": "analyst_read_only",
                 "description": "Analysts can only read repository information",
                 "subjects": ["role:analyst"],
-                "resources": [
-                    "githound-demo:repository:info",
-                    "githound-demo:tools:list"
-                ],
+                "resources": ["githound-demo:repository:info", "githound-demo:tools:list"],
                 "actions": ["read", "list"],
-                "effect": "allow"
+                "effect": "allow",
             },
             {
                 "id": "intern_limited_access",
                 "description": "Interns have very limited access",
                 "subjects": ["role:intern"],
-                "resources": [
-                    "githound-demo:tools:list"
-                ],
+                "resources": ["githound-demo:tools:list"],
                 "actions": ["list"],
-                "effect": "allow"
+                "effect": "allow",
             },
             {
                 "id": "secure_repo_restriction",
@@ -91,9 +83,7 @@ def create_demo_policy_file() -> None:
                 "resources": ["githound-demo:repository:/secure/*"],
                 "actions": ["*"],
                 "effect": "deny",
-                "conditions": {
-                    "subject_role": {"not_in": ["admin", "security-lead"]}
-                }
+                "conditions": {"subject_role": {"not_in": ["admin", "security-lead"]}},
             },
             {
                 "id": "default_deny",
@@ -101,13 +91,13 @@ def create_demo_policy_file() -> None:
                 "subjects": ["*"],
                 "resources": ["*"],
                 "actions": ["*"],
-                "effect": "deny"
-            }
-        ]
+                "effect": "deny",
+            },
+        ],
     }
 
     policy_file = "githound_eunomia_policies.json"
-    with open(policy_file, 'w') as f:
+    with open(policy_file, "w") as f:
         json.dump(policies, f, indent=2)
 
     logger.info(f"Created demo policy file: {policy_file}")
@@ -117,9 +107,9 @@ def create_demo_policy_file() -> None:
 async def demo_eunomia_authorization() -> None:
     """Demonstrate Eunomia authorization with GitHound."""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("GitHound MCP Server - Eunomia Authorization Demo")
-    print("="*60)
+    print("=" * 60)
 
     # Create demo policy file
     policy_file = create_demo_policy_file()
@@ -128,9 +118,7 @@ async def demo_eunomia_authorization() -> None:
     from githound.mcp.auth.providers.jwt import StaticJWTVerifier
 
     jwt_provider = StaticJWTVerifier(
-        secret_key="demo-secret-key",
-        issuer="githound-demo",
-        audience="mcp-client"
+        secret_key="demo-secret-key", issuer="githound-demo", audience="mcp-client"
     )
 
     # Wrap with Eunomia authorization
@@ -138,13 +126,13 @@ async def demo_eunomia_authorization() -> None:
         base_provider=jwt_provider,
         policy_file=policy_file,
         server_name="githound-demo",
-        enable_audit_logging=True
+        enable_audit_logging=True,
     )
 
     # Set as the global auth provider
     set_auth_provider(auth_provider)
 
-    print(f"✓ Created Eunomia authorization provider")
+    print("✓ Created Eunomia authorization provider")
     print(f"✓ Policy file: {policy_file}")
 
     # Create test users with different roles
@@ -164,25 +152,27 @@ async def demo_eunomia_authorization() -> None:
         ("admin", "githound-demo:admin:config"),
     ]
 
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Permission Test Results:")
-    print("-"*60)
+    print("-" * 60)
     print(f"{'User':<15} {'Role':<12} {'Operation':<10} {'Resource':<25} {'Allowed':<8}")
-    print("-"*60)
+    print("-" * 60)
 
     for user in test_users:
         for operation, resource in test_operations:
             try:
                 allowed = await check_permission(user, operation, resource)
                 status = "✓ YES" if allowed else "✗ NO"
-                print(f"{user.username:<15} {user.role:<12} {operation:<10} {resource:<25} {status:<8}")
-            except Exception as e:
+                print(
+                    f"{user.username:<15} {user.role:<12} {operation:<10} {resource:<25} {status:<8}"
+                )
+            except Exception:
                 print(f"{user.username:<15} {user.role:<12} {operation:<10} {resource:<25} ERROR")
 
     # Test tool-level permissions with arguments
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Tool Permission Test Results:")
-    print("-"*60)
+    print("-" * 60)
 
     tool_tests = [
         ("search_files", {"repo_path": "/public/repo", "pattern": "*.py"}),
@@ -196,31 +186,33 @@ async def demo_eunomia_authorization() -> None:
             try:
                 allowed = await check_tool_permission(user, tool_name, tool_args)
                 status = "✓ YES" if allowed else "✗ NO"
-                args_str = str(tool_args)[:30] + "..." if len(str(tool_args)) > 30 else str(tool_args)
+                args_str = (
+                    str(tool_args)[:30] + "..." if len(str(tool_args)) > 30 else str(tool_args)
+                )
                 print(f"{user.username:<15} {tool_name:<15} {args_str:<35} {status}")
             except Exception as e:
                 print(f"{user.username:<15} {tool_name:<15} ERROR: {e}")
 
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Policy File Contents:")
-    print("-"*60)
+    print("-" * 60)
 
-    with open(policy_file, 'r') as f:
+    with open(policy_file) as f:
         policy_content = json.load(f)
 
     print(f"Server: {policy_content['server_name']}")
     print(f"Policies: {len(policy_content['policies'])}")
 
-    for policy in policy_content['policies']:
+    for policy in policy_content["policies"]:
         print(f"\n  Policy: {policy['id']}")
         print(f"    Description: {policy['description']}")
         print(f"    Subjects: {policy['subjects']}")
         print(f"    Effect: {policy['effect']}")
 
     # Demonstrate policy reloading
-    print("\n" + "-"*60)
+    print("\n" + "-" * 60)
     print("Policy Management:")
-    print("-"*60)
+    print("-" * 60)
 
     print("✓ Policies loaded from:", auth_provider.get_policy_file_path())
 
@@ -231,9 +223,9 @@ async def demo_eunomia_authorization() -> None:
     except Exception as e:
         print(f"✗ Policy reload failed: {e}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Demo Complete!")
-    print("="*60)
+    print("=" * 60)
     print("\nNext Steps:")
     print("1. Customize the policy file for your use case")
     print("2. Set up proper JWT authentication")

@@ -1,16 +1,14 @@
 """Tests for GitHound fuzzy searcher."""
 
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
 from git import Repo
 
 from githound.models import SearchQuery
-from githound.search_engine import (
-    FuzzySearcher,
-    SearchContext,
-)
+from githound.search_engine import FuzzySearcher, SearchContext
 
 
 @pytest.fixture

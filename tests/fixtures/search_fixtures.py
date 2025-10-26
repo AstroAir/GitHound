@@ -1,10 +1,9 @@
 """Test fixtures for search engine testing."""
 
 import tempfile
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Generator, List
-from unittest.mock import Mock
 
 import pytest
 from git import Actor, Repo
@@ -16,7 +15,10 @@ from githound.models import CommitInfo, SearchQuery, SearchResult
 def complex_git_repo() -> Generator[Path, None, None]:
     """Create a complex Git repository for comprehensive search testing."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        repo_path = Path(temp_dir)
+        import os
+
+        # Normalize path to handle Windows 8.3 short names
+        repo_path = Path(os.path.realpath(temp_dir))
         repo = Repo.init(repo_path)
 
         # Configure user for commits
@@ -47,18 +49,18 @@ from typing import List, Dict, Optional
 
 class Module{i}Class:
     """Class for module {i}."""
-    
+
     def __init__(self, name: str) -> None:
         self.name = name
         self.value = {i}
-    
+
     def process_data(self, data: List[str]) -> Dict[str, int]:
         """Process data and return results."""
         result = {{}}
         for item in data:
             result[item] = len(item) * {i}
         return result
-    
+
     def calculate(self, x: int, y: int) -> int:
         """Calculate something useful."""
         return (x + y) * {i}
@@ -84,11 +86,11 @@ class Component{i} {{
         this.name = name;
         this.value = {i};
     }}
-    
+
     render() {{
         return `<div class="component-{i}">{{this.name}}</div>`;
     }}
-    
+
     handleClick(event) {{
         console.log(`Component {i} clicked: {{event.target}}`);
         this.value += 1;
@@ -120,7 +122,7 @@ database:
   host: localhost
   port: {5432 + i}
   name: test_db_{i}
-  
+
 features:
   - feature_{i}_1
   - feature_{i}_2
@@ -161,16 +163,16 @@ from typing import List, Pattern, Optional
 
 class SearchEngine:
     """Advanced search engine implementation."""
-    
+
     def __init__(self) -> None:
         self.patterns: List[Pattern] = []
         self.case_sensitive = False
-    
+
     def add_pattern(self, pattern: str) -> None:
         """Add a search pattern."""
         flags = 0 if self.case_sensitive else re.IGNORECASE
         self.patterns.append(re.compile(pattern, flags))
-    
+
     def search(self, text: str) -> List[str]:
         """Search for patterns in text."""
         results = []
@@ -178,7 +180,7 @@ class SearchEngine:
             matches = pattern.findall(text)
             results.extend(matches)
         return results
-    
+
     def fuzzy_search(self, text: str, threshold: float = 0.8) -> List[str]:
         """Perform fuzzy search with similarity threshold."""
         # Simplified fuzzy search implementation
@@ -217,6 +219,9 @@ def search_files(directory: str, pattern: str) -> List[str]:
 
         yield repo_path
 
+        # Cleanup: Close repository to release file handles
+        repo.close()
+
 
 @pytest.fixture
 def search_test_queries() -> dict:
@@ -245,7 +250,7 @@ def search_test_queries() -> dict:
 
 
 @pytest.fixture
-def mock_search_results() -> List[SearchResult]:
+def mock_search_results() -> list[SearchResult]:
     """Provide mock search results for testing."""
     return [
         SearchResult(
@@ -285,7 +290,7 @@ def mock_search_results() -> List[SearchResult]:
 
 
 @pytest.fixture
-def mock_commit_info() -> List[CommitInfo]:
+def mock_commit_info() -> list[CommitInfo]:
     """Provide mock commit information for testing."""
     return [
         CommitInfo(

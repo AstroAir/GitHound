@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Git Commit Analysis Examples
 
@@ -17,24 +16,20 @@ This example covers:
 - Commit message analysis patterns
 """
 
-import sys
 import json
 import logging
-from pathlib import Path
+import sys
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from pathlib import Path
+from typing import Any
 
-from githound.git_handler import (
-    get_repository, extract_commit_metadata, get_commits_with_filters
-)
 from githound.git_diff import compare_commits
+from githound.git_handler import extract_commit_metadata, get_commits_with_filters, get_repository
 from githound.models import CommitInfo
-
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -46,9 +41,9 @@ class CommitAnalyzer:
         """Initialize analyzer with repository path."""
         self.repo_path = Path(repo_path)
         self.repo = None
-        self.analysis_results: Dict[str, Any] = {
+        self.analysis_results: dict[str, Any] = {
             "repository_path": str(repo_path),
-            "analysis_timestamp": datetime.now().isoformat()
+            "analysis_timestamp": datetime.now().isoformat(),
         }
 
     def load_repository(self) -> bool:
@@ -64,7 +59,7 @@ class CommitAnalyzer:
             self.analysis_results["error"] = str(e)
             return False
 
-    def analyze_specific_commit(self, commit_hash: Optional[str] = None) -> Dict[str, Any]:
+    def analyze_specific_commit(self, commit_hash: str | None = None) -> dict[str, Any]:
         """Analyze a specific commit in detail."""
         logger.info("\n=== Specific Commit Analysis ===")
 
@@ -113,14 +108,14 @@ class CommitAnalyzer:
             commit_analysis = self._analyze_commit_patterns(commit_info)
             commit_data.update(commit_analysis)
 
-            self.analysis_results['specific_commit'] = commit_data
+            self.analysis_results["specific_commit"] = commit_data
             return commit_data
 
         except Exception as e:
             logger.error(f"✗ Commit analysis failed: {e}")
             return {"error": str(e)}
 
-    def _analyze_commit_patterns(self, commit_info: CommitInfo) -> Dict[str, Any]:
+    def _analyze_commit_patterns(self, commit_info: CommitInfo) -> dict[str, Any]:
         """Analyze patterns in commit data."""
         analysis: dict[str, Any] = {}
 
@@ -128,20 +123,20 @@ class CommitAnalyzer:
         message = commit_info.message.lower()
 
         # Categorize commit type based on message
-        if any(word in message for word in ['fix', 'bug', 'issue', 'error']):
+        if any(word in message for word in ["fix", "bug", "issue", "error"]):
             commit_type = "bugfix"
-        elif any(word in message for word in ['feat', 'feature', 'add', 'new']):
+        elif any(word in message for word in ["feat", "feature", "add", "new"]):
             commit_type = "feature"
-        elif any(word in message for word in ['refactor', 'cleanup', 'improve']):
+        elif any(word in message for word in ["refactor", "cleanup", "improve"]):
             commit_type = "refactor"
-        elif any(word in message for word in ['doc', 'readme', 'comment']):
+        elif any(word in message for word in ["doc", "readme", "comment"]):
             commit_type = "documentation"
-        elif any(word in message for word in ['test', 'spec']):
+        elif any(word in message for word in ["test", "spec"]):
             commit_type = "test"
         else:
             commit_type = "other"
 
-        analysis['commit_type'] = commit_type
+        analysis["commit_type"] = commit_type
 
         # Size analysis
         total_changes = commit_info.insertions + commit_info.deletions
@@ -154,8 +149,8 @@ class CommitAnalyzer:
         else:
             size_category = "very_large"
 
-        analysis['size_category'] = size_category
-        analysis['total_changes'] = total_changes
+        analysis["size_category"] = size_category
+        analysis["total_changes"] = total_changes
 
         # File type analysis
         file_types: dict[str, Any] = {}
@@ -165,11 +160,11 @@ class CommitAnalyzer:
                 ext = "no_extension"
             file_types[ext] = file_types.get(ext, 0) + 1
 
-        analysis['file_types'] = file_types
+        analysis["file_types"] = file_types
 
         return analysis
 
-    def analyze_commit_history(self, days: int = 30, max_commits: int = 100) -> Dict[str, Any]:
+    def analyze_commit_history(self, days: int = 30, max_commits: int = 100) -> dict[str, Any]:
         """Analyze commit history patterns over time."""
         logger.info(f"\n=== Commit History Analysis (last {days} days) ===")
 
@@ -181,9 +176,7 @@ class CommitAnalyzer:
             since_date = datetime.now() - timedelta(days=days)
 
             commits = get_commits_with_filters(
-                repo=self.repo,
-                max_count=max_commits,
-                since=since_date
+                repo=self.repo, max_count=max_commits, since=since_date
             )
 
             commit_list: list[Any] = []
@@ -195,7 +188,7 @@ class CommitAnalyzer:
                 "file_types": {},
                 "daily_activity": {},
                 "hourly_activity": [0] * 24,
-                "weekday_activity": [0] * 7
+                "weekday_activity": [0] * 7,
             }
 
             for commit in commits:
@@ -219,7 +212,7 @@ class CommitAnalyzer:
                             "commits": 0,
                             "insertions": 0,
                             "deletions": 0,
-                            "files": set()
+                            "files": set(),
                         }
 
                     history_stats["authors"][author]["commits"] += 1
@@ -229,23 +222,33 @@ class CommitAnalyzer:
 
                     # Commit type statistics
                     commit_type = patterns.get("commit_type", "other")
-                    history_stats["commit_types"][commit_type] = history_stats["commit_types"].get(commit_type, 0) + 1
+                    history_stats["commit_types"][commit_type] = (
+                        history_stats["commit_types"].get(commit_type, 0) + 1
+                    )
 
                     # Size category statistics
                     size_category = patterns.get("size_category", "unknown")
-                    history_stats["size_categories"][size_category] = history_stats["size_categories"].get(size_category, 0) + 1
+                    history_stats["size_categories"][size_category] = (
+                        history_stats["size_categories"].get(size_category, 0) + 1
+                    )
 
                     # File type statistics
                     for file_type, count in patterns.get("file_types", {}).items():
-                        history_stats["file_types"][file_type] = history_stats["file_types"].get(file_type, 0) + count
+                        history_stats["file_types"][file_type] = (
+                            history_stats["file_types"].get(file_type, 0) + count
+                        )
 
                     # Time-based statistics
                     try:
-                        commit_date = datetime.fromisoformat(commit_info.timestamp.replace('Z', '+00:00'))
+                        commit_date = datetime.fromisoformat(
+                            commit_info.timestamp.replace("Z", "+00:00")
+                        )
 
                         # Daily activity
-                        day_key = commit_date.strftime('%Y-%m-%d')
-                        history_stats["daily_activity"][day_key] = history_stats["daily_activity"].get(day_key, 0) + 1
+                        day_key = commit_date.strftime("%Y-%m-%d")
+                        history_stats["daily_activity"][day_key] = (
+                            history_stats["daily_activity"].get(day_key, 0) + 1
+                        )
 
                         # Hourly activity
                         history_stats["hourly_activity"][commit_date.hour] += 1
@@ -253,7 +256,7 @@ class CommitAnalyzer:
                         # Weekday activity (Monday = 0)
                         history_stats["weekday_activity"][commit_date.weekday()] += 1
 
-                    except:
+                    except Exception:
                         pass  # Skip time analysis if date parsing fails
 
                 except Exception as e:
@@ -263,21 +266,25 @@ class CommitAnalyzer:
             # Convert sets to counts for JSON serialization
             for author_data in history_stats["authors"].values():
                 author_data["unique_files"] = len(author_data["files"])
-                author_data["files"] = list(author_data["files"])[:10]  # Keep only first 10 for brevity
+                author_data["files"] = list(author_data["files"])[
+                    :10
+                ]  # Keep only first 10 for brevity
 
             # Calculate additional metrics
             if history_stats["total_commits"] > 0:
                 # Most active author
-                most_active_author = max(
-                    history_stats["authors"].items(),
-                    key=lambda x: x[1]["commits"]
-                )[0] if history_stats["authors"] else "None"
+                most_active_author = (
+                    max(history_stats["authors"].items(), key=lambda x: x[1]["commits"])[0]
+                    if history_stats["authors"]
+                    else "None"
+                )
 
                 # Most common commit type
-                most_common_type = max(
-                    history_stats["commit_types"].items(),
-                    key=lambda x: x[1]
-                )[0] if history_stats["commit_types"] else "None"
+                most_common_type = (
+                    max(history_stats["commit_types"].items(), key=lambda x: x[1])[0]
+                    if history_stats["commit_types"]
+                    else "None"
+                )
 
                 # Average commits per day
                 unique_days = len(history_stats["daily_activity"])
@@ -288,10 +295,22 @@ class CommitAnalyzer:
                     "most_common_commit_type": most_common_type,
                     "average_commits_per_day": round(avg_commits_per_day, 2),
                     "active_days": unique_days,
-                    "most_active_hour": history_stats["hourly_activity"].index(max(history_stats["hourly_activity"])),
-                    "most_active_weekday": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][
-                        history_stats["weekday_activity"].index(max(history_stats["weekday_activity"]))
-                    ]
+                    "most_active_hour": history_stats["hourly_activity"].index(
+                        max(history_stats["hourly_activity"])
+                    ),
+                    "most_active_weekday": [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday",
+                    ][
+                        history_stats["weekday_activity"].index(
+                            max(history_stats["weekday_activity"])
+                        )
+                    ],
                 }
 
             logger.info(f"Analyzed {history_stats['total_commits']} commits")
@@ -312,18 +331,18 @@ class CommitAnalyzer:
                 "analysis_period": {
                     "days": days,
                     "since_date": since_date.isoformat(),
-                    "max_commits": max_commits
-                }
+                    "max_commits": max_commits,
+                },
             }
 
-            self.analysis_results['commit_history'] = result
+            self.analysis_results["commit_history"] = result
             return result
 
         except Exception as e:
             logger.error(f"✗ Commit history analysis failed: {e}")
             return {"error": str(e)}
 
-    def compare_commits(self, from_commit: str, to_commit: str) -> Dict[str, Any]:
+    def compare_commits(self, from_commit: str, to_commit: str) -> dict[str, Any]:
         """Compare two commits and analyze differences."""
         logger.info(f"\n=== Commit Comparison: {from_commit[:8]} -> {to_commit[:8]} ===")
 
@@ -333,9 +352,7 @@ class CommitAnalyzer:
         try:
             # Perform comparison
             diff_result = compare_commits(
-                repo=self.repo,
-                from_commit=from_commit,
-                to_commit=to_commit
+                repo=self.repo, from_commit=from_commit, to_commit=to_commit
             )
 
             # Convert to dictionary
@@ -350,8 +367,14 @@ class CommitAnalyzer:
             if diff_result.file_diffs:
                 logger.info("File changes:")
                 for i, file_diff in enumerate(diff_result.file_diffs[:10]):  # Show first 10
-                    change_type = file_diff.change_type.value if hasattr(file_diff.change_type, 'value') else str(file_diff.change_type)
-                    logger.info(f"  {i+1}. {file_diff.file_path} ({change_type}): +{file_diff.additions}/-{file_diff.deletions}")
+                    change_type = (
+                        file_diff.change_type.value
+                        if hasattr(file_diff.change_type, "value")
+                        else str(file_diff.change_type)
+                    )
+                    logger.info(
+                        f"  {i+1}. {file_diff.file_path} ({change_type}): +{file_diff.additions}/-{file_diff.deletions}"
+                    )
 
                 if len(diff_result.file_diffs) > 10:
                     logger.info(f"  ... and {len(diff_result.file_diffs) - 10} more files")
@@ -360,14 +383,14 @@ class CommitAnalyzer:
             comparison_analysis = self._analyze_diff_patterns(diff_result)
             comparison_data.update(comparison_analysis)
 
-            self.analysis_results['commit_comparison'] = comparison_data
+            self.analysis_results["commit_comparison"] = comparison_data
             return comparison_data
 
         except Exception as e:
             logger.error(f"✗ Commit comparison failed: {e}")
             return {"error": str(e)}
 
-    def _analyze_diff_patterns(self, diff_result) -> Dict[str, Any]:
+    def _analyze_diff_patterns(self, diff_result) -> dict[str, Any]:
         """Analyze patterns in diff data."""
         analysis: dict[str, Any] = {}
 
@@ -382,9 +405,9 @@ class CommitAnalyzer:
         else:
             magnitude = "very_large"
 
-        analysis['change_magnitude'] = magnitude
-        analysis['total_changes'] = total_changes
-        analysis['net_change'] = diff_result.total_additions - diff_result.total_deletions
+        analysis["change_magnitude"] = magnitude
+        analysis["total_changes"] = total_changes
+        analysis["net_change"] = diff_result.total_additions - diff_result.total_deletions
 
         # File type analysis
         file_types: dict[str, Any] = {}
@@ -398,17 +421,25 @@ class CommitAnalyzer:
             file_types[ext] = file_types.get(ext, 0) + 1
 
             # Change type
-            change_type = file_diff.change_type.value if hasattr(file_diff.change_type, 'value') else str(file_diff.change_type)
+            change_type = (
+                file_diff.change_type.value
+                if hasattr(file_diff.change_type, "value")
+                else str(file_diff.change_type)
+            )
             change_types[change_type] = change_types.get(change_type, 0) + 1
 
-        analysis['file_types_changed'] = file_types
-        analysis['change_types'] = change_types
+        analysis["file_types_changed"] = file_types
+        analysis["change_types"] = change_types
 
         # Ratio analysis
         if diff_result.total_deletions > 0:
-            analysis['addition_deletion_ratio'] = round(diff_result.total_additions / diff_result.total_deletions, 2)
+            analysis["addition_deletion_ratio"] = round(
+                diff_result.total_additions / diff_result.total_deletions, 2
+            )
         else:
-            analysis['addition_deletion_ratio'] = float('inf') if diff_result.total_additions > 0 else 0
+            analysis["addition_deletion_ratio"] = (
+                float("inf") if diff_result.total_additions > 0 else 0
+            )
 
         return analysis
 
@@ -464,7 +495,7 @@ async def main() -> None:
 
         # Save results
         output_file = f"commit_analysis_{Path(repo_path).name}.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(analyzer.analysis_results, f, indent=2, default=str)
 
         print(f"\nDetailed results saved to: {output_file}")
@@ -476,4 +507,5 @@ async def main() -> None:
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Script Runner
 
@@ -16,22 +15,13 @@ Examples:
     python scripts/run.py quick-start setup
 """
 
-from utils import (
-    console,
-    get_project_root,
-    print_error,
-    print_header,
-    print_info,
-    print_section,
-    print_success,
-)
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.table import Table
+from utils import console, get_project_root, print_error, print_header, print_info, print_section
 
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -122,11 +112,7 @@ class ScriptRunner:
                 if len(script_info["commands"]) > 3:
                     commands_str += "..."
 
-                table.add_row(
-                    script_name,
-                    script_info["description"],
-                    commands_str
-                )
+                table.add_row(script_name, script_info["description"], commands_str)
 
             console.print(table)
             console.print()
@@ -147,9 +133,12 @@ class ScriptRunner:
 
         # Run the script with --help
         try:
-            result = subprocess.run([
-                sys.executable, str(script_file), "--help"
-            ], capture_output=True, text=True, cwd=self.project_root)
+            result = subprocess.run(
+                [sys.executable, str(script_file), "--help"],
+                capture_output=True,
+                text=True,
+                cwd=self.project_root,
+            )
 
             if result.returncode == 0:
                 console.print("\n[bold]Script Help:[/bold]")
@@ -165,7 +154,7 @@ class ScriptRunner:
 
         for script_name in self.scripts:
             self.show_script_help(script_name)
-            console.print("\n" + "="*80 + "\n")
+            console.print("\n" + "=" * 80 + "\n")
 
     def run_script(self, script_name: str, args: List[str]) -> int:
         """Run a specific script with arguments."""
@@ -201,8 +190,7 @@ class ScriptRunner:
             script_info = self.scripts[script_name]
             print_info(f"Common commands for {script_name}:")
             for cmd in script_info["commands"]:
-                console.print(
-                    f"  [cyan]python scripts/run.py {script_name} {cmd}[/cyan]")
+                console.print(f"  [cyan]python scripts/run.py {script_name} {cmd}[/cyan]")
 
 
 @app.command()
@@ -213,9 +201,7 @@ def list_scripts() -> None:
 
 
 @app.command()
-def help_script(
-    script_name: str = typer.Argument(..., help="Script to show help for")
-) -> None:
+def help_script(script_name: str = typer.Argument(..., help="Script to show help for")) -> None:
     """Show help for a specific script."""
     runner = ScriptRunner()
     runner.show_script_help(script_name)
@@ -231,10 +217,8 @@ def help_all() -> None:
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    list_scripts: bool = typer.Option(
-        False, "--list", "-l", help="List all scripts"),
-    help_all: bool = typer.Option(
-        False, "--help-all", help="Show help for all scripts"),
+    list_scripts: bool = typer.Option(False, "--list", "-l", help="List all scripts"),
+    help_all: bool = typer.Option(False, "--help-all", help="Show help for all scripts"),
 ) -> None:
     """
     GitHound Script Runner - Unified interface to all utility scripts.
@@ -261,8 +245,8 @@ def main(
     # If no command specified, show usage
     if ctx.invoked_subcommand is None:
         # Check if we have arguments that might be a script name
-        if ctx.params.get('args'):
-            args = ctx.params['args']
+        if ctx.params.get("args"):
+            args = ctx.params["args"]
             if args:
                 script_name = args[0]
                 script_args = args[1:] if len(args) > 1 else []
@@ -276,21 +260,28 @@ def main(
 
         console.print("\n[bold]Quick Examples:[/bold]")
         console.print(
-            "  [cyan]python scripts/run.py --list[/cyan]                    # List all scripts")
+            "  [cyan]python scripts/run.py --list[/cyan]                    # List all scripts"
+        )
         console.print(
-            "  [cyan]python scripts/run.py dev-env check[/cyan]            # Check development environment")
+            "  [cyan]python scripts/run.py dev-env check[/cyan]            # Check development environment"
+        )
         console.print(
-            "  [cyan]python scripts/run.py services start web[/cyan]       # Start web server")
+            "  [cyan]python scripts/run.py services start web[/cyan]       # Start web server"
+        )
         console.print(
-            "  [cyan]python scripts/run.py quick-start setup[/cyan]        # Complete setup")
+            "  [cyan]python scripts/run.py quick-start setup[/cyan]        # Complete setup"
+        )
         console.print(
-            "  [cyan]python scripts/run.py health-check check[/cyan]       # System health check")
+            "  [cyan]python scripts/run.py health-check check[/cyan]       # System health check"
+        )
 
         console.print("\n[bold]Getting Help:[/bold]")
         console.print(
-            "  [cyan]python scripts/run.py --help-all[/cyan]               # Help for all scripts")
+            "  [cyan]python scripts/run.py --help-all[/cyan]               # Help for all scripts"
+        )
         console.print(
-            "  [cyan]python scripts/run.py help-script dev-env[/cyan]      # Help for specific script")
+            "  [cyan]python scripts/run.py help-script dev-env[/cyan]      # Help for specific script"
+        )
 
         runner.list_scripts()
 
@@ -298,7 +289,7 @@ def main(
 # Handle direct script execution
 if __name__ == "__main__":
     # Check if we have command line arguments that look like script execution
-    if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
+    if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         # Direct script execution: python scripts/run.py script-name args...
         runner = ScriptRunner()
         script_name = sys.argv[1]

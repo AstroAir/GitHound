@@ -1,7 +1,6 @@
 """Tests for GitHound schemas."""
 
 from datetime import datetime
-from pathlib import Path
 
 from githound.schemas import SortOrder  # Added missing import
 from githound.schemas import (

@@ -13,7 +13,7 @@ GitHound is a comprehensive Git repository analysis tool that provides advanced 
 GitHound offers:
 
 - **Multi-modal search**: Content, commits, authors, dates, file paths, and types
-- **AI Integration**: MCP server with 25+ tools for AI assistants
+- **AI Integration**: MCP Server with 29 tools for AI assistants
 - **Advanced analysis**: Blame tracking, diff analysis, pattern detection
 - **Multiple interfaces**: CLI, Python API, REST API, WebSocket, MCP
 - **Export capabilities**: JSON, YAML, CSV, XML, Excel formats
@@ -143,7 +143,7 @@ githound search --repo-path . --content "query" \
 
 ### What is the MCP server and why would I use it
 
-The MCP (Model Context Protocol) server allows AI assistants to analyze Git repositories directly. It provides 25+ tools for:
+The MCP (Model Context Protocol) server allows AI assistants to analyze Git repositories directly. It provides 29 tools for:
 
 - Repository analysis and search
 - Commit history exploration
@@ -325,11 +325,12 @@ from pathlib import Path
 gh = GitHound(Path("/path/to/repo"))
 
 # Search for content
-results = gh.search_advanced_sync({
-    "content_pattern": "function_name",
-    "file_type": "py",
-    "max_results": 100
-})
+from githound.models import SearchQuery
+query = SearchQuery(
+    content_pattern="function_name",
+    file_extensions=["py"]
+)
+results = gh.search_advanced_sync(query, max_results=100)
 
 # Analyze repository
 repo_info = gh.analyze_repository()

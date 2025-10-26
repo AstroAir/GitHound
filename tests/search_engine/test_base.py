@@ -1,6 +1,5 @@
 """Tests for GitHound search engine base classes."""
 
-from abc import ABC
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
@@ -8,11 +7,7 @@ import pytest
 from git import Repo
 
 from githound.models import SearchQuery, SearchResult, SearchType
-from githound.search_engine import (
-    BaseSearcher,
-    CacheableSearcher,
-    SearchContext,
-)
+from githound.search_engine import BaseSearcher, CacheableSearcher, SearchContext
 
 
 @pytest.fixture

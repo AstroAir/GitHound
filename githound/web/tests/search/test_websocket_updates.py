@@ -2,8 +2,6 @@
 WebSocket real-time updates tests for GitHound web interface.
 """
 
-import asyncio
-import json
 
 import pytest
 from playwright.async_api import Page, expect
@@ -173,7 +171,7 @@ class TestWebSocketUpdates:
         search_queries = ["function", "class"]
         pages = [page, page2]
 
-        for i, (p, query) in enumerate(zip(pages, search_queries)):
+        for i, (p, query) in enumerate(zip(pages, search_queries, strict=False)):
             await p.fill('[data-testid="repo-path-input"]', str(test_repository))
             await p.fill('[data-testid="search-query-input"]', query)
             await p.click('[data-testid="submit-search"]')

@@ -13,18 +13,21 @@ This guide covers how to deploy GitHound using Docker for development, staging, 
 ### Development Setup
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/AstroAir/GitHound.git
    cd GitHound
    ```
 
 2. **Copy environment configuration**:
+
    ```bash
    cp .env.example .env
    # Edit .env with your specific configuration
    ```
 
 3. **Start development environment**:
+
    ```bash
    docker-compose up -d
    ```
@@ -46,12 +49,14 @@ GitHound Docker deployment consists of:
 ## Environment Configurations
 
 ### Development (.env + docker-compose.override.yml)
+
 - Hot reload enabled
 - Debug logging
 - Source code mounted as volume
 - All ports exposed
 
 ### Production (docker-compose.prod.yml)
+
 - Optimized for performance
 - Resource limits
 - Log rotation
@@ -61,6 +66,7 @@ GitHound Docker deployment consists of:
 ## Deployment Commands
 
 ### Development
+
 ```bash
 # Start all services
 docker-compose up -d
@@ -76,6 +82,7 @@ docker-compose up -d --build
 ```
 
 ### Production
+
 ```bash
 # Deploy to production
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
@@ -95,21 +102,25 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 Key environment variables for Docker deployment (see `.env.example` for complete list and [Environment Variables Reference](../docs/configuration/environment-variables.md) for comprehensive documentation):
 
 **Core Configuration:**
+
 - `GITHOUND_ENV`: Environment (development/staging/production)
 - `GITHOUND_LOG_LEVEL`: Logging level (DEBUG/INFO/WARNING/ERROR)
 - `GITHOUND_WEB_PORT`: Web API port (default: 8000)
 - `FASTMCP_SERVER_PORT`: MCP server port (default: 3000)
 
 **Security:**
+
 - `SECRET_KEY`: Application secret key (required in production)
 - `JWT_SECRET_KEY`: JWT signing key (required for authentication)
 
 **Data Storage:**
+
 - `REDIS_URL`: Redis connection string
 - `GITHOUND_DATA_DIR`: Application data directory
 - `GITHOUND_CACHE_DIR`: Cache directory
 
 **Authentication (optional):**
+
 - `FASTMCP_SERVER_ENABLE_AUTH`: Enable MCP server authentication
 - `FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID`: GitHub OAuth client ID
 - `FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET`: GitHub OAuth client secret
@@ -137,6 +148,7 @@ curl http://localhost:3000/health
 ## Monitoring and Logs
 
 ### View Logs
+
 ```bash
 # All services
 docker-compose logs -f
@@ -149,6 +161,7 @@ docker-compose logs --tail=100 githound-web
 ```
 
 ### Resource Monitoring
+
 ```bash
 # Container stats
 docker stats
@@ -167,6 +180,7 @@ docker-compose top
 4. **Redis connection**: Check Redis service status
 
 ### Debug Commands
+
 ```bash
 # Enter container shell
 docker-compose exec githound-web bash
@@ -184,6 +198,7 @@ docker-compose exec githound-web ping redis
 ## Security Considerations
 
 ### Production Security
+
 - Change default secrets in `.env`
 - Use HTTPS with proper SSL certificates
 - Configure firewall rules
@@ -191,6 +206,7 @@ docker-compose exec githound-web ping redis
 - Monitor access logs
 
 ### Network Security
+
 - Services communicate via internal Docker network
 - Only necessary ports exposed
 - Redis not exposed externally in production
@@ -198,6 +214,7 @@ docker-compose exec githound-web ping redis
 ## Backup and Recovery
 
 ### Data Backup
+
 ```bash
 # Backup volumes
 docker run --rm -v githound_data:/data -v $(pwd):/backup alpine tar czf /backup/githound-data.tar.gz -C /data .
@@ -205,6 +222,7 @@ docker run --rm -v redis_data:/data -v $(pwd):/backup alpine tar czf /backup/red
 ```
 
 ### Data Restore
+
 ```bash
 # Restore volumes
 docker run --rm -v githound_data:/data -v $(pwd):/backup alpine tar xzf /backup/githound-data.tar.gz -C /data
@@ -214,12 +232,14 @@ docker run --rm -v redis_data:/data -v $(pwd):/backup alpine tar xzf /backup/red
 ## Performance Tuning
 
 ### Resource Optimization
+
 - Adjust worker counts based on CPU cores
 - Configure Redis memory limits
 - Set appropriate cache TTL values
 - Monitor and adjust resource limits
 
 ### Scaling
+
 ```bash
 # Scale web service
 docker-compose up -d --scale githound-web=3
@@ -231,6 +251,7 @@ docker-compose up -d --scale githound-web=3
 ## Integration Examples
 
 ### CI/CD Pipeline
+
 ```yaml
 # Example GitHub Actions workflow
 name: Deploy GitHound
@@ -249,6 +270,7 @@ jobs:
 ```
 
 ### External Services
+
 ```bash
 # Connect to external database
 export DATABASE_URL="postgresql://user:pass@host:5432/db"
@@ -264,6 +286,7 @@ export REDIS_URL="redis://external-redis:6379/0"
 For production deployments with custom domains:
 
 1. **Update nginx configuration**:
+
    ```bash
    # Edit docker/nginx/conf.d/githound.conf
    # Replace server_name _ with your domain
@@ -271,6 +294,7 @@ For production deployments with custom domains:
    ```
 
 2. **SSL Certificates**:
+
    ```bash
    # Place SSL certificates in docker/ssl/
    mkdir -p docker/ssl
@@ -312,6 +336,7 @@ services:
 ## Deployment Scripts
 
 ### Quick Deployment
+
 ```bash
 # Make scripts executable
 chmod +x scripts/docker-deploy.sh
@@ -327,6 +352,7 @@ chmod +x scripts/docker-deploy.sh
 ```
 
 ### Automated Deployment
+
 ```bash
 # Set up automated deployment with cron
 # Add to crontab for automatic updates
@@ -336,6 +362,7 @@ chmod +x scripts/docker-deploy.sh
 ## Current Features and Capabilities
 
 ### MCP Server Integration
+
 - FastMCP 2.0 server with 25+ tools for Git repository analysis
 - Support for stdio, HTTP, and SSE transports
 - Authentication and authorization providers (GitHub OAuth, JWT, Permit.io, Eunomia)
@@ -343,6 +370,7 @@ chmod +x scripts/docker-deploy.sh
 - Real-time streaming capabilities
 
 ### Web API Features
+
 - Comprehensive REST API with OpenAPI documentation
 - WebSocket support for real-time operations
 - JWT-based authentication
@@ -350,12 +378,14 @@ chmod +x scripts/docker-deploy.sh
 - Export capabilities (JSON, YAML, CSV, XML, Excel)
 
 ### Search Engine
+
 - Multi-modal search capabilities (content, commit messages, file paths, authors)
 - Advanced pattern detection and fuzzy search
 - Parallel processing with configurable worker pools
 - Intelligent result ranking and caching
 
 ### Security Features
+
 - Role-based access control
 - Audit logging for all operations
 - Secure container configuration with read-only filesystems
@@ -365,6 +395,7 @@ chmod +x scripts/docker-deploy.sh
 ## Support
 
 For issues and questions:
+
 - Check the troubleshooting section
 - Review container logs
 - Open an issue on GitHub

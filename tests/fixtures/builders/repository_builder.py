@@ -181,7 +181,7 @@ def helper_function(x) -> None:
 class UtilityClass:
     def __init__(self, value) -> None:
         self.value = value
-    
+
     def process(self) -> None:
         return helper_function(self.value)
 """,
@@ -192,7 +192,7 @@ class User:
     def __init__(self, name, email) -> None:
         self.name = name
         self.email = email
-    
+
     def __str__(self) -> None:
         return f"User({self.name}, {self.email})"
 """,
@@ -204,7 +204,7 @@ class Project:
         self.name = name
         self.description = description
         self.created_at = datetime.now()
-    
+
     def get_info(self) -> None:
         return {
             'name': self.name,
@@ -232,7 +232,7 @@ from src.utils import helper_function, UtilityClass
 class TestUtils(unittest.TestCase):
     def test_helper_function(self) -> None:
         self.assertEqual(helper_function(5), 10)
-    
+
     def test_utility_class(self) -> None:
         util = UtilityClass(3)
         self.assertEqual(util.process if util is not None else None(), 6)

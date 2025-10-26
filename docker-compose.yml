@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # GitHound Web API Service
@@ -31,7 +31,7 @@ services:
       - githound_data:/app/data
       - githound_logs:/app/logs
       - githound_cache:/app/cache
-      - ./repositories:/app/repositories:ro  # Mount repositories for analysis
+      - ./repositories:/app/repositories:ro # Mount repositories for analysis
     depends_on:
       redis:
         condition: service_healthy
@@ -46,17 +46,27 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 1G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
     security_opt:
       - no-new-privileges:true
-    read_only: false  # Set to true if app doesn't need write access
+    read_only: false # Set to true if app doesn't need write access
     tmpfs:
       - /tmp:noexec,nosuid,size=100m
-    command: ["uvicorn", "githound.web.api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    command:
+      [
+        "uvicorn",
+        "githound.web.api:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--workers",
+        "1",
+      ]
 
   # GitHound MCP Server Service
   githound-mcp:
@@ -88,14 +98,18 @@ services:
       - githound_data:/app/data
       - githound_logs:/app/logs
       - githound_cache:/app/cache
-      - ./repositories:/app/repositories:ro  # Mount repositories for analysis
+      - ./repositories:/app/repositories:ro # Mount repositories for analysis
     depends_on:
       redis:
         condition: service_healthy
     networks:
       - githound-network
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 3000)); s.close()' || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c ''import socket; s=socket.socket(); s.connect(("localhost", 3000)); s.close()'' || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -103,17 +117,26 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
     security_opt:
       - no-new-privileges:true
     read_only: false
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
-    command: ["python", "-m", "githound.mcp_server", "--host", "0.0.0.0", "--port", "3000"]
+    command:
+      [
+        "python",
+        "-m",
+        "githound.mcp_server",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "3000",
+      ]
 
   # Redis Cache Service
   redis:
@@ -136,14 +159,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 128M
     security_opt:
       - no-new-privileges:true
-    user: "999:999"  # Redis user
+    user: "999:999" # Redis user
     command: >
       redis-server
       --appendonly yes
@@ -177,7 +200,15 @@ services:
     networks:
       - githound-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -185,10 +216,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 256M
         reservations:
-          cpus: '0.1'
+          cpus: "0.1"
           memory: 64M
     security_opt:
       - no-new-privileges:true
@@ -210,12 +241,12 @@ services:
     profiles:
       - monitoring
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
 
 volumes:
   githound_data:

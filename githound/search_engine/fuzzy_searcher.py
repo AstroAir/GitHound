@@ -44,7 +44,7 @@ class FuzzySearcher(CacheableSearcher):
             branch = context.branch or context.repo.active_branch.name
             commits = list(context.repo.iter_commits(branch, max_count=1000))
             return min(len(commits), 1000)
-        except:
+        except Exception:
             return 200
 
     async def search(self, context: SearchContext) -> AsyncGenerator[SearchResult, None]:
@@ -100,6 +100,11 @@ class FuzzySearcher(CacheableSearcher):
         self._report_progress(context, "Building search index...", 0.1)
 
         commits_processed = 0
+        max_commits = context.query.max_results or 1000  # Use query limit if available
+
+        # Optimize: Only load file contents if content search is needed
+        need_content = context.query.content_pattern is not None
+
         for commit in context.repo.iter_commits(branch):
             commits_processed += 1
 
@@ -119,30 +124,36 @@ class FuzzySearcher(CacheableSearcher):
                 parents=[parent.hexsha for parent in commit.parents],
             )
 
-            # Get file content for content search
+            # Get file content only if needed for content search
             file_contents: list[Any] = []
-            for parent in commit.parents:
-                diffs = commit.diff(parent)
-                for diff in diffs:
-                    if diff.b_blob is None or diff.b_path is None:
-                        continue
+            if need_content:
+                for parent in commit.parents:
+                    diffs = commit.diff(parent)
+                    for diff in diffs:
+                        if diff.b_blob is None or diff.b_path is None:
+                            continue
 
-                    try:
-                        content = diff.b_blob.data_stream.read().decode("utf-8", errors="ignore")
-                        file_contents.append({"path": diff.b_path, "content": content})
-                    except (UnicodeDecodeError, AttributeError):
-                        continue
+                        try:
+                            # Optimize: Limit file size to prevent memory issues
+                            if diff.b_blob.size > 1024 * 1024:  # Skip files > 1MB
+                                continue
+                            content = diff.b_blob.data_stream.read().decode(
+                                "utf-8", errors="ignore"
+                            )
+                            file_contents.append({"path": diff.b_path, "content": content})
+                        except (UnicodeDecodeError, AttributeError):
+                            continue
 
             targets.append(
                 {"commit": commit, "commit_info": commit_info, "file_contents": file_contents}
             )
 
-            # Limit to prevent memory issues
-            if commits_processed >= 1000:
+            # Early termination based on query limit
+            if commits_processed >= max_commits:
                 break
 
             if commits_processed % 100 == 0:
-                progress = 0.1 + (commits_processed / 1000) * 0.2  # 10-30% progress
+                progress = 0.1 + (commits_processed / max_commits) * 0.2  # 10-30% progress
                 self._report_progress(context, f"Indexed {commits_processed} commits", progress)
 
         return targets
@@ -209,23 +220,27 @@ class FuzzySearcher(CacheableSearcher):
         """Perform fuzzy search on commit messages."""
         results: list[Any] = []
 
-        # Extract all commit messages
-        messages: list[Any] = []
-        message_to_target: dict[str, Any] = {}
+        # Optimization: Build messages list and mapping in single pass
+        # Use tuple (message, index) to handle duplicate messages
+        messages: list[str] = []
+        message_targets: list[dict[str, Any]] = []
 
         for target in targets:
             message = target["commit_info"].message
             messages.append(message)
-            message_to_target[message] = target
+            message_targets.append(target)
 
         # Perform fuzzy matching
         matches = process.extract(
             pattern, messages, scorer=fuzz.partial_ratio, score_cutoff=threshold * 100
         )
 
-        for match, score, _ in matches:
+        # Optimization: Pre-calculate search time once
+        search_time_ms = self._calculate_search_time_ms(search_start_time)
+
+        for match, score, idx in matches:
             relevance_score = score / 100.0
-            target = message_to_target[match]
+            target = message_targets[idx]
 
             result = SearchResult(
                 commit_hash=target["commit_info"].hash,
@@ -240,7 +255,7 @@ class FuzzySearcher(CacheableSearcher):
                     "matched_message": match,
                     "fuzzy_score": score,
                 },
-                search_time_ms=self._calculate_search_time_ms(search_start_time),
+                search_time_ms=search_time_ms,
             )
             results.append(result)
 
@@ -256,27 +271,41 @@ class FuzzySearcher(CacheableSearcher):
         """Perform fuzzy search on file content."""
         results: list[Any] = []
 
-        # Extract all content lines
-        content_lines: list[Any] = []
-        line_to_context: dict[str, Any] = {}
+        # Optimization: Build content lines and context mapping efficiently
+        # Use list of tuples instead of dict to handle duplicate lines and maintain order
+        content_lines: list[str] = []
+        line_contexts: list[dict[str, Any]] = []
+
+        # Optimization: Limit total lines processed upfront to avoid building huge lists
+        max_lines = 10000
+        lines_processed = 0
 
         for target in targets:
+            if lines_processed >= max_lines:
+                break
+
             for file_content in target["file_contents"]:
+                if lines_processed >= max_lines:
+                    break
+
                 lines = file_content["content"].split("\n")
                 for line_num, line in enumerate(lines, 1):
+                    if lines_processed >= max_lines:
+                        break
+
                     line = line.strip()
                     if len(line) > 10:  # Skip very short lines
                         content_lines.append(line)
-                        line_to_context[line] = {
-                            "target": target,
-                            "file_path": file_content["path"],
-                            "line_number": line_num,
-                        }
+                        line_contexts.append(
+                            {
+                                "target": target,
+                                "file_path": file_content["path"],
+                                "line_number": line_num,
+                            }
+                        )
+                        lines_processed += 1
 
-        # Perform fuzzy matching (limit to prevent performance issues)
-        if len(content_lines) > 10000:
-            content_lines = content_lines[:10000]
-
+        # Perform fuzzy matching with limit
         matches = process.extract(
             pattern,
             content_lines,
@@ -285,9 +314,12 @@ class FuzzySearcher(CacheableSearcher):
             limit=100,  # Limit results
         )
 
-        for match, score, _ in matches:
+        # Optimization: Pre-calculate search time once
+        search_time_ms = self._calculate_search_time_ms(search_start_time)
+
+        for match, score, idx in matches:
             relevance_score = score / 100.0
-            context = line_to_context[match]
+            context = line_contexts[idx]
             target = context["target"]
 
             result = SearchResult(
@@ -304,7 +336,7 @@ class FuzzySearcher(CacheableSearcher):
                     "fuzzy_score": score,
                     "file_path": context["file_path"],
                 },
-                search_time_ms=self._calculate_search_time_ms(search_start_time),
+                search_time_ms=search_time_ms,
             )
             results.append(result)
 

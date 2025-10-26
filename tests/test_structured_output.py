@@ -3,10 +3,12 @@
 import json
 import tempfile
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 
 import pytest
 import yaml
+from rich.console import Console
 
 from githound.models import (
     BlameLineInfo,
@@ -243,7 +245,9 @@ class TestExportManager:
 
     def test_yaml_export(self, sample_search_results) -> None:
         """Test YAML export functionality."""
-        export_manager = ExportManager()
+        # Use a quiet console to avoid encoding issues in tests
+        quiet_console = Console(file=StringIO(), force_terminal=False)
+        export_manager = ExportManager(console=quiet_console)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             output_file = Path(f.name)
@@ -267,7 +271,9 @@ class TestExportManager:
 
     def test_export_with_options_json(self, sample_search_results) -> None:
         """Test export with options - JSON format."""
-        export_manager = ExportManager()
+        # Use a quiet console to avoid encoding issues in tests
+        quiet_console = Console(file=StringIO(), force_terminal=False)
+        export_manager = ExportManager(console=quiet_console)
 
         options = ExportOptions(
             format=OutputFormat.JSON,

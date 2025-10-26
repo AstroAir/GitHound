@@ -241,7 +241,7 @@ class TestResponsiveDesign:
                     image_box = await image.bounding_box()
                     assert (
                         image_box["width"] <= viewport["width"]
-                    ), f"Image should fit viewport width"
+                    ), "Image should fit viewport width"
 
     async def test_text_readability_responsive(self, page: Page, authenticated_user):
         """Test text readability across different screen sizes."""

@@ -11,20 +11,14 @@ from pydantic import BaseModel, Field
 
 from ..middleware.rate_limiting import get_limiter
 from ..models.api_models import ApiResponse
-from ..models.auth_models import (
-    PasswordChange,
-    Token,
-    User,
-    UserCreate,
-    UserLogin,
-    UserProfile,
-)
+from ..models.auth_models import PasswordChange, Token, UserCreate, UserLogin, UserProfile
+from ..services.auth_service import UserCreate as ServiceUserCreate
+from ..services.auth_service import UserLogin as ServiceUserLogin
 from ..services.auth_service import auth_manager, get_current_user, require_admin
-from ..services.auth_service import UserCreate as ServiceUserCreate, UserLogin as ServiceUserLogin
 from ..utils.validation import get_request_id
 
 # Create router
-router = APIRouter(prefix="/api/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["authentication"])
 limiter = get_limiter()
 
 
@@ -67,9 +61,7 @@ async def register_user(
 
         # Create the user - convert to service model
         service_user_data = ServiceUserCreate(
-            username=user_data.username,
-            email=user_data.email,
-            password=user_data.password
+            username=user_data.username, email=user_data.email, password=user_data.password
         )
         user_profile = auth_manager.create_user(service_user_data)
 
@@ -81,7 +73,7 @@ async def register_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to register user: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -97,8 +89,7 @@ async def login_user(
     try:
         # Use the login method which returns a Token - convert to service model
         service_login_data = ServiceUserLogin(
-            username=login_data.username,
-            password=login_data.password
+            username=login_data.username, password=login_data.password
         )
         token = auth_manager.login(service_login_data)
 
@@ -125,7 +116,7 @@ async def login_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to authenticate user: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/profile", response_model=UserProfile)
@@ -155,7 +146,7 @@ async def get_user_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get user profile: {str(e)}",
-        )
+        ) from e
 
 
 @router.put("/profile", response_model=ApiResponse)
@@ -193,7 +184,7 @@ async def update_user_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update profile: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/change-password", response_model=ApiResponse)
@@ -242,7 +233,7 @@ async def change_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to change password: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/refresh", response_model=Token)
@@ -279,7 +270,7 @@ async def refresh_token(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to refresh token: {str(e)}",
-        )
+        ) from e
 
 
 # Admin Endpoints
@@ -311,7 +302,7 @@ async def list_users(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list users: {str(e)}",
-        )
+        ) from e
 
 
 @router.delete("/users/{user_id}", response_model=ApiResponse)
@@ -352,4 +343,4 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete user: {str(e)}",
-        )
+        ) from e

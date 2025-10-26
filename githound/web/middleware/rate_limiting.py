@@ -7,7 +7,7 @@ Provides configurable rate limiting with Redis backend support.
 import os
 import time
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 import redis
 from redis import Redis

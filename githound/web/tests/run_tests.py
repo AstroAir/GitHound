@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test runner script for GitHound web frontend tests.
 """
@@ -8,7 +7,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 
 class TestRunner:
@@ -18,7 +16,7 @@ class TestRunner:
         self.test_dir = Path(__file__).parent
         self.project_root = self.test_dir.parent.parent.parent
 
-    def run_command(self, command: List[str], cwd: Optional[Path] = None) -> int:
+    def run_command(self, command: list[str], cwd: Path | None = None) -> int:
         """Run a command and return the exit code."""
         if cwd is None:
             cwd = self.test_dir

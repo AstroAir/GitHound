@@ -8,17 +8,18 @@ real-world scenarios, and performance characteristics.
 
 import asyncio
 import json
-import pytest
-import time
-from pathlib import Path
-from typing import Any, Dict, List
 import subprocess
-
-from fastmcp.client import FastMCPClient
-from fastmcp.client.transports import StdioTransport
 
 # Import example modules
 import sys
+import time
+from pathlib import Path
+from typing import Any
+
+import pytest
+from fastmcp.client import FastMCPClient
+from fastmcp.client.transports import StdioTransport
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from clients import githound_client
@@ -48,7 +49,9 @@ class TestEndToEndWorkflows:
                 # Allow some failures for HTTP/SSE transports that may not be available
                 if section_result["status"] == "failed" and "transport" in section_name:
                     continue
-                assert section_result["status"] == "success", f"Section {section_name} failed: {section_result.get('error', 'Unknown error')}"
+                assert (
+                    section_result["status"] == "success"
+                ), f"Section {section_name} failed: {section_result.get('error', 'Unknown error')}"
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -184,7 +187,7 @@ class TestRealWorldScenarios:
                 return {
                     "tools_count": len(tools),
                     "resources_count": len(resources),
-                    "tool_result": result.data
+                    "tool_result": result.data,
                 }
 
         # Create multiple concurrent clients
@@ -210,10 +213,9 @@ class TestRealWorldScenarios:
         assert large_message in str(result.data)
 
         # Test with large numbers
-        result = await simple_mcp_client.call_tool("add_numbers", {
-            "a": 999999999.999999,
-            "b": 888888888.888888
-        })
+        result = await simple_mcp_client.call_tool(
+            "add_numbers", {"a": 999999999.999999, "b": 888888888.888888}
+        )
         assert result is not None
         assert result.data is not None
 
@@ -232,7 +234,9 @@ class TestRealWorldScenarios:
             test_file.write_text(content)
 
             subprocess.run(["git", "add", f"large_file_{i}.py"], cwd=repo_path, check=True)
-            subprocess.run(["git", "commit", "-m", f"Add large file {i}"], cwd=repo_path, check=True)
+            subprocess.run(
+                ["git", "commit", "-m", f"Add large file {i}"], cwd=repo_path, check=True
+            )
 
         # Test GitHound operations on larger repository
         server_script = Path(__file__).parent.parent / "servers" / "githound_server.py"
@@ -242,9 +246,7 @@ class TestRealWorldScenarios:
             start_time = time.time()
 
             # Analyze repository
-            result = await client.call_tool("analyze_repository", {
-                "repo_path": str(repo_path)
-            })
+            result = await client.call_tool("analyze_repository", {"repo_path": str(repo_path)})
 
             execution_time = time.time() - start_time
 
@@ -340,8 +342,9 @@ class TestPerformanceIntegration:
     @pytest.mark.asyncio
     async def test_memory_usage_stability(self, simple_mcp_client) -> None:
         """Test memory usage stability over time."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid if os is not None else None())
         initial_memory = process.memory_info().rss
@@ -369,9 +372,7 @@ class TestPerformanceIntegration:
         async with FastMCPClient(transport) as client:
             # Test repository analysis performance
             start_time = time.time()
-            result = await client.call_tool("analyze_repository", {
-                "repo_path": str(temp_git_repo)
-            })
+            result = await client.call_tool("analyze_repository", {"repo_path": str(temp_git_repo)})
             analysis_time = time.time() - start_time
 
             assert result is not None
@@ -379,10 +380,9 @@ class TestPerformanceIntegration:
 
             # Test commit history performance
             start_time = time.time()
-            result = await client.call_tool("get_commit_history", {
-                "repo_path": str(temp_git_repo),
-                "limit": 10
-            })
+            result = await client.call_tool(
+                "get_commit_history", {"repo_path": str(temp_git_repo), "limit": 10}
+            )
             history_time = time.time() - start_time
 
             assert result is not None
@@ -400,25 +400,28 @@ class TestDataConsistency:
         repo_path = str(temp_git_repo)
 
         # Get repository info
-        repo_result = await githound_mcp_client.call_tool("analyze_repository", {
-            "repo_path": repo_path
-        })
+        repo_result = await githound_mcp_client.call_tool(
+            "analyze_repository", {"repo_path": repo_path}
+        )
 
         # Get commit history
-        history_result = await githound_mcp_client.call_tool("get_commit_history", {
-            "repo_path": repo_path,
-            "limit": 100  # Get all commits
-        })
+        history_result = await githound_mcp_client.call_tool(
+            "get_commit_history", {"repo_path": repo_path, "limit": 100}  # Get all commits
+        )
 
         # Get author stats
-        author_result = await githound_mcp_client.call_tool("get_author_stats", {
-            "repo_path": repo_path
-        })
+        author_result = await githound_mcp_client.call_tool(
+            "get_author_stats", {"repo_path": repo_path}
+        )
 
-        if (repo_result.data and history_result.data and author_result.data and
-            isinstance(repo_result.data, dict) and isinstance(history_result.data, list) and
-            isinstance(author_result.data, dict)):
-
+        if (
+            repo_result.data
+            and history_result.data
+            and author_result.data
+            and isinstance(repo_result.data, dict)
+            and isinstance(history_result.data, list)
+            and isinstance(author_result.data, dict)
+        ):
             # Verify consistency
             repo_commits = repo_result.data.get("total_commits", 0)
             history_commits = len(history_result.data)
@@ -439,18 +442,21 @@ class TestDataConsistency:
         repo_path = str(temp_git_repo)
 
         # Get data via tool
-        tool_result = await githound_mcp_client.call_tool("get_author_stats", {
-            "repo_path": repo_path
-        })
+        tool_result = await githound_mcp_client.call_tool(
+            "get_author_stats", {"repo_path": repo_path}
+        )
 
         # Get data via resource
         resource_content = await githound_mcp_client.read_resource(
             f"githound://repository/{repo_path}/contributors"
         )
 
-        if (tool_result.data and resource_content and
-            isinstance(tool_result.data, dict) and len(resource_content) > 0):
-
+        if (
+            tool_result.data
+            and resource_content
+            and isinstance(tool_result.data, dict)
+            and len(resource_content) > 0
+        ):
             resource_data = json.loads(resource_content[0].text)
 
             # Compare author counts

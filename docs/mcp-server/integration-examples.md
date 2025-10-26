@@ -1,6 +1,6 @@
 # GitHound MCP Integration Examples
 
-Practical examples showing how to integrate and use GitHound MCP server with various AI tools and applications.
+Practical examples showing how to integrate and use GitHound MCP Server with various AI tools and applications.
 
 ## Client Setup Examples
 
@@ -595,7 +595,7 @@ if execution_time > 10:  # 10 seconds threshold
 
 ### Claude Desktop Workflows
 
-#### Code Review Assistant
+#### Pull Request Review Workflow
 
 ```markdown
 # Claude Desktop Prompt Example
@@ -629,26 +629,17 @@ I'm reviewing a pull request. Can you help me analyze the changes?
 When developing a new feature in Cursor:
 
 1. **Context Gathering**:
-   ```
 
    @githound analyze_repository repo_path="/current/project"
    @githound list_branches include_remote=true
 
-   ```
-
 2. **Pattern Research**:
-   ```
 
    @githound advanced_search repo_path="/current/project" content_pattern="similar_feature" file_extensions=["py", "js"]
 
-   ```
-
 3. **Impact Analysis**:
-   ```
 
    @githound compare_branches_diff repo_path="/current/project" branch1="main" branch2="feature/new-auth"
-
-   ```
 ```
 
 ### GitHub Copilot Workflows
@@ -699,4 +690,6 @@ Based on the repository analysis, help me:
 - Use authentication for production deployments
 - Monitor performance and implement caching strategies
 
-These examples demonstrate how to effectively integrate GitHound MCP server with various AI tools and applications, providing comprehensive Git repository analysis capabilities through the standardized MCP protocol.
+These examples demonstrate how to effectively integrate GitHound MCP server with various AI tools
+and applications, providing comprehensive Git repository analysis capabilities through the
+standardized MCP protocol.

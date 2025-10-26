@@ -1,41 +1,37 @@
-#!/usr/bin/env python3
 """Demo script showing GitHound MCP server OAuth authentication in action."""
 
-import os
 import asyncio
 import json
-from typing import Any
-
-# Add the project root to the path so we can import GitHound modules
+import os
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from githound.mcp.auth import set_auth_provider, get_auth_provider, authenticate_request
+from githound.mcp.auth_manager import set_auth_provider
 from githound.mcp.config import get_oauth_discovery_metadata  # [attr-defined]
+
+# Add the project root to the path so we can import GitHound modules
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 async def demo_jwt_authentication() -> None:
     """Demonstrate JWT authentication."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("JWT Authentication Demo")
-    print("="*60)
+    print("=" * 60)
 
     try:
-        from githound.mcp.auth.providers.jwt import StaticJWTVerifier
-        import jwt
         import time
+
+        import jwt
+
+        from githound.mcp.auth.providers.jwt import StaticJWTVerifier
 
         # Create JWT verifier
         secret_key = "demo-secret-key-12345"
         issuer = "githound-mcp-demo"
         audience = "mcp-client"
 
-        verifier = StaticJWTVerifier(
-            secret_key=secret_key,
-            issuer=issuer,
-            audience=audience
-        )
+        verifier = StaticJWTVerifier(secret_key=secret_key, issuer=issuer, audience=audience)
 
         set_auth_provider(verifier)
 
@@ -51,16 +47,16 @@ async def demo_jwt_authentication() -> None:
             "iss": issuer,
             "aud": audience,
             "exp": int(time.time()) + 3600,  # Expires in 1 hour
-            "iat": int(time.time())
+            "iat": int(time.time()),
         }
 
         token = jwt.encode(payload, secret_key, algorithm="HS256")
-        print(f"✓ Created test JWT token")
+        print("✓ Created test JWT token")
 
         # Test token validation
         token_info = await verifier.validate_token(token)
         if token_info:
-            print(f"✓ Token validation successful")
+            print("✓ Token validation successful")
             print(f"  User ID: {token_info.user_id}")
             print(f"  Username: {token_info.username}")
             print(f"  Roles: {token_info.roles}")
@@ -71,7 +67,7 @@ async def demo_jwt_authentication() -> None:
         # Test authentication
         auth_result = await verifier.authenticate(f"Bearer {token}")
         if auth_result.success:
-            print(f"✓ Authentication successful")
+            print("✓ Authentication successful")
             print(f"  User: {auth_result.user.username}")
             print(f"  Email: {auth_result.user.email}")
             print(f"  Role: {auth_result.user.role}")
@@ -94,9 +90,9 @@ async def demo_jwt_authentication() -> None:
 
 async def demo_github_authentication() -> None:
     """Demonstrate GitHub OAuth authentication."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("GitHub OAuth Authentication Demo")
-    print("="*60)
+    print("=" * 60)
 
     try:
         from githound.mcp.auth.providers.github import GitHubProvider
@@ -105,17 +101,17 @@ async def demo_github_authentication() -> None:
         provider = GitHubProvider(
             client_id="demo-client-id",
             client_secret="demo-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         set_auth_provider(provider)
 
-        print(f"✓ Created GitHub OAuth provider")
+        print("✓ Created GitHub OAuth provider")
 
         # Test OAuth metadata
         metadata = provider.get_oauth_metadata()
         if metadata:
-            print(f"✓ OAuth metadata generated:")
+            print("✓ OAuth metadata generated:")
             print(f"  Provider: {metadata.get('provider')}")
             print(f"  Authorization URL: {metadata.get('authorization_endpoint')}")
             print(f"  Token URL: {metadata.get('token_endpoint')}")
@@ -141,9 +137,9 @@ async def demo_github_authentication() -> None:
 
 async def demo_google_authentication() -> None:
     """Demonstrate Google OAuth authentication."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Google OAuth Authentication Demo")
-    print("="*60)
+    print("=" * 60)
 
     try:
         from githound.mcp.auth.providers.google import GoogleProvider
@@ -152,17 +148,17 @@ async def demo_google_authentication() -> None:
         provider = GoogleProvider(
             client_id="demo-client-id.apps.googleusercontent.com",
             client_secret="demo-client-secret",
-            base_url="http://localhost:8000"
+            base_url="http://localhost:8000",
         )
 
         set_auth_provider(provider)
 
-        print(f"✓ Created Google OAuth provider")
+        print("✓ Created Google OAuth provider")
 
         # Test OAuth metadata
         metadata = provider.get_oauth_metadata()
         if metadata:
-            print(f"✓ OAuth metadata generated:")
+            print("✓ OAuth metadata generated:")
             print(f"  Provider: {metadata.get('provider')}")
             print(f"  Authorization URL: {metadata.get('authorization_endpoint')}")
             print(f"  Token URL: {metadata.get('token_endpoint')}")
@@ -190,9 +186,9 @@ async def demo_google_authentication() -> None:
 
 async def demo_oauth_proxy() -> None:
     """Demonstrate OAuth proxy functionality."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("OAuth Proxy Demo")
-    print("="*60)
+    print("=" * 60)
 
     try:
         from githound.mcp.auth.providers.oauth_proxy import OAuthProxy
@@ -204,17 +200,17 @@ async def demo_oauth_proxy() -> None:
             base_url="http://localhost:8000",
             authorization_endpoint="https://auth.example.com/oauth/authorize",
             token_endpoint="https://auth.example.com/oauth/token",
-            userinfo_endpoint="https://auth.example.com/oauth/userinfo"
+            userinfo_endpoint="https://auth.example.com/oauth/userinfo",
         )
 
         set_auth_provider(proxy)
 
-        print(f"✓ Created OAuth proxy")
+        print("✓ Created OAuth proxy")
 
         # Test OAuth metadata
         metadata = proxy.get_oauth_metadata()
         if metadata:
-            print(f"✓ OAuth metadata generated:")
+            print("✓ OAuth metadata generated:")
             print(f"  Authorization URL: {metadata.get('authorization_endpoint')}")
             print(f"  Token URL: {metadata.get('token_endpoint')}")
             print(f"  Client ID: {metadata.get('client_id')}")
@@ -229,7 +225,7 @@ async def demo_oauth_proxy() -> None:
                 "client_name": "GitHound MCP Server",
                 "redirect_uris": ["http://localhost:8000/oauth/callback"],
                 "scope": "read write",
-                "grant_types": ["authorization_code", "refresh_token"]
+                "grant_types": ["authorization_code", "refresh_token"],
             }
             print(f"  Client metadata: {json.dumps(client_metadata, indent=2)}")
 
@@ -247,19 +243,19 @@ async def demo_oauth_proxy() -> None:
 
 def demo_environment_configuration() -> None:
     """Demonstrate environment-based configuration."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Environment Configuration Demo")
-    print("="*60)
+    print("=" * 60)
 
     # Show current environment variables
-    auth_vars = {k: v for k, v in os.environ.items() if 'AUTH' in k.upper() or 'OAUTH' in k.upper()}
+    auth_vars = {k: v for k, v in os.environ.items() if "AUTH" in k.upper() or "OAUTH" in k.upper()}
 
     if auth_vars:
         print("Current authentication environment variables:")
         for key, value in auth_vars.items():
             # Mask sensitive values
-            if 'SECRET' in key.upper() or 'KEY' in key.upper():
-                masked_value = value[:4] + '*' * (len(value) - 4) if len(value) > 4 else '***'
+            if "SECRET" in key.upper() or "KEY" in key.upper():
+                masked_value = value[:4] + "*" * (len(value) - 4) if len(value) > 4 else "***"
                 print(f"  {key}={masked_value}")
             else:
                 print(f"  {key}={value}")
@@ -270,7 +266,9 @@ def demo_environment_configuration() -> None:
 
     print("\n1. JWT Authentication:")
     print("   export FASTMCP_SERVER_AUTH=githound.mcp.auth.providers.jwt.JWTVerifier")
-    print("   export FASTMCP_SERVER_AUTH_JWKS_URI=https://your-auth-server.com/.well-known/jwks.json")
+    print(
+        "   export FASTMCP_SERVER_AUTH_JWKS_URI=https://your-auth-server.com/.well-known/jwks.json"
+    )
     print("   export FASTMCP_SERVER_AUTH_ISSUER=your-issuer")
     print("   export FASTMCP_SERVER_AUTH_AUDIENCE=githound-mcp")
 
@@ -288,16 +286,18 @@ def demo_environment_configuration() -> None:
     print("   export FASTMCP_SERVER_AUTH=githound.mcp.auth.providers.oauth_proxy.OAuthProxy")
     print("   export FASTMCP_SERVER_AUTH_CLIENT_ID=your-client-id")
     print("   export FASTMCP_SERVER_AUTH_CLIENT_SECRET=your-client-secret")
-    print("   export FASTMCP_SERVER_AUTH_AUTHORIZATION_ENDPOINT=https://auth.example.com/oauth/authorize")
+    print(
+        "   export FASTMCP_SERVER_AUTH_AUTHORIZATION_ENDPOINT=https://auth.example.com/oauth/authorize"
+    )
     print("   export FASTMCP_SERVER_AUTH_TOKEN_ENDPOINT=https://auth.example.com/oauth/token")
     print("   export FASTMCP_SERVER_AUTH_USERINFO_ENDPOINT=https://auth.example.com/oauth/userinfo")
 
 
 def demo_oauth_discovery() -> None:
     """Demonstrate OAuth discovery metadata."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("OAuth Discovery Metadata Demo")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Get OAuth discovery metadata
@@ -331,9 +331,9 @@ async def main() -> None:
     demo_environment_configuration()
     demo_oauth_discovery()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Demo Summary")
-    print("="*60)
+    print("=" * 60)
     print("✓ JWT Authentication: Token-based auth with configurable verification")
     print("✓ GitHub OAuth: OAuth 2.0 flow with GitHub as identity provider")
     print("✓ Google OAuth: OAuth 2.0 flow with Google as identity provider")

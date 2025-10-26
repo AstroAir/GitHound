@@ -5,6 +5,7 @@ Comprehensive Playwright-based testing suite for the GitHound web interface, cov
 ## 🏗️ Test Architecture
 
 ### Directory Structure
+
 ```
 githound/web/tests/
 ├── README.md                     # This file
@@ -80,12 +81,14 @@ githound/web/tests/
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+
 - Redis server (for WebSocket and caching tests)
 - Git (for test repository creation)
 
 ### Installation
+
 ```bash
 # Install Python dependencies
 pip install -e ".[dev,test]"
@@ -102,6 +105,7 @@ npm install
 ### Running Tests
 
 #### Using the Test Runner Script (Recommended)
+
 ```bash
 # Run all tests
 ./run-tests.sh                    # Linux/Mac
@@ -127,6 +131,7 @@ npm install
 ```
 
 #### Using Playwright Directly
+
 ```bash
 cd githound/web/tests
 
@@ -150,6 +155,7 @@ playwright test --debug
 ```
 
 #### Using Pytest
+
 ```bash
 # Run specific test categories
 pytest githound/web/tests/ -m "auth"
@@ -168,6 +174,7 @@ pytest githound/web/tests/ --cov=githound.web
 ## 📋 Test Categories
 
 ### 🔐 Authentication Tests (`auth/`)
+
 - **User Registration**: Form validation, duplicate username handling
 - **Login/Logout**: Credential validation, session management
 - **Password Management**: Password change, validation
@@ -176,6 +183,7 @@ pytest githound/web/tests/ --cov=githound.web
 - **Session Persistence**: Cross-page navigation, reload behavior
 
 ### 🔍 Search Tests (`search/`)
+
 - **Search Forms**: Advanced search, fuzzy search, historical search
 - **Result Display**: Pagination, filtering, sorting
 - **Real-time Updates**: WebSocket progress notifications
@@ -184,6 +192,7 @@ pytest githound/web/tests/ --cov=githound.web
 - **Error Handling**: Invalid repositories, network failures
 
 ### 🔌 API Integration Tests (`api/`)
+
 - **Authentication APIs**: Login, registration, profile management
 - **Search APIs**: All search endpoints through frontend
 - **Analysis APIs**: Blame, diff, repository statistics
@@ -192,6 +201,7 @@ pytest githound/web/tests/ --cov=githound.web
 - **Error Handling**: API failures, rate limiting, validation
 
 ### 🎨 UI/UX Tests (`ui/`)
+
 - **Responsive Design**: Mobile, tablet, desktop layouts
 - **Accessibility**: WCAG compliance, keyboard navigation, screen readers
 - **Cross-browser Compatibility**: Chrome, Firefox, Safari
@@ -200,6 +210,7 @@ pytest githound/web/tests/ --cov=githound.web
 - **Visual Regression**: Layout consistency, styling
 
 ### ⚡ Performance Tests (`performance/`)
+
 - **Page Load Times**: Initial load, navigation performance
 - **Search Performance**: Query execution, result rendering
 - **WebSocket Performance**: Connection speed, message latency
@@ -210,6 +221,7 @@ pytest githound/web/tests/ --cov=githound.web
 ## 🛠️ Configuration
 
 ### Environment Variables
+
 ```bash
 # Test environment
 TESTING=true
@@ -224,7 +236,9 @@ RECORD_VIDEO=false
 ```
 
 ### Playwright Configuration
+
 Key settings in `playwright.config.js`:
+
 - **Browsers**: Chromium, Firefox, WebKit, Mobile Chrome/Safari
 - **Timeouts**: 30s action timeout, 60s test timeout
 - **Retries**: 2 retries on CI, 0 locally
@@ -233,7 +247,9 @@ Key settings in `playwright.config.js`:
 - **Videos**: Retain on failure
 
 ### Pytest Configuration
+
 Key settings in `pytest.ini`:
+
 - **Test Discovery**: `test_*.py` files
 - **Markers**: `auth`, `search`, `api`, `ui`, `performance`, `e2e`
 - **Coverage**: HTML and XML reports
@@ -242,6 +258,7 @@ Key settings in `pytest.ini`:
 ## 📊 Test Reports
 
 ### Generated Reports
+
 - **HTML Report**: `test-results/playwright-report/index.html`
 - **Coverage Report**: `test-results/coverage-html/index.html`
 - **JUnit XML**: `test-results/playwright-results.xml`
@@ -249,6 +266,7 @@ Key settings in `pytest.ini`:
 - **Videos**: `test-results/videos/`
 
 ### Viewing Reports
+
 ```bash
 # Open Playwright HTML report
 playwright show-report
@@ -263,6 +281,7 @@ python githound/web/tests/run_tests.py report
 ## 🔧 Development
 
 ### Adding New Tests
+
 1. **Choose the appropriate directory** based on test category
 2. **Follow naming conventions**: `test_*.py` files, `test_*` functions
 3. **Use appropriate markers**: `@pytest.mark.auth`, `@pytest.mark.search`, etc.
@@ -270,12 +289,14 @@ python githound/web/tests/run_tests.py report
 5. **Use test helpers** from `utils/test_helpers.py`
 
 ### Test Data Management
+
 - **Test Users**: Created via `test_data_manager.create_test_user()`
 - **Test Repositories**: Generated with sample Git history
 - **Mock Data**: Consistent test data across test runs
 - **Cleanup**: Automatic cleanup after each test
 
 ### Best Practices
+
 - **Page Object Model**: Use locators with `data-testid` attributes
 - **Async/Await**: All Playwright operations are async
 - **Explicit Waits**: Use `expect()` for reliable element waiting
@@ -286,6 +307,7 @@ python githound/web/tests/run_tests.py report
 ## 🚀 CI/CD Integration
 
 ### GitHub Actions
+
 The test suite integrates with GitHub Actions via `.github/workflows/web-frontend-tests.yml`:
 
 - **Multi-browser Testing**: Chrome, Firefox, Safari
@@ -296,6 +318,7 @@ The test suite integrates with GitHub Actions via `.github/workflows/web-fronten
 - **PR Comments**: Automated test result summaries
 
 ### Running in CI
+
 ```bash
 # Install dependencies
 pip install -e ".[dev,test]"
@@ -313,6 +336,7 @@ playwright test --reporter=html --reporter=junit
 ### Common Issues
 
 #### Browser Installation
+
 ```bash
 # Reinstall browsers
 playwright install --force
@@ -322,6 +346,7 @@ playwright install-deps
 ```
 
 #### Test Server Issues
+
 ```bash
 # Check if server is running
 curl http://localhost:8000/health
@@ -331,6 +356,7 @@ python -m githound.web.main
 ```
 
 #### WebSocket Connection Issues
+
 ```bash
 # Check Redis connection
 redis-cli ping
@@ -340,6 +366,7 @@ curl -H "Upgrade: websocket" http://localhost:8000/ws
 ```
 
 #### Permission Issues
+
 ```bash
 # Fix file permissions
 chmod +x githound/web/tests/run_tests.py
@@ -349,6 +376,7 @@ mkdir -p test-results/{screenshots,videos,traces}
 ```
 
 ### Debug Mode
+
 ```bash
 # Run single test in debug mode
 playwright test auth/test_authentication.py::TestAuthentication::test_user_login_flow --debug
@@ -363,12 +391,14 @@ PLAYWRIGHT_DEBUG=1 playwright test
 ## 📈 Metrics and Monitoring
 
 ### Test Metrics
+
 - **Test Coverage**: Aim for >90% code coverage
 - **Test Execution Time**: Monitor for performance regressions
 - **Flaky Test Detection**: Track test stability over time
 - **Browser Compatibility**: Ensure consistent behavior across browsers
 
 ### Performance Benchmarks
+
 - **Page Load**: <3 seconds for initial load
 - **Search Response**: <30 seconds for complex queries
 - **WebSocket Latency**: <100ms for real-time updates
@@ -377,6 +407,7 @@ PLAYWRIGHT_DEBUG=1 playwright test
 ## 🤝 Contributing
 
 ### Adding New Test Categories
+
 1. Create new directory under `githound/web/tests/`
 2. Add `__init__.py` and test files
 3. Update `conftest.py` with new fixtures if needed
@@ -384,6 +415,7 @@ PLAYWRIGHT_DEBUG=1 playwright test
 5. Update this README with documentation
 
 ### Test Review Checklist
+
 - [ ] Tests are independent and isolated
 - [ ] Appropriate test markers are used
 - [ ] Error scenarios are covered

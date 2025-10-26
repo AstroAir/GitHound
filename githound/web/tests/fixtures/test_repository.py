@@ -2,11 +2,8 @@
 Test repository management for GitHound web tests.
 """
 
-import os
 import subprocess
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
 
 
 class TestRepositoryManager:
@@ -14,7 +11,7 @@ class TestRepositoryManager:
 
     def __init__(self, test_data_dir: Path):
         self.test_data_dir = test_data_dir
-        self.repositories: Dict[str, Path] = {}
+        self.repositories: dict[str, Path] = {}
 
     def create_test_repository(self, name: str = "test_repo") -> Path:
         """Create a test repository with sample data."""
@@ -92,7 +89,7 @@ Main application module.
 
 import os
 import sys
-from typing import List, Dict, Any
+from typing import Optional, List, Dict, Any
 
 
 def main() -> None:
@@ -138,7 +135,7 @@ Utility functions for the application.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional, Any, Dict, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -230,7 +227,7 @@ playwright==1.40.0
 New feature implementation.
 \"\"\"
 
-from typing import List
+from typing import Optional, List
 
 
 class FeatureManager:
@@ -354,7 +351,7 @@ class Class{i}:
         self._run_git_command(repo_path, ["add", "."])
         self._run_git_command(repo_path, ["commit", "-m", "Add remaining files"])
 
-    def _run_git_command(self, repo_path: Path, command: List[str]) -> None:
+    def _run_git_command(self, repo_path: Path, command: list[str]) -> None:
         """Run a git command in the repository."""
         full_command = ["git"] + command
         result = subprocess.run(full_command, cwd=repo_path, capture_output=True, text=True)

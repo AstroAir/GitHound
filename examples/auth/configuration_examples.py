@@ -1,33 +1,31 @@
-#!/usr/bin/env python3
 """Examples of how to configure OAuth authentication for GitHound MCP server."""
 
 import os
-from typing import Any
 
 
-def setup_github_oauth() -> Dict[str, str]:
+def setup_github_oauth() -> dict[str, str]:
     """
     Example configuration for GitHub OAuth.
 
-    To use GitHub OAuth:
-    1. Create a GitHub OAuth App at https://github.com/settings/applications/new
-    2. Set the authorization callback URL to: http://your-server.com/oauth/callback
-    3. Copy the Client ID and Client Secret
-    4. Set these environment variables
+        To use GitHub OAuth:
+        1. Create a GitHub OAuth App at https://github.com/settings/applications/new
+        2. Set the authorization callback URL to: http://your-server.com/oauth/callback
+        3. Copy the Client ID and Client Secret
+        4. Set these environment variables
 
-    Returns:
-        Dictionary of environment variables to set
+        Returns:
+            Dictionary of environment variables to set
     """
     return {
         "FASTMCP_SERVER_AUTH": "githound.mcp.auth.providers.github.GitHubProvider",
         "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID": "Ov23li...",  # Your GitHub OAuth App ID
         "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET": "github_pat_...",  # Your GitHub OAuth App Secret
         "FASTMCP_SERVER_BASE_URL": "http://localhost:8000",  # Your MCP server URL
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_google_oauth() -> Dict[str, str]:
+def setup_google_oauth() -> dict[str, str]:
     """
     Example configuration for Google OAuth.
 
@@ -47,11 +45,11 @@ def setup_google_oauth() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH_GOOGLE_CLIENT_ID": "123456.apps.googleusercontent.com",
         "FASTMCP_SERVER_AUTH_GOOGLE_CLIENT_SECRET": "GOCSPX-...",
         "FASTMCP_SERVER_BASE_URL": "http://localhost:8000",
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_jwt_verifier() -> Dict[str, str]:
+def setup_jwt_verifier() -> dict[str, str]:
     """
     Example configuration for JWT token verification.
 
@@ -68,11 +66,11 @@ def setup_jwt_verifier() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH_JWKS_URI": "https://your-auth-server.com/.well-known/jwks.json",
         "FASTMCP_SERVER_AUTH_ISSUER": "your-issuer",
         "FASTMCP_SERVER_AUTH_AUDIENCE": "githound-mcp",
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_static_jwt_verifier() -> Dict[str, str]:
+def setup_static_jwt_verifier() -> dict[str, str]:
     """
     Example configuration for static JWT verification (for testing).
 
@@ -87,11 +85,11 @@ def setup_static_jwt_verifier() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH_SECRET_KEY": "your-secret-key-here",
         "FASTMCP_SERVER_AUTH_ISSUER": "your-issuer",
         "FASTMCP_SERVER_AUTH_AUDIENCE": "githound-mcp",
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_oauth_proxy() -> Dict[str, str]:
+def setup_oauth_proxy() -> dict[str, str]:
     """
     Example configuration for custom OAuth provider proxy.
 
@@ -111,11 +109,11 @@ def setup_oauth_proxy() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH_TOKEN_ENDPOINT": "https://auth.example.com/oauth/token",
         "FASTMCP_SERVER_AUTH_USERINFO_ENDPOINT": "https://auth.example.com/oauth/userinfo",
         "FASTMCP_SERVER_BASE_URL": "http://localhost:8000",
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_eunomia_authorization() -> Dict[str, str]:
+def setup_eunomia_authorization() -> dict[str, str]:
     """
     Example configuration for Eunomia authorization integration.
 
@@ -133,19 +131,17 @@ def setup_eunomia_authorization() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH_JWKS_URI": "https://your-auth-server.com/.well-known/jwks.json",
         "FASTMCP_SERVER_AUTH_ISSUER": "your-issuer",
         "FASTMCP_SERVER_AUTH_AUDIENCE": "githound-mcp",
-
         # Eunomia authorization
         "EUNOMIA_ENABLE": "true",
         "EUNOMIA_POLICY_FILE": "githound_policies.json",
         "EUNOMIA_SERVER_NAME": "githound-mcp",
         "EUNOMIA_ENABLE_AUDIT_LOGGING": "true",
         "EUNOMIA_BYPASS_METHODS": '["initialize", "ping"]',
-
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_permit_authorization() -> Dict[str, str]:
+def setup_permit_authorization() -> dict[str, str]:
     """
     Example configuration for Permit.io authorization integration.  # [attr-defined]
 
@@ -163,7 +159,6 @@ def setup_permit_authorization() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH": "githound.mcp.auth.providers.github.GitHubProvider",
         "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_ID": "your-github-client-id",
         "FASTMCP_SERVER_AUTH_GITHUB_CLIENT_SECRET": "your-github-client-secret",
-
         # Permit.io authorization
         "PERMIT_ENABLE": "true",
         "PERMIT_MCP_PERMIT_PDP_URL": "http://localhost:7766",  # or https://cloudpdp.api.permit.io
@@ -172,13 +167,12 @@ def setup_permit_authorization() -> Dict[str, str]:
         "PERMIT_MCP_IDENTITY_JWT_SECRET": "your-jwt-secret",
         "PERMIT_MCP_ENABLE_AUDIT_LOGGING": "true",
         "PERMIT_MCP_BYPASSED_METHODS": '["initialize", "ping"]',
-
         "FASTMCP_SERVER_BASE_URL": "http://localhost:8000",
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def setup_combined_authorization() -> Dict[str, str]:
+def setup_combined_authorization() -> dict[str, str]:
     """
     Example configuration for both Eunomia and Permit.io authorization.  # [attr-defined]
 
@@ -194,13 +188,11 @@ def setup_combined_authorization() -> Dict[str, str]:
         "FASTMCP_SERVER_AUTH_JWKS_URI": "https://your-auth-server.com/.well-known/jwks.json",
         "FASTMCP_SERVER_AUTH_ISSUER": "your-issuer",
         "FASTMCP_SERVER_AUTH_AUDIENCE": "githound-mcp",
-
         # Eunomia authorization
         "EUNOMIA_ENABLE": "true",
         "EUNOMIA_POLICY_FILE": "githound_policies.json",
         "EUNOMIA_SERVER_NAME": "githound-mcp",
         "EUNOMIA_ENABLE_AUDIT_LOGGING": "true",
-
         # Permit.io authorization
         "PERMIT_ENABLE": "true",
         "PERMIT_MCP_PERMIT_PDP_URL": "http://localhost:7766",
@@ -208,12 +200,11 @@ def setup_combined_authorization() -> Dict[str, str]:
         "PERMIT_MCP_IDENTITY_MODE": "jwt",
         "PERMIT_MCP_IDENTITY_JWT_SECRET": "your-jwt-secret",
         "PERMIT_MCP_ENABLE_AUDIT_LOGGING": "true",
-
-        "FASTMCP_SERVER_ENABLE_AUTH": "true"
+        "FASTMCP_SERVER_ENABLE_AUTH": "true",
     }
 
 
-def apply_configuration(config: Dict[str, str], dry_run: bool = True) -> None:
+def apply_configuration(config: dict[str, str], dry_run: bool = True) -> None:
     """
     Apply a configuration by setting environment variables.
 
@@ -227,8 +218,8 @@ def apply_configuration(config: Dict[str, str], dry_run: bool = True) -> None:
     for key, value in config.items():  # [attr-defined]
         if dry_run:
             # Mask sensitive values for display
-            if any(sensitive in key.upper() for sensitive in ['SECRET', 'KEY', 'TOKEN']):
-                display_value = value[:8] + '...' if len(value) > 8 else '***'
+            if any(sensitive in key.upper() for sensitive in ["SECRET", "KEY", "TOKEN"]):
+                display_value = value[:8] + "..." if len(value) > 8 else "***"
                 print(f"export {key}={display_value}")
             else:
                 print(f"export {key}={value}")

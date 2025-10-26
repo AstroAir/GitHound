@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GitHound Performance Benchmark
 
@@ -15,8 +14,20 @@ Commands:
     baseline    - Set current performance as baseline
 """
 
-from utils import (
-    console,
+import json
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import typer
+
+# Add utils to path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from script_utils import (
+    StatusContext,
     get_project_root,
     print_error,
     print_header,
@@ -26,20 +37,7 @@ from utils import (
     print_success,
     print_warning,
     run_command_with_output,
-    StatusContext,
 )
-import json
-import sys
-import time
-from datetime import datetime
-from pathlib import Path
-from typing import Optional, Union, Any
-
-import typer
-
-# Add utils to path
-sys.path.insert(0, str(Path(__file__).parent))
-
 
 app = typer.Typer(
     name="benchmark",
@@ -57,7 +55,7 @@ class BenchmarkRunner:
         self.benchmark_dir.mkdir(exist_ok=True)
         self.baseline_file = self.benchmark_dir / "baseline.json"
 
-    def run_import_benchmark(self) -> Dict[str, float]:
+    def run_import_benchmark(self) -> dict[str, float]:
         """Benchmark import times."""
         print_section("Import Benchmarks")
 
@@ -66,48 +64,49 @@ class BenchmarkRunner:
         # Core import
         start = time.time()
         try:
-            run_command_with_output([
-                "python", "-c", "import githound"
-            ], cwd=self.project_root)
+            run_command_with_output(["python", "-c", "import githound"], cwd=self.project_root)
             import_time = time.time() - start
             benchmarks["core_import"] = import_time
-            print_step(f"Core import: {import_time:.3f}s",
-                       "success" if import_time < 1.0 else "warning")
-        except Exception as e:
+            print_step(
+                f"Core import: {import_time:.3f}s", "success" if import_time < 1.0 else "warning"
+            )
+        except Exception:
             print_step("Core import", "error")
-            benchmarks["core_import"] = float('inf')
+            benchmarks["core_import"] = float("inf")
 
         # CLI import
         start = time.time()
         try:
-            run_command_with_output([
-                "python", "-c", "from githound.cli import app"
-            ], cwd=self.project_root)
+            run_command_with_output(
+                ["python", "-c", "from githound.cli import app"], cwd=self.project_root
+            )
             cli_time = time.time() - start
             benchmarks["cli_import"] = cli_time
-            print_step(f"CLI import: {cli_time:.3f}s",
-                       "success" if cli_time < 2.0 else "warning")
-        except Exception as e:
+            print_step(f"CLI import: {cli_time:.3f}s", "success" if cli_time < 2.0 else "warning")
+        except Exception:
             print_step("CLI import", "error")
-            benchmarks["cli_import"] = float('inf')
+            benchmarks["cli_import"] = float("inf")
 
         # Search engine import
         start = time.time()
         try:
-            run_command_with_output([
-                "python", "-c", "from githound.search_engine import SearchOrchestrator"
-            ], cwd=self.project_root)
+            run_command_with_output(
+                ["python", "-c", "from githound.search_engine import SearchOrchestrator"],
+                cwd=self.project_root,
+            )
             search_time = time.time() - start
             benchmarks["search_import"] = search_time
-            print_step(f"Search engine import: {search_time:.3f}s",
-                       "success" if search_time < 1.5 else "warning")
-        except Exception as e:
+            print_step(
+                f"Search engine import: {search_time:.3f}s",
+                "success" if search_time < 1.5 else "warning",
+            )
+        except Exception:
             print_step("Search engine import", "error")
-            benchmarks["search_import"] = float('inf')
+            benchmarks["search_import"] = float("inf")
 
         return benchmarks
 
-    def run_functionality_benchmark(self) -> Dict[str, float]:
+    def run_functionality_benchmark(self) -> dict[str, float]:
         """Benchmark core functionality."""
         print_section("Functionality Benchmarks")
 
@@ -116,8 +115,11 @@ class BenchmarkRunner:
         # Repository analysis
         start = time.time()
         try:
-            result = run_command_with_output([
-                "python", "-c", """
+            result = run_command_with_output(
+                [
+                    "python",
+                    "-c",
+                    """
 from githound import GitHound
 from pathlib import Path
 import time
@@ -127,34 +129,41 @@ gh = GitHound(Path('.'))
 info = gh.analyze_repository()
 duration = time.time() - start
 print(f"Analysis took {duration:.3f}s")
-"""
-            ], cwd=self.project_root)
+""",
+                ],
+                cwd=self.project_root,
+            )
 
             if result[0] == 0:
                 # Extract duration from output
-                output_lines = result[1].strip().split('\n')
+                output_lines = result[1].strip().split("\n")
                 for line in output_lines:
                     if "Analysis took" in line:
-                        duration_str = line.split()[-1].replace('s', '')
+                        duration_str = line.split()[-1].replace("s", "")
                         benchmarks["repo_analysis"] = float(duration_str)
                         break
                 else:
                     benchmarks["repo_analysis"] = time.time() - start
 
-                print_step(f"Repository analysis: {benchmarks['repo_analysis']:.3f}s",
-                           "success" if benchmarks["repo_analysis"] < 5.0 else "warning")
+                print_step(
+                    f"Repository analysis: {benchmarks['repo_analysis']:.3f}s",
+                    "success" if benchmarks["repo_analysis"] < 5.0 else "warning",
+                )
             else:
                 print_step("Repository analysis", "error")
-                benchmarks["repo_analysis"] = float('inf')
-        except Exception as e:
+                benchmarks["repo_analysis"] = float("inf")
+        except Exception:
             print_step("Repository analysis", "error")
-            benchmarks["repo_analysis"] = float('inf')
+            benchmarks["repo_analysis"] = float("inf")
 
         # Search functionality
         start = time.time()
         try:
-            result = run_command_with_output([
-                "python", "-c", """
+            result = run_command_with_output(
+                [
+                    "python",
+                    "-c",
+                    """
 from githound import GitHound
 from githound.models import SearchQuery
 from pathlib import Path
@@ -166,33 +175,36 @@ query = SearchQuery(content_pattern='function')
 results = list(gh.search_advanced(query))
 duration = time.time() - start
 print(f"Search took {duration:.3f}s, found {len(results)} results")
-"""
-            ], cwd=self.project_root)
+""",
+                ],
+                cwd=self.project_root,
+            )
 
             if result[0] == 0:
                 # Extract duration from output
-                output_lines = result[1].strip().split('\n')
+                output_lines = result[1].strip().split("\n")
                 for line in output_lines:
                     if "Search took" in line:
-                        duration_str = line.split()[2].replace('s,', '')
-                        benchmarks["search_functionality"] = float(
-                            duration_str)
+                        duration_str = line.split()[2].replace("s,", "")
+                        benchmarks["search_functionality"] = float(duration_str)
                         break
                 else:
                     benchmarks["search_functionality"] = time.time() - start
 
-                print_step(f"Search functionality: {benchmarks['search_functionality']:.3f}s",
-                           "success" if benchmarks["search_functionality"] < 10.0 else "warning")
+                print_step(
+                    f"Search functionality: {benchmarks['search_functionality']:.3f}s",
+                    "success" if benchmarks["search_functionality"] < 10.0 else "warning",
+                )
             else:
                 print_step("Search functionality", "error")
-                benchmarks["search_functionality"] = float('inf')
-        except Exception as e:
+                benchmarks["search_functionality"] = float("inf")
+        except Exception:
             print_step("Search functionality", "error")
-            benchmarks["search_functionality"] = float('inf')
+            benchmarks["search_functionality"] = float("inf")
 
         return benchmarks
 
-    def run_cli_benchmark(self) -> Dict[str, float]:
+    def run_cli_benchmark(self) -> dict[str, float]:
         """Benchmark CLI performance."""
         print_section("CLI Benchmarks")
 
@@ -201,50 +213,53 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
         # CLI help command
         start = time.time()
         try:
-            result = run_command_with_output([
-                "python", "-m", "githound.cli", "--help"
-            ], cwd=self.project_root)
+            result = run_command_with_output(
+                ["python", "-m", "githound.cli", "--help"], cwd=self.project_root
+            )
             help_time = time.time() - start
 
             if result[0] == 0:
                 benchmarks["cli_help"] = help_time
-                print_step(f"CLI help: {help_time:.3f}s",
-                           "success" if help_time < 2.0 else "warning")
+                print_step(
+                    f"CLI help: {help_time:.3f}s", "success" if help_time < 2.0 else "warning"
+                )
             else:
                 print_step("CLI help", "error")
-                benchmarks["cli_help"] = float('inf')
-        except Exception as e:
+                benchmarks["cli_help"] = float("inf")
+        except Exception:
             print_step("CLI help", "error")
-            benchmarks["cli_help"] = float('inf')
+            benchmarks["cli_help"] = float("inf")
 
         # CLI version command
         start = time.time()
         try:
-            result = run_command_with_output([
-                "python", "-m", "githound.cli", "version"
-            ], cwd=self.project_root)
+            result = run_command_with_output(
+                ["python", "-m", "githound.cli", "version"], cwd=self.project_root
+            )
             version_time = time.time() - start
 
             if result[0] == 0:
                 benchmarks["cli_version"] = version_time
-                print_step(f"CLI version: {version_time:.3f}s",
-                           "success" if version_time < 1.0 else "warning")
+                print_step(
+                    f"CLI version: {version_time:.3f}s",
+                    "success" if version_time < 1.0 else "warning",
+                )
             else:
                 print_step("CLI version", "error")
-                benchmarks["cli_version"] = float('inf')
-        except Exception as e:
+                benchmarks["cli_version"] = float("inf")
+        except Exception:
             print_step("CLI version", "error")
-            benchmarks["cli_version"] = float('inf')
+            benchmarks["cli_version"] = float("inf")
 
         return benchmarks
 
-    def run_all_benchmarks(self) -> Dict[str, Any]:
+    def run_all_benchmarks(self) -> dict[str, Any]:
         """Run all benchmark suites."""
         print_header("GitHound Performance Benchmarks")
 
         start_time = datetime.now()
 
-        results: Dict[str, Any] = {
+        results: dict[str, Any] = {
             "metadata": {
                 "timestamp": start_time.isoformat(),
                 "version": "0.1.0",  # Could be extracted from pyproject.toml
@@ -265,7 +280,7 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
         all_times: list[Any] = []
         for category in ["import", "functionality", "cli"]:
             for benchmark, time_val in results[category].items():
-                if time_val != float('inf'):
+                if time_val != float("inf"):
                     all_times.append(time_val)
 
         if all_times:
@@ -275,36 +290,36 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
 
         return results
 
-    def save_benchmark_results(self, results: Dict[str, Any], filename: Optional[str] = None) -> Path:
+    def save_benchmark_results(self, results: dict[str, Any], filename: str | None = None) -> Path:
         """Save benchmark results to file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"benchmark_{timestamp}.json"
 
         filepath = self.benchmark_dir / filename
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(results, f, indent=2, default=str)
 
         return filepath
 
-    def load_baseline(self) -> Optional[Dict[str, Any]]:
+    def load_baseline(self) -> dict[str, Any] | None:
         """Load baseline benchmark results."""
         if not self.baseline_file.exists():
             return None
 
         try:
-            with open(self.baseline_file, 'r') as f:
-                data: Dict[str, Any] = json.load(f)
+            with open(self.baseline_file) as f:
+                data: dict[str, Any] = json.load(f)
                 return data
         except Exception:
             return None
 
-    def save_baseline(self, results: Dict[str, Any]) -> None:
+    def save_baseline(self, results: dict[str, Any]) -> None:
         """Save results as baseline."""
-        with open(self.baseline_file, 'w') as f:
+        with open(self.baseline_file, "w") as f:
             json.dump(results, f, indent=2, default=str)
 
-    def compare_with_baseline(self, current: Dict[str, Any]) -> Dict[str, Any]:
+    def compare_with_baseline(self, current: dict[str, Any]) -> dict[str, Any]:
         """Compare current results with baseline."""
         baseline = self.load_baseline()
         if not baseline:
@@ -329,11 +344,10 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
                 baseline_time = baseline[category][benchmark]
                 current_time = current[category][benchmark]
 
-                if baseline_time == float('inf') or current_time == float('inf'):
+                if baseline_time == float("inf") or current_time == float("inf"):
                     continue
 
-                change_pct = ((current_time - baseline_time) /
-                              baseline_time) * 100
+                change_pct = ((current_time - baseline_time) / baseline_time) * 100
 
                 item = {
                     "benchmark": f"{category}.{benchmark}",
@@ -354,10 +368,8 @@ print(f"Search took {duration:.3f}s, found {len(results)} results")
 
 @app.command()
 def run(
-    save: bool = typer.Option(True, "--save/--no-save",
-                              help="Save results to file"),
-    baseline: bool = typer.Option(
-        False, "--baseline", help="Set as new baseline"),
+    save: bool = typer.Option(True, "--save/--no-save", help="Save results to file"),
+    baseline: bool = typer.Option(False, "--baseline", help="Set as new baseline"),
 ) -> None:
     """Run performance benchmarks."""
     runner = BenchmarkRunner()
@@ -397,20 +409,17 @@ def compare() -> None:
     if comparison["improvements"]:
         print_section("Improvements (Faster)")
         for item in comparison["improvements"]:
-            print_success(
-                f"{item['benchmark']}: {item['change_pct']:.1f}% faster")
+            print_success(f"{item['benchmark']}: {item['change_pct']:.1f}% faster")
 
     if comparison["regressions"]:
         print_section("Regressions (Slower)")
         for item in comparison["regressions"]:
-            print_warning(
-                f"{item['benchmark']}: {item['change_pct']:.1f}% slower")
+            print_warning(f"{item['benchmark']}: {item['change_pct']:.1f}% slower")
 
     if comparison["unchanged"]:
         print_section("Unchanged (< 5% change)")
         for item in comparison["unchanged"]:
-            print_info(
-                f"{item['benchmark']}: {item['change_pct']:.1f}% change")
+            print_info(f"{item['benchmark']}: {item['change_pct']:.1f}% change")
 
 
 @app.command()
@@ -420,6 +429,7 @@ def baseline() -> None:
 
     if runner.baseline_file.exists():
         from utils import confirm
+
         if not confirm("Baseline already exists. Overwrite?"):
             print_info("Baseline update cancelled")
             return
@@ -435,8 +445,7 @@ def baseline() -> None:
 
 @app.command()
 def report(
-    output: str = typer.Option(
-        "benchmark-report.json", "--output", "-o", help="Output file"),
+    output: str = typer.Option("benchmark-report.json", "--output", "-o", help="Output file"),
 ) -> None:
     """Generate detailed benchmark report."""
     runner = BenchmarkRunner()
@@ -449,7 +458,7 @@ def report(
         results["comparison"] = comparison
 
     output_path = Path(output)
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     print_success(f"Benchmark report saved to: {output_path}")

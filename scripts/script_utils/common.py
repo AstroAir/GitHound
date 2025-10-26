@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optionalnal, Tuple, Union
+from typing import Any
 
 
 def get_project_root() -> Path:
@@ -20,7 +20,7 @@ def get_project_root() -> Path:
     raise RuntimeError("Could not find project root (no pyproject.toml found)")
 
 
-def check_python_version(min_version: Tuple[int, int] = (3, 11)) -> bool:
+def check_python_version(min_version: tuple[int, int] = (3, 11)) -> bool:
     """Check if Python version meets minimum requirements."""
     current_version = sys.version_info[:2]
     return current_version >= min_version
@@ -29,9 +29,9 @@ def check_python_version(min_version: Tuple[int, int] = (3, 11)) -> bool:
 def check_virtual_env() -> bool:
     """Check if running in a virtual environment."""
     return (
-        hasattr(sys, 'real_prefix') or
-        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix) or
-        os.environ.get('VIRTUAL_ENV') is not None
+        hasattr(sys, "real_prefix")
+        or (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)
+        or os.environ.get("VIRTUAL_ENV") is not None
     )
 
 
@@ -41,11 +41,11 @@ def check_command_exists(command: str) -> bool:
 
 
 def run_command(
-    command: Union[str, List[str]],
-    cwd: Optional[Path] = None,
+    command: str | list[str],
+    cwd: Path | None = None,
     check: bool = True,
     capture_output: bool = False,
-    env: Optional[Dict[str, str]] = None
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess:
     """
     Run a command with proper error handling.
@@ -65,25 +65,18 @@ def run_command(
 
     try:
         result = subprocess.run(
-            command,
-            cwd=cwd,
-            check=check,
-            capture_output=capture_output,
-            text=True,
-            env=env
+            command, cwd=cwd, check=check, capture_output=capture_output, text=True, env=env
         )
         return result
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Command failed: {' '.join(command)}\nError: {e}")
-    except FileNotFoundError:
-        raise RuntimeError(f"Command not found: {command[0]}")
+        raise RuntimeError(f"Command failed: {' '.join(command)}\nError: {e}") from e
+    except FileNotFoundError as e:
+        raise RuntimeError(f"Command not found: {command[0]}") from e
 
 
 def run_command_with_output(
-    command: Union[str, List[str]],
-    cwd: Optional[Path] = None,
-    env: Optional[Dict[str, str]] = None
-) -> Tuple[int, str, str]:
+    command: str | list[str], cwd: Path | None = None, env: dict[str, str] | None = None
+) -> tuple[int, str, str]:
     """
     Run a command and return exit code, stdout, and stderr.
 
@@ -99,45 +92,35 @@ def run_command_with_output(
         command = command.split()
 
     try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            env=env
-        )
+        result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, env=env)
         return result.returncode, result.stdout, result.stderr
     except FileNotFoundError:
         return 1, "", f"Command not found: {command[0]}"
 
 
-def get_git_info() -> Dict[str, str]:
+def get_git_info() -> dict[str, str]:
     """Get Git repository information."""
     project_root = get_project_root()
     info: dict[str, Any] = {}
 
     try:
         # Get current branch
-        result = run_command_with_output(
-            ["git", "branch", "--show-current"], cwd=project_root)
+        result = run_command_with_output(["git", "branch", "--show-current"], cwd=project_root)
         if result[0] == 0:
             info["branch"] = result[1].strip()
 
         # Get commit hash
-        result = run_command_with_output(
-            ["git", "rev-parse", "HEAD"], cwd=project_root)
+        result = run_command_with_output(["git", "rev-parse", "HEAD"], cwd=project_root)
         if result[0] == 0:
             info["commit"] = result[1].strip()[:8]
 
         # Get remote URL
-        result = run_command_with_output(
-            ["git", "remote", "get-url", "origin"], cwd=project_root)
+        result = run_command_with_output(["git", "remote", "get-url", "origin"], cwd=project_root)
         if result[0] == 0:
             info["remote"] = result[1].strip()
 
         # Check for uncommitted changes
-        result = run_command_with_output(
-            ["git", "status", "--porcelain"], cwd=project_root)
+        result = run_command_with_output(["git", "status", "--porcelain"], cwd=project_root)
         if result[0] == 0:
             info["dirty"] = bool(result[1].strip())
 
@@ -147,7 +130,7 @@ def get_git_info() -> Dict[str, str]:
     return info
 
 
-def find_files_by_pattern(directory: Path, pattern: str) -> List[Path]:
+def find_files_by_pattern(directory: Path, pattern: str) -> list[Path]:
     """Find files matching a pattern in directory."""
     return list(directory.rglob(pattern))
 
@@ -166,7 +149,7 @@ def get_directory_size(directory: Path) -> int:
 
 def format_bytes(bytes_count: int) -> str:
     """Format bytes as human-readable string."""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
         if bytes_count < 1024.0:
             return f"{bytes_count:.1f} {unit}"
         bytes_count /= 1024.0
@@ -200,7 +183,7 @@ def safe_remove_file(path: Path) -> bool:
     return False
 
 
-def get_python_info() -> Dict[str, str]:
+def get_python_info() -> dict[str, str]:
     """Get Python environment information."""
     return {
         "version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
@@ -224,7 +207,7 @@ def check_port_available(port: int, host: str = "localhost") -> bool:
         return False
 
 
-def get_free_port(start_port: int = 8000, max_attempts: int = 100) -> Optional[int]:
+def get_free_port(start_port: int = 8000, max_attempts: int = 100) -> int | None:
     """Find a free port starting from start_port."""
     for port in range(start_port, start_port + max_attempts):
         if check_port_available(port):

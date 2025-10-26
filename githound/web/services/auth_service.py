@@ -23,7 +23,7 @@ ACCESS_TOKEN_EXPIRE_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "24"))
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Security scheme
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 class User(BaseModel):
@@ -104,15 +104,15 @@ class AuthManager:
 
             payload: dict[str, Any] = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             return payload
-        except jwt.ExpiredSignatureError:
+        except jwt.ExpiredSignatureError as e:
             self.active_tokens.discard(token)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
-            )
-        except jwt.PyJWTError:
+            ) from e
+        except jwt.PyJWTError as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
-            )
+            ) from e
 
     def create_user(self, user_data: UserCreate) -> User:
         """Create a new user."""
@@ -294,9 +294,16 @@ auth_manager = AuthManager()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> dict[str, Any]:
     """Get the current authenticated user."""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     token = credentials.credentials
     payload = auth_manager.verify_token(token)
 

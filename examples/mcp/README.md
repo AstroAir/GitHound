@@ -28,11 +28,13 @@ GitHound automatically searches for MCP.json files in these locations (in order 
 ## Example Files
 
 ### Basic Configuration
+
 - `mcp.json` - Basic GitHound MCP server configuration
 - `claude_desktop_mcp.json` - Configuration for Claude Desktop
 - `cursor_mcp.json` - Configuration for Cursor IDE
 
 ### Advanced Configuration
+
 - `mcp_with_auth.json` - Multiple server configurations with authentication
 - `fastmcp_compatible.json` - FastMCP-compatible configuration using `uv`
 
@@ -73,11 +75,13 @@ You can configure GitHound through environment variables in the `env` section:
 For authentication-enabled configurations, you can include provider-specific environment variables:
 
 ### Permit.io Provider
+
 - `PERMIT_MCP_API_KEY` - Your Permit.io API key
 - `PERMIT_MCP_PROJECT_ID` - Project ID
 - `PERMIT_MCP_ENVIRONMENT_ID` - Environment ID
 
 ### Eunomia Provider
+
 - `EUNOMIA_POLICY_FILE` - Path to policy file
 - `EUNOMIA_SERVER_NAME` - Server name for policies
 - `EUNOMIA_ENABLE_AUDIT_LOGGING` - Enable audit logging
@@ -85,15 +89,19 @@ For authentication-enabled configurations, you can include provider-specific env
 ## Usage with Different Clients
 
 ### Claude Desktop
+
 Copy the `mcpServers` object from any example into your `~/.claude/claude_desktop_config.json` file.
 
 ### Cursor
+
 Save the configuration as `~/.cursor/mcp.json`.
 
 ### VS Code
+
 Save the configuration as `.vscode/mcp.json` in your workspace.
 
 ### Custom Applications
+
 Use the JSON configuration with any application that supports the MCP protocol.
 
 ## Testing Configuration

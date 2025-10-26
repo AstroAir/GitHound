@@ -2,12 +2,10 @@
 Test server management for GitHound web tests.
 """
 
-import asyncio
 import os
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional
 
 import requests
 
@@ -17,7 +15,7 @@ class TestServerManager:
 
     def __init__(self, test_data_dir: Path):
         self.test_data_dir = test_data_dir
-        self.server_process: Optional[subprocess.Popen[bytes]] = None
+        self.server_process: subprocess.Popen[bytes] | None = None
         self.base_url = "http://localhost:8000"
         self.startup_timeout = 30
 

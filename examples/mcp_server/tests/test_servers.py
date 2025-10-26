@@ -7,21 +7,18 @@ and the GitHound MCP server implementations.
 
 import asyncio
 import json
-import pytest
-import tempfile
-from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, patch, MagicMock
-
-from fastmcp.client import FastMCPClient
-from fastmcp.client.transports import StdioTransport
-from fastmcp.exceptions import ToolError
 
 # Import server modules to test
 import sys
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+from fastmcp.exceptions import ToolError
+
 sys.path.append(str(Path(__file__).parent.parent))
 
-from servers import simple_server, githound_server
+from servers import githound_server, simple_server
 
 
 class TestSimpleServer:
@@ -101,7 +98,7 @@ class TestSimpleServer:
         expected_resources = [
             "simple://server/info",
             "simple://config/settings",
-            "simple://status/current"
+            "simple://status/current",
         ]
         for expected_resource in expected_resources:
             assert expected_resource in resource_uris
@@ -113,7 +110,7 @@ class TestSimpleServer:
 
         assert content is not None
         assert len(content) > 0
-        assert hasattr(content[0], 'text')
+        assert hasattr(content[0], "text")
 
         # Parse JSON content
         data = json.loads(content[0].text)
@@ -124,11 +121,13 @@ class TestSimpleServer:
     @pytest.mark.asyncio
     async def test_config_resource(self, simple_mcp_client) -> None:
         """Test config resource."""
-        content = await simple_mcp_client.read_resource("simple://config/settings")  # [attr-defined]
+        content = await simple_mcp_client.read_resource(
+            "simple://config/settings"
+        )  # [attr-defined]
 
         assert content is not None
         assert len(content) > 0
-        assert hasattr(content[0], 'text')
+        assert hasattr(content[0], "text")
 
         # Parse JSON content
         data = json.loads(content[0].text)
@@ -143,7 +142,7 @@ class TestSimpleServer:
 
         assert content is not None
         assert len(content) > 0
-        assert hasattr(content[0], 'text')
+        assert hasattr(content[0], "text")
 
         # Parse JSON content
         data = json.loads(content[0].text)
@@ -168,7 +167,7 @@ class TestGitHoundServer:
             "analyze_commit",
             "get_commit_history",
             "get_file_history",
-            "get_author_stats"
+            "get_author_stats",
         ]
         for expected_tool in expected_tools:
             assert expected_tool in tool_names
@@ -176,9 +175,9 @@ class TestGitHoundServer:
     @pytest.mark.asyncio
     async def test_analyze_repository_tool(self, githound_mcp_client, temp_git_repo) -> None:
         """Test analyze_repository tool functionality."""
-        result = await githound_mcp_client.call_tool("analyze_repository", {
-            "repo_path": str(temp_git_repo)
-        })
+        result = await githound_mcp_client.call_tool(
+            "analyze_repository", {"repo_path": str(temp_git_repo)}
+        )
 
         assert result is not None
         assert result.data is not None
@@ -193,10 +192,9 @@ class TestGitHoundServer:
     @pytest.mark.asyncio
     async def test_get_commit_history_tool(self, githound_mcp_client, temp_git_repo) -> None:
         """Test get_commit_history tool functionality."""
-        result = await githound_mcp_client.call_tool("get_commit_history", {
-            "repo_path": str(temp_git_repo),
-            "limit": 5
-        })
+        result = await githound_mcp_client.call_tool(
+            "get_commit_history", {"repo_path": str(temp_git_repo), "limit": 5}
+        )
 
         assert result is not None
         assert result.data is not None
@@ -215,9 +213,9 @@ class TestGitHoundServer:
     @pytest.mark.asyncio
     async def test_get_author_stats_tool(self, githound_mcp_client, temp_git_repo) -> None:
         """Test get_author_stats tool functionality."""
-        result = await githound_mcp_client.call_tool("get_author_stats", {
-            "repo_path": str(temp_git_repo)
-        })
+        result = await githound_mcp_client.call_tool(
+            "get_author_stats", {"repo_path": str(temp_git_repo)}
+        )
 
         assert result is not None
         assert result.data is not None
@@ -230,11 +228,10 @@ class TestGitHoundServer:
     @pytest.mark.asyncio
     async def test_get_file_history_tool(self, githound_mcp_client, temp_git_repo) -> None:
         """Test get_file_history tool functionality."""
-        result = await githound_mcp_client.call_tool("get_file_history", {
-            "repo_path": str(temp_git_repo),
-            "file_path": "README.md",
-            "limit": 5
-        })
+        result = await githound_mcp_client.call_tool(
+            "get_file_history",
+            {"repo_path": str(temp_git_repo), "file_path": "README.md", "limit": 5},
+        )
 
         assert result is not None
         assert result.data is not None
@@ -250,14 +247,14 @@ class TestGitHoundServer:
         resources = await githound_mcp_client.list_resources()
 
         # Check for templated resources
-        templated_resources = [r for r in resources if '{' in r.uri and '}' in r.uri]
+        templated_resources = [r for r in resources if "{" in r.uri and "}" in r.uri]
         assert len(templated_resources) > 0
 
         # Verify expected resource patterns
         resource_uris = [resource.uri for resource in resources]
         expected_patterns = [
             "githound://repository/{repo_path}/summary",
-            "githound://repository/{repo_path}/contributors"
+            "githound://repository/{repo_path}/contributors",
         ]
 
         for pattern in expected_patterns:
@@ -271,7 +268,7 @@ class TestGitHoundServer:
 
         assert content is not None
         assert len(content) > 0
-        assert hasattr(content[0], 'text')
+        assert hasattr(content[0], "text")
 
         # Parse JSON content
         data = json.loads(content[0].text)
@@ -287,7 +284,7 @@ class TestGitHoundServer:
 
         assert content is not None
         assert len(content) > 0
-        assert hasattr(content[0], 'text')
+        assert hasattr(content[0], "text")
 
         # Parse JSON content
         data = json.loads(content[0].text)
@@ -303,28 +300,27 @@ class TestServerErrorHandling:
     async def test_invalid_repository_path(self, githound_mcp_client) -> None:
         """Test handling of invalid repository paths."""
         with pytest.raises(ToolError):
-            await githound_mcp_client.call_tool("analyze_repository", {
-                "repo_path": "/non/existent/path"
-            })
+            await githound_mcp_client.call_tool(
+                "analyze_repository", {"repo_path": "/non/existent/path"}
+            )
 
     @pytest.mark.asyncio
     async def test_invalid_commit_hash(self, githound_mcp_client, temp_git_repo) -> None:
         """Test handling of invalid commit hashes."""
         with pytest.raises(ToolError):
-            await githound_mcp_client.call_tool("analyze_commit", {
-                "repo_path": str(temp_git_repo),
-                "commit_hash": "invalid_hash_123"
-            })
+            await githound_mcp_client.call_tool(
+                "analyze_commit",
+                {"repo_path": str(temp_git_repo), "commit_hash": "invalid_hash_123"},
+            )
 
     @pytest.mark.asyncio
     async def test_invalid_file_path(self, githound_mcp_client, temp_git_repo) -> None:
         """Test handling of invalid file paths."""
         # This might not raise an error but should return empty results
-        result = await githound_mcp_client.call_tool("get_file_history", {
-            "repo_path": str(temp_git_repo),
-            "file_path": "non_existent_file.txt",
-            "limit": 5
-        })
+        result = await githound_mcp_client.call_tool(
+            "get_file_history",
+            {"repo_path": str(temp_git_repo), "file_path": "non_existent_file.txt", "limit": 5},
+        )
 
         assert result is not None
         # Should return empty list or handle gracefully
@@ -343,7 +339,9 @@ class TestServerPerformance:
 
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_tool_execution_performance(self, simple_mcp_client, performance_thresholds) -> None:
+    async def test_tool_execution_performance(
+        self, simple_mcp_client, performance_thresholds
+    ) -> None:
         """Test tool execution performance."""
         import time
 
@@ -363,7 +361,9 @@ class TestServerPerformance:
 
     @pytest.mark.performance
     @pytest.mark.asyncio
-    async def test_resource_access_performance(self, simple_mcp_client, performance_thresholds) -> None:
+    async def test_resource_access_performance(
+        self, simple_mcp_client, performance_thresholds
+    ) -> None:
         """Test resource access performance."""
         import time
 
@@ -379,10 +379,7 @@ class TestServerPerformance:
     async def test_concurrent_requests(self, simple_mcp_client) -> None:
         """Test handling of concurrent requests."""
         # Execute multiple tools concurrently
-        tasks = [
-            simple_mcp_client.call_tool("echo", {"message": f"test {i}"})
-            for i in range(5)
-        ]
+        tasks = [simple_mcp_client.call_tool("echo", {"message": f"test {i}"}) for i in range(5)]
 
         results = await asyncio.gather(*tasks)
 
@@ -408,7 +405,7 @@ class TestServerConfiguration:
         assert githound_server.app is not None
         assert githound_server.app.name == "GitHound MCP Server"
 
-    @patch('githound_server.GITHOUND_AVAILABLE', False)
+    @patch("githound_server.GITHOUND_AVAILABLE", False)
     def test_githound_server_mock_mode(self) -> None:
         """Test GitHound server in mock mode."""
         # Test that server can run without GitHound modules
@@ -416,7 +413,7 @@ class TestServerConfiguration:
 
     def test_pydantic_models(self) -> None:
         """Test Pydantic model definitions."""
-        from githound_server import RepositoryInfo, CommitInfo, FileInfo
+        from githound_server import CommitInfo, RepositoryInfo
 
         # Test RepositoryInfo model
         repo_info = RepositoryInfo(
@@ -426,7 +423,7 @@ class TestServerConfiguration:
             total_files=5,
             total_authors=2,
             branches=["main"],
-            tags=["v1.0.0"]
+            tags=["v1.0.0"],
         )
 
         assert repo_info.name == "test-repo"
@@ -441,7 +438,7 @@ class TestServerConfiguration:
             message="Test commit",
             files_changed=2,
             insertions=10,
-            deletions=5
+            deletions=5,
         )
 
         assert commit_info.hash == "abc123"
@@ -495,22 +492,21 @@ class TestServerIntegration:
         repo_path = str(temp_git_repo)
 
         # 1. Analyze repository
-        repo_result = await githound_mcp_client.call_tool("analyze_repository", {
-            "repo_path": repo_path
-        })
+        repo_result = await githound_mcp_client.call_tool(
+            "analyze_repository", {"repo_path": repo_path}
+        )
         assert repo_result is not None
 
         # 2. Get commit history
-        history_result = await githound_mcp_client.call_tool("get_commit_history", {
-            "repo_path": repo_path,
-            "limit": 5
-        })
+        history_result = await githound_mcp_client.call_tool(
+            "get_commit_history", {"repo_path": repo_path, "limit": 5}
+        )
         assert history_result is not None
 
         # 3. Get author stats
-        author_result = await githound_mcp_client.call_tool("get_author_stats", {
-            "repo_path": repo_path
-        })
+        author_result = await githound_mcp_client.call_tool(
+            "get_author_stats", {"repo_path": repo_path}
+        )
         assert author_result is not None
 
         # 4. Access resources

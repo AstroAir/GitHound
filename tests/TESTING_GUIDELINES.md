@@ -23,7 +23,7 @@ This document outlines the testing standards and patterns for the GitHound proje
 
 ### Directory Structure
 
-```
+```text
 tests/
 ├── unit/                    # Fast, isolated unit tests
 ├── integration/             # Integration tests with external dependencies
@@ -320,6 +320,7 @@ def test_search_performance_with_large_repository(large_git_repo):
 ### Custom Test Utilities
 
 Use the provided test utilities in `tests/fixtures/` for common scenarios:
+
 - `cli_fixtures.py`: CLI testing utilities
 - `search_fixtures.py`: Search engine test data
 - `builders/`: Test data builders for complex scenarios

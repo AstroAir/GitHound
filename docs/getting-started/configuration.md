@@ -185,6 +185,26 @@ GitHound supports comprehensive configuration through environment variables acro
 | `FASTMCP_SERVER_ENABLE_AUTH` | `false` | Enable authentication for MCP server |
 | `FASTMCP_SERVER_AUTH` | None | Authentication provider class path |
 | `FASTMCP_SERVER_RATE_LIMIT_ENABLED` | `false` | Enable rate limiting |
+| `GITHOUND_AUTH_PROVIDER` | `none` | Authentication provider (permit/eunomia/none) |
+| `GITHOUND_AUTH_REQUIRED` | `false` | Require authentication for all operations |
+
+#### Permit.io Authentication
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PERMIT_API_KEY` | None | Permit.io API key for RBAC |
+| `PERMIT_PROJECT_ID` | None | Permit.io project identifier |
+| `PERMIT_ENVIRONMENT` | `dev` | Permit.io environment (dev/staging/production) |
+| `PERMIT_API_URL` | `https://api.permit.io` | Permit.io API endpoint |
+
+#### Eunomia Authentication
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EUNOMIA_API_ENDPOINT` | None | Eunomia authorization service endpoint |
+| `EUNOMIA_API_KEY` | None | Eunomia API key for ABAC |
+| `EUNOMIA_POLICY_SET` | None | Eunomia policy set identifier |
+| `EUNOMIA_TIMEOUT` | `30` | Request timeout for Eunomia calls (seconds) |
 
 #### GitHub Authentication
 
@@ -242,6 +262,28 @@ GitHound supports comprehensive configuration through environment variables acro
 | `GITHOUND_CACHE_BACKEND` | `memory` | Cache backend type (memory, redis) |
 | `GITHOUND_CACHE_TTL` | `3600` | Cache time-to-live in seconds |
 | `GITHOUND_CACHE_MAX_SIZE` | `1000` | Maximum cache entries (memory backend) |
+
+#### Redis Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDIS_URL` | `redis://localhost:6379` | Redis connection URL |
+| `REDIS_HOST` | `localhost` | Redis server host |
+| `REDIS_PORT` | `6379` | Redis server port |
+| `REDIS_DB` | `0` | Redis database number |
+| `REDIS_PASSWORD` | None | Redis authentication password |
+| `REDIS_SSL` | `false` | Enable SSL/TLS for Redis connection |
+| `REDIS_POOL_SIZE` | `10` | Maximum Redis connection pool size |
+
+#### Rate Limiting Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHOUND_RATE_LIMIT_ENABLED` | `false` | Enable rate limiting |
+| `GITHOUND_RATE_LIMIT_BACKEND` | `redis` | Rate limiting backend (redis, memory) |
+| `GITHOUND_RATE_LIMIT_DEFAULT` | `100/hour` | Default rate limit |
+| `GITHOUND_RATE_LIMIT_SEARCH` | `50/hour` | Rate limit for search operations |
+| `GITHOUND_RATE_LIMIT_EXPORT` | `10/hour` | Rate limit for export operations |
 
 ## Authentication Configuration
 

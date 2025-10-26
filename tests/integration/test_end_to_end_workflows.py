@@ -8,10 +8,35 @@ MCP server operations, API interactions, and data export functionality.
 import asyncio
 import json
 import tempfile
+from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
+
+# Check for MCP availability
+try:
+    from tests.conftest import FASTMCP_AVAILABLE, MCP_SERVER_AVAILABLE
+except ImportError:
+    # Fallback detection if conftest import fails
+    try:
+        from githound.mcp_server import get_mcp_server, mcp
+
+        MCP_SERVER_AVAILABLE = mcp is not None
+    except (ImportError, TypeError, AttributeError):
+        MCP_SERVER_AVAILABLE = False
+
+    try:
+        from fastmcp import FastMCP
+
+        FASTMCP_AVAILABLE = True
+    except ImportError:
+        FASTMCP_AVAILABLE = False
+
+# Skip the entire module if MCP is not available
+if not (FASTMCP_AVAILABLE and MCP_SERVER_AVAILABLE):
+    pytest.skip("MCP functionality not available", allow_module_level=True)
 
 
 class MockMCPContext:
@@ -35,13 +60,17 @@ class MockMCPContext:
 
 
 @pytest.fixture
-def integration_test_repo() -> None:
+def integration_test_repo() -> Generator[tuple[Any, str], None, None]:
     """Create a comprehensive test repository for integration testing."""
+    import os
+
     temp_dir = tempfile.mkdtemp(prefix="githound_integration_")
+    # Normalize path to handle Windows 8.3 short names
+    normalized_temp_dir = os.path.realpath(temp_dir)
 
     from git import Repo
 
-    repo = Repo.init(temp_dir)
+    repo = Repo.init(normalized_temp_dir)
 
     # Configure test user
     with repo.config_writer() as config:  # [attr-defined]
@@ -51,7 +80,7 @@ def integration_test_repo() -> None:
         config.set_value("user", "email", "integration@test.com")
 
     # Create comprehensive project structure
-    base_path = Path(temp_dir)
+    base_path = Path(normalized_temp_dir)
 
     # Source files
     src_dir = base_path / "src"
@@ -163,7 +192,7 @@ class FeatureProcessor:
 # Contribution by {author_name}
 
 This file represents a contribution by {author_name}.
-Created on {datetime.now if datetime is not None else None().isoformat()}.
+Created on {datetime.now().isoformat() if datetime is not None else 'unknown'}.
 """
         )
 
@@ -173,11 +202,12 @@ Created on {datetime.now if datetime is not None else None().isoformat()}.
     # Create tag
     repo.create_tag("v1.0.0", message="Version 1.0.0 release")
 
-    yield repo, temp_dir
+    yield repo, normalized_temp_dir
 
-    # Cleanup
+    # Cleanup: Close repository to release file handles
     import shutil
 
+    repo.close()
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 

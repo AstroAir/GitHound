@@ -7,7 +7,6 @@ across the application, including build metadata and version comparison.
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 
 def get_version() -> str:
@@ -31,7 +30,7 @@ def get_version() -> str:
             return "0.1.0-dev"
 
 
-def get_build_info() -> Dict[str, Optional[str] | bool]:
+def get_build_info() -> dict[str, str | None | bool]:
     """Get build information including git metadata.
 
     Returns:
@@ -43,7 +42,7 @@ def get_build_info() -> Dict[str, Optional[str] | bool]:
         - build_date: Build date (if available)
         - dirty: Whether working directory has uncommitted changes
     """
-    info: Dict[str, Optional[str] | bool] = {
+    info: dict[str, str | None | bool] = {
         "version": get_version(),
         "git_commit": None,
         "git_branch": None,
@@ -121,7 +120,7 @@ def get_build_info() -> Dict[str, Optional[str] | bool]:
     return info
 
 
-def get_version_info() -> Tuple[int, int, int, Optional[str]]:
+def get_version_info() -> tuple[int, int, int, str | None]:
     """Parse version string into components.
 
     Returns:

@@ -1,12 +1,11 @@
-#!/usr/bin/env python3
 """
 Verification script for the frontend refactoring.
 Checks that all components and files are properly created.
 """
 
-import os
 import sys
 from pathlib import Path
+
 
 def check_file_exists(file_path, description):
     """Check if a file exists and print result."""
@@ -17,6 +16,7 @@ def check_file_exists(file_path, description):
         print(f"❌ {description}: {file_path} (MISSING)")
         return False
 
+
 def check_directory_exists(dir_path, description):
     """Check if a directory exists and print result."""
     if dir_path.exists() and dir_path.is_dir():
@@ -26,11 +26,12 @@ def check_directory_exists(dir_path, description):
         print(f"❌ {description}: {dir_path} (MISSING)")
         return False
 
+
 def check_file_contains(file_path, text, description):
     """Check if a file contains specific text."""
     try:
         if file_path.exists():
-            content = file_path.read_text(encoding='utf-8')
+            content = file_path.read_text(encoding="utf-8")
             if text in content:
                 print(f"✅ {description}")
                 return True
@@ -43,6 +44,7 @@ def check_file_contains(file_path, text, description):
     except Exception as e:
         print(f"❌ {description} (ERROR: {e})")
         return False
+
 
 def main():
     """Main verification function."""
@@ -140,9 +142,21 @@ def main():
     content_checks = [
         (static_dir / "main.js", "import GitHoundApp", "Main.js imports GitHoundApp"),
         (static_dir / "index.html", 'type="module"', "HTML uses ES6 modules"),
-        (static_dir / "components" / "core" / "component.js", "export class Component", "Component class is exported"),
-        (static_dir / "components" / "auth" / "auth-manager.js", "extends Component", "AuthManager extends Component"),
-        (static_dir / "styles" / "base" / "variables.css", "--primary-color", "CSS variables defined"),
+        (
+            static_dir / "components" / "core" / "component.js",
+            "export class Component",
+            "Component class is exported",
+        ),
+        (
+            static_dir / "components" / "auth" / "auth-manager.js",
+            "extends Component",
+            "AuthManager extends Component",
+        ),
+        (
+            static_dir / "styles" / "base" / "variables.css",
+            "--primary-color",
+            "CSS variables defined",
+        ),
     ]
 
     for file_path, text, description in content_checks:
@@ -160,6 +174,7 @@ def main():
     else:
         print("❌ Some checks failed. Please review the missing files/content above.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

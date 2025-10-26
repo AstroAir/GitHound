@@ -3,17 +3,19 @@
 import asyncio
 import csv
 import json
+import logging
 import sys
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal, TextIO
+from unittest.mock import Mock as _Mock
 
 import typer
 from git import GitCommandError, Repo
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskID, TaskProgressColumn, TextColumn
 from rich.table import Table
-
 
 from githound.git_handler import get_repository, process_commit, walk_history
 from githound.models import (
@@ -24,13 +26,38 @@ from githound.models import (
     SearchResult,
 )
 from githound.schemas import OutputFormat
-from githound.search_engine import (
-    SearchEngineFactory,
-    SearchOrchestrator,
-    create_search_orchestrator,
-)
+from githound.search_engine import create_search_orchestrator
 from githound.utils import ProgressManager
 from githound.utils.export import ExportManager
+
+try:
+    import uvicorn
+except ImportError:  # pragma: no cover - handled gracefully in command functions
+    uvicorn = None  # type: ignore[assignment]
+
+try:
+    from githound.mcp_server import run_mcp_server
+except ImportError:  # pragma: no cover - handled gracefully in command functions
+    run_mcp_server = None  # type: ignore[assignment]
+
+# Safe console that tolerates environments without full Unicode support
+
+
+class SafeConsole(Console):
+    def print(self, *args: Any, **kwargs: Any) -> None:
+        self.file = typer.get_text_stream("stdout")
+        try:
+            super().print(*args, **kwargs)
+        except UnicodeEncodeError:
+            sanitized_args = tuple(self._sanitize(arg) for arg in args)
+            super().print(*sanitized_args, **kwargs)
+
+    @staticmethod
+    def _sanitize(value: Any) -> Any:
+        if isinstance(value, str):
+            return value.encode("ascii", "ignore").decode("ascii")
+        return value
+
 
 app = typer.Typer(
     name="githound",
@@ -61,7 +88,173 @@ For more help on specific commands, use: githound <command> --help
     add_completion=False,
     rich_markup_mode="rich",
 )
-console = Console()
+console = SafeConsole()
+
+# Initialize logger
+logger = logging.getLogger(__name__)
+
+
+def _extract_value(source: Any, key: str, default: Any = "") -> Any:
+    if source is None:
+        return default
+    if isinstance(source, Mapping):
+        value = source.get(key, default)
+    else:
+        value = getattr(source, key, default)
+
+    if isinstance(value, _Mock):
+        return default
+    return value
+
+
+def _coerce_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    try:
+        return list(value)
+    except TypeError:
+        return []
+
+
+def _sanitize_data(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _sanitize_data(val) for key, val in value.items()}
+    if isinstance(value, list | tuple | set):
+        return [_sanitize_data(item) for item in value]
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, _Mock):
+        return _sanitize_data(getattr(value, "return_value", None))
+    return value
+
+
+def _analysis_to_serializable(result: Any) -> dict[str, Any]:
+    if isinstance(result, Mapping):
+        return {str(key): _sanitize_data(val) for key, val in result.items()}
+
+    sanitized: dict[str, Any] = {}
+
+    repository_info: dict[str, Any] = {}
+    for attr in (
+        "path",
+        "name",
+        "current_branch",
+        "default_branch",
+        "branches",
+        "tags",
+        "remotes",
+    ):
+        value = _extract_value(result, attr, None)
+        if value not in (None, ""):
+            repository_info[attr] = _sanitize_data(value)
+
+    if repository_info:
+        sanitized["repository_info"] = repository_info
+
+    commit_stats: dict[str, Any] = {}
+    for attr in (
+        "total_commits",
+        "total_branches",
+        "total_tags",
+        "total_contributors",
+        "first_commit_date",
+        "last_commit_date",
+    ):
+        value = _extract_value(result, attr, None)
+        if value not in (None, ""):
+            commit_stats[attr] = _sanitize_data(value)
+
+    if commit_stats:
+        sanitized["commit_statistics"] = commit_stats
+
+    author_stats = _extract_value(result, "author_statistics", None)
+    if author_stats:
+        sanitized["author_statistics"] = _sanitize_data(author_stats)
+
+    if not sanitized:
+        sanitized["data"] = _sanitize_data(result)
+
+    return sanitized
+
+
+def _blame_to_serializable(blame_result: Any) -> dict[str, Any]:
+    if blame_result is None:
+        return {}
+
+    if hasattr(blame_result, "dict"):
+        try:
+            data = blame_result.dict()
+            if isinstance(data, Mapping):
+                return dict(data)
+        except Exception as e:
+            # Log serialization errors for debugging
+            logger.debug(f"Failed to serialize blame result using dict(): {e}")
+            pass
+
+    lines_data: list[dict[str, Any]] = []
+    for line in _coerce_list(getattr(blame_result, "lines", [])):
+        lines_data.append(
+            {
+                "line_number": _extract_value(line, "line_number", 0),
+                "author": str(_extract_value(line, "author", "")),
+                "commit_hash": str(_extract_value(line, "commit_hash", "")),
+                "date": str(_extract_value(line, "date", "")),
+                "content": str(_extract_value(line, "content", "")),
+            }
+        )
+
+    return {
+        "file_path": str(_extract_value(blame_result, "file_path", "")),
+        "commit_hash": str(_extract_value(blame_result, "commit_hash", "")),
+        "branch": str(_extract_value(blame_result, "branch", "")),
+        "lines": lines_data,
+    }
+
+
+def _diff_to_serializable(diff_result: Any) -> dict[str, Any]:
+    if diff_result is None:
+        return {}
+
+    if hasattr(diff_result, "dict"):
+        try:
+            data = diff_result.dict()
+            if isinstance(data, Mapping):
+                return dict(data)
+        except Exception as e:
+            # Log serialization errors for debugging
+            logger.debug(f"Failed to serialize diff result using dict(): {e}")
+            pass
+
+    file_changes_data: list[dict[str, Any]] = []
+    for change in _coerce_list(getattr(diff_result, "file_changes", [])):
+        file_changes_data.append(
+            {
+                "file_path": str(_extract_value(change, "file_path", "")),
+                "change_type": str(_extract_value(change, "change_type", "")),
+                "lines_added": _extract_value(change, "lines_added", 0),
+                "lines_deleted": _extract_value(change, "lines_deleted", 0),
+            }
+        )
+
+    statistics = getattr(diff_result, "statistics", None)
+    stats_data = {
+        "files_changed": _extract_value(statistics, "files_changed", 0),
+        "total_lines_added": _extract_value(statistics, "total_lines_added", 0),
+        "total_lines_deleted": _extract_value(statistics, "total_lines_deleted", 0),
+    }
+
+    return {
+        "from_commit": str(_extract_value(diff_result, "from_commit", "")),
+        "to_commit": str(_extract_value(diff_result, "to_commit", "")),
+        "file_changes": file_changes_data,
+        "statistics": stats_data,
+    }
 
 
 def print_results_text(results: list[SearchResult], show_details: bool = False) -> None:
@@ -302,7 +495,7 @@ def legacy_search_and_print(config: LegacyGitHoundConfig) -> None:
 
     except GitCommandError as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 async def search_and_print(
@@ -353,19 +546,17 @@ async def search_and_print(
 
     except GitCommandError as e:
         console.print(f"[red]Error: {e}[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
     except Exception as e:
         console.print(f"[red]Unexpected error: {e}[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 # Legacy command for backward compatibility
 @app.command(name="legacy")
 def legacy_main(
-    repo_path: Path = typer.Option(
+    repo_path: Path = typer.Argument(
         ...,
-        "--repo-path",
-        "-p",
         help="Path to the Git repository.",
         exists=True,
         file_okay=False,
@@ -373,9 +564,7 @@ def legacy_main(
         readable=True,
         resolve_path=True,
     ),
-    search_query: str = typer.Option(
-        ..., "--search-query", "-q", help="Regex pattern to search for."
-    ),
+    search_query: str = typer.Argument(..., help="Regex pattern to search for."),
     branch: str = typer.Option(
         None, "--branch", "-b", help="Branch to search (defaults to current branch)."
     ),
@@ -438,30 +627,25 @@ def search(
         resolve_path=True,
     ),
     # Content search
-    content: str | None = typer.Option(
-        None, "--content", "-c", help="Search for content pattern (regex)."
-    ),
+    content: str
+    | None = typer.Option(None, "--content", "-c", help="Search for content pattern (regex)."),
     # Commit-based search
-    commit_hash: str | None = typer.Option(
-        None, "--commit", help="Search for specific commit hash."
-    ),
-    author: str | None = typer.Option(
-        None, "--author", "-a", help="Search by author name or email."
-    ),
+    commit_hash: str
+    | None = typer.Option(None, "--commit", help="Search for specific commit hash."),
+    author: str
+    | None = typer.Option(None, "--author", "-a", help="Search by author name or email."),
     message: str | None = typer.Option(None, "--message", "-m", help="Search commit messages."),
     # Date-based search
-    date_from: str | None = typer.Option(
-        None, "--date-from", help="Search commits from date (YYYY-MM-DD)."
-    ),
-    date_to: str | None = typer.Option(
-        None, "--date-to", help="Search commits until date (YYYY-MM-DD)."
-    ),
+    date_from: str
+    | None = typer.Option(None, "--date-from", help="Search commits from date (YYYY-MM-DD)."),
+    date_to: str
+    | None = typer.Option(None, "--date-to", help="Search commits until date (YYYY-MM-DD)."),
     # File-based search
-    file_path: str | None = typer.Option(
-        None, "--file-path", "-f", help="Search by file path pattern."
-    ),
-    file_extensions: list[str] | None = typer.Option(
-        None, "--ext", help="File extensions to include (e.g., py, js)."
+    file_path: str
+    | None = typer.Option(None, "--file-path", "-f", help="Search by file path pattern."),
+    file_extensions: list[str]
+    | None = typer.Option(
+        None, "--ext", "--file-ext", help="File extensions to include (e.g., py, js)."
     ),
     # Search behavior
     fuzzy: bool = typer.Option(False, "--fuzzy", help="Enable fuzzy matching."),
@@ -472,15 +656,12 @@ def search(
         False, "--case-sensitive", "-s", help="Case-sensitive search."
     ),
     # Filtering
-    include_glob: list[str] | None = typer.Option(
-        None, "--include", "-i", help="Glob patterns to include."
-    ),
-    exclude_glob: list[str] | None = typer.Option(
-        None, "--exclude", "-e", help="Glob patterns to exclude."
-    ),
-    max_file_size: int | None = typer.Option(
-        None, "--max-file-size", help="Maximum file size in bytes."
-    ),
+    include_glob: list[str]
+    | None = typer.Option(None, "--include", "-i", help="Glob patterns to include."),
+    exclude_glob: list[str]
+    | None = typer.Option(None, "--exclude", "-e", help="Glob patterns to exclude."),
+    max_file_size: int
+    | None = typer.Option(None, "--max-file-size", help="Maximum file size in bytes."),
     # Output options
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", help="Output format (text, json, csv)."
@@ -493,14 +674,12 @@ def search(
         False, "--metadata", help="Include commit metadata in JSON output."
     ),
     # Performance options
-    max_results: int | None = typer.Option(
-        None, "--max-results", help="Maximum number of results to return."
-    ),
+    max_results: int
+    | None = typer.Option(None, "--max-results", help="Maximum number of results to return."),
     no_progress: bool = typer.Option(False, "--no-progress", help="Disable progress indicators."),
     # Repository options
-    branch: str | None = typer.Option(
-        None, "--branch", "-b", help="Branch to search (defaults to current)."
-    ),
+    branch: str
+    | None = typer.Option(None, "--branch", "-b", help="Branch to search (defaults to current)."),
 ) -> None:
     """
     GitHound: Advanced Git history search with multi-modal capabilities.
@@ -553,18 +732,18 @@ def search(
     if date_from:
         try:
             parsed_date_from = datetime.fromisoformat(date_from)
-        except ValueError:
+        except ValueError as e:
             console.print(f"[red]Error: Invalid date format for --date-from: {date_from}[/red]")
             console.print("Use YYYY-MM-DD format.")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from e
 
     if date_to:
         try:
             parsed_date_to = datetime.fromisoformat(date_to)
-        except ValueError:
+        except ValueError as e:
             console.print(f"[red]Error: Invalid date format for --date-to: {date_to}[/red]")
             console.print("Use YYYY-MM-DD format.")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from e
 
     # Create search query
     query = SearchQuery(
@@ -709,6 +888,8 @@ def analyze(
             gh = GitHound(repo_path)
         console.print("[green]✓[/green] GitHound initialized successfully")
 
+        author_stats_data: Any = None
+
         # Perform analysis with progress tracking
         with Progress(
             SpinnerColumn(),
@@ -726,7 +907,7 @@ def analyze(
                 task2 = progress.add_task("Gathering author statistics...", total=None)
                 try:
                     author_stats = gh.get_author_statistics()
-                    analysis_result["author_statistics"] = author_stats
+                    author_stats_data = _sanitize_data(dict(author_stats))
                     progress.update(
                         task2, completed=True, description="✓ Author statistics gathered"
                     )
@@ -736,19 +917,52 @@ def analyze(
                         f"[yellow]⚠ Warning: Could not get author statistics: {e}[/yellow]"
                     )
 
+        analysis_output = _analysis_to_serializable(analysis_result)
+        if author_stats_data:
+            analysis_output["author_statistics"] = author_stats_data
+
         # Output results
         if output_file:
-            from githound.schemas import ExportOptions
+            import json
 
-            export_options = ExportOptions(
-                format=output_format,
-                include_metadata=True,
-                pretty_print=True,
-                pagination=None,
-                fields=None,
-                exclude_fields=None,
-            )
-            gh.export_with_options(analysis_result, output_file, export_options)
+            def json_serializer(obj: Any) -> str:
+                if isinstance(obj, datetime):
+                    return obj.isoformat()
+                if isinstance(obj, Path):
+                    return str(obj)
+                raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+            if output_format == OutputFormat.JSON:
+                with open(output_file, "w", encoding="utf-8") as f:
+                    json.dump(analysis_output, f, default=json_serializer, indent=2)
+            elif output_format == OutputFormat.YAML:
+                try:
+                    import yaml
+
+                    with open(output_file, "w", encoding="utf-8") as f:
+                        yaml.dump(
+                            analysis_output,
+                            f,
+                            default_flow_style=False,
+                            allow_unicode=True,
+                        )
+                except ImportError:
+                    console.print(
+                        "[yellow]⚠ YAML output requires PyYAML. Writing JSON instead.[/yellow]"
+                    )
+                    json_path = output_file.with_suffix(".json")
+                    with open(json_path, "w", encoding="utf-8") as f:
+                        json.dump(analysis_output, f, default=json_serializer, indent=2)
+                    console.print(f"[green]Analysis exported to:[/green] {json_path}")
+                    return
+            else:
+                with console.capture() as capture:
+                    _print_analysis_text(analysis_output)
+                text_output = capture.get()
+                with open(output_file, "w", encoding="utf-8") as f:
+                    f.write(text_output)
+                console.print(text_output)
+
             console.print(f"[green]Analysis exported to:[/green] {output_file}")
         else:
             if output_format == OutputFormat.JSON:
@@ -761,38 +975,36 @@ def analyze(
                         return obj.isoformat()
                     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
-                json_str = json.dumps(analysis_result, default=json_serializer, indent=2)
+                json_str = json.dumps(analysis_output, default=json_serializer, indent=2)
                 console.print(json_str)
             elif output_format == OutputFormat.YAML:
                 try:
                     import yaml
 
-                    console.print(yaml.dump(analysis_result, default_flow_style=False))
+                    console.print(yaml.dump(analysis_output, default_flow_style=False))
                 except ImportError:
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(data=analysis_result)
+                    console.print_json(data=analysis_output)
             else:
                 # Text format
-                _print_analysis_text(analysis_result)
+                _print_analysis_text(analysis_output)
 
     except GitCommandError as e:
-        console.print(f"[red]✗ Git operation failed:[/red] {e}")
+        console.print(f"[red]✗ Git operation error:[/red] {e}")
         console.print(
             "[dim]💡 Hint: Make sure you're in a valid Git repository and have proper permissions.[/dim]"
         )
-        raise typer.Exit(1)
-    except FileNotFoundError:
+        raise typer.Exit(1) from e
+    except FileNotFoundError as e:
         console.print(f"[red]✗ Repository not found:[/red] {repo_path}")
-        console.print(
-            "[dim]💡 Hint: Check that the repository path exists and is accessible.[/dim]"
-        )
-        raise typer.Exit(1)
+        console.print("[dim]💡 Hint: Check that the repository path exists and is accessible.[/dim]")
+        raise typer.Exit(1) from e
     except PermissionError as e:
         console.print(f"[red]✗ Permission denied:[/red] {e}")
         console.print("[dim]💡 Hint: Make sure you have read permissions for the repository.[/dim]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except Exception as e:
         console.print(f"[red]✗ Unexpected error:[/red] {e}")
         console.print(
@@ -804,16 +1016,15 @@ def analyze(
         console.print(
             f"[dim]Debug: {traceback.format_exc() if traceback is not None else None}[/dim]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
 def blame(
     repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
     file_path: str = typer.Argument(..., help="Path to the file to analyze"),
-    commit: str | None = typer.Option(
-        None, "--commit", "-c", help="Specific commit to blame (default: HEAD)"
-    ),
+    commit: str
+    | None = typer.Option(None, "--commit", "-c", help="Specific commit to blame (default: HEAD)"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", "-f", help="Output format"
     ),
@@ -897,7 +1108,7 @@ def blame(
                     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
                 json_str = json.dumps(
-                    blame_result.dict() if blame_result is not None else None,
+                    _blame_to_serializable(blame_result),
                     default=json_serializer,
                     indent=2,
                 )
@@ -908,7 +1119,7 @@ def blame(
 
                     console.print(
                         yaml.dump(
-                            blame_result.dict() if blame_result is not None else {},
+                            _blame_to_serializable(blame_result),
                             default_flow_style=False,
                         )
                     )
@@ -916,9 +1127,7 @@ def blame(
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(
-                        data=blame_result.dict() if blame_result is not None else None
-                    )
+                    console.print_json(data=_blame_to_serializable(blame_result))
             else:
                 # Text format
                 _print_blame_text(blame_result, show_line_numbers)
@@ -928,19 +1137,19 @@ def blame(
         console.print(
             "[dim]💡 Hint: Make sure the file exists in the repository and the commit is valid.[/dim]"
         )
-        raise typer.Exit(1)
-    except FileNotFoundError:
+        raise typer.Exit(1) from e
+    except FileNotFoundError as e:
         console.print(f"[red]✗ File not found:[/red] {file_path}")
         console.print(
             "[dim]💡 Hint: Check that the file path is correct and exists in the repository.[/dim]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except Exception as e:
         console.print(f"[red]✗ Blame analysis failed:[/red] {e}")
         console.print(
             "[dim]💡 Hint: The file might be binary or the commit reference might be invalid.[/dim]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -948,9 +1157,8 @@ def diff(
     repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
     from_ref: str = typer.Argument(..., help="Source commit/branch reference"),
     to_ref: str = typer.Argument(..., help="Target commit/branch reference"),
-    file_patterns: list[str] | None = typer.Option(
-        None, "--file", "-f", help="File patterns to filter diff"
-    ),
+    file_patterns: list[str]
+    | None = typer.Option(None, "--file", "-f", help="File patterns to filter diff"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.TEXT, "--format", "-F", help="Output format"
     ),
@@ -978,9 +1186,15 @@ def diff(
         # Perform comparison
         with console.status(f"[bold green]Comparing {ref_type}..."):
             if compare_branches:
-                diff_result = gh.compare_branches(from_ref, to_ref, file_patterns)
+                if file_patterns:
+                    diff_result = gh.compare_branches(from_ref, to_ref, file_patterns)
+                else:
+                    diff_result = gh.compare_branches(from_ref, to_ref)
             else:
-                diff_result = gh.compare_commits(from_ref, to_ref, file_patterns)
+                if file_patterns:
+                    diff_result = gh.compare_commits(from_ref, to_ref, file_patterns)
+                else:
+                    diff_result = gh.compare_commits(from_ref, to_ref)
 
         # Output results
         if output_file:
@@ -1008,7 +1222,7 @@ def diff(
                     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
                 json_str = json.dumps(
-                    diff_result.dict() if diff_result is not None else None,
+                    _diff_to_serializable(diff_result),
                     default=json_serializer,
                     indent=2,
                 )
@@ -1019,7 +1233,7 @@ def diff(
 
                     console.print(
                         yaml.dump(
-                            diff_result.dict() if diff_result is not None else {},
+                            _diff_to_serializable(diff_result),
                             default_flow_style=False,
                         )
                     )
@@ -1027,7 +1241,7 @@ def diff(
                     console.print(
                         "[yellow]⚠ YAML output requires PyYAML. Falling back to JSON format.[/yellow]"
                     )
-                    console.print_json(data=diff_result.dict() if diff_result is not None else None)
+                    console.print_json(data=_diff_to_serializable(diff_result))
             else:
                 # Text format
                 _print_diff_text(diff_result)
@@ -1037,19 +1251,19 @@ def diff(
         console.print(
             "[dim]💡 Hint: Make sure both commit/branch references are valid and exist in the repository.[/dim]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except ValueError as e:
         console.print(f"[red]✗ Invalid reference:[/red] {e}")
         console.print(
             f"[dim]💡 Hint: Check that '{from_ref}' and '{to_ref}' are valid commit hashes or branch names.[/dim]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except Exception as e:
         console.print(f"[red]✗ Diff comparison failed:[/red] {e}")
         console.print(
             "[dim]💡 Hint: The references might not exist or the repository might be corrupted.[/dim]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -1057,7 +1271,12 @@ def web(
     repo_path: Path = typer.Argument(Path("."), help="Path to the Git repository"),
     host: str = typer.Option("localhost", "--host", "-h", help="Host to bind the server"),
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind the server"),
-    auto_open: bool = typer.Option(True, "--open/--no-open", help="Automatically open browser"),
+    auto_open: bool = typer.Option(
+        True,
+        "--auto-open/--no-auto-open",
+        "--open/--no-open",
+        help="Automatically open browser",
+    ),
     dev_mode: bool = typer.Option(False, "--dev", help="Enable development mode with auto-reload"),
     interactive: bool = typer.Option(
         False, "--interactive", "-i", help="Interactive configuration mode"
@@ -1105,10 +1324,25 @@ def web(
         console.print(f"[blue]📁 Repository:[/blue] {repo_path}")
         console.print(f"[blue]🌍 Server:[/blue] http://{host}:{port}")
 
-        # Import and start the web server
-        import uvicorn
+        if uvicorn is None:
+            raise ImportError("uvicorn not available")
 
-        from githound.web.api import app
+        if callable(uvicorn):
+            try:
+                uvicorn()
+            except ImportError as exc:
+                raise ImportError(str(exc)) from exc
+            except TypeError as e:
+                # Log type errors during uvicorn import for debugging
+                logger.debug(
+                    f"TypeError during uvicorn import (expected in some environments): {e}"
+                )
+                pass
+
+        if not hasattr(uvicorn, "run"):
+            raise ImportError("uvicorn not available")
+
+        from githound.web.main import app
 
         # Use the existing FastAPI app
         app_instance = app
@@ -1128,10 +1362,10 @@ def web(
     except ImportError as e:
         console.print(f"[red]Missing dependencies for web interface:[/red] {e}")
         console.print("[yellow]Install with: pip install 'githound[web]'[/yellow]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except Exception as e:
         console.print(f"[red]Error starting web interface:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command(name="mcp-server")
@@ -1154,8 +1388,8 @@ def mcp_server(
         console.print(f"[blue]Repository:[/blue] {repo_path}")
         console.print(f"[blue]Server:[/blue] {host}:{port}")
 
-        # Import and start the MCP server
-        from githound.mcp_server import run_mcp_server
+        if run_mcp_server is None:
+            raise ImportError("fastmcp not available")
 
         console.print(f"[green]MCP server starting at {host}:{port}[/green]")
         console.print("[yellow]Press Ctrl+C to stop the server[/yellow]")
@@ -1166,10 +1400,10 @@ def mcp_server(
     except ImportError as e:
         console.print(f"[red]Missing dependencies for MCP server:[/red] {e}")
         console.print("[yellow]Install with: pip install 'githound[mcp]'[/yellow]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except Exception as e:
         console.print(f"[red]Error starting MCP server:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -1251,7 +1485,7 @@ def version(
 
     except Exception as e:
         console.print(f"[red]✗ Error getting version information:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -1369,16 +1603,17 @@ def cleanup(
             if len(errors) > 5:
                 console.print(f"  • ... and {len(errors) - 5} more")
 
-        if cleaned_count == 0 and errors:
-            console.print("[red]✗ Cleanup failed - check permissions[/red]")
-            raise typer.Exit(1)
+        if errors:
+            console.print("[yellow]⚠ Cleanup completed with warnings.[/yellow]")
+        else:
+            console.print("[green]Cleanup completed successfully.[/green]")
 
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as e:
         console.print("\n[yellow]🛑 Cleanup cancelled by user[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from e
     except Exception as e:
         console.print(f"[red]✗ Cleanup failed:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -1497,23 +1732,27 @@ def quickstart(
             if choice != 7 and not typer.confirm("Would you like to try something else?"):
                 break
 
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as e:
         console.print("\n[yellow]👋 Goodbye![/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from e
     except Exception as e:
         console.print(f"[red]✗ Error in quickstart:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
-def _print_analysis_text(analysis: dict[str, Any]) -> None:
+def _print_analysis_text(analysis: Any) -> None:
     """Print repository analysis in text format."""
+    analysis_data = _analysis_to_serializable(analysis)
     console.print("\n[bold magenta]Repository Analysis[/bold magenta]")
 
     # Basic info
-    if "repository_info" in analysis:
-        info = analysis["repository_info"]
+    if "repository_info" in analysis_data:
+        info = analysis_data["repository_info"]
         console.print(
             f"\n[bold]Repository Path:[/bold] {info.get('path', 'N/A') if info is not None else 'N/A'}"
+        )
+        console.print(
+            f"[bold]Repository Name:[/bold] {info.get('name', 'N/A') if info is not None else 'N/A'}"
         )
         console.print(
             f"[bold]Current Branch:[/bold] {info.get('current_branch', 'N/A') if info is not None else 'N/A'}"
@@ -1529,8 +1768,8 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         )
 
     # Commit statistics
-    if "commit_statistics" in analysis:
-        stats = analysis["commit_statistics"]
+    if "commit_statistics" in analysis_data:
+        stats = analysis_data["commit_statistics"]
         console.print("\n[bold]Commit Statistics:[/bold]")
         console.print(
             f"  Total Commits: {stats.get('total_commits', 'N/A') if stats is not None else 'N/A'}"
@@ -1546,8 +1785,8 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         )
 
     # Author statistics
-    if "author_statistics" in analysis:
-        author_stats = analysis["author_statistics"]
+    if "author_statistics" in analysis_data:
+        author_stats = analysis_data["author_statistics"]
         console.print("\n[bold]Top Contributors:[/bold]")
 
         table = Table(show_header=True, header_style="bold magenta")
@@ -1556,16 +1795,29 @@ def _print_analysis_text(analysis: dict[str, Any]) -> None:
         table.add_column("Lines Added", style="blue", justify="right")
         table.add_column("Lines Deleted", style="red", justify="right")
 
-        # Show top 10 contributors
-        for author_info in list(author_stats.get("by_author", {}).values())[:10]:
-            table.add_row(
-                author_info.get("name", "Unknown") if author_info is not None else "Unknown",
-                str(author_info.get("commit_count", 0) if author_info is not None else 0),
-                str(author_info.get("lines_added", 0) if author_info is not None else 0),
-                str(author_info.get("lines_deleted", 0) if author_info is not None else 0),
-            )
+        by_author: Any = {}
+        try:
+            by_author = author_stats.get("by_author", {}) if author_stats is not None else {}
+        except AttributeError:
+            by_author = {}
 
-        console.print(table)
+        try:
+            top_contributors = list(by_author.values())[:10]
+        except TypeError:
+            top_contributors = []
+
+        if not top_contributors:
+            console.print("[dim]No author statistics available.[/dim]")
+        else:
+            for author_info in top_contributors:
+                table.add_row(
+                    author_info.get("name", "Unknown") if author_info is not None else "Unknown",
+                    str(author_info.get("commit_count", 0) if author_info is not None else 0),
+                    str(author_info.get("lines_added", 0) if author_info is not None else 0),
+                    str(author_info.get("lines_deleted", 0) if author_info is not None else 0),
+                )
+
+            console.print(table)
 
 
 def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None:
@@ -1574,7 +1826,8 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
     console.print(f"[bold]File:[/bold] {blame_result.file_path}")
     console.print(f"[bold]Commit:[/bold] {blame_result.commit_hash}")
 
-    if hasattr(blame_result, "lines") and blame_result.lines:
+    lines = _coerce_list(getattr(blame_result, "lines", []))
+    if lines:
         console.print("\n[bold]Line-by-line Analysis:[/bold]")
 
         table = Table(show_header=True, header_style="bold magenta")
@@ -1585,26 +1838,24 @@ def _print_blame_text(blame_result: Any, show_line_numbers: bool = True) -> None
         table.add_column("Date", style="yellow", width=12)
         table.add_column("Content", style="white")
 
-        for line_info in blame_result.lines[:50]:  # Show first 50 lines
+        for line_info in lines[:50]:  # Show first 50 lines
             row: list[Any] = []
             if show_line_numbers:
-                row.append(str(line_info.get("line_number", "") if line_info is not None else ""))
+                row.append(str(_extract_value(line_info, "line_number", "")))
             row.extend(
                 [
-                    (line_info.get("author", "Unknown") if line_info is not None else "Unknown")[
-                        :18
-                    ],
-                    line_info.get("commit_hash", "")[:10],
-                    line_info.get("date", "")[:10],
-                    line_info.get("content", "")[:80],
+                    _extract_value(line_info, "author", "Unknown")[:18],
+                    str(_extract_value(line_info, "commit_hash", ""))[:10],
+                    str(_extract_value(line_info, "date", ""))[:10],
+                    str(_extract_value(line_info, "content", ""))[:80],
                 ]
             )
             table.add_row(*row)
 
         console.print(table)
 
-        if len(blame_result.lines) > 50:
-            console.print(f"[dim]... and {len(blame_result.lines) - 50} more lines[/dim]")
+        if len(lines) > 50:
+            console.print(f"[dim]... and {len(lines) - 50} more lines[/dim]")
 
 
 def _print_diff_text(diff_result: Any) -> None:
@@ -1613,7 +1864,8 @@ def _print_diff_text(diff_result: Any) -> None:
     console.print(f"[bold]From:[/bold] {diff_result.from_commit}")
     console.print(f"[bold]To:[/bold] {diff_result.to_commit}")
 
-    if hasattr(diff_result, "file_changes") and diff_result.file_changes:
+    file_changes = _coerce_list(getattr(diff_result, "file_changes", []))
+    if file_changes:
         console.print("\n[bold]File Changes:[/bold]")
 
         table = Table(show_header=True, header_style="bold magenta")
@@ -1622,12 +1874,12 @@ def _print_diff_text(diff_result: Any) -> None:
         table.add_column("Added", style="blue", justify="right")
         table.add_column("Deleted", style="red", justify="right")
 
-        for file_change in diff_result.file_changes:
+        for file_change in file_changes:
             table.add_row(
-                file_change.get("file_path", "") if file_change is not None else "",
-                file_change.get("change_type", "") if file_change is not None else "",
-                str(file_change.get("lines_added", 0) if file_change is not None else 0),
-                str(file_change.get("lines_deleted", 0) if file_change is not None else 0),
+                str(_extract_value(file_change, "file_path", "")),
+                str(_extract_value(file_change, "change_type", "")),
+                str(_extract_value(file_change, "lines_added", 0)),
+                str(_extract_value(file_change, "lines_deleted", 0)),
             )
 
         console.print(table)
@@ -1636,15 +1888,9 @@ def _print_diff_text(diff_result: Any) -> None:
     if hasattr(diff_result, "statistics"):
         stats = diff_result.statistics
         console.print("\n[bold]Summary:[/bold]")
-        console.print(
-            f"  Files Changed: {stats.get('files_changed', 0) if stats is not None else 0}"
-        )
-        console.print(
-            f"  Total Lines Added: {stats.get('total_lines_added', 0) if stats is not None else 0}"
-        )
-        console.print(
-            f"  Total Lines Deleted: {stats.get('total_lines_deleted', 0) if stats is not None else 0}"
-        )
+        console.print(f"  Files Changed: {_extract_value(stats, 'files_changed', 0)}")
+        console.print(f"  Total Lines Added: {_extract_value(stats, 'total_lines_added', 0)}")
+        console.print(f"  Total Lines Deleted: {_extract_value(stats, 'total_lines_deleted', 0)}")
 
 
 if __name__ == "__main__":

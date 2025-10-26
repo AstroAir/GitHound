@@ -2,14 +2,10 @@
 
 import datetime
 import os
-from typing import Optional
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest
-
-from githound.mcp.auth.providers.base import AuthResult, TokenInfo
-from githound.mcp.models import User
 
 
 class TestJWTVerifier:

@@ -1,10 +1,9 @@
 """Tag and release searchers for GitHound."""
 
-import asyncio
 import re
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -61,7 +60,7 @@ class TagSearcher(CacheableSearcher):
             return
 
         # Perform tag analysis
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         # Analyze tags
         self._report_progress(context, "Analyzing tags...", 0.2)
@@ -87,9 +86,9 @@ class TagSearcher(CacheableSearcher):
 
         self._report_progress(context, "Tag analysis completed", 1.0)
 
-    async def _analyze_tags(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_tags(self, context: SearchContext) -> list[SearchResult]:
         """Analyze repository tags."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             tags = list(context.repo.tags)
@@ -179,9 +178,9 @@ class TagSearcher(CacheableSearcher):
 
         return results
 
-    async def _analyze_version_patterns(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_version_patterns(self, context: SearchContext) -> list[SearchResult]:
         """Analyze version patterns in tags."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             tags = list(context.repo.tags)
@@ -285,9 +284,9 @@ class TagSearcher(CacheableSearcher):
 
         return results
 
-    async def _analyze_release_timeline(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_release_timeline(self, context: SearchContext) -> list[SearchResult]:
         """Analyze release timeline and frequency."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             tags = list(context.repo.tags)
@@ -350,7 +349,7 @@ class TagSearcher(CacheableSearcher):
 
         return results
 
-    def _get_tag_date(self, tag: Any) -> Optional[datetime]:
+    def _get_tag_date(self, tag: Any) -> datetime | None:
         """Get the date of a tag."""
         try:
             # Try to get tag object date first (annotated tags)
@@ -361,13 +360,13 @@ class TagSearcher(CacheableSearcher):
         except Exception:
             return None
 
-    def _parse_version(self, tag_name: str) -> Tuple[bool, Dict[str, Any]]:
+    def _parse_version(self, tag_name: str) -> tuple[bool, dict[str, Any]]:
         """Parse version information from tag name."""
         for pattern in self.version_patterns:
             match = re.match(pattern, tag_name, re.IGNORECASE)
             if match:
                 groups = match.groups()
-                version_info: Dict[str, Union[int, str]] = {
+                version_info: dict[str, int | str] = {
                     "major": int(groups[0]) if groups[0] else 0,
                     "minor": int(groups[1]) if groups[1] else 0,
                     "patch": int(groups[2]) if groups[2] and groups[2].isdigit() else 0,
@@ -382,7 +381,7 @@ class TagSearcher(CacheableSearcher):
 
         return False, {}
 
-    def _version_sort_key(self, version_info: Dict[str, Any]) -> Tuple[int, int, int]:
+    def _version_sort_key(self, version_info: dict[str, Any]) -> tuple[int, int, int]:
         """Create a sort key for version comparison."""
         return (
             version_info.get("major", 0),
@@ -391,8 +390,8 @@ class TagSearcher(CacheableSearcher):
         )
 
     def _analyze_version_jump(
-        self, prev_version: Dict[str, Any], curr_version: Dict[str, Any]
-    ) -> Dict[str, str]:
+        self, prev_version: dict[str, Any], curr_version: dict[str, Any]
+    ) -> dict[str, str]:
         """Analyze the type of version jump between two versions."""
         prev_major = prev_version.get("major", 0)
         prev_minor = prev_version.get("minor", 0)

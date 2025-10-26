@@ -1,11 +1,10 @@
 """Diff analysis searchers for GitHound."""
 
-import asyncio
 import re
 from collections import defaultdict
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from ..models import CommitInfo, SearchQuery, SearchResult, SearchType
 from .base import CacheableSearcher, SearchContext
@@ -67,7 +66,7 @@ class DiffSearcher(CacheableSearcher):
             return
 
         # Perform diff analysis
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         # Analyze recent changes
         self._report_progress(context, "Analyzing recent changes...", 0.2)
@@ -93,9 +92,9 @@ class DiffSearcher(CacheableSearcher):
 
         self._report_progress(context, "Diff analysis completed", 1.0)
 
-    async def _analyze_recent_changes(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_recent_changes(self, context: SearchContext) -> list[SearchResult]:
         """Analyze recent changes in the repository."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             # Fetch recent commits for analysis (limit to 20 for memory efficiency)
@@ -198,9 +197,9 @@ class DiffSearcher(CacheableSearcher):
 
         return results
 
-    async def _analyze_change_patterns(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_change_patterns(self, context: SearchContext) -> list[SearchResult]:
         """Analyze patterns in code changes."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             # Get recent commits for pattern analysis
@@ -233,7 +232,6 @@ class DiffSearcher(CacheableSearcher):
             # Create results for significant patterns
             for pattern_type, matches in pattern_counts.items():
                 if len(matches) >= 2:  # Only show patterns that appear multiple times
-
                     # Get a representative example
                     example_match = matches[0]
 
@@ -260,9 +258,9 @@ class DiffSearcher(CacheableSearcher):
 
         return results
 
-    async def _analyze_file_evolution(self, context: SearchContext) -> List[SearchResult]:
+    async def _analyze_file_evolution(self, context: SearchContext) -> list[SearchResult]:
         """Analyze how files have evolved over time."""
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         try:
             # Get recent commits
@@ -311,7 +309,6 @@ class DiffSearcher(CacheableSearcher):
             # Find files with significant evolution
             for file_path, changes in file_changes.items():
                 if len(changes) >= 3:  # Files changed in at least 3 commits
-
                     total_insertions = sum(c["insertions"] for c in changes)
                     total_deletions = sum(c["deletions"] for c in changes)
 
@@ -342,7 +339,7 @@ class DiffSearcher(CacheableSearcher):
 
         return results
 
-    def _analyze_commit_diff(self, diff: Any) -> Dict[str, int]:
+    def _analyze_commit_diff(self, diff: Any) -> dict[str, int]:
         """Analyze a commit's diff and return summary statistics."""
         summary = {
             "files_changed": 0,
@@ -367,7 +364,7 @@ class DiffSearcher(CacheableSearcher):
 
         return summary
 
-    def _find_change_patterns(self, diff: Any) -> Dict[str, List[str]]:
+    def _find_change_patterns(self, diff: Any) -> dict[str, list[str]]:
         """Find specific patterns in diff content."""
         patterns_found = defaultdict(list)
 

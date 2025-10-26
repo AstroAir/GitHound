@@ -1,8 +1,9 @@
 """Direct wrapper functions for MCP tools (used by integration tests)."""
 
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from git import GitCommandError
 
@@ -25,31 +26,113 @@ from .models import (
     RepositoryInput,
 )
 
-
 # Import Context for type compatibility
-try:
-    from fastmcp import Context as BaseContext
-except ImportError:
-    # Create a base context class for type compatibility
-    class BaseContext:  # type: ignore
-        async def info(self, message: str) -> None: ...
-        async def error(self, message: str) -> None: ...
+if TYPE_CHECKING:
+    from fastmcp import Context as FastMCPContext
+else:
+    try:
+        from fastmcp import Context as FastMCPContext  # type: ignore[assignment]
+    except ImportError:
+
+        class FastMCPContext:  # type: ignore
+            async def info(self, message: str) -> None:
+                ...
+
+            async def error(self, message: str) -> None:
+                ...
+
+
+BaseContext = FastMCPContext
+
 
 class MockContext(BaseContext):
-    """Mock context for direct function calls."""
+    """Mock context for direct function calls with FastMCP 2.x compatibility."""
 
     def __init__(self, fastmcp: Any = None) -> None:
         """Initialize mock context."""
         # Don't set fastmcp as it's read-only in the base class
         pass
 
-    async def info(self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None) -> None:
+    async def info(
+        self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None
+    ) -> None:
         """Mock info logging."""
         print(f"INFO: {message}")
 
-    async def error(self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None) -> None:
+    async def error(
+        self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None
+    ) -> None:
         """Mock error logging."""
         print(f"ERROR: {message}")
+
+    async def warning(
+        self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None
+    ) -> None:
+        """Mock warning logging."""
+        print(f"WARNING: {message}")
+
+    async def debug(
+        self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None
+    ) -> None:
+        """Mock debug logging."""
+        print(f"DEBUG: {message}")
+
+    async def report_progress(
+        self, progress: float, total: float | None = None, message: str | None = None
+    ) -> None:
+        """Mock progress reporting."""
+        if total:
+            percentage = (progress / total) * 100
+            print(f"PROGRESS: {progress}/{total} ({percentage:.1f}%) - {message or ''}")
+        else:
+            print(f"PROGRESS: {progress} - {message or ''}")
+
+    async def sample(
+        self, prompt: str, max_tokens: int | None = None, temperature: float | None = None
+    ) -> Any:
+        """Mock LLM sampling (returns placeholder)."""
+        print(f"SAMPLE REQUEST: {prompt[:100]}...")
+        return type("SampleResult", (), {"text": "Mock LLM response"})()
+
+    async def read_resource(self, uri: str) -> Any:
+        """Mock resource reading (returns placeholder)."""
+        print(f"RESOURCE READ: {uri}")
+        return type("Resource", (), {"content": f"Mock resource content for {uri}"})()
+
+    async def critical(
+        self, message: str, logger_name: str | None = None, extra: Mapping[str, Any] | None = None
+    ) -> None:
+        """Mock critical logging."""
+        print(f"CRITICAL: {message}")
+
+
+class GitHound:
+    """Lightweight facade providing MCP-friendly helpers."""
+
+    def __init__(self, repo_path: str | Path) -> None:
+        self.repo_path = Path(repo_path)
+
+    def search_advanced(self, query: str, **kwargs: Any) -> list[dict[str, Any]]:
+        """Placeholder advanced search returning no results by default."""
+        return []
+
+    def analyze_repository(self) -> dict[str, Any]:
+        """Return repository metadata if available."""
+        try:
+            repo = get_repository(self.repo_path)
+            return get_repository_metadata(repo)
+        except Exception:
+            return {}
+
+
+def search_repository(repo_path: str | Path, query: str, **kwargs: Any) -> Any:
+    """Convenience wrapper that delegates to GitHound.search_advanced."""
+    return GitHound(repo_path).search_advanced(query, **kwargs)
+
+
+def analyze_repository(repo_path: str | Path, **kwargs: Any) -> Any:
+    """Convenience wrapper that delegates to GitHound.analyze_repository."""
+    return GitHound(repo_path).analyze_repository()
 
 
 async def analyze_repository_direct(input_data: RepositoryInput) -> dict[str, Any]:

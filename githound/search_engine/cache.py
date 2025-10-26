@@ -1,13 +1,13 @@
 """Enhanced caching system for GitHound search engine."""
 
-import asyncio
 import hashlib
 import json
 import pickle
+import sys
 import time
+import zlib
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import redis.asyncio as redis
@@ -27,12 +27,12 @@ class CacheBackend(ABC):
     """Abstract base class for cache backends."""
 
     @abstractmethod
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache."""
         pass
 
     @abstractmethod
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache with optional TTL."""
         pass
 
@@ -52,21 +52,25 @@ class CacheBackend(ABC):
         pass
 
     @abstractmethod
-    async def keys(self, pattern: str = "*") -> List[str]:
+    async def keys(self, pattern: str = "*") -> list[str]:
         """Get all keys matching pattern."""
         pass
 
 
 class MemoryCache(CacheBackend):
-    """In-memory cache backend."""
+    """In-memory cache backend with memory-aware eviction."""
 
-    def __init__(self, max_size: int = 1000, default_ttl: int = 3600) -> None:
+    def __init__(
+        self, max_size: int = 1000, default_ttl: int = 3600, max_memory_mb: int | None = None
+    ) -> None:
         self.max_size = max_size
         self.default_ttl = default_ttl
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._access_times: Dict[str, float] = {}
+        self.max_memory_mb = max_memory_mb
+        self._cache: dict[str, dict[str, Any]] = {}
+        self._access_times: dict[str, float] = {}
+        self._size_estimates: dict[str, int] = {}  # Track approximate size of each entry
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache."""
         if key not in self._cache:
             return None
@@ -82,8 +86,18 @@ class MemoryCache(CacheBackend):
         self._access_times[key] = time.time()
         return entry["value"]
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
-        """Set value in cache with optional TTL."""
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
+        """Set value in cache with optional TTL and memory-aware eviction."""
+        # Estimate size of the value
+        value_size = self._estimate_size(value)
+
+        # Check memory limit if configured
+        if self.max_memory_mb and key not in self._cache:
+            current_memory_mb = sum(self._size_estimates.values()) / (1024 * 1024)
+            if current_memory_mb + (value_size / (1024 * 1024)) > self.max_memory_mb:
+                # Evict until we have enough space
+                await self._evict_by_memory(value_size)
+
         # Evict if at max size
         if len(self._cache) >= self.max_size and key not in self._cache:
             await self._evict_lru()
@@ -97,6 +111,7 @@ class MemoryCache(CacheBackend):
             "expires_at": expires_at,
         }
         self._access_times[key] = time.time()
+        self._size_estimates[key] = value_size
         return True
 
     async def delete(self, key: str) -> bool:
@@ -104,6 +119,7 @@ class MemoryCache(CacheBackend):
         if key in self._cache:
             del self._cache[key]
             self._access_times.pop(key, None)
+            self._size_estimates.pop(key, None)
             return True
         return False
 
@@ -117,7 +133,7 @@ class MemoryCache(CacheBackend):
         self._access_times.clear()
         return True
 
-    async def keys(self, pattern: str = "*") -> List[str]:
+    async def keys(self, pattern: str = "*") -> list[str]:
         """Get all keys matching pattern."""
         if pattern == "*":
             return list(self._cache.keys())
@@ -135,6 +151,34 @@ class MemoryCache(CacheBackend):
         lru_key = min(self._access_times.keys(), key=lambda k: self._access_times[k])
         await self.delete(lru_key)
 
+    async def _evict_by_memory(self, needed_bytes: int) -> None:
+        """Evict items until we have enough memory for the new item."""
+        if not self._size_estimates:
+            return
+
+        freed_bytes = 0
+        # Sort by access time (LRU) and evict oldest first
+        sorted_keys = sorted(self._access_times.keys(), key=lambda k: self._access_times[k])
+
+        for key in sorted_keys:
+            if freed_bytes >= needed_bytes:
+                break
+            freed_bytes += self._size_estimates.get(key, 0)
+            await self.delete(key)
+
+    def _estimate_size(self, obj: Any) -> int:
+        """Estimate the size of an object in bytes.
+
+        This is a rough estimate for memory management purposes.
+        """
+        try:
+            # Use sys.getsizeof for a quick estimate
+            # This doesn't account for all nested objects but is fast
+            return sys.getsizeof(obj)
+        except (TypeError, AttributeError):
+            # Fallback for objects that don't support getsizeof
+            return 1024  # Assume 1KB as default
+
 
 class RedisCache(CacheBackend):
     """Redis cache backend."""
@@ -151,7 +195,7 @@ class RedisCache(CacheBackend):
         self.url = url
         self.prefix = prefix
         self.default_ttl = default_ttl
-        self._client: Optional["redis.Redis"] = None
+        self._client: redis.Redis | None = None
 
     async def _get_client(self) -> "redis.Redis":
         """Get or create Redis client."""
@@ -163,22 +207,49 @@ class RedisCache(CacheBackend):
         """Add prefix to key."""
         return f"{self.prefix}{key}"
 
-    async def get(self, key: str) -> Optional[Any]:
-        """Get value from cache."""
+    async def get(self, key: str) -> Any | None:
+        """Get value from cache.
+
+        Optimization: Handle decompression of compressed values.
+        """
         client = await self._get_client()
         try:
             data = await client.get(self._make_key(key))
             if data is None:
                 return None
+
+            # Optimization: Check compression marker and decompress if needed
+            if len(data) > 0:
+                if data[0:1] == b"\x01":
+                    # Compressed data
+                    data = zlib.decompress(data[1:])
+                elif data[0:1] == b"\x00":
+                    # Uncompressed data
+                    data = data[1:]
+                # else: legacy data without marker, try to load as-is
+
             return pickle.loads(data)
         except Exception:
             return None
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
-        """Set value in cache with optional TTL."""
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
+        """Set value in cache with optional TTL.
+
+        Optimization: Compress large values to reduce memory and network usage.
+        """
         client = await self._get_client()
         try:
             data = pickle.dumps(value)
+
+            # Optimization: Compress if data is larger than 1KB
+            if len(data) > 1024:
+                data = zlib.compress(data, level=6)  # Level 6 is a good balance
+                # Prepend a marker to indicate compression
+                data = b"\x01" + data
+            else:
+                # Prepend marker for uncompressed data
+                data = b"\x00" + data
+
             ttl = ttl or self.default_ttl
             if ttl > 0:
                 await client.setex(self._make_key(key), ttl, data)
@@ -217,7 +288,7 @@ class RedisCache(CacheBackend):
         except Exception:
             return False
 
-    async def keys(self, pattern: str = "*") -> List[str]:
+    async def keys(self, pattern: str = "*") -> list[str]:
         """Get all keys matching pattern."""
         client = await self._get_client()
         try:
@@ -238,7 +309,7 @@ class SearchCache:
 
     def __init__(
         self,
-        backend: Optional[CacheBackend] = None,
+        backend: CacheBackend | None = None,
         default_ttl: int = 3600,
         enable_compression: bool = True,
     ) -> None:
@@ -253,12 +324,27 @@ class SearchCache:
         }
 
     def _make_cache_key(self, *args: Any) -> str:
-        """Create a cache key from arguments."""
-        # Create a deterministic hash of the arguments
-        key_data = json.dumps(args, sort_keys=True, default=str)
-        return hashlib.sha256(key_data.encode()).hexdigest()[:16]
+        """Create a cache key from arguments.
 
-    async def get(self, *args: Any) -> Optional[Any]:
+        Optimized to use faster hashing and avoid unnecessary JSON serialization
+        for simple types.
+        """
+        # Fast path for simple types (strings, ints, etc.)
+        if len(args) == 1 and isinstance(args[0], str | int | float | bool):
+            return f"simple:{type(args[0]).__name__}:{args[0]}"
+
+        # For complex types, use JSON serialization with SHA256
+        # Using xxhash would be faster but adds dependency, so stick with hashlib
+        try:
+            key_data = json.dumps(args, sort_keys=True, default=str, separators=(",", ":"))
+        except (TypeError, ValueError):
+            # Fallback for non-serializable objects
+            key_data = str(args)
+
+        # Use blake2b for faster hashing than sha256
+        return hashlib.blake2b(key_data.encode(), digest_size=16).hexdigest()
+
+    async def get(self, *args: Any) -> Any | None:
         """Get value from cache."""
         key = self._make_cache_key(*args)
         value = await self.backend.get(key)
@@ -270,7 +356,7 @@ class SearchCache:
             self._stats["misses"] += 1
             return None
 
-    async def set(self, value: Any, *args: Any, ttl: Optional[int] = None) -> bool:
+    async def set(self, value: Any, *args: Any, ttl: int | None = None) -> bool:
         """Set value in cache."""
         key = self._make_cache_key(*args)
         result = await self.backend.set(key, value, ttl or self.default_ttl)
@@ -306,15 +392,33 @@ class SearchCache:
         """Clear all cache entries."""
         return await self.backend.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
-        """Get cache statistics."""
+    def get_stats(self) -> dict[str, Any]:
+        """Get comprehensive cache statistics."""
         total_requests = self._stats["hits"] + self._stats["misses"]
         hit_rate = self._stats["hits"] / total_requests if total_requests > 0 else 0.0
+
+        # Get backend-specific stats if available
+        backend_stats = {}
+        if isinstance(self.backend, MemoryCache):
+            total_memory_bytes = sum(self.backend._size_estimates.values())
+            backend_stats = {
+                "cache_size": len(self.backend._cache),
+                "max_size": self.backend.max_size,
+                "memory_usage_mb": total_memory_bytes / (1024 * 1024),
+                "max_memory_mb": self.backend.max_memory_mb,
+                "avg_entry_size_kb": (
+                    total_memory_bytes / len(self.backend._cache) / 1024
+                    if self.backend._cache
+                    else 0
+                ),
+            }
 
         return {
             **self._stats,
             "hit_rate": hit_rate,
+            "miss_rate": 1.0 - hit_rate if total_requests > 0 else 0.0,
             "total_requests": total_requests,
+            **backend_stats,
         }
 
     def reset_stats(self) -> None:

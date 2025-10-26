@@ -8,11 +8,10 @@ commit processing, and metadata extraction.
 
 import asyncio
 import logging
-import subprocess
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple, Any
-from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GitCommit:
     """Represents a Git commit with metadata."""
+
     hash: str
     author: str
     author_email: str
@@ -33,6 +33,7 @@ class GitCommit:
 @dataclass
 class GitAuthor:
     """Represents a Git author with statistics."""
+
     name: str
     email: str
     commit_count: int
@@ -44,19 +45,21 @@ class GitAuthor:
 @dataclass
 class GitRepository:
     """Represents a Git repository with metadata."""
+
     name: str
     path: Path
     total_commits: int
     total_files: int
     total_authors: int
-    branches: List[str]
-    tags: List[str]
-    first_commit_date: Optional[datetime]
-    last_commit_date: Optional[datetime]
+    branches: list[str]
+    tags: list[str]
+    first_commit_date: datetime | None
+    last_commit_date: datetime | None
 
 
 class GitOperationsError(Exception):
     """Exception raised for Git operations errors."""
+
     pass
 
 
@@ -82,7 +85,7 @@ class GitOperations:
         if not git_dir.exists():
             raise GitOperationsError(f"Not a Git repository: {self.repo_path}")
 
-    async def _run_git_command(self, args: List[str]) -> str:
+    async def _run_git_command(self, args: list[str]) -> str:
         """
         Run a Git command asynchronously.
 
@@ -97,10 +100,11 @@ class GitOperations:
         """
         try:
             process = await asyncio.create_subprocess_exec(
-                "git", *args,
+                "git",
+                *args,
                 cwd=self.repo_path,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await process.communicate()
@@ -111,10 +115,12 @@ class GitOperations:
 
             return stdout.decode().strip()
 
-        except FileNotFoundError:
-            raise GitOperationsError("Git command not found. Please ensure Git is installed.")
+        except FileNotFoundError as e:
+            raise GitOperationsError(
+                "Git command not found. Please ensure Git is installed."
+            ) from e
         except Exception as e:
-            raise GitOperationsError(f"Failed to execute Git command: {e}")
+            raise GitOperationsError(f"Failed to execute Git command: {e}") from e
 
     async def get_repository_info(self) -> GitRepository:
         """
@@ -134,23 +140,23 @@ class GitOperations:
 
         # Get total files (tracked files)
         files_output = await self._run_git_command(["ls-files"])
-        total_files = len(files_output.split('\n')) if files_output else 0
+        total_files = len(files_output.split("\n")) if files_output else 0
 
         # Get authors
         authors_output = await self._run_git_command(["log", "--format=%ae", "HEAD"])
-        unique_authors = set(authors_output.split('\n')) if authors_output else set()
+        unique_authors = set(authors_output.split("\n")) if authors_output else set()
         total_authors = len(unique_authors)
 
         # Get branches
         branches_output = await self._run_git_command(["branch", "-a"])
         branches: list[Any] = []
-        for line in branches_output.split('\n'):
+        for line in branches_output.split("\n"):
             line = line.strip()
-            if line and not line.startswith('*'):
-                branch = line.replace('remotes/origin/', '').replace('remotes/', '')
-                if branch not in branches and not branch.startswith('HEAD'):
+            if line and not line.startswith("*"):
+                branch = line.replace("remotes/origin/", "").replace("remotes/", "")
+                if branch not in branches and not branch.startswith("HEAD"):
                     branches.append(branch)
-            elif line.startswith('*'):
+            elif line.startswith("*"):
                 current_branch = line[2:].strip()
                 if current_branch not in branches:
                     branches.insert(0, current_branch)
@@ -158,24 +164,30 @@ class GitOperations:
         # Get tags
         try:
             tags_output = await self._run_git_command(["tag", "-l"])
-            tags = tags_output.split('\n') if tags_output else []
+            tags = tags_output.split("\n") if tags_output else []
         except GitOperationsError:
             tags: list[Any] = []
 
         # Get first and last commit dates
         try:
-            first_commit_output = await self._run_git_command([
-                "log", "--reverse", "--format=%ai", "-1"
-            ])
-            first_commit_date = datetime.fromisoformat(first_commit_output.replace if first_commit_output is not None else None(' ', 'T', 1).rstrip('Z'))
+            first_commit_output = await self._run_git_command(
+                ["log", "--reverse", "--format=%ai", "-1"]
+            )
+            first_commit_date = datetime.fromisoformat(
+                first_commit_output.replace
+                if first_commit_output is not None
+                else None(" ", "T", 1).rstrip("Z")
+            )
         except (GitOperationsError, ValueError):
             first_commit_date = None
 
         try:
-            last_commit_output = await self._run_git_command([
-                "log", "--format=%ai", "-1"
-            ])
-            last_commit_date = datetime.fromisoformat(last_commit_output.replace if last_commit_output is not None else None(' ', 'T', 1).rstrip('Z'))
+            last_commit_output = await self._run_git_command(["log", "--format=%ai", "-1"])
+            last_commit_date = datetime.fromisoformat(
+                last_commit_output.replace
+                if last_commit_output is not None
+                else None(" ", "T", 1).rstrip("Z")
+            )
         except (GitOperationsError, ValueError):
             last_commit_date = None
 
@@ -188,17 +200,17 @@ class GitOperations:
             branches=branches,
             tags=tags,
             first_commit_date=first_commit_date,
-            last_commit_date=last_commit_date
+            last_commit_date=last_commit_date,
         )
 
     async def get_commit_history(
         self,
         limit: int = 10,
-        author: Optional[str] = None,
-        since: Optional[str] = None,
-        until: Optional[str] = None,
-        file_path: Optional[str] = None
-    ) -> List[GitCommit]:
+        author: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        file_path: str | None = None,
+    ) -> list[GitCommit]:
         """
         Get commit history with optional filtering.
 
@@ -236,11 +248,11 @@ class GitOperations:
             return []
 
         commits: list[Any] = []
-        for line in log_output.split('\n'):
+        for line in log_output.split("\n"):
             if not line:
                 continue
 
-            parts = line.split('|', 4)
+            parts = line.split("|", 4)
             if len(parts) != 5:
                 continue
 
@@ -248,35 +260,37 @@ class GitOperations:
 
             # Parse date
             try:
-                commit_date = datetime.fromisoformat(date_str.replace if date_str is not None else None(' ', 'T', 1).rstrip('Z'))
+                commit_date = datetime.fromisoformat(
+                    date_str.replace if date_str is not None else None(" ", "T", 1).rstrip("Z")
+                )
             except ValueError:
                 commit_date = datetime.now()
 
             # Get commit stats
             try:
-                stats_output = await self._run_git_command([
-                    "show", "--stat", "--format=", commit_hash
-                ])
+                stats_output = await self._run_git_command(
+                    ["show", "--stat", "--format=", commit_hash]
+                )
 
                 # Parse stats (files changed, insertions, deletions)
                 files_changed = 0
                 insertions = 0
                 deletions = 0
 
-                for stat_line in stats_output.split('\n'):
-                    if 'file' in stat_line and 'changed' in stat_line:
+                for stat_line in stats_output.split("\n"):
+                    if "file" in stat_line and "changed" in stat_line:
                         # Parse summary line like "2 files changed, 10 insertions(+), 5 deletions(-)"
-                        parts = stat_line.split(',')
+                        parts = stat_line.split(",")
                         for part in parts:
                             part = part.strip()
-                            if 'file' in part and 'changed' in part:
+                            if "file" in part and "changed" in part:
                                 files_changed = int(part.split()[0])
-                            elif 'insertion' in part:
+                            elif "insertion" in part:
                                 insertions = int(part.split()[0])
-                            elif 'deletion' in part:
+                            elif "deletion" in part:
                                 deletions = int(part.split()[0])
                         break
-                    elif stat_line.strip() and '|' in stat_line:
+                    elif stat_line.strip() and "|" in stat_line:
                         # Count individual file changes
                         files_changed += 1
 
@@ -285,20 +299,22 @@ class GitOperations:
                 insertions = 0
                 deletions = 0
 
-            commits.append(GitCommit(
-                hash=commit_hash,
-                author=author_name,
-                author_email=author_email,
-                date=commit_date,
-                message=message,
-                files_changed=files_changed,
-                insertions=insertions,
-                deletions=deletions
-            ))
+            commits.append(
+                GitCommit(
+                    hash=commit_hash,
+                    author=author_name,
+                    author_email=author_email,
+                    date=commit_date,
+                    message=message,
+                    files_changed=files_changed,
+                    insertions=insertions,
+                    deletions=deletions,
+                )
+            )
 
         return commits
 
-    async def get_author_statistics(self) -> Dict[str, Any]:
+    async def get_author_statistics(self) -> dict[str, Any]:
         """
         Get author contribution statistics.
 
@@ -308,9 +324,7 @@ class GitOperations:
         logger.info("Getting author statistics")
 
         # Get all commits with author info
-        log_output = await self._run_git_command([
-            "log", "--format=%an|%ae|%H"
-        ])
+        log_output = await self._run_git_command(["log", "--format=%an|%ae|%H"])
 
         if not log_output:
             return {"authors": [], "total_authors": 0}
@@ -319,11 +333,11 @@ class GitOperations:
         author_commits: dict[str, Any] = {}
         commit_hashes: list[Any] = []
 
-        for line in log_output.split('\n'):
+        for line in log_output.split("\n"):
             if not line:
                 continue
 
-            parts = line.split('|', 2)
+            parts = line.split("|", 2)
             if len(parts) != 3:
                 continue
 
@@ -346,53 +360,52 @@ class GitOperations:
 
             for commit_hash in commits:
                 try:
-                    stats_output = await self._run_git_command([
-                        "show", "--stat", "--format=", commit_hash
-                    ])
+                    stats_output = await self._run_git_command(
+                        ["show", "--stat", "--format=", commit_hash]
+                    )
 
-                    for stat_line in stats_output.split('\n'):
-                        if '|' in stat_line and ('+' in stat_line or '-' in stat_line):
+                    for stat_line in stats_output.split("\n"):
+                        if "|" in stat_line and ("+" in stat_line or "-" in stat_line):
                             # Parse file stat line
-                            parts = stat_line.split('|')
+                            parts = stat_line.split("|")
                             if len(parts) >= 2:
                                 file_path = parts[0].strip()
                                 files_modified.add(file_path)
 
                                 # Count + and - symbols
                                 changes = parts[1].strip()
-                                total_insertions += changes.count('+')
-                                total_deletions += changes.count('-')
-                        elif 'insertion' in stat_line or 'deletion' in stat_line:
+                                total_insertions += changes.count("+")
+                                total_deletions += changes.count("-")
+                        elif "insertion" in stat_line or "deletion" in stat_line:
                             # Parse summary line
-                            parts = stat_line.split(',')
+                            parts = stat_line.split(",")
                             for part in parts:
                                 part = part.strip()
-                                if 'insertion' in part:
+                                if "insertion" in part:
                                     total_insertions += int(part.split()[0])
-                                elif 'deletion' in part:
+                                elif "deletion" in part:
                                     total_deletions += int(part.split()[0])
 
                 except GitOperationsError:
                     continue
 
-            authors.append(GitAuthor(
-                name=author_name,
-                email=author_email,
-                commit_count=len(commits),
-                insertions=total_insertions,
-                deletions=total_deletions,
-                files_modified=len(files_modified)
-            ))
+            authors.append(
+                GitAuthor(
+                    name=author_name,
+                    email=author_email,
+                    commit_count=len(commits),
+                    insertions=total_insertions,
+                    deletions=total_deletions,
+                    files_modified=len(files_modified),
+                )
+            )
 
         # Sort authors by commit count
         authors.sort(key=lambda a: a.commit_count, reverse=True)
 
-        return {
-            "authors": authors,
-            "total_authors": len(authors)
-        }
+        return {"authors": authors, "total_authors": len(authors)}
 
-    async def get_file_history(self, file_path: str, limit: int = 10) -> List[GitCommit]:
+    async def get_file_history(self, file_path: str, limit: int = 10) -> list[GitCommit]:
         """
         Get commit history for a specific file.
 
@@ -405,10 +418,7 @@ class GitOperations:
         """
         logger.info(f"Getting file history for {file_path}")
 
-        return await self.get_commit_history(
-            limit=limit,
-            file_path=file_path
-        )
+        return await self.get_commit_history(limit=limit, file_path=file_path)
 
     async def analyze_commit(self, commit_hash: str) -> GitCommit:
         """
@@ -423,16 +433,16 @@ class GitOperations:
         logger.info(f"Analyzing commit {commit_hash}")
 
         # Get commit info
-        commit_info = await self._run_git_command([
-            "show", "--format=%H|%an|%ae|%ai|%s", "--stat", commit_hash
-        ])
+        commit_info = await self._run_git_command(
+            ["show", "--format=%H|%an|%ae|%ai|%s", "--stat", commit_hash]
+        )
 
-        lines = commit_info.split('\n')
+        lines = commit_info.split("\n")
         if not lines:
             raise GitOperationsError(f"Commit not found: {commit_hash}")
 
         # Parse commit header
-        header_parts = lines[0].split('|', 4)
+        header_parts = lines[0].split("|", 4)
         if len(header_parts) != 5:
             raise GitOperationsError(f"Invalid commit format: {commit_hash}")
 
@@ -440,7 +450,9 @@ class GitOperations:
 
         # Parse date
         try:
-            commit_date = datetime.fromisoformat(date_str.replace if date_str is not None else None(' ', 'T', 1).rstrip('Z'))
+            commit_date = datetime.fromisoformat(
+                date_str.replace if date_str is not None else None(" ", "T", 1).rstrip("Z")
+            )
         except ValueError:
             commit_date = datetime.now()
 
@@ -450,19 +462,19 @@ class GitOperations:
         deletions = 0
 
         for line in lines[1:]:
-            if 'file' in line and 'changed' in line:
+            if "file" in line and "changed" in line:
                 # Parse summary line
-                parts = line.split(',')
+                parts = line.split(",")
                 for part in parts:
                     part = part.strip()
-                    if 'file' in part and 'changed' in part:
+                    if "file" in part and "changed" in part:
                         files_changed = int(part.split()[0])
-                    elif 'insertion' in part:
+                    elif "insertion" in part:
                         insertions = int(part.split()[0])
-                    elif 'deletion' in part:
+                    elif "deletion" in part:
                         deletions = int(part.split()[0])
                 break
-            elif '|' in line and ('+' in line or '-' in line):
+            elif "|" in line and ("+" in line or "-" in line):
                 # Count individual file changes
                 files_changed += 1
 
@@ -474,5 +486,5 @@ class GitOperations:
             message=message,
             files_changed=files_changed,
             insertions=insertions,
-            deletions=deletions
+            deletions=deletions,
         )

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 REST API Basic Usage Examples
 
@@ -22,9 +21,9 @@ This example covers:
 
 import asyncio
 import json
-import sys
-from typing import Optional, cast, Any
 import logging
+import sys
+from typing import Any, cast
 
 try:
     import httpx
@@ -36,8 +35,7 @@ except ImportError:
 
 # Configure logging
 logging.basicConfig(  # [attr-defined]
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -45,17 +43,14 @@ logger = logging.getLogger(__name__)
 class GitHoundAPIClient:
     """Simple client for GitHound REST API."""
 
-    def __init__(self, base_url: str = "http://localhost:8000", api_key: Optional[str] = None) -> None:
+    def __init__(self, base_url: str = "http://localhost:8000", api_key: str | None = None) -> None:
         """Initialize API client."""
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.client = httpx.AsyncClient()
 
         # Set up authentication headers
-        self.headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
         if api_key:
             self.headers["X-API-Key"] = api_key
@@ -68,71 +63,64 @@ class GitHoundAPIClient:
         """Async context manager exit."""
         await self.client.aclose()
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check API health status."""
         try:
             response = await self.client.get(f"{self.base_url}/health")
             response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
+            return cast(dict[str, Any], response.json())
         except httpx.HTTPError as e:
             logger.error(f"Health check failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def start_search(self, search_request: Dict[str, Any]) -> Dict[str, Any]:
+    async def start_search(self, search_request: dict[str, Any]) -> dict[str, Any]:
         """Start a new search operation."""
         try:
             response = await self.client.post(
-                f"{self.base_url}/api/search",
-                json=search_request,
-                headers=self.headers
+                f"{self.base_url}/api/search", json=search_request, headers=self.headers
             )
             response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
+            return cast(dict[str, Any], response.json())
         except httpx.HTTPError as e:
             logger.error(f"Search start failed: {e}")
-            if hasattr(e, 'response') and e.response:
+            if hasattr(e, "response") and e.response:
                 try:
                     error_detail = e.response.json()
                     return {"status": "error", "error": error_detail}
-                except:
+                except Exception:
                     pass
             return {"status": "error", "error": str(e)}
 
-    async def get_search_status(self, search_id: str) -> Dict[str, Any]:
+    async def get_search_status(self, search_id: str) -> dict[str, Any]:
         """Get search status."""
         try:
             response = await self.client.get(
-                f"{self.base_url}/api/search/{search_id}/status",
-                headers=self.headers
+                f"{self.base_url}/api/search/{search_id}/status", headers=self.headers
             )
             response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
+            return cast(dict[str, Any], response.json())
         except httpx.HTTPError as e:
             logger.error(f"Get search status failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def get_search_results(self, search_id: str) -> Dict[str, Any]:
+    async def get_search_results(self, search_id: str) -> dict[str, Any]:
         """Get search results."""
         try:
             response = await self.client.get(
-                f"{self.base_url}/api/search/{search_id}",
-                headers=self.headers
+                f"{self.base_url}/api/search/{search_id}", headers=self.headers
             )
             response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
+            return cast(dict[str, Any], response.json())
         except httpx.HTTPError as e:
             logger.error(f"Get search results failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def list_searches(self) -> Dict[str, Any]:
+    async def list_searches(self) -> dict[str, Any]:
         """List all searches."""
         try:
-            response = await self.client.get(
-                f"{self.base_url}/api/searches",
-                headers=self.headers
-            )
+            response = await self.client.get(f"{self.base_url}/api/searches", headers=self.headers)
             response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
+            return cast(dict[str, Any], response.json())
         except httpx.HTTPError as e:
             logger.error(f"List searches failed: {e}")
             return {"status": "error", "error": str(e)}
@@ -143,7 +131,7 @@ class APIUsageDemo:
 
     def __init__(self, base_url: str = "http://localhost:8000") -> None:
         self.base_url = base_url
-        self.results: Dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
 
     async def demonstrate_health_check(self) -> None:
         """Demonstrate API health check."""
@@ -152,19 +140,25 @@ class APIUsageDemo:
         async with GitHoundAPIClient(self.base_url) as client:
             health_result = await client.health_check()
 
-            self.results['health_check'] = health_result
+            self.results["health_check"] = health_result
 
-            if health_result.get('status') == 'healthy':
+            if health_result.get("status") == "healthy":
                 logger.info("✓ API is healthy and ready")
-                logger.info(f"  Uptime: {health_result.get if health_result is not None else None('uptime', 'N/A')}")
-                logger.info(f"  Version: {health_result.get if health_result is not None else None('version', 'N/A')}")
+                logger.info(
+                    f"  Uptime: {health_result.get if health_result is not None else None('uptime', 'N/A')}"
+                )
+                logger.info(
+                    f"  Version: {health_result.get if health_result is not None else None('version', 'N/A')}"
+                )
             else:
                 logger.error("✗ API health check failed")
-                logger.error(f"  Error: {health_result.get if health_result is not None else None('error', 'Unknown error')}")
+                logger.error(
+                    f"  Error: {health_result.get if health_result is not None else None('error', 'Unknown error')}"
+                )
 
             return health_result
 
-    async def demonstrate_basic_search(self, repository_path: str) -> Optional[Dict[str, Any]]:
+    async def demonstrate_basic_search(self, repository_path: str) -> dict[str, Any] | None:
         """Demonstrate basic search operation."""
         logger.info("\n=== Basic Search Operation ===")
 
@@ -173,9 +167,7 @@ class APIUsageDemo:
             "query": "test",
             "repository_path": repository_path,
             "search_type": "message",
-            "filters": {
-                "max_results": 10
-            }
+            "filters": {"max_results": 10},
         }
 
         logger.info(f"Starting search with query: '{search_request['query']}'")
@@ -185,67 +177,67 @@ class APIUsageDemo:
             # Start search
             search_result = await client.start_search(search_request)
 
-            if 'error' in search_result:
+            if "error" in search_result:
                 logger.error(f"✗ Search failed to start: {search_result['error']}")
-                self.results['basic_search'] = search_result
-                return cast(Dict[str, Any], search_result)
+                self.results["basic_search"] = search_result
+                return cast(dict[str, Any], search_result)
 
-            search_id = search_result.get('search_id')
+            search_id = search_result.get("search_id")
             logger.info(f"✓ Search started with ID: {search_id}")
 
             # Monitor search progress
             max_wait_time = 30  # seconds
-            wait_interval = 1   # seconds
+            wait_interval = 1  # seconds
             elapsed_time = 0
 
             while elapsed_time < max_wait_time:
                 status_result = await client.get_search_status(search_id)
 
-                if 'error' in status_result:
+                if "error" in status_result:
                     logger.error(f"✗ Failed to get search status: {status_result['error']}")
                     break
 
-                status = status_result.get('status', 'unknown')
-                progress = status_result.get('progress', 0)
+                status = status_result.get("status", "unknown")
+                progress = status_result.get("progress", 0)
 
                 logger.info(f"  Search status: {status} ({progress:.1f}%)")
 
-                if status in ['completed', 'failed']:
+                if status in ["completed", "failed"]:
                     break
 
                 await asyncio.sleep(wait_interval)
                 elapsed_time += wait_interval
 
             # Get final results
-            if status == 'completed':
+            if status == "completed":
                 results = await client.get_search_results(search_id)
 
-                if 'error' not in results:
-                    result_count = results.get('total_count', 0)
-                    search_duration = results.get('search_duration_ms', 0)
+                if "error" not in results:
+                    result_count = results.get("total_count", 0)
+                    search_duration = results.get("search_duration_ms", 0)
 
-                    logger.info(f"✓ Search completed successfully")
+                    logger.info("✓ Search completed successfully")
                     logger.info(f"  Results found: {result_count}")
                     logger.info(f"  Search duration: {search_duration:.2f}ms")
 
                     # Show sample results
-                    search_results = results.get('results', [])
+                    search_results = results.get("results", [])
                     if search_results:
                         logger.info("  Sample results:")
                         for i, result in enumerate(search_results[:3]):
-                            commit_hash = result.get('commit_hash', 'N/A')[:8]
-                            message = result.get('message', 'N/A')[:50]
+                            commit_hash = result.get("commit_hash", "N/A")[:8]
+                            message = result.get("message", "N/A")[:50]
                             logger.info(f"    {i+1}. {commit_hash}: {message}...")
 
-                    self.results['basic_search'] = results
-                    return cast(Dict[str, Any], results)
+                    self.results["basic_search"] = results
+                    return cast(dict[str, Any], results)
                 else:
                     logger.error(f"✗ Failed to get search results: {results['error']}")
             else:
                 logger.warning(f"⚠ Search did not complete within {max_wait_time} seconds")
 
-            self.results['basic_search'] = {"status": "timeout", "search_id": search_id}
-            return self.results['basic_search']
+            self.results["basic_search"] = {"status": "timeout", "search_id": search_id}
+            return self.results["basic_search"]
 
     async def demonstrate_search_management(self) -> None:
         """Demonstrate search management operations."""
@@ -255,25 +247,27 @@ class APIUsageDemo:
             # List all searches
             searches_result = await client.list_searches()
 
-            if 'error' in searches_result:
+            if "error" in searches_result:
                 logger.error(f"✗ Failed to list searches: {searches_result['error']}")
-                self.results['search_management'] = searches_result
+                self.results["search_management"] = searches_result
                 return searches_result
 
-            searches = searches_result.get('searches', [])
+            searches = searches_result.get("searches", [])
             logger.info(f"✓ Found {len(searches)} searches")
 
             if searches:
                 logger.info("  Recent searches:")
                 for i, search in enumerate(searches[:5]):
-                    search_id = search.get('search_id', 'N/A')[:8]
-                    status = search.get('status', 'N/A')
-                    results_count = search.get('results_count', 0)
-                    started_at = search.get('started_at', 'N/A')
+                    search_id = search.get("search_id", "N/A")[:8]
+                    status = search.get("status", "N/A")
+                    results_count = search.get("results_count", 0)
+                    started_at = search.get("started_at", "N/A")
 
-                    logger.info(f"    {i+1}. {search_id}: {status} ({results_count} results) - {started_at}")
+                    logger.info(
+                        f"    {i+1}. {search_id}: {status} ({results_count} results) - {started_at}"
+                    )
 
-            self.results['search_management'] = searches_result
+            self.results["search_management"] = searches_result
             return searches_result
 
     async def demonstrate_error_handling(self) -> None:
@@ -286,11 +280,11 @@ class APIUsageDemo:
             invalid_search = {
                 "query": "test",
                 "repository_path": "/nonexistent/path",
-                "search_type": "message"
+                "search_type": "message",
             }
 
             result = await client.start_search(invalid_search)
-            if 'error' in result:
+            if "error" in result:
                 logger.info(f"   ✓ Error properly handled: {result['error']}")
             else:
                 logger.warning("   ⚠ Expected error but got success")
@@ -298,7 +292,7 @@ class APIUsageDemo:
             # Test 2: Invalid search ID
             logger.info("2. Testing invalid search ID...")
             invalid_status = await client.get_search_status("invalid-search-id")
-            if 'error' in invalid_status:
+            if "error" in invalid_status:
                 logger.info(f"   ✓ Error properly handled: {invalid_status['error']}")
             else:
                 logger.warning("   ⚠ Expected error but got success")
@@ -311,15 +305,15 @@ class APIUsageDemo:
             }
 
             result = await client.start_search(malformed_search)
-            if 'error' in result:
-                logger.info(f"   ✓ Validation error properly handled")
+            if "error" in result:
+                logger.info("   ✓ Validation error properly handled")
             else:
                 logger.warning("   ⚠ Expected validation error but got success")
 
-            self.results['error_handling'] = {
+            self.results["error_handling"] = {
                 "invalid_repo": result,
                 "invalid_search_id": invalid_status,
-                "malformed_request": result
+                "malformed_request": result,
             }
 
 
@@ -356,7 +350,7 @@ async def main() -> None:
 
         # Save results to file
         output_file = "api_basic_usage_results.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(demo.results, f, indent=2, default=str)
 
         print(f"\nResults saved to: {output_file}")

@@ -13,10 +13,11 @@ logger = logging.getLogger(__name__)
 
 # Check if permit-fastmcp is available
 try:
-    from permit_fastmcp.middleware.middleware import PermitMcpMiddleware  # type: ignore[import-not-found]
+    from permit_fastmcp.middleware.middleware import PermitMcpMiddleware
 
     PERMIT_AVAILABLE = True
 except ImportError:
+    PermitMcpMiddleware = None
     PERMIT_AVAILABLE = False
     logger.warning("permit-fastmcp not available. Install with: pip install permit-fastmcp")
 
@@ -194,7 +195,7 @@ class PermitAuthorizationProvider(AuthProvider):
             if self._middleware:
                 # This would integrate with the actual Permit.io policy engine
                 # For now, implement a simplified version
-                return await self._evaluate_permit_policy(
+                return await self._evaluate_permit_policy(  # type: ignore[unreachable]
                     subject, action, resource_name, auth_context
                 )
             else:
@@ -243,7 +244,7 @@ class PermitAuthorizationProvider(AuthProvider):
             # This demonstrates how tool arguments can be used in policies
             if "arg_number" in context:
                 number_value = context.get("arg_number", 0)
-                if isinstance(number_value, (int, float)) and number_value > 10:
+                if isinstance(number_value, int | float) and number_value > 10:
                     # Allow access to conditional tools when number > 10
                     if action == "conditional-greet":
                         return True

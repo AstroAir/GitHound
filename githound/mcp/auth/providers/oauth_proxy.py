@@ -45,7 +45,8 @@ class OAuthProxy(RemoteAuthProvider):
             userinfo_endpoint: Provider's userinfo endpoint (optional)
             scopes: Default scopes to request
         """
-        super().__init__(base_url=base_url, **kwargs)
+        # Set credentials before calling super().__init__() so they're available
+        # when _load_from_environment() is called
         self.client_id = client_id
         self.client_secret = client_secret
         self.authorization_endpoint = authorization_endpoint
@@ -55,6 +56,9 @@ class OAuthProxy(RemoteAuthProvider):
 
         # Store dynamic client registrations
         self._registered_clients: dict[str, dict[str, Any]] = {}
+
+        # Call parent __init__ after setting attributes
+        super().__init__(base_url=base_url, **kwargs)
 
     def _load_from_environment(self) -> None:
         """Load OAuth proxy configuration from environment variables."""
@@ -121,12 +125,14 @@ class OAuthProxy(RemoteAuthProvider):
     def get_oauth_metadata(self) -> dict[str, Any]:
         """Get OAuth 2.0 metadata for MCP clients."""
         return {
+            "client_id": self.client_id,
             "authorization_endpoint": f"{self.base_url}/oauth/authorize",
             "token_endpoint": f"{self.base_url}/oauth/token",
             "userinfo_endpoint": f"{self.base_url}/oauth/userinfo",
             "issuer": self.base_url,
             "response_types_supported": ["code"],
             "grant_types_supported": ["authorization_code", "refresh_token"],
+            "scopes": self.scopes,
             "scopes_supported": self.scopes,
             "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
             "dynamic_client_registration_endpoint": f"{self.base_url}/oauth/register",
@@ -231,7 +237,7 @@ class OAuthProxy(RemoteAuthProvider):
 
         except (URLError, HTTPError, json.JSONDecodeError) as e:
             logger.error(f"Error exchanging token with upstream provider: {e}")
-            raise ValueError("Token exchange failed")
+            raise ValueError("Token exchange failed") from e
 
     async def handle_callback(self, params: dict[str, str]) -> dict[str, Any]:
         """

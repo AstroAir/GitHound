@@ -1,6 +1,5 @@
 """WebSocket service for real-time progress updates."""
 
-import asyncio
 import json
 import logging
 from datetime import datetime

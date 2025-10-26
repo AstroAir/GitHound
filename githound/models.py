@@ -1,10 +1,11 @@
 """Core data models for GitHound."""
 
 import dataclasses
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -301,7 +302,9 @@ class SearchConfig(BaseModel):
 
     # Progress reporting
     enable_progress: bool = Field(True, description="Whether to report search progress")
-    progress_callback: Callable[[str, float], None] | None = Field(None, description="Progress callback function")
+    progress_callback: Callable[[str, float], None] | None = Field(
+        None, description="Progress callback function"
+    )
 
 
 class GitHoundConfig(BaseModel):

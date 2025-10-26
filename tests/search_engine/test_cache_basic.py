@@ -1,7 +1,6 @@
 """Basic tests for GitHound search engine cache module."""
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -261,11 +260,11 @@ class TestSearchCache:
     @pytest.mark.asyncio
     async def test_cache_invalidation(self) -> None:
         """Test cache invalidation."""
+
         from githound.models import SearchQuery, SearchResult
-        from typing import List
 
         query = SearchQuery(content_pattern="test")
-        results: List[SearchResult] = []
+        results: list[SearchResult] = []
 
         cache_key = "test_invalidation_key"
         await self.cache.set(results, cache_key)
